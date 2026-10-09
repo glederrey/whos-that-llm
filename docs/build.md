@@ -70,6 +70,14 @@ In Supabase, set the site URL and the email redirect URLs to the site root `/`, 
 
 Verify every slug on OpenRouter before enabling it. Prices and dates below are for seeding, not for billing. Billing uses `usage.cost_usd`. Families with one model stay disabled until a second model exists, so the later Family card is not a one-model pool. All models can still draw a model whose family is disabled.
 
+The first prototype turns on three small models and leaves every other row disabled. There is no admin page yet, so this seed is the roster you can try:
+
+- Claude Haiku 5.5 (`claude-haiku-5-5`)
+- GPT-5.6 Luna (`gpt-5-6-luna`)
+- DeepSeek V4 Flash (`deepseek-v4-flash`)
+
+That pool has three companies and two regions, USA and China, so a guess can hit or miss both point traits. A full round on any of them is under about 1 cent. More models wait until admin exists.
+
 Slugs checked against public listings in October 2026. Re-check on the day of the seed. `released_on` is required before enable, and several of these dates still need to be copied off the model page.
 
 | Our id | OpenRouter id | Company | Family | Size | Reasoning | Notes |
@@ -78,16 +86,16 @@ Slugs checked against public listings in October 2026. Re-check on the day of th
 | `claude-opus-5-5` | `anthropic/claude-opus-5.5` | Anthropic | opus | large | yes | Confirm the slug. Expensive. `is_latest` |
 | `claude-sonnet-5` | `anthropic/claude-sonnet-5` | Anthropic | sonnet | medium | yes | |
 | `claude-sonnet-5-5` | `anthropic/claude-sonnet-5.5` | Anthropic | sonnet | medium | yes | Released 2026-09-28. `is_latest` |
-| `claude-haiku-5-5` | `anthropic/claude-haiku-5.5` | Anthropic | haiku | small | yes | Released 2026-10-07. Family stays disabled until a second Haiku exists |
-| `gpt-5-6-luna` | `openai/gpt-5.6-luna` | OpenAI | gpt | small | yes | Treat Luna / Sol / Terra as one family until play says otherwise |
+| `claude-haiku-5-5` | `anthropic/claude-haiku-5.5` | Anthropic | haiku | small | yes | Starts enabled. Released 2026-10-07. Family stays disabled until a second Haiku exists |
+| `gpt-5-6-luna` | `openai/gpt-5.6-luna` | OpenAI | gpt | small | yes | Starts enabled. Treat Luna / Sol / Terra as one family until play says otherwise |
 | `gpt-5-6-sol` | `openai/gpt-5.6-sol` | OpenAI | gpt | medium | yes | `is_latest` |
 | `gpt-5-6-terra` | `openai/gpt-5.6-terra` | OpenAI | gpt | large | yes | |
-| `deepseek-v4-flash` | `deepseek/deepseek-v4-flash` | DeepSeek | deepseek | small | yes | China. Open weights is an admin fact. Confirm it on the model page. Play does not use it |
+| `deepseek-v4-flash` | `deepseek/deepseek-v4-flash` | DeepSeek | deepseek | small | yes | Starts enabled. China. Open weights is an admin fact. Confirm it on the model page. Play does not use it |
 | `deepseek-v4-pro` | `deepseek/deepseek-v4-pro` | DeepSeek | deepseek | large | yes | |
 | `mistral-medium-3-5` | `mistralai/mistral-medium-3-5` | Mistral | mistral | medium | confirm | Europe |
 | `mistral-large-2512` | `mistralai/mistral-large-2512` | Mistral | mistral | large | confirm | |
 
-Leave Fable out. The Reasoning column is an admin fact for `provider_settings` and for cost. It is not a chip. For each reasoning model, the seed starts with `{ "reasoning": { "effort": "low" } }`. Play one round. If `reasoning_tokens` stays high, change the object and play again before `enabled` is true.
+Leave Fable out. The Reasoning column is an admin fact for `provider_settings` and for cost. It is not a chip. For each reasoning model, the seed starts with `{ "reasoning": { "effort": "low" } }`. Play one round of each enabled model. If `reasoning_tokens` stays high, set that model back to `enabled = false` and change the object before turning it on again.
 
 Companies to insert first: Anthropic `us`, OpenAI `us`, DeepSeek `cn`, Mistral `eu`. Labels on screen are USA, China, and Europe. Logos can be simple letter marks until real files exist. The path still has to resolve. Storage upload comes with admin.
 
@@ -97,10 +105,10 @@ The seed script inserts missing ids and does not update a row whose `updated_at`
 
 The first build is a playable All models round. Gael plays it locally, then the other categories.
 
-1. Migration from [Data](data.md). Seed the roster disabled. Seed All models enabled as a category, and the other categories disabled.
+1. Migration from [Data](data.md). Seed the roster. Enable only Haiku 5.5, GPT-5.6 Luna, and DeepSeek V4 Flash. Seed All models enabled as a category, and the other categories disabled.
 2. App shell: landing page, login, welcome, footer, theme. Email links return to `/`. A session is required before `/play`.
-3. `lib/openrouter.ts` and `lib/prompt.ts`. Stream the reply word by word. Enable Haiku only. Play one round. Read `reasoning_tokens` and the transcript. Confirm it does not name itself. Confirm an empty successful reply still spends the message.
-4. `lib/game.ts`: frozen traits, server-filtered guess list, compare, hints, no-hint mode, score. All models, five messages, one guess after each reply, give up, no skip. The result page shows the breakdown and the short explanation, including a negative total. Play 20 rounds across the cheap models. If a family is indistinguishable, disable that family. Do not change the schema to save it.
+3. `lib/openrouter.ts` and `lib/prompt.ts`. Stream the reply word by word. Play one round on Haiku. Read `reasoning_tokens` and the transcript. Confirm it does not name itself. Confirm an empty successful reply still spends the message.
+4. `lib/game.ts`: frozen traits, server-filtered guess list, compare, hints, no-hint mode, score. All models, five messages, one guess after each reply, give up, no skip. The result page shows the breakdown and the short explanation, including a negative total. Play across the three enabled models. If a family is indistinguishable, disable that family. Do not change the schema to save it.
 5. The hourly cap and one active round. A credit error sets `app_settings.paused` for everyone.
 6. Leaderboard for All models: rank, name, best score.
 7. Later: company, family, region, latest, daily, origin. They are pool filters plus the given-trait rule. Origin is the three region buttons.
