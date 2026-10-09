@@ -90,19 +90,21 @@ export function LoginForm({ next, cancelled }: { next: string; cancelled: boolea
     setNote("Check your email.");
   }
 
+  const signingIn = tab === "sign-in";
+
   return (
-    <div className="card stack">
-      <div className="tabs">
-        <button type="button" className="button-quiet" aria-pressed={tab === "sign-in"} onClick={() => setTab("sign-in")}>
-          Sign in
+    <div className="auth">
+      <h1>{signingIn ? "Sign in" : "Create account"}</h1>
+      <p className="muted auth-switch">
+        {signingIn ? "New here?" : "Already have an account?"}{" "}
+        <button type="button" className="text-link" onClick={() => setTab(signingIn ? "create" : "sign-in")}>
+          {signingIn ? "Create an account" : "Sign in"}
         </button>
-        <button type="button" className="button-quiet" aria-pressed={tab === "create"} onClick={() => setTab("create")}>
-          Create account
-        </button>
-      </div>
+      </p>
       <button type="button" className="button" onClick={google} disabled={busy}>
         Continue with Google
       </button>
+      <p className="or">or</p>
       <form className="stack" onSubmit={submit}>
         <label>
           Email
@@ -112,20 +114,23 @@ export function LoginForm({ next, cancelled }: { next: string; cancelled: boolea
           Password
           <input
             type="password"
-            autoComplete={tab === "create" ? "new-password" : "current-password"}
+            autoComplete={signingIn ? "current-password" : "new-password"}
             value={password}
             onChange={(event) => setPassword(event.target.value)}
             required
           />
         </label>
-        {tab === "create" ? <p className="muted">We email you a confirmation link.</p> : null}
+        {signingIn ? (
+          <button type="button" className="text-link forgot" onClick={forgot} disabled={busy}>
+            Forgot password
+          </button>
+        ) : (
+          <p className="muted">We email you a confirmation link.</p>
+        )}
         <button type="submit" className="button" disabled={busy}>
-          {tab === "create" ? "Create account" : "Sign in"}
+          {signingIn ? "Sign in" : "Create account"}
         </button>
       </form>
-      <button type="button" className="button-quiet" onClick={forgot} disabled={busy}>
-        Forgot password
-      </button>
       {note ? <p className="muted">{note}</p> : null}
       {error ? <p className="error">{error}</p> : null}
     </div>

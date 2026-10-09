@@ -20,6 +20,8 @@ export function RoundBoard({ initial }: { initial: PublicGame }) {
   const [hintBusy, setHintBusy] = useState<"year" | "size" | null>(null);
   const [listOpen, setListOpen] = useState(false);
   const [openedHints, setOpenedHints] = useState<Array<"year" | "size">>([]);
+  const [shake, setShake] = useState(false);
+  const [wrongFlash, setWrongFlash] = useState(false);
   const dialogRef = useRef<HTMLDialogElement>(null);
   const blurTimer = useRef<number | null>(null);
   const endRef = useRef<HTMLDivElement>(null);
@@ -180,9 +182,16 @@ export function RoundBoard({ initial }: { initial: PublicGame }) {
       router.refresh();
       return;
     }
+    setShake(true);
+    setWrongFlash(true);
+    window.setTimeout(() => {
+      setShake(false);
+      setWrongFlash(false);
+    }, 700);
     setGame(body);
     setSelected(null);
     setSearch("");
+    setListOpen(false);
   }
 
   async function buy(key: "year" | "size") {
@@ -254,7 +263,15 @@ export function RoundBoard({ initial }: { initial: PublicGame }) {
         {liveUser !== null ? <div className="bubble user">{liveUser}</div> : null}
         {liveAssistant !== null ? (
           <div className="bubble" aria-live="polite">
-            {liveAssistant}
+            {liveAssistant === "" ? (
+              <span className="typing" aria-label="Waiting for the reply">
+                <i />
+                <i />
+                <i />
+              </span>
+            ) : (
+              liveAssistant
+            )}
           </div>
         ) : null}
         <div ref={endRef} />
@@ -288,52 +305,92 @@ export function RoundBoard({ initial }: { initial: PublicGame }) {
               flag
             />
             <TraitLine label="Family" value={given.get("family") ?? (game.feedback?.familySame ? game.feedback.familyValue : null)} />
-            {hintsOpen ? <HintLine label="Year" cost={given.has("year") ? null : game.hintCost} shown={hintShown("year")} value={game.hints.year ?? given.get("year") ?? null} busy={hintBusy !== null} onOpen={() => (given.has("year") ? revealGiven("year") : void buy("year"))} /> : null}
-            {hintsOpen ? <HintLine label="Size" cost={given.has("size") ? null : game.hintCost} shown={hintShown("size")} value={game.hints.size ?? given.get("size") ?? null} busy={hintBusy !== null} onOpen={() => (given.has("size") ? revealGiven("size") : void buy("size"))} /> : null}
+            {hintsOpen ? (
+              <TraitLine
+                label="Year"
+                value={hintShown("year") ? (game.hints.year ?? given.get("year") ?? null) : null}
+                reveal={
+                  hintShown("year")
+                    ? null
+                    : {
+                        label: given.has("year") ? "Reveal" : `Reveal (−${game.hintCost} pts)`,
+                        busy: hintBusy !== null,
+                        onOpen: () => (given.has("year") ? revealGiven("year") : void buy("year")),
+                      }
+                }
+              />
+            ) : null}
+            {hintsOpen ? (
+              <TraitLine
+                label="Size"
+                value={hintShown("size") ? (game.hints.size ?? given.get("size") ?? null) : null}
+                reveal={
+                  hintShown("size")
+                    ? null
+                    : {
+                        label: given.has("size") ? "Reveal" : `Reveal (−${game.hintCost} pts)`,
+                        busy: hintBusy !== null,
+                        onOpen: () => (given.has("size") ? revealGiven("size") : void buy("size")),
+                      }
+                }
+              />
+            ) : null}
           </section>
         ) : null}
         {game.awaitingGuess ? (
-          <section className="card stack guess-box">
+          <section className={`card stack guess-box${shake ? " shake" : ""}`}>
             <h2>Guess for message {game.messageNumber}.</h2>
             <div className="guess-search">
-            <input
-              value={search}
-              placeholder="Search models"
-              onChange={(event) => setSearch(event.target.value)}
-              onFocus={() => {
-                if (blurTimer.current) window.clearTimeout(blurTimer.current);
-                setListOpen(true);
-              }}
-              onBlur={() => {
-                blurTimer.current = window.setTimeout(() => setListOpen(false), 160);
-              }}
-            />
-            {listOpen ? (
-              <div className="candidates">
-                {rows.map((row) => (
-                  <button
-                    key={row.id}
-                    type="button"
-                    className="candidate"
-                    aria-pressed={selected === row.id}
-                    onMouseDown={(event) => event.preventDefault()}
-                    onClick={() => {
-                      setSelected(row.id);
-                      setListOpen(false);
-                    }}
-                  >
-                    <img src={row.logoPath} alt="" />
-                    <span>
-                      {row.companyName}
-                      <br />
-                      {row.name}
-                    </span>
-                  </button>
-                ))}
-              </div>
-            ) : null}
+              {selectedRow && !listOpen ? (
+                <button type="button" className="picked" onClick={() => setListOpen(true)}>
+                  <img src={selectedRow.logoPath} alt="" />
+                  <span>
+                    {selectedRow.companyName}
+                    <br />
+                    {selectedRow.name}
+                  </span>
+                </button>
+              ) : (
+                <input
+                  value={search}
+                  placeholder="Search models"
+                  onChange={(event) => setSearch(event.target.value)}
+                  onFocus={() => {
+                    if (blurTimer.current) window.clearTimeout(blurTimer.current);
+                    setListOpen(true);
+                  }}
+                  onBlur={() => {
+                    blurTimer.current = window.setTimeout(() => setListOpen(false), 160);
+                  }}
+                />
+              )}
+              {listOpen ? (
+                <div className="candidates">
+                  {rows.map((row) => (
+                    <button
+                      key={row.id}
+                      type="button"
+                      className="candidate"
+                      aria-pressed={selected === row.id}
+                      onMouseDown={(event) => event.preventDefault()}
+                      onClick={() => {
+                        setSelected(row.id);
+                        setSearch("");
+                        setListOpen(false);
+                      }}
+                    >
+                      <img src={row.logoPath} alt="" />
+                      <span>
+                        {row.companyName}
+                        <br />
+                        {row.name}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              ) : null}
             </div>
-            {selectedRow ? <p className="muted">{selectedRow.companyName} · {selectedRow.name}</p> : null}
+            {wrongFlash ? <p className="wrong-flash">Wrong</p> : null}
             <button type="button" className="button" disabled={!selected || guessBusy} onClick={() => void guess()}>
               Submit guess
             </button>
@@ -355,49 +412,35 @@ export function RoundBoard({ initial }: { initial: PublicGame }) {
   );
 }
 
-function TraitLine({ label, value, flag }: { label: string; value: string | null | undefined; flag?: boolean }) {
+function TraitLine({
+  label,
+  value,
+  flag,
+  reveal,
+}: {
+  label: string;
+  value: string | null | undefined;
+  flag?: boolean;
+  reveal?: { label: string; busy: boolean; onOpen: () => void } | null;
+}) {
   return (
     <p className={value ? "trait hit" : "trait"}>
       <span>{label}</span>
-      {value ? (
-        <span className="trait-value">
-          {flag ? <RegionFlag region={value} /> : null}
-          {value}
-        </span>
-      ) : (
-        <span className="pill">Hidden</span>
-      )}
+      <span className="trait-side">
+        {value ? (
+          <span className="trait-value">
+            {flag ? <RegionFlag region={value} /> : null}
+            {value}
+          </span>
+        ) : (
+          <span className="pill">Not found yet</span>
+        )}
+        {reveal && !value ? (
+          <button type="button" className="button-quiet reveal" disabled={reveal.busy} onClick={reveal.onOpen}>
+            {reveal.label}
+          </button>
+        ) : null}
+      </span>
     </p>
-  );
-}
-
-function HintLine({
-  label,
-  cost,
-  shown,
-  value,
-  busy,
-  onOpen,
-}: {
-  label: string;
-  cost: number | null;
-  shown: boolean;
-  value: string | null;
-  busy: boolean;
-  onOpen: () => void;
-}) {
-  if (shown && value) {
-    return (
-      <p className="trait hit">
-        <span>{label}</span>
-        <span className="trait-value">{value}</span>
-      </p>
-    );
-  }
-  return (
-    <button type="button" className="button-quiet" disabled={busy} onClick={onOpen}>
-      {label}
-      {cost === null ? "" : ` · ${cost} points`}
-    </button>
   );
 }

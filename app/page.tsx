@@ -24,12 +24,15 @@ export default async function HomePage({
       <h1>Who&apos;s that LLM</h1>
       <p className="lede">Five messages. One hidden model. Name it.</p>
       <p className="limits">5 messages · 1 guess each · 10 games an hour</p>
-      <p>
+      <div className="row">
         <a className="button" href={playHref}>
           Play
         </a>
-      </p>
-      <div className="category-list">
+        <a className="button-quiet" href="/leaderboard">
+          Leaderboard
+        </a>
+      </div>
+      <div className="card category-list">
         {categories.map((category) => (
           <div key={category.id}>
             <span>

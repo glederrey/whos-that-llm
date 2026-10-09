@@ -32,7 +32,7 @@ export function WelcomeForm({ next }: { next: string }) {
   }
 
   return (
-    <form className="card stack" onSubmit={submit}>
+    <form className="auth" onSubmit={submit}>
       <h1>Pick a username.</h1>
       <label>
         Username

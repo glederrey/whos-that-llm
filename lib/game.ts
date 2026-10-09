@@ -161,9 +161,12 @@ export function knownValues(input: {
 export function filterCandidates(
   traits: Traits,
   known: Known,
+  excludeIds: string[] = [],
 ): PublicCandidate[] {
+  const excluded = new Set(excludeIds);
   return Object.entries(traits.models)
-    .filter(([, model]) => {
+    .filter(([id, model]) => {
+      if (excluded.has(id)) return false;
       if (known.companyId && model.companyId !== known.companyId) return false;
       if (known.familyId && model.familyId !== known.familyId) return false;
       if (known.region && model.region !== known.region) return false;
@@ -245,7 +248,7 @@ export function scoreRound(input: {
     points: p1 - p0,
   });
   breakdown.push({
-    label: `Messages · ${messages} replies · ×${formatFactor(messageFactor)}`,
+    label: `Messages · ${messages} ${messages === 1 ? "reply" : "replies"} · ×${formatFactor(messageFactor)}`,
     points: p2 - p1,
   });
   if (input.noHint) {
@@ -307,7 +310,7 @@ function explainScore(
     );
   }
   lines.push(
-    `Messages: ${input.messages} replies. Message factor ${rules.messageLimit}/${input.messages}.`,
+    `Messages: ${input.messages} ${input.messages === 1 ? "reply" : "replies"}. Message factor ${rules.messageLimit}/${input.messages}.`,
   );
   if (input.noHint) lines.push(`No-hint: ×${formatFactor(rules.noHintMultiplier)}.`);
   if (input.hints.length === 0) {
@@ -378,6 +381,7 @@ export function toPublicGame(input: {
   modelId: string;
   hints: HintKey[];
   guesses: GuessFlags[];
+  guessedModelIds: string[];
   transcript: PublicGame["transcript"];
   score: number | null;
   breakdown: ScoreLine[] | null;
@@ -426,7 +430,7 @@ export function toPublicGame(input: {
       year: input.hints.includes("year") ? String(hidden.year) : null,
       size: input.hints.includes("size") ? sizeLabel(hidden.size) : null,
     },
-    candidates: filterCandidates(input.traits, known),
+    candidates: filterCandidates(input.traits, known, input.guessedModelIds),
     transcript: input.transcript,
   };
 

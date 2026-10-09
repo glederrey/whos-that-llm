@@ -31,7 +31,10 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               <img className="for-dark" src="/brand/logo-dark.png" alt="" />
               <span>Who&apos;s that LLM</span>
             </a>
-            <AccountMenu userId={user?.id ?? null} username={username} />
+            <nav className="header-nav">
+              <a href="/leaderboard">Leaderboard</a>
+              <AccountMenu userId={user?.id ?? null} username={username} />
+            </nav>
           </header>
           <main className="page">{children}</main>
           <SiteFooter />

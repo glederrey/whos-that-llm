@@ -51,7 +51,7 @@ type PublicGame = {
 };
 ```
 
-`feedback` is null for the whole round when `noHint` is true, and on Origin. `given` is still sent. `candidates` is the filtered list: logo, company, and name only. The server removes models that contradict a known trait before it sends the list. The client does not receive family, region, year, size, weights, or reasoning, and it does not filter.
+`feedback` is null for the whole round when `noHint` is true, and on Origin. `given` is still sent. `candidates` is the filtered list: logo, company, and name only. The server removes models that contradict a known trait, and models already guessed, before it sends the list. The client does not receive family, region, year, size, weights, or reasoning, and it does not filter.
 
 Known traits are given values, bought hints, and matched company, region, and family. In no-hint mode, matches are stored on the guess row and do not become known, so they do not narrow `candidates`.
 

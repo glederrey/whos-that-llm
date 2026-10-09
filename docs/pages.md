@@ -69,7 +69,7 @@ Purpose: explain the game in one screen. Public. Playing requires a session.
 - Title: **Who's that LLM**
 - Line: **Five messages. One hidden model. Name it.**
 - Limits, one line: **5 messages · 1 guess each · 10 games an hour**
-- Button: **Play**. Goes to `/login`, or `/play` when a session exists.
+- Button: **Play**. Goes to `/login`, or `/play` when a session exists. Next to it, **Leaderboard** goes to `/leaderboard`. The header has the same link on every page.
 - Category lines, one sentence each, in `sort_order`. A category that is not enabled yet has **Not open yet.** and no button. The sentences are the `categories.blurb` column:
 
 | Card | Sentence |
@@ -89,7 +89,7 @@ A confirmation or password-reset link returns here. If the URL carries a session
 
 ## Login (`/login`)
 
-One card, two tabs: **Sign in** and **Create account**.
+One narrow card. The heading is **Sign in** or **Create account**. A text link under it switches to the other. **Continue with Google** is first, then a divider, then email and password. **Forgot password** sits under the password field on sign-in, as a text link.
 
 - Button: **Continue with Google**
 - Fields: email, password
@@ -163,7 +163,7 @@ The score is not shown in the header. It is computed when the round ends.
 
 ### Transcript
 
-User and assistant bubbles. The system prompt is never rendered. The assistant bubble streams word by word. The guess stays closed until the full reply is stored.
+User and assistant bubbles. The system prompt is never rendered. The assistant bubble streams word by word. Until the first word arrives, the bubble shows a waiting animation. The guess stays closed until the full reply is stored.
 
 Input under the transcript:
 
@@ -179,7 +179,7 @@ A stored assistant reply that is empty or whitespace still spends the message an
 
 Appears when `awaitingGuess` is true. Heading: **Guess for message 2.**
 
-Search field, placeholder **Search models**. The rows stay closed until the field is focused, then open as a dropdown: logo, company, and name. Nothing else. Submit is enabled when a row is selected. There is no Skip.
+Search field, placeholder **Search models**. The rows stay closed until the field is focused, then open as a dropdown: logo, company, and name. Nothing else. A chosen model replaces the placeholder in that field. Submit is enabled when a row is selected. There is no Skip. A wrong guess shakes the card, flashes **Wrong**, and that model leaves the list. A model already guessed is not offered again.
 
 The list is the one the server already filtered. A guess the server rejects: **That model is not in the list.**
 
@@ -189,9 +189,9 @@ Origin replaces the search with **USA**, **China**, **Europe**. One tap submits 
 
 Hidden for the whole round when no-hint mode is on. Origin renders none of it.
 
-The board sits on the right. Company, region, and family start as **Hidden**. A miss does not say wrong. A hit unveils that row: **Company · Anthropic**, **Region · USA** with the USA, China, or Europe flag, or **Family · Opus**. A trait the pool already shares is unveiled from the start, except year and size.
+The board sits on the right. Every row looks the same: the trait, then **Not found yet**, or the unveiled value. Company, region, and family start as **Not found yet**. A miss does not name the trait. A hit unveils that row: **Anthropic**, **USA** with the USA, China, or Europe flag, or **Opus**. A trait the pool already shares is unveiled from the start, except year and size.
 
-Year and size stay hidden until the player clicks them. If the pool shares that trait, the click reveals it and costs nothing. If models differ, the button reads **Year · 100 points** or **Size · 100 points** and the click buys it.
+Year and size join the same list after the first reply. Until the click they read **Not found yet**, with **Reveal** when the pool shares that trait, or **Reveal (−100 pts)** when the models differ. The click reveals the year or the size. The button does not come back.
 
 Point numbers for a match stay off this board. They are on the result page. Naming the model leaves the round before another feedback pass.
 
@@ -199,8 +199,7 @@ Point numbers for a match stay off this board. They are on the result page. Nami
 
 Under the feedback, after the first reply, when this category allows hints and no-hint mode is off.
 
-- **Year**, or **Year · 100 points** when the years differ
-- **Size**, or **Size · 100 points** when the sizes differ
+- **Reveal**, or **Reveal (−100 pts)** when the years or the sizes differ
 
 One click. The button disables until the response returns. A revealed year shows the calendar year, such as **2026**. A revealed size shows **Small**, **Medium**, or **Large**. The button does not come back.
 

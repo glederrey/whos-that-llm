@@ -137,4 +137,8 @@ test("no-hint mode does not narrow the list on a match", () => {
   assert.equal(filterCandidates(traits, blind).length, 3);
   const hinted = knownValues({ traits, hidden, guesses: [], hints: ["year"], noHint: true });
   assert.equal(filterCandidates(traits, hinted).length, 3);
+  assert.deepEqual(
+    filterCandidates(traits, blind, ["luna"]).map((row) => row.id),
+    ["haiku", "flash"],
+  );
 });

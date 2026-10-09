@@ -191,7 +191,7 @@ export async function readPublicGame(gameId: string, userId: string): Promise<Pu
   if (!game) return null;
   const [{ data: messages }, { data: guesses }] = await Promise.all([
     client.from("messages").select("turn, role, content").eq("game_id", gameId).order("turn").order("role"),
-    client.from("guesses").select("model_correct, company_correct, family_correct, region_correct").eq("game_id", gameId),
+    client.from("guesses").select("guessed_model_id, model_correct, company_correct, family_correct, region_correct").eq("game_id", gameId),
   ]);
   const flags: GuessFlags[] = (guesses ?? []).map((guess) => ({
     modelCorrect: Boolean(guess.model_correct),
@@ -199,6 +199,9 @@ export async function readPublicGame(gameId: string, userId: string): Promise<Pu
     familyCorrect: Boolean(guess.family_correct),
     regionCorrect: Boolean(guess.region_correct),
   }));
+  const guessedModelIds = (guesses ?? [])
+    .map((guess) => guess.guessed_model_id)
+    .filter((id): id is string => typeof id === "string" && id.length > 0);
   return toPublicGame({
     id: game.id,
     category: game.category,
@@ -212,6 +215,7 @@ export async function readPublicGame(gameId: string, userId: string): Promise<Pu
     modelId: game.model_id,
     hints: game.hints ?? [],
     guesses: flags,
+    guessedModelIds,
     transcript: sortTranscript(messages ?? []),
     score: game.score,
     breakdown: game.score_breakdown,
@@ -296,7 +300,7 @@ export async function submitGuess(gameId: string, userId: string, modelId: strin
 
   const { data: guesses } = await client
     .from("guesses")
-    .select("model_correct, company_correct, family_correct, region_correct")
+    .select("guessed_model_id, model_correct, company_correct, family_correct, region_correct")
     .eq("game_id", gameId);
   const previous: GuessFlags[] = (guesses ?? []).map((guess) => ({
     modelCorrect: Boolean(guess.model_correct),
@@ -304,6 +308,9 @@ export async function submitGuess(gameId: string, userId: string, modelId: strin
     familyCorrect: Boolean(guess.family_correct),
     regionCorrect: Boolean(guess.region_correct),
   }));
+  const guessedModelIds = (guesses ?? [])
+    .map((guess) => guess.guessed_model_id)
+    .filter((id): id is string => typeof id === "string" && id.length > 0);
   const hidden = game.traits.models[game.model_id];
   const guessed = game.traits.models[modelId];
   if (!hidden || !guessed) return fail(409, "conflict");
@@ -315,7 +322,7 @@ export async function submitGuess(gameId: string, userId: string, modelId: strin
     hints: game.hints ?? [],
     noHint: game.no_hint,
   });
-  const allowed = new Set(filterCandidates(game.traits, known).map((row) => row.id));
+  const allowed = new Set(filterCandidates(game.traits, known, guessedModelIds).map((row) => row.id));
   if (!allowed.has(modelId)) return fail(409, "conflict");
 
   const flags = compareModel(game.model_id, modelId, hidden, guessed);

@@ -26,7 +26,7 @@ export function ResetPassword({ hasUsername }: { hasUsername: boolean }) {
   }
 
   return (
-    <form className="card stack" onSubmit={submit}>
+    <form className="auth" onSubmit={submit}>
       <h2>Choose a new password</h2>
       <label>
         New password
