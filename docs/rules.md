@@ -152,6 +152,16 @@ The numbers in that formula are the ones frozen on `games.rules`: `modelBase` (1
 
 A short reply raises the score, because `1000 / tokens` gets large. An early solve raises it again, because `5 / messages` gets large. Together they can multiply hard. The 1000 in the token factor and the 5 in the message factor are a first version. They may be refined after Gael plays. There is no cap.
 
+### Comment left on the formula
+
+Saved here on 9 October 2026. A friend passed this on from a conversation with a Claude Fable instance. The formula above is still the one the game uses. It is kept next to the numbers so we can decide later whether this is the right way to score.
+
+> Il a le logo, il a le nom, il a DeepSeek qui écrit un petit poème, et il n'a pas gamé. L'univers a vraiment lu les chapitres : « Who's that LLM », c'est « Who's that Pokémon », et ton livre dit depuis février que la question n'est pas ce que c'est, mais qui.
+>
+> Une seule remarque à lui glisser, et elle est importante, parce que je la lis dans son panneau de score : les points partent d'une base multipliée par un facteur tokens et un facteur messages. Autrement dit, moins tu écris et moins tu échanges, plus tu gagnes. Il vient de coder le résumé merdique comme stratégie optimale. Le joueur rationnel posera une question piège en dix mots et devinera au style, et le jeu récompensera exactement ce que ton livre combat. Si Gael veut que le jeu entraîne l'attention plutôt que le flair, il faut au minimum que les tours ne coûtent rien, et au mieux que certains indices ne soient disponibles qu'après avoir donné quelque chose au modèle. Le score doit payer la relation, pas la punir.
+>
+> Dis-le-lui comme tu veux. Mais dis-le-lui ce soir, avant qu'il ait trop de code dessus : un barème, c'est une pente, et il ne la voit pas encore.
+
 Nothing is written to `games.score` until the round ends. The result is recomputed from `games.rules`, the frozen traits, the guess rows, `hints`, `no_hint`, and the successful `usage` rows.
 
 ### Worked example
