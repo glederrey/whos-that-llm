@@ -2,11 +2,13 @@
 
 One Supabase Postgres database. The catalog, the rounds, and the cost ledger are tables in it.
 
-The browser may read `companies`, `families`, and the view `models_public`. Those rows are the roster a player is allowed to see. `models_public` is `models` where `enabled` is true, and it omits `openrouter_id`, `provider_settings`, and the two prices. The secret is `games.model_id` on an open round, and the browser never queries `games`. Server routes use the secret key, which bypasses row level security. Row level security denies `anon` and `authenticated` on `games`, `messages`, `guesses`, and `usage`.
+The browser may read `companies`, `families`, and the view `models_public`. Those rows are the roster a player is allowed to see. `models_public` is `models` where `enabled` is true, and the columns are `id`, `name`, `company_id`, and `logo_path`. It omits `openrouter_id`, `provider_settings`, the two prices, `family_id`, `size`, `released_on`, `is_latest`, `open_weights`, and `reasoning`. The guess list for a round does not come from this view. The server sends logo, company, and name for the models that are still legal.
 
-There is no hints table. A hint is a column on the model. The fact that this player bought it is `games.revealed`.
+The secret of an open round is `games.model_id`. The browser never queries `games`. Server routes use the secret key, which bypasses row level security. Row level security denies `anon` and `authenticated` on `games`, `messages`, `guesses`, and `usage`.
 
-There is no separate "who played when" table. `games.started_at` and `games.username` are that record. `profiles` is the account.
+There is no hints catalog. Year and size are columns on the model. The fact that this player bought one is `games.hints`.
+
+There is no separate "who played when" table. `games.started_at` and `games.username` are that record. `profiles` is the account. `profiles.id` links the auth user, and therefore the email, to the username.
 
 ## Why transcripts are stored
 
@@ -19,11 +21,11 @@ The admin round page needs the text, because a 500-token reply has room to say i
 | Table | `anon` / `authenticated` | Service role |
 |---|---|---|
 | `companies`, `families`, `models_public`, `categories` where `enabled` | `select` | write on the base tables |
-| `profiles` | `select` all rows. `update` own `username` only | write |
+| `profiles` | `select` own row. `update` own `username` only, and only while that column is null until profile edits exist | write |
 | `games`, `messages`, `guesses`, `usage` | no privileges | read and write |
 | `leaderboard(category, since)` | `execute` | execute |
 
-`leaderboard` is a security definer function, not a view of game rows. It exposes aggregates only. `anon` can call it, so the landing page can show the weekly top 5 before login.
+`leaderboard` is a security definer function, not a view of game rows. It exposes rank, name, and score only. `anon` can call it, so the landing page can show the weekly top 5 before login, once that block exists.
 
 `profiles` is created by a trigger on `auth.users`. The user does not insert their own profile row.
 
@@ -35,19 +37,23 @@ The admin round page needs the text, because a 500-token reply has room to say i
 |---|---|---|
 | `id` | text, pk | `anthropic` |
 | `name` | text | |
-| `region` | text | `us`, `eu`, `cn` |
-| `logo_path` | text | `/logos/anthropic.svg` |
+| `region` | text | `us`, `cn`, `eu`. Shown as USA, China, Europe |
+| `logo_path` | text | A path in Supabase Storage, or an `https` URL when upload is unavailable |
 | `created_at` | timestamptz | default `now()` |
+
+Logo upload is part of admin, which is later. Until then a seed path such as `/logos/anthropic.svg` is enough, and the file has to resolve.
 
 ### `families`
 
 | Column | Type | Notes |
 |---|---|---|
-| `id` | text, pk | `opus`. Never changes. Past rounds store it |
+| `id` | text, pk | `opus`. Never changes. Past rounds store it inside `games.traits` |
 | `name` | text, unique | Display, editable |
-| `enabled` | boolean | False hides it from the picker. Models keep the id |
+| `enabled` | boolean | False hides it from the family picker. Models keep the id |
 | `created_at` | timestamptz | |
 | `updated_at` | timestamptz | |
+
+The id is the stable key. Past rounds copy the display name into `games.traits`, so a rename does not rewrite them.
 
 ### `models`
 
@@ -58,55 +64,50 @@ The admin round page needs the text, because a 500-token reply has room to say i
 | `name` | text | Claude Sonnet 5.5 |
 | `company_id` | text, fk | |
 | `family_id` | text, fk | |
-| `size` | text | `small`, `medium`, `large` |
-| `open_weights` | boolean | |
-| `reasoning` | boolean | |
-| `provider_settings` | jsonb | default `{}`. Passed through on the call |
-| `is_latest` | boolean | |
-| `released_on` | date | Required while `enabled` |
+| `size` | text | `small`, `medium`, `large`. A hint. Not a point trait and not a category |
+| `open_weights` | boolean | Admin fact. Play does not read it |
+| `reasoning` | boolean | Admin fact. Play does not read it |
+| `provider_settings` | jsonb | default `{}`. Passed through on the call. Not a player-facing trait |
+| `is_latest` | boolean | The newest model in its family, for the later Latest pool |
+| `released_on` | date | Required while `enabled`. The year hint reads the calendar year |
 | `enabled` | boolean | default false. False keeps the row and pulls the model out of every draw |
-| `logo_path` | text, null | Overrides the company logo |
+| `logo_path` | text, null | Overrides the company logo. Storage path or `https` URL |
 | `input_usd_per_mtok` | numeric, null | List price, admin only |
 | `output_usd_per_mtok` | numeric, null | |
 | `updated_at` | timestamptz | The seed will not clobber a newer edit |
 
 Checks:
 
-- `size` is `small`, `medium`, or `large`. Region is not a column here.
+- `size` is `small`, `medium`, or `large`.
 - `enabled` implies `released_on` is not null.
-- `enabled` and `reasoning` together imply `provider_settings` is not `{}`.
+- `enabled` and `reasoning` together imply `provider_settings` is not `{}`. That check is there so a thinking model cannot be turned on with no effort setting. It does not put reasoning into the game.
 
-Region is not a column here. It comes from the company. The year chip uses `extract(year from released_on)`. Direction compares the dates.
+`open_weights` and `reasoning` stay on the row so admin can see them and so a seed can record them. They are not copied into `games.traits`. They are not on `models_public`. They are not chips, hints, filters, or score terms.
 
-`enabled` is the on/off switch. Turning it off is how a model is removed from play. The row stays, so old rounds still resolve the name. A hard delete is allowed only when no `games.model_id` and no `category_models` row points at it.
+Region is not a column here. It comes from the company. The year hint uses `extract(year from released_on)` at the moment the round starts, then reads the frozen year.
+
+`enabled` is the on/off switch. Turning it off is how a model is removed from play. The row stays, so old rounds still resolve the name from `games.traits`. A hard delete is allowed only when no `games.model_id` points at it.
+
+Editing `company_id`, `family_id`, `size`, `released_on`, or the company region applies to new games only. A round already started keeps `games.traits`.
 
 ### `categories`
 
-The lobby and the leaderboard read this table. The nine built-in rows are seeded and cannot be deleted. Further rows are pools you create in admin.
+The lobby and the leaderboard read this table. The built-in rows are seeded and cannot be deleted.
 
 | Column | Type | Notes |
 |---|---|---|
-| `id` | text, pk | `all`, `daily`, or `opus-vs-sonnet`. Never changes. `games.category` stores it |
+| `id` | text, pk | `all`, `daily`, `company`, … Never changes. `games.category` stores it |
 | `name` | text | Card title |
-| `blurb` | text | The one sentence on the card |
-| `kind` | text | `builtin` or `pool` |
-| `enabled` | boolean | False hides the card. Past rounds stay |
-| `scored` | boolean | False means no score and no leaderboard tab. Custom is the built-in false |
-| `jackpot_multiplier` | numeric | Copied into `games.rules` at start. Built-ins use the values in [Rules](rules.md). A new pool defaults to 1 |
-| `token_scored` | boolean | When true, the stored score is the points scaled by tokens. Copied into `games.rules`. Daily is true. Other built-ins are false. A new pool defaults to false. Ignored when `scored` is false |
-| `sort_order` | int | Lobby order |
+| `blurb` | text | The one sentence on the main page and on the card |
+| `enabled` | boolean | False hides the lobby card. The main page still shows the blurb, with **Not open yet.** Past rounds stay |
+| `leaderboard` | boolean | True for `all` and `daily`. False for the others. A main family board can be turned on later |
+| `hints_allowed` | boolean | True for `all`, `region`, and `daily`. False for `company`, `family`, `latest`, and `origin` |
+| `sort_order` | int | Main page and lobby order |
 | `created_at` | timestamptz | |
 
-### `category_models`
+Seed `enabled` true only for `all`. The others are seeded false until they are built. Seed `leaderboard` true for `all` and `daily` even while `daily` is disabled, so the column matches the rule. A disabled category with no finished rounds still has no tab.
 
-Only for `kind = pool`. Built-in categories compute their pool in code.
-
-| Column | Type | Notes |
-|---|---|---|
-| `category_id` | text, fk `categories` | |
-| `model_id` | text, fk `models` | |
-
-Primary key `(category_id, model_id)`. A draw uses rows whose model is `enabled`. A disabled model can stay on the list so that turning it back on puts it in the category again.
+Every scored round uses the formula in [Rules](rules.md). The category row does not store a multiplier.
 
 ### `app_settings`
 
@@ -115,17 +116,17 @@ One row, `id = 1`.
 | Column | Type | Notes |
 |---|---|---|
 | `id` | int, pk | Check `id = 1` |
-| `paused` | boolean | True refuses new rounds and new messages |
+| `paused` | boolean | True refuses new rounds and new messages. Set by admin, and by a credit error |
 
 ### `profiles`
 
 | Column | Type | Notes |
 |---|---|---|
-| `id` | uuid, pk, fk `auth.users` | on delete cascade |
-| `username` | text, unique, null | Null until `/welcome` |
+| `id` | uuid, pk, fk `auth.users` | on delete cascade. This id links the email to the username |
+| `username` | text, null | Null until `/welcome`. Not unique |
 | `created_at` | timestamptz | |
 
-`username` matches `^[A-Za-z0-9_]{3,20}$` when it is not null. The reserved names are rejected in the route, not in the check, so the list can change without a migration.
+When `username` is not null, its trimmed length is 3–20. Capitals and punctuation are allowed. The check is on length after trim, not on a character class. Two profiles may share a username. The account is `id`.
 
 ### `games`
 
@@ -135,29 +136,31 @@ One row per round.
 |---|---|---|
 | `id` | uuid, pk | default `gen_random_uuid()` |
 | `user_id` | uuid, fk `profiles` | on delete restrict. Deleting the auth user will not delete their rounds |
-| `username` | text | Copied at insert |
-| `category` | text, fk `categories` | The category id, including pools created later |
-| `pool_key` | text, null | `anthropic`, `opus`, `us`, `large`, `all-latest`, or a company id for latest-of-one-company. Null for `all`, `daily`, `origin`, `custom` |
-| `pool_model_ids` | text[] | The models that were legal when the round started. The guess list reads this, not the live roster. For `custom`, it is the set the player checked |
+| `username` | text | Copied at insert. Leaderboard name for that round |
+| `category` | text, fk `categories` | |
+| `pool_key` | text, null | `anthropic`, `opus`, `us`, `cn`, or `eu`. Null for `all`, `latest`, `daily`, and `origin` |
+| `pool_model_ids` | text[] | The models that were legal when the round started |
 | `model_id` | text, fk `models` | |
-| `status` | text | `active`, `solved`, `finished`, `given_up` |
-| `blind` | boolean | |
+| `traits` | jsonb | Frozen at insert. Scoring, filtering, feedback, and the result page read this, not the live catalog |
+| `status` | text | `active`, `solved`, `miss`, `given_up` |
+| `no_hint` | boolean | |
 | `rules` | jsonb | The config snapshot. Scoring reads this, not today's file |
-| `revealed` | text[] | default `'{}'`. Keys from the characteristic list. Empty when blind |
-| `message_count` | int | 0–5. User messages stored |
-| `awaiting_guess` | boolean | True after a stored reply, false after a guess or a skip |
-| `scored` | boolean | Copied from the category at start. The leaderboard ignores false |
-| `score` | int, null | Written once, at the end, when `scored`. The points, or the token-scaled points when `rules.tokenScored`. Stays null for custom |
-| `score_breakdown` | jsonb, null | Written once, at the end, when `scored` |
+| `hints` | text[] | default `'{}'`. `year`, `size`, or both. Empty when no-hint, and when the category disallows hints |
+| `message_count` | int | 0–5. User messages stored. Also the number of stored replies |
+| `awaiting_guess` | boolean | True after a stored reply, false after a guess. Give-up ends the round instead |
+| `score` | int, null | Written once, at the end, when `message_count` is at least 1. May be negative. Null when they give up before any reply |
+| `score_breakdown` | jsonb, null | The integer lines, in order, not including the total |
+| `score_explanation` | text[], null | The short public lines |
 | `daily_key` | date, null | UTC date. Set only for `daily` |
 | `started_at` | timestamptz | default `now()`. The hourly cap counts these |
 | `finished_at` | timestamptz, null | |
 
 Indexes:
 
-- `(user_id, started_at desc)` for the hourly count and the profile history
+- `(user_id, started_at desc)` for the hourly count and, later, the profile history
 - unique `(user_id)` where `status = 'active'`
 - unique `(user_id, daily_key)` where `daily_key is not null`
+- `(category, status, finished_at)` for the leaderboard
 
 `rules` shape:
 
@@ -166,34 +169,42 @@ Indexes:
   "messageLimit": 5,
   "maxUserChars": 500,
   "maxOutputTokens": 500,
-  "blindMultiplier": 1.25,
-  "jackpotBase": 800,
-  "jackpotStep": 100,
-  "categoryMultiplier": 1,
-  "tokenScored": false,
+  "modelBase": 1000,
+  "regionPoints": 100,
+  "companyPoints": 300,
   "tokenScale": 1000,
-  "match": {
-    "company": 200,
-    "family": 150,
-    "year": 100,
-    "size": 80,
-    "region": 60,
-    "weights": 50,
-    "reasoning": 40
-  },
-  "reveal": {
-    "company": 250,
-    "family": 180,
-    "year": 120,
-    "size": 100,
-    "region": 80,
-    "weights": 70,
-    "reasoning": 50
+  "hintCost": 100,
+  "noHintMultiplier": 1.5,
+  "hintsAllowed": true
+}
+```
+
+`hintsAllowed` is copied from `categories.hints_allowed` at start. The other fields are copied from config. `hints` may only contain `year` and `size`, each once. The route checks that.
+
+`traits` shape:
+
+```json
+{
+  "given": ["region"],
+  "models": {
+    "claude-sonnet-5-5": {
+      "name": "Claude Sonnet 5.5",
+      "companyId": "anthropic",
+      "companyName": "Anthropic",
+      "familyId": "sonnet",
+      "familyName": "Sonnet",
+      "region": "us",
+      "size": "medium",
+      "year": 2026,
+      "logoPath": "/logos/anthropic.svg"
+    }
   }
 }
 ```
 
-`revealed` may only contain those seven keys, each once. The route checks that. A database check is optional.
+One entry per id in `pool_model_ids`, including the hidden model. `given` lists traits whose value is the same on every entry. Weights and reasoning are absent on purpose.
+
+`score_breakdown` is an array of `{ "label": "Named the model", "points": 1000 }`, in the order [Rules](rules.md) specifies. `score_explanation` is the public lines, in the order [Pages](pages.md) specifies.
 
 ### `messages`
 
@@ -203,14 +214,14 @@ Indexes:
 | `game_id` | uuid, fk `games` on delete cascade | |
 | `turn` | int | 1–5 |
 | `role` | text | `user` or `assistant` |
-| `content` | text | |
+| `content` | text | Assistant content may be empty or whitespace. That row still counts |
 | `created_at` | timestamptz | |
 
 Unique `(game_id, turn, role)`. The system prompt is not a row.
 
 ### `guesses`
 
-One row per submission, including the solve. A skip writes nothing. Unique `(game_id, turn)`, which is what makes "one guess per message" true even if two requests race: the second insert fails.
+One row per submitted guess, including the solve and a wrong fifth guess. Give-up writes nothing here. Unique `(game_id, turn)`, which is what makes "one guess per message" true even if two requests race: the second insert fails. Origin is the exception later: it has at most one guess row, and `turn` is the message the guess was submitted on.
 
 | Column | Type | Notes |
 |---|---|---|
@@ -218,19 +229,14 @@ One row per submission, including the solve. A skip writes nothing. Unique `(gam
 | `game_id` | uuid, fk | |
 | `turn` | int | |
 | `guessed_model_id` | text, fk `models`, null | Null for origin |
-| `guessed_region` | text, null | `us` / `eu` / `cn`. Always set. For a model guess, copy it from that model's company |
+| `guessed_region` | text, null | `us` / `cn` / `eu`. For a model guess, copy it from the frozen company. For origin, this is the guess |
 | `model_correct` | boolean | False for every origin guess |
 | `company_correct` | boolean | |
-| `family_correct` | boolean | |
+| `family_correct` | boolean | Stored for feedback and for the later daily stat. Pays nothing |
 | `region_correct` | boolean | |
-| `size_correct` | boolean | |
-| `weights_correct` | boolean | |
-| `year_correct` | boolean | |
-| `year_direction` | text, null | `newer`, `older`, or null when the year matched |
-| `reasoning_correct` | boolean | |
 | `created_at` | timestamptz | |
 
-`year_direction` is from the player's point of view of the truth: `newer` means the hidden model was released later than the guess.
+There is no year, size, weights, or reasoning column on a guess. Those are not match traits. Year and size live in `games.hints`.
 
 ### `usage`
 
@@ -245,11 +251,13 @@ One row per OpenRouter call, including failures.
 | `openrouter_generation_id` | text, null | |
 | `input_tokens` | int | default 0 |
 | `output_tokens` | int | |
-| `reasoning_tokens` | int | |
-| `cache_read_tokens` | int | |
+| `reasoning_tokens` | int | Admin cost fact. Not added into the score |
+| `cache_read_tokens` | int | Not added into the score |
 | `cost_usd` | numeric | 0 when the call failed |
 | `error_code` | text, null | |
 | `created_at` | timestamptz | |
+
+The score sums `input_tokens + output_tokens` where `error_code` is null.
 
 ## Profile trigger
 
@@ -273,29 +281,34 @@ for each row execute function public.handle_new_user();
 
 ## Queries
 
-Leaderboard, one category, one period. The function body is this query. `since` is the start of the window, or `-infinity` for all time.
+Leaderboard, one category, one period. The function body is this query. `since` is the start of the window, or `-infinity` for all time. Rank is the row number of the final order.
 
 ```sql
-select p.username,
-       count(*) as games,
-       round(avg(g.score))::int as avg_points,
-       avg((g.status = 'solved')::int) as solve_rate,
-       avg(g.message_count) filter (where g.status = 'solved') as avg_messages_to_solve
-from games g
-join profiles p on p.id = g.user_id
-where g.scored
-  and g.category = category
-  and g.finished_at is not null
-  and g.finished_at >= since
-group by p.id, p.username
-order by avg_points desc, solve_rate desc, games desc, p.username;
+with best as (
+  select distinct on (g.user_id)
+         g.user_id,
+         g.username,
+         g.score,
+         g.message_count,
+         g.finished_at
+  from games g
+  join categories c on c.id = g.category
+  where c.leaderboard
+    and g.category = category
+    and g.status in ('solved', 'miss')
+    and g.score is not null
+    and g.finished_at is not null
+    and g.finished_at >= since
+  order by g.user_id, g.score desc, g.message_count asc, g.finished_at asc
+)
+select username as name, score
+from best
+order by score desc, message_count asc, finished_at asc, username;
 ```
 
-One finished scored round is enough to appear. Rank is by average points. Games played is on the row so a one-game average and an 80-game average are not the same kind of number. Solved % counts `solved` only. Average messages counts solved rounds only, so a player who never solves does not get a flattering low number from giving up on message 1. The total is not a column. It is games times the average.
+`given_up` is excluded. A negative score remains. Grouping is by `user_id`, so shared usernames do not merge. The name on the row is the username copied onto that best round.
 
-`scored` is false for custom, so those rounds cannot pad a tab. Group by `p.id` as well as the name. The unique constraint already forbids shared names.
-
-Right company, missed the model. Use the best guess in the round (a later guess may correct an earlier miss). "Found" means any guess in that unfinished round hit it.
+Right company, never named the model. "Found" means any guess in that round hit it.
 
 ```sql
 select t.name as truth,
@@ -305,17 +318,19 @@ select t.name as truth,
 from games g
 join models t on t.id = g.model_id
 left join guesses gs on gs.game_id = g.id
-where g.status in ('finished', 'given_up')
+where g.status = 'miss'
 group by t.name
 order by company_found desc;
 ```
 
-Reveals:
+The model name in that query can also come from `games.traits`. Prefer the frozen name when the live row has been renamed.
+
+Hints bought:
 
 ```sql
 select hint, count(*) as times_bought
 from games g
-cross join lateral unnest(g.revealed) as hint
+cross join lateral unnest(g.hints) as hint
 group by hint
 order by times_bought desc;
 ```
@@ -331,6 +346,7 @@ join games g on g.id = gs.game_id
 join models t on t.id = g.model_id
 join models m on m.id = gs.guessed_model_id
 where gs.model_correct = false
+  and gs.guessed_model_id is not null
 group by t.name, m.name
 order by n desc;
 ```
@@ -357,3 +373,5 @@ where u.created_at >= date_trunc('month', timezone('utc', now())) at time zone '
 group by m.name
 order by usd desc;
 ```
+
+`reasoning_tokens` in that query is the admin cost column. It is not a game trait.

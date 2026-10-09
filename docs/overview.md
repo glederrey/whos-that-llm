@@ -1,22 +1,29 @@
 # Overview
 
-A chat game. A hidden model answers. The player has five messages to figure out which model it is. Each message earns one guess. A guess pays for every characteristic it gets right. Naming the exact model pays a jackpot on top. Revealing a characteristic the guess missed costs points. Every guess is stored, so we can see which models get confused with which.
+A chat game. A hidden model answers. The player has five messages. After each reply they name one model, or give up. Naming the model sets the base to 1000, and that is the maximum base. If they never name it, the base is 100 for the region and 300 for the company, when those matched. Year and size can be bought as hints. They add no points.
 
 The name on the site is **Who's that LLM**.
+
+## First build
+
+**All models** is the game to build first. One site. A player signs up or logs in before they can play. They get five messages, a word-by-word reply, a guess or a give-up after each reply, year and size hints, no-hint mode, and a result page.
+
+Company, family, region, latest, daily, and origin are specified in [Rules](rules.md) and come later. Size is a hint, not a category. The profile, the home weekly top 5, daily result stats, and the admin screens come later too. The pause flag exists from the first build, because a credit error pauses everyone.
 
 ## Stack
 
 | Piece | Role |
 |---|---|
 | Next.js on Node 22 | The site, and the only code that talks to a model |
-| Vercel AI SDK `ai` v7 and `@openrouter/ai-sdk-provider` | One call shape for every model |
+| Vercel AI SDK `ai` v7 and `@openrouter/ai-sdk-provider` | One call shape for every model. Replies stream word by word |
 | Supabase Auth | Google and email/password, same user table |
 | Supabase Postgres | Catalog, games, guesses, cost ledger |
-| OpenRouter | One API key, one bill, US / EU / CN models |
+| Supabase Storage | Later. Company logos, with a URL as the fallback |
+| OpenRouter | One API key, one bill, USA / Europe / China models |
 | Vercel Hobby | Hosting, HTTPS, a `*.vercel.app` URL |
 | A Python notebook later | Charts the admin page does not have |
 
-The browser never receives the OpenRouter key, the Supabase secret key, or the hidden model id of an active round.
+The browser never receives the OpenRouter key, the Supabase secret key, or the hidden model id of an active round. The guess list the browser receives is logo, company, and name for the models the server has already kept.
 
 Pages and route handlers are one Next.js app. The handlers are the backend: they hold the keys, call OpenRouter, and write the game. There is no second server. A split would add another deploy and another hop on every message, for a site with one client. Supabase is the database and the login, not an application server. The Python notebook stays outside, for charts.
 
@@ -38,28 +45,36 @@ No VPS, no extra email service, no second database.
 | What | What to do | When |
 |---|---|---|
 | **GitHub** | Already exists: `glederrey/whos-that-llm`. Vercel deploys from it. | Done |
-| **Supabase** | One project. Copy the project URL, the publishable key, and the secret key. Turn on Email and Google under Authentication. | Before auth works |
+| **Supabase** | One project. Copy the project URL, the publishable key, and the secret key. Turn on Email and Google under Authentication. Set the site URL and the redirect URLs to the main page, `/`. | Before auth works |
 | **Google Cloud** | One project on the existing Google account. No billing. OAuth client (Web). Authorized redirect: `https://<project-ref>.supabase.co/auth/v1/callback`. Paste the id and secret into the Supabase Google provider. | Before the Google button works |
-| **OpenRouter** | Account, about $10 of credit, one API key, a monthly cap around $20. The key stays in env vars. | Before the first real model call |
+| **OpenRouter** | Account, about $10 of credit, one API key, a monthly cap around $20. The key stays in env vars. Gael tops up credits himself. | Before the first real model call |
 | **Vercel** | Sign up with GitHub. Hobby. Paste the env vars from [Build](build.md). | When the app is deployed. Local play does not need it |
 | **Ko-fi** | One page for tips. Stay on the free setting, so a one-time tip pays no Ko-fi fee. Connect Stripe. Set the page currency to euros. Paste the page URL into `tipUrl`. | Before the footer shows **Tip** |
 | **Domain registrar** | Buy the name and add the two DNS records. | After someone besides us is playing |
 
 Ko-fi does not price a page in francs, so euros avoids a second conversion on a European card. Stripe pays out to the Swiss account. A tip is not an account on this site, and it buys nothing in the game. The API bill stays on the OpenRouter cap until tips actually cover it.
 
-Supabase sends confirmation and password-reset mail. That quota is enough to start. Custom SMTP is the fix if those emails start failing.
+Supabase sends confirmation and password-reset mail. Both links return to the main page. That quota is enough to start. Custom SMTP is the fix if those emails start failing.
 
-Admin is not a role you hand out. `ADMIN_EMAIL` in the server env is the one address that can open `/admin`. Sign in with that address (Google or email/password, as long as the session email matches). Everyone else gets the same 404 as a missing page, and the site renders no Admin link for them. An empty `ADMIN_EMAIL` means there is no admin.
+Admin is not a role you hand out. It is a later screen. `ADMIN_EMAIL` in the server env is the one address that can open `/admin`. Sign in with that address (Google or email/password, as long as the session email matches). Everyone else gets the same 404 as a missing page, and the site renders no Admin link for them. An empty `ADMIN_EMAIL` means there is no admin.
 
 ## Auth
 
+Players sign up or log in before they can play. The main page is public. Every play route requires a session.
+
 Both methods stay on, and both write into `auth.users`. Link identities that share an email, so one person does not get two accounts.
 
-Email confirmation stays on. The first session with no username goes to `/welcome`. Usernames are 3–20 characters, `[A-Za-z0-9_]`, unique. Reject `admin`, `system`, `who`, and `llm`. The profile name is what the leaderboard shows today. The game row keeps a copy from the moment the round started, so a rename does not rewrite history.
+Email confirmation stays on. Confirmation and password-reset links return to `/`. The main page completes the session from that return. The first session with no username goes to `/welcome`.
+
+A username is 3–20 characters after trimming. Capitals and punctuation are allowed. It does not have to be unique. `profiles.id` is the internal id that links the auth user (and therefore the email) to the username. Changing the username, and a profile with stats and past games, come later. The game row keeps a copy of the username from the moment the round started, so a later rename does not rewrite history.
+
+## Credits
+
+OpenRouter 402, or an explicit credit error, sets `app_settings.paused` and pauses the game for everyone. Admin can also pause. Gael tops up credits on OpenRouter himself. There is no top-up inside the site. Unpause from the admin switch once that screen exists. Until then, clear the flag in the database after the credit is topped up.
 
 ## Limits the player can see
 
-These three are on the landing page, the lobby, the rules, and the round.
+These three are on the landing page, the lobby, and the round.
 
 | Limit | Value | On screen |
 |---|---|---|
@@ -71,20 +86,22 @@ Also:
 
 - A user message is at most **500 characters**. The input shows the counter.
 - The assistant reply is capped at **500 output tokens**. The server clamps this. Nothing in the database can raise it.
+- An empty or whitespace-only user message is rejected and does not spend a turn.
+- An empty or whitespace-only successful model reply still spends the message.
 - One open round per account. The lobby offers Continue.
-- The daily model is once per account per UTC day, and it counts toward the 10.
+- The daily model, when that category exists, is once per account per UTC day, and it counts toward the 10.
 
-The hourly check and the insert run in one transaction. Two tabs cannot both take the last slot.
+The hourly check and the insert run in one transaction. Two tabs cannot both take the last slot. A started round counts, including a give-up before the first message.
 
 ## What a round costs
 
-Five replies are 2,500 output tokens, plus the growing transcript on the way in, plus whatever the low reasoning setting still emits. October 2026 list prices, for a full round:
+Five replies are 2,500 output tokens, plus the growing transcript on the way in. A thinking model can spend part of that budget before any visible words. That spend is an admin cost fact. It is not a trait the player can score or buy. October 2026 list prices, for a full round:
 
 | Tier | Examples | About one full round |
 |---|---|---|
 | Small | Haiku 5.5, a small GPT, DeepSeek Flash | under 1 cent |
 | Medium | Sonnet 5.5, GPT-5.6 Sol | about 5 cents |
-| Large | Opus 5.5 | about 10 cents, more if reasoning tokens stay high |
+| Large | Opus 5.5 | about 10 cents, more when the model spends heavily before the visible reply |
 | Leave out | Fable | several times an Opus round |
 
-Ten Opus rounds in an hour is about a dollar for that player. The OpenRouter monthly cap is the backstop. Every call stores `cost_usd` and `reasoning_tokens`. A model whose "lowest" effort still spends heavily gets disabled from the admin page.
+Ten Opus rounds in an hour is about a dollar for that player. The OpenRouter monthly cap is the backstop. Every call stores `cost_usd` and `reasoning_tokens`. A model whose spend stays high gets disabled from the admin page, once that page exists.
