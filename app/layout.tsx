@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { DM_Sans } from "next/font/google";
+import Script from "next/script";
 import { SiteFooter } from "@/components/site-footer";
 import { ThemeToggle } from "@/components/theme-toggle";
 import "./globals.css";
@@ -17,10 +18,10 @@ const themeScript = `(function(){try{var s=localStorage.getItem("theme");var t=s
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={font.variable} suppressHydrationWarning>
-      <head>
-        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
-      </head>
       <body>
+        <Script id="theme-init" strategy="beforeInteractive">
+          {themeScript}
+        </Script>
         <div className="shell">
           <header className="header">
             <a className="brand" href="/">

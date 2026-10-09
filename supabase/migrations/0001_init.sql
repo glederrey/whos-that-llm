@@ -537,9 +537,24 @@ create policy profiles_update_username on public.profiles
   using (id = auth.uid() and username is null)
   with check (id = auth.uid());
 
-grant select on public.companies, public.families, public.models_public to anon, authenticated;
+-- New Supabase projects do not grant Data API access on tables created in the SQL editor.
+grant usage on schema public to anon, authenticated, service_role;
+grant select on public.companies, public.families, public.models_public, public.categories to anon, authenticated;
 grant select, update on public.profiles to authenticated;
-grant execute on function public.leaderboard(text, timestamptz) to anon, authenticated;
+grant select, insert, update, delete on
+  public.companies,
+  public.families,
+  public.models,
+  public.categories,
+  public.app_settings,
+  public.profiles,
+  public.games,
+  public.messages,
+  public.guesses,
+  public.usage
+to service_role;
+grant select on public.models_public to service_role;
+grant execute on function public.leaderboard(text, timestamptz) to anon, authenticated, service_role;
 
 revoke all on function public.start_game(uuid, int, text, text, boolean, text, text[], jsonb, jsonb) from public, anon, authenticated;
 revoke all on function public.claim_model_call(uuid, uuid) from public, anon, authenticated;

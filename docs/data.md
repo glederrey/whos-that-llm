@@ -20,7 +20,7 @@ The admin round page needs the text, because a 500-token reply has room to say i
 
 | Table | `anon` / `authenticated` | Service role |
 |---|---|---|
-| `companies`, `families`, `models_public`, `categories` where `enabled` | `select` | write on the base tables |
+| `companies`, `families`, `models_public`, `categories` where `enabled` | `select`. The table grant is required as well as the policy. A new Supabase project does not add it | write on the base tables |
 | `profiles` | `select` own row. `update` own `username` only, and only while that column is null until profile edits exist | write |
 | `games`, `messages`, `guesses`, `usage` | no privileges | read and write |
 | `leaderboard(category, since)` | `execute` | execute |
