@@ -28,7 +28,7 @@ One home page for the picture, and the rest for the work. A subnav sits on every
 
 The page you open to see if the game is fine. It does not edit the roster.
 
-**Pause the game.** Sets `app_settings.paused`. While paused, starting a round and sending a message return `503` `paused`. Open rounds can still be read and given up. The public lobby shows **The game is paused.** and disables Play. This is the switch for a runaway bill. The OpenRouter monthly cap remains the backstop if the process is down.
+**Pause the game.** Sets `app_settings.paused`. While paused, starting a round and sending a message return `503` `paused`. A guess, a skip, a reveal, and a give-up still work, so a player who already has a reply can finish that turn. They cannot send the next message until the game is unpaused. The public lobby shows **The game is paused.** and disables Play. This is the switch for a runaway bill. The OpenRouter monthly cap remains the backstop if the process is down.
 
 **Spend**, from `GET https://openrouter.ai/api/v1/key` next to our `usage` sums:
 
@@ -66,9 +66,9 @@ The table shows list price beside average `cost_usd` and average `reasoning_toke
 
 Two kinds.
 
-**Built-ins** are seeded: All models, Company, Family, Region, Size, Latest, Daily, Origin, Custom. They have special screens (a company picker, three region buttons, the custom checklist). You can rename the card, edit the sentence, change `sort_order`, set `enabled` false, and edit `jackpot_multiplier` on the scored ones. You cannot delete them and you cannot change Custom to scored. Turning Daily off hides the card. Old daily rounds stay on the leaderboard as long as that category is scored and has finished games.
+**Built-ins** are seeded: All models, Company, Family, Region, Size, Latest, Daily, Origin, Custom. They have special screens (a company picker, three region buttons, the custom checklist). You can rename the card, edit the sentence, change `sort_order`, set `enabled` false, and edit `jackpot_multiplier` on the scored ones. You can turn `token_scored` on or off for a scored built-in. Daily starts on. The control is absent on Custom, and the route rejects it there. You cannot delete a built-in and you cannot change Custom to scored. Turning Daily off hides the card. Old daily rounds stay on the leaderboard as long as that category is scored and has finished games. A round already started keeps the flag it copied into `rules`.
 
-**Pools** are the categories you create. A pool is a name, a sentence, a jackpot multiplier (default 1), a scored flag (default on), and a checklist of models. The draw is uniform among the members that are currently `enabled`. Given chips follow the usual rule on that set. The player sees the name, the sentence, and the count. They do not see the member list before the round, or the category is a coin flip among names you just showed them.
+**Pools** are the categories you create. A pool is a name, a sentence, a jackpot multiplier (default 1), a scored flag (default on), a token-scored flag (default off), and a checklist of models. The draw is uniform among the members that are currently `enabled`. Given chips follow the usual rule on that set. The player sees the name, the sentence, and the count. They do not see the member list before the round, or the category is a coin flip among names you just showed them. `token_scored` cannot be set while `scored` is false.
 
 Create needs at least two member rows. They may be disabled. The lobby card stays disabled with **Not enough models** until two of them are enabled.
 

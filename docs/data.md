@@ -21,9 +21,9 @@ The admin round page needs the text, because a 500-token reply has room to say i
 | `companies`, `families`, `models_public`, `categories` where `enabled` | `select` | write on the base tables |
 | `profiles` | `select` all rows. `update` own `username` only | write |
 | `games`, `messages`, `guesses`, `usage` | no privileges | read and write |
-| `leaderboard` | `select` | read |
+| `leaderboard(category, since)` | `execute` | execute |
 
-`leaderboard` is a `security definer` view. It exposes aggregates only.
+`leaderboard` is a security definer function, not a view of game rows. It exposes aggregates only. `anon` can call it, so the landing page can show the weekly top 5 before login.
 
 `profiles` is created by a trigger on `auth.users`. The user does not insert their own profile row.
 
@@ -72,7 +72,7 @@ The admin round page needs the text, because a 500-token reply has room to say i
 
 Checks:
 
-- `region` and `size` are the enums above.
+- `size` is `small`, `medium`, or `large`. Region is not a column here.
 - `enabled` implies `released_on` is not null.
 - `enabled` and `reasoning` together imply `provider_settings` is not `{}`.
 
@@ -93,6 +93,7 @@ The lobby and the leaderboard read this table. The nine built-in rows are seeded
 | `enabled` | boolean | False hides the card. Past rounds stay |
 | `scored` | boolean | False means no score and no leaderboard tab. Custom is the built-in false |
 | `jackpot_multiplier` | numeric | Copied into `games.rules` at start. Built-ins use the values in [Rules](rules.md). A new pool defaults to 1 |
+| `token_scored` | boolean | When true, the stored score is the points scaled by tokens. Copied into `games.rules`. Daily is true. Other built-ins are false. A new pool defaults to false. Ignored when `scored` is false |
 | `sort_order` | int | Lobby order |
 | `created_at` | timestamptz | |
 
@@ -133,7 +134,7 @@ One row per round.
 | Column | Type | Notes |
 |---|---|---|
 | `id` | uuid, pk | default `gen_random_uuid()` |
-| `user_id` | uuid, fk `profiles` | |
+| `user_id` | uuid, fk `profiles` | on delete restrict. Deleting the auth user will not delete their rounds |
 | `username` | text | Copied at insert |
 | `category` | text, fk `categories` | The category id, including pools created later |
 | `pool_key` | text, null | `anthropic`, `opus`, `us`, `large`, `all-latest`, or a company id for latest-of-one-company. Null for `all`, `daily`, `origin`, `custom` |
@@ -146,7 +147,7 @@ One row per round.
 | `message_count` | int | 0–5. User messages stored |
 | `awaiting_guess` | boolean | True after a stored reply, false after a guess or a skip |
 | `scored` | boolean | Copied from the category at start. The leaderboard ignores false |
-| `score` | int, null | Written once, at the end, when `scored`. `max(0, raw)`. Stays null for custom |
+| `score` | int, null | Written once, at the end, when `scored`. The points, or the token-scaled points when `rules.tokenScored`. Stays null for custom |
 | `score_breakdown` | jsonb, null | Written once, at the end, when `scored` |
 | `daily_key` | date, null | UTC date. Set only for `daily` |
 | `started_at` | timestamptz | default `now()`. The hourly cap counts these |
@@ -169,6 +170,8 @@ Indexes:
   "jackpotBase": 800,
   "jackpotStep": 100,
   "categoryMultiplier": 1,
+  "tokenScored": false,
+  "tokenScale": 1000,
   "match": {
     "company": 200,
     "family": 150,
@@ -270,7 +273,7 @@ for each row execute function public.handle_new_user();
 
 ## Queries
 
-Leaderboard, one category, one period. `$2` is the start of the window, or `-infinity` for all time.
+Leaderboard, one category, one period. The function body is this query. `since` is the start of the window, or `-infinity` for all time.
 
 ```sql
 select p.username,
@@ -281,9 +284,9 @@ select p.username,
 from games g
 join profiles p on p.id = g.user_id
 where g.scored
-  and g.category = $1
+  and g.category = category
   and g.finished_at is not null
-  and g.finished_at >= $2
+  and g.finished_at >= since
 group by p.id, p.username
 order by avg_points desc, solve_rate desc, games desc, p.username;
 ```
@@ -350,7 +353,7 @@ select m.name,
        sum(u.reasoning_tokens) as reasoning_tokens
 from usage u
 join models m on m.id = u.model_id
-where u.created_at >= date_trunc('month', now() at time zone 'utc')
+where u.created_at >= date_trunc('month', timezone('utc', now())) at time zone 'utc'
 group by m.name
 order by usd desc;
 ```

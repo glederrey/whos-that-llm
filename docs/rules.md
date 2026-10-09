@@ -64,10 +64,12 @@ Compute it from the pool, not from a hardcoded list per category:
 
 ```
 pool = enabled models matching the category and pool_key
-for each characteristic except the origin exception:
+for each characteristic:
   if the pool has exactly one distinct value:
     that characteristic is given, and the value is that one
 ```
+
+Origin skips this. It has no chip board.
 
 Consequences, so we do not special-case them in the UI:
 
@@ -75,8 +77,6 @@ Consequences, so we do not special-case them in the UI:
 - A family that belongs to one company gives family, company, and region. Size is given when that family has one size.
 - Region mode gives region. Size mode gives size.
 - All-models mode gives nothing, unless the whole roster happens to share a value. Do not enable a roster that is all American and then act surprised that region is given.
-
-Origin exception: `region` is never given and never revealable. It is the answer. The other six still follow the rule above.
 
 ### Known values
 
@@ -92,7 +92,7 @@ If one model is left in the list, the player still has to submit it. The round d
 
 ## Reveals
 
-A missed chip is a button. Clicking it shows the true value, subtracts the cost, appends the key to `games.revealed`, and narrows the list. Each key can be revealed once.
+A missed chip is a button. Clicking it shows the true value, subtracts the cost, appends the key to `games.revealed`, and narrows the list. Each key can be revealed once. A chip that is still unknown is not a button. Origin has no reveals.
 
 The result page shows every characteristic. That is the end of the round, not a reveal, and it costs nothing.
 
@@ -100,20 +100,35 @@ The result page shows every characteristic. That is the end of the round, not a 
 
 The lobby checkbox **Play without hints** is stored as `games.blind` and cannot change mid-round.
 
-Blind removes the reveal buttons. The server rejects a reveal. Guess feedback stays: correct, wrong, and year direction. The raw score is multiplied by **1.25** because the missing values could not be bought.
+Blind removes the reveal buttons. The server rejects a reveal. Guess feedback stays: correct, wrong, and year direction. The raw score is multiplied by **1.25** because the missing values could not be bought. Origin stores `blind` false and does not multiply.
 
 ## Scoring
 
-A round that never names the model still has a score. The exact model is a jackpot on top of the characteristics. The stored score is `max(0, raw)`. The breakdown shows the raw lines, including a negative raw.
+A round that never names the model still has a score. Solving pays a jackpot on top of the characteristics. Origin pays the jackpot only, for a correct region, and the characteristics add nothing. The breakdown shows the raw lines, including a negative raw, and the token line on token-scored categories.
 
 ```
-raw = category_multiplier * jackpot     # jackpot is 0 if the model was never named
+raw = category_multiplier * jackpot     # jackpot is 0 unless this guess solved the round
     + sum(match points the player guessed, ignoring given characteristics)
     - sum(reveal costs)
 raw = raw * 1.25                         # only when blind
-
-score = max(0, raw)
 ```
+
+On a token-scored category the points above are not the stored score. The round still pays the same characteristics, the same jackpot, and the same blind multiplier. At the end those points are scaled by the tokens the successful calls actually used.
+
+```
+points = max(0, raw)
+tokens = sum(input_tokens + output_tokens)   # successful calls only
+
+score = round(points)                                       # tokenScored false
+score = 0                                                   # tokenScored and tokens is 0
+score = max(0, round(points * tokenScale / tokens))         # tokenScale is 1000
+```
+
+A chat of 1,000 tokens leaves the points unchanged. Shorter than that raises them. Longer shrinks them. Rounding is to the nearest integer. A half rounds away from zero. `raw` can land on a half because of the 1.25 multiplier, so the non-token score is rounded too.
+
+`tokens` sums `usage` rows for this round whose `error_code` is null. A failed call is left out, the same way it does not spend a message. `reasoning_tokens` and `cache_read_tokens` are not added. Some providers already count reasoning inside `output_tokens`, and adding the column again would count it twice.
+
+The flag is `categories.token_scored`, copied into `games.rules.tokenScored` when the round starts. Daily is seeded on. The other built-ins are seeded off. A pool defaults off, and admin can turn it on. Custom cannot, because Custom has no score. On a mixed pool the flag taxes whoever drew the model that writes long replies. Daily is safe to turn on because every player that day has the same model.
 
 The jackpot depends on the message number of the solving guess.
 
@@ -146,9 +161,9 @@ Reveal costs more than the match, so buying the answer is a worse deal than gues
 | Company | 0.60 |
 | Origin | 0.30 |
 
-The multiplier applies to the jackpot only. A company point is worth 200 in every mode, and 0 when the pool already gave the company away.
+The multiplier applies to the jackpot only. A company point is worth 200 in every mode except origin, and 0 when the pool already gave the company away. Origin has no characteristic points.
 
-While a scored round is active, the header shows the banked score (matches so far, minus reveals, times 1.25 if blind) and the jackpot if they name the model on the open message. Nothing is written to `games.score` until the round ends. The banked number is recomputed from `games.rules`, the guess rows, and `revealed`, so it cannot drift from a second counter.
+While a scored round is active, the header shows the banked score (matches so far, minus reveals, times 1.25 if blind) and the jackpot if they name the model on the open message. On a token-scored round both numbers are the scaled ones, and the header also shows the token count. Nothing is written to `games.score` until the round ends. The banked number is recomputed from `games.rules`, the guess rows, `revealed`, and the successful `usage` rows, so it cannot drift from a second counter.
 
 Custom rounds skip this section. `score` and `score_breakdown` stay null. Reveals still open the true value, and they cost nothing. Blind still hides the reveal buttons. There is no 1.25 multiplier, because there is no score to multiply.
 
@@ -172,9 +187,11 @@ They reveal family (−180). The list becomes that family. Message 2, they name 
 
 The same solve on message 5 pays a 400 jackpot instead of 700. A round that finds company and family and never the model scores `200 + 150`, plus whatever else matched, minus reveals.
 
+Daily is token-scored. The same 1,200 points, with 1,500 tokens on the successful calls, stores `round(1200 * 1000 / 1500) = 800`. Another player with the same points and 3,000 tokens stores 400.
+
 ## Categories
 
-The call is the same in every category: 5 messages, 500 characters, 500 output tokens, one system prompt, that model's low reasoning settings. A category only changes the pool and therefore which chips are given. Which cards exist is a table, `categories`, edited in admin. The built-ins below are seeded. A pool you create there is one more row: a fixed set of models, a multiplier, and a scored flag.
+The call is the same in every category: 5 messages, 500 characters, 500 output tokens, one system prompt, that model's low reasoning settings. A category changes the pool, and therefore which chips are given, plus the jackpot multiplier and whether the score is scaled by tokens. Which cards exist is a table, `categories`, edited in admin. The built-ins below are seeded. A pool you create there is one more row: a fixed set of models, a multiplier, a scored flag, and a token-scored flag.
 
 | Category | Pool | Notes |
 |---|---|---|
@@ -184,10 +201,20 @@ The call is the same in every category: 5 messages, 500 characters, 500 output t
 | `region` | `us`, `eu`, or `cn`, at least 2 enabled models | Region is given. Built-in |
 | `size` | `small`, `medium`, or `large`, at least 2 | Size is given. Built-in |
 | `latest` | `is_latest` models, or one company's latest when it has at least 2 | Built-in |
-| `daily` | One model, same for every player that UTC day | Once per account. Built-in |
-| `origin` | Every enabled model | The guess is the region. Built-in |
+| `daily` | One model, same for every player that UTC day | Once per account. Token-scored. Built-in |
+| `origin` | Every enabled model | One region guess. No chips. Built-in |
 | `custom` | The models the player checked, at least 2 | Not scored. Built-in |
 | `pool` | Members of a category you created, that are enabled | At least 2 or the card stays off |
+
+### Origin
+
+Three buttons: American, European, Chinese. No chip board, no reveals, no model search. The other six characteristics are not shown and do not pay.
+
+The player still has five messages. They have one guess for the whole round. After a reply they may skip and keep talking, and the guess is still available. The fifth reply has no skip. They pick a region. A guess ends the round, right or wrong. There is no second try.
+
+A correct region solves the round. The jackpot uses that message's number, then the 0.30 multiplier. Message 1 pays `800 * 0.30`. Message 5 pays `400 * 0.30`. A wrong region scores 0. Blind is ignored. There is nothing to hide, so the 1.25 multiplier does not apply.
+
+The result page names the model. The round itself never does.
 
 ### Custom
 
@@ -213,8 +240,8 @@ Size, also manual:
 
 `is_latest` is a manual flag, usually one to three models per company.
 
-The daily model is `hash(utc date) mod enabled_count`, computed when the first player of the day starts, then stored so later players get the same id. Do not publish it ahead of time. The result page may say how many players solved it once that day has finished rounds.
+The first daily start of a UTC day draws one model from the enabled roster and freezes that id and that roster on the day. Later starts copy both, so a model turned off at noon is still guessable today and a model turned on at noon is not added. Do not publish the id ahead of time. Starting spends the day, including a give-up before the first message. The result page may say how many players solved it once that day has finished rounds.
 
-A pool with fewer than 2 enabled models is not listed, except daily and origin, which draw from the whole enabled roster. Europe will be thin. A row with fewer than 4 models still appears, and it shows the count. A category with `enabled = false` is not listed at all.
+A pool with fewer than 2 enabled models is not listed, except daily and origin, which draw from the whole enabled roster. An empty roster is not playable in any category. Europe will be thin. A row with fewer than 4 models still appears, and it shows the count. A category with `enabled = false` is not listed at all.
 
-Two models side by side, and a blind ranking vote, wait. Both are different games.
+Two models side by side, and a blind ranking vote, are different games. They are not this one.

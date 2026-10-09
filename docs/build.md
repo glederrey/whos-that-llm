@@ -36,7 +36,7 @@ supabase/migrations/            the tables in Data
 
 `lib/game.ts` is the only place that decides a chip, a price, or a pool. Routes load rows and call it. Components render the public object and do not reimplement the rules.
 
-`lib/config.ts` exports the object stored on `games.rules`, plus `hourlyCap: 10` and the built-in jackpot multipliers. Those multipliers are seeded into `categories`. After that, a round copies the multiplier off the category row, so an admin edit does not require a deploy. The rules page reads the category rows for the multipliers and `config.ts` for everything else.
+`lib/config.ts` exports the object stored on `games.rules`, plus `hourlyCap: 10`, `tokenScale: 1000`, `tipUrl`, and the built-in jackpot multipliers. Those multipliers are seeded into `categories`, and Daily is seeded with `token_scored` true. After that, a round copies the multiplier and the token flag off the category row, so an admin edit does not require a deploy. The rules page reads the category rows for the multipliers and the token flag, and `config.ts` for everything else. `tipUrl` is the Ko-fi page. Empty hides the footer link.
 
 ## Env
 
@@ -75,7 +75,7 @@ Leave Fable out. For each reasoning model, the seed starts with `{ "reasoning": 
 
 Companies to insert first: Anthropic `us`, OpenAI `us`, DeepSeek `cn`, Mistral `eu`. Logos can be simple letter marks until real files exist. The path still has to resolve.
 
-The seed script inserts missing ids and does not update a row whose `updated_at` is newer than the seed file. Admin edits survive a re-seed.
+The seed script inserts missing ids and does not update a row whose `updated_at` is newer than the seed file. Admin edits survive a re-seed. Built-in categories get `sort_order` in the order of the blurb table in [Pages](pages.md).
 
 ## Order
 
