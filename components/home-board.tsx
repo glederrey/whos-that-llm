@@ -150,28 +150,22 @@ export function HomeBoard({
                   ) : null}
                 </span>
                 {open ? (
-                  <div className="category-actions">
-                    <button type="button" className="button" disabled={!continueGame && disabled} onClick={() => void start(category.id)}>
-                      {continueGame ? "Continue" : "Play"}
-                    </button>
-                    {category.id === "all" && !continueGame ? (
-                      <label className="check">
-                        <input
-                          type="checkbox"
-                          checked={noHint}
-                          onChange={(event) => setNoHint(event.target.checked)}
-                        />
-                        <span>
-                          Play without hints.
-                          <span className="muted"> No year or size hints. No match feedback. Score × 1.5.</span>
-                        </span>
-                      </label>
-                    ) : null}
-                  </div>
+                  <button type="button" className="button" disabled={!continueGame && disabled} onClick={() => void start(category.id)}>
+                    {continueGame ? "Continue" : "Play"}
+                  </button>
                 ) : (
                   <span className="pill">Not open yet</span>
                 )}
               </div>
+              {category.id === "all" && open && !continueGame ? (
+                <label className="check category-check">
+                  <input type="checkbox" checked={noHint} onChange={(event) => setNoHint(event.target.checked)} />
+                  <span>
+                    Play without hints.
+                    <span className="muted"> No year or size hints. No match feedback. Score × 1.5.</span>
+                  </span>
+                </label>
+              ) : null}
             </div>
           );
         })}
