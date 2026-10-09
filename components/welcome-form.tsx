@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 
 export function WelcomeForm({ next }: { next: string }) {
   const router = useRouter();
-  const [username, setUsername] = useState("");
+  const [username, setUsername] = useState("Human");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -38,7 +38,7 @@ export function WelcomeForm({ next }: { next: string }) {
         Username
         <input
           value={username}
-          placeholder="ada"
+          placeholder="Human"
           onChange={(event) => setUsername(event.target.value)}
           autoComplete="nickname"
         />

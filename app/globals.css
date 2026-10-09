@@ -50,17 +50,34 @@ button { cursor: pointer; }
   justify-content: space-between;
   padding: 18px 0 8px;
 }
-.brand { display: flex; align-items: center; text-decoration: none; }
-.brand img { height: 42px; width: auto; }
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--text);
+  font-size: 22px;
+  font-weight: 700;
+  text-decoration: none;
+}
+.brand img { height: 72px; width: auto; }
 html[data-theme="light"] .for-dark { display: none; }
 html[data-theme="dark"] .for-light { display: none; }
+.theme-toggle {
+  width: 40px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+.theme-toggle svg { width: 20px; height: 20px; }
 .icon-button, .button, .button-quiet {
   border-radius: 8px;
   border: 1px solid transparent;
   background: var(--teal);
   color: #062e2e;
   padding: 10px 14px;
-  font-weight: 650;
+  font-weight: 500;
 }
 .button:hover, .icon-button:hover { background: var(--teal-press); color: white; }
 .button:disabled, .icon-button:disabled { opacity: 0.45; cursor: not-allowed; }
@@ -80,7 +97,8 @@ html[data-theme="dark"] .button-danger { color: var(--miss); border-color: var(-
   color: var(--mute);
   font-size: 14px;
 }
-.footer a { display: inline-flex; align-items: center; gap: 8px; text-decoration: none; }
+.credit { display: inline-flex; align-items: center; flex-wrap: wrap; gap: 6px; margin: 0; }
+.credit a { display: inline-flex; align-items: center; gap: 6px; }
 .cursor-mark { width: 16px; height: 16px; }
 
 h1 { font-size: 40px; line-height: 1.1; margin: 12px 0; }

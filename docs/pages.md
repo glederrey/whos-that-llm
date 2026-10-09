@@ -43,7 +43,7 @@ Flat color from the palette above. No gradient fills, no glass, no blur, no glow
 
 The landing page is the title, one sentence, the limits, a short line for each category, and Play. No feature grid, no quotes, no logo wall, no animated background. Teal marks the next action. It is not a wash across the page.
 
-The header mark follows the theme. Light theme uses the dark-ink logo (`logo/dark`). Dark theme uses the light-ink logo (`logo/light`). The favicon is the dot version. Next serves files from `public/`, so those files are copied there. The folders are named for the ink, not for the theme.
+The header mark follows the theme. Light theme uses `logo/light`. Dark theme uses `logo/dark`. The mark sits to the left of the name **Who's that LLM**. The favicon is the dot version. Next serves files from `public/`, so those files are copied there. The folders are named for the theme.
 
 ## Phones
 
@@ -58,7 +58,7 @@ Admin is usable on a phone and comfortable on a computer. Playing a round is the
 On every page, including the round and admin.
 
 - **Tip** opens the Ko-fi page in a new tab. The URL is `tipUrl` in `lib/config.ts`. An empty string hides the link, so the footer can ship before the page exists.
-- **Created by Gael Lederrey with Cursor**, with the Cursor logo, linking to `https://cursor.com`.
+- **Created by Gael Lederrey with Cursor**, with the Cursor logo. **Gael Lederrey** links to `https://github.com/glederrey`. **Cursor** and the logo link to `https://cursor.com`.
 
 A tip does not raise the hourly cap, change a score, or put a name on the leaderboard.
 
@@ -107,7 +107,7 @@ One card, two tabs: **Sign in** and **Create account**.
 Shown once, when `profiles.username` is null.
 
 - **Pick a username.**
-- Field, placeholder `ada`
+- Field, placeholder `Human`. The field starts filled with **Human**, so Save keeps that name unless they change it.
 - Button: **Save**
 - Shape error: **3 to 20 characters.**
 - Capitals and punctuation are allowed. Shared names are allowed. Save stores the name on that profile.

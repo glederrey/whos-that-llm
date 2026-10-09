@@ -28,8 +28,34 @@ export function ThemeToggle() {
 
   const next = theme === "dark" ? "light" : "dark";
   return (
-    <button type="button" className="icon-button" onClick={() => apply(next)} aria-label={`Switch to ${next} theme`}>
-      {next === "dark" ? "Dark" : "Light"}
+    <button type="button" className="icon-button theme-toggle" onClick={() => apply(next)} aria-label={`Switch to ${next} theme`}>
+      {theme === "dark" ? <SunIcon /> : <MoonIcon />}
     </button>
+  );
+}
+
+function SunIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" strokeWidth="2" />
+      <path
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"
+      />
+    </svg>
+  );
+}
+
+function MoonIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path
+        fill="currentColor"
+        d="M16.5 3.2a8.5 8.5 0 1 0 4.3 14.6A9 9 0 0 1 16.5 3.2Z"
+      />
+    </svg>
   );
 }
