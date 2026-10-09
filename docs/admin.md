@@ -106,4 +106,4 @@ Family pays nothing. Feedback can still say **Same family.** A company pool for 
 
 ## Rounds (`/admin/rounds`)
 
-When, username, category, pool, model name, status, score, messages, cost, reasoning tokens. Filters for today, for open rounds, and for one model. Open a row for the transcript and each guess. This is how a model that says its own name gets caught. Check it after the first evening, and after any prompt change. The score on a give-up is shown here even though that round is off the leaderboard. A negative score is shown as stored.
+When, username, category, pool, model name, status, score, messages, cost, reasoning tokens. Filters for today, for open rounds, and for one model. Open a row for the transcript and each guess. This is how a model that says its own name gets caught. The same rows stay after that check. They are the chat dataset, joined to the round by `games.id`. Check it after the first evening, and after any prompt change. The score on a give-up is shown here even though that round is off the leaderboard. A negative score is shown as stored.

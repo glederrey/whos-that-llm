@@ -12,9 +12,13 @@ There is no separate "who played when" table. `games.started_at` and `games.user
 
 ## Why transcripts are stored
 
+Each round is one row in `games`. That row's `id` is the session id. The player's message and the model's reply are rows in `messages`, tied to that id by `game_id`. One turn is two rows with the same `turn`: `role = user` is what they sent, `role = assistant` is what the model answered.
+
 A user message is at most 500 characters. A reply is at most 500 tokens, about 2 KB. A full round is about 15 KB. Ten thousand rounds are about 150 MB.
 
-The admin round page needs the text, because a 500-token reply has room to say its own name. Score, guesses, and the leaderboard do not read `messages`. Old transcripts can be deleted later without moving a point.
+The text is kept. Later analysis reads `messages` joined to `games` on `game_id`. The admin round page also reads it, because a 500-token reply has room to say its own name. Score, guesses, and the leaderboard do not read `messages`, so a point does not depend on the text. That is not a reason to delete the rows. A round and its transcript stay.
+
+A failed call writes `usage` and does not write `messages`, because there is no stored reply. The system prompt is not a row.
 
 ## Access
 
@@ -208,6 +212,8 @@ One entry per id in `pool_model_ids`, including the hidden model. `given` lists 
 `score_breakdown` is an array of `{ "label": "Named the model", "points": 1000 }`, in the order [Rules](rules.md) specifies. `score_explanation` is the public lines, in the order [Pages](pages.md) specifies.
 
 ### `messages`
+
+The transcript of one round. Keep these rows. Do not delete old transcripts to reclaim space.
 
 | Column | Type | Notes |
 |---|---|---|

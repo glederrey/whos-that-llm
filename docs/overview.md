@@ -19,7 +19,7 @@ Company, family, region, latest, daily, and origin are specified in [Rules](rule
 | Next.js on Node 22 | The site, and the only code that talks to a model |
 | Vercel AI SDK `ai` v7 and `@openrouter/ai-sdk-provider` | One call shape for every model. Replies stream word by word |
 | Supabase Auth | Google and email/password, same user table |
-| Supabase Postgres | Catalog, games, guesses, cost ledger |
+| Supabase Postgres | Catalog, games, the message transcript, guesses, cost ledger |
 | Supabase Storage | Later. Company logos, with a URL as the fallback |
 | OpenRouter | One API key, one bill, USA / Europe / China models |
 | Vercel Hobby | Hosting, HTTPS, a `*.vercel.app` URL |
