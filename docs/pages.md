@@ -65,14 +65,43 @@ A tip does not raise the hourly cap, change a score, or put a name on the leader
 
 ## Landing (`/`)
 
-Purpose: explain the game and start it. Public. Playing requires a session. This is the only lobby. `/play` redirects here.
+Purpose: present the game. Public. Playing requires a session, and that happens on `/play`. The leaderboard does not.
 
-The site name stays in the header. The page does not repeat it.
+The header keeps the name and a logo the same height as that text, plus **Leaderboard** and the account menu.
 
-- Heading: **Five messages. One hidden model. Name it.**
-- Signed in: **7 games left this hour.** When at least one round has started in the rolling hour, add **One comes back at 14:22.** The time is the oldest `started_at` in that window plus one hour, in the viewer's local zone. At the cap: **None left this hour. The next one opens at 14:22.**
-- Cap, one line: **10 games an hour, before the developer goes broke.** The number is `hourlyCap`.
-- Header: **Leaderboard**, with a trophy icon, on every page. The page body does not repeat that button.
+Two columns. On a narrow screen they stack.
+
+- Left: the logo, large.
+- Right: **Find the model.** Then: a hidden model answers you. You have five messages. After each reply, name the one you think it is. Find it, and the round is yours. Miss the name, and the company and the region can still count.
+- Signed out: **Sign up** goes to `/login?tab=create&next=/play`. **Sign in** goes to `/login?next=/play`.
+- Signed in: **Play** goes to `/play`.
+- Under the buttons: **The leaderboard is open to everyone. An account is only for playing.**
+
+A confirmation or password-reset link returns here. If the URL carries a session and the profile has no username, send the player to `/welcome`.
+
+## Login (`/login`)
+
+One narrow card. The heading is **Sign in** or **Create account**. A text link under it switches to the other. **Continue with Google** is first, then a divider, then email and password. **Forgot password** sits under the password field on sign-in, as a text link.
+
+- Button: **Continue with Google**
+- Fields: email, password
+- Create-account note: **Supabase will email you a confirmation link.**
+- Button: **What we store.** Closed until clicked. Then: we keep the username and the games (messages, replies, and guesses), for research, because the developer is a data scientist. Nothing else is kept. The email is not saved with the game. Sign-in goes through Supabase, which uses it only to confirm the account and to keep automated sign-ups out.
+- Link: **Forgot password**. Asks for an email. Supabase sends the reset. The page says **Check your email.** either way, so it does not reveal whether the address exists.
+- The confirmation link and the reset link both open `/`.
+- Errors, under the form, one at a time:
+  - **Wrong email or password.**
+  - **Confirm your email, then come back.**
+  - **That email is already registered.**
+  - **Google sign-in was cancelled.**
+
+## Lobby (`/play`)
+
+Requires a session. No session goes to `/login?next=/play`. No username goes to `/welcome?next=/play`.
+
+- Heading: **Find the model.**
+- Line: **It answers. You have five messages to say which one it was.**
+- A status bar: **7 games left**, then **One back at 14:22** when a round has already started in the rolling hour. The time is the oldest `started_at` in that window plus one hour, in the viewer's local zone. At the cap: **None left** and **Next one at 14:22.** Beside that: **10 an hour, before the developer goes broke.** The number is `hourlyCap`. When the game is paused, the bar says **The game is paused.**
 - Category rows. Daily first, then All models, Company, Family, Region, Custom. A category that is not enabled yet has **Not open yet.** and no button. The sentences are the `categories.blurb` column:
 
 | Card | Sentence |
@@ -85,25 +114,14 @@ The site name stays in the header. The page does not repeat it.
 | Custom | A custom choice of models. |
 
 - Daily block, later, and only when Daily is enabled: **Today's model is live.** Button **Play today's**. The name is absent. Disabled, with **The game is paused.**, when the game is paused. No session goes to `/login` and then into today's round. An open daily round shows **Continue**. A day already started, including a give-up, shows **You already played today's model.** and does not start another.
-- Weekly top 5, later: rank, name, and score from the All models board for the current week, limited to 5. Visible before login. If the week has no counted round: **No finished games this week.**
+- Weekly top 5, later: rank, name, and score from the All models board for the current week, limited to 5. If the week has no counted round: **No finished games this week.**
+- **Play** sits on the category row. All models starts the round. The other rows stay **Not open yet** until they are built.
+- An open round turns that **Play** into **Continue**.
+- **Play** is disabled when the hour is full, the game is paused, or the All models pool has fewer than 2 models (**Not enough models.**).
+- Under the All models row, a full-width option, off by default: **Play without hints.** Beside it: **No year or size. No match feedback. Score × 1.5.** It stays editable until Play.
+- **Admin** only when the server has already decided this session is the admin email, and only once admin exists. It is not in the markup otherwise.
 
-A confirmation or password-reset link returns here. If the URL carries a session and the profile has no username, send the player to `/welcome`.
-
-## Login (`/login`)
-
-One narrow card. The heading is **Sign in** or **Create account**. A text link under it switches to the other. **Continue with Google** is first, then a divider, then email and password. **Forgot password** sits under the password field on sign-in, as a text link.
-
-- Button: **Continue with Google**
-- Fields: email, password
-- Create-account note: **Supabase emails you a confirmation link.**
-- Under that, on create account: a round stores the username, the messages, the replies, and the guesses. Supabase Auth keeps the email so the player can sign back in, and so a script cannot open a pile of games. The email is not on the leaderboard and not on the round.
-- Link: **Forgot password**. Asks for an email. Supabase sends the reset. The page says **Check your email.** either way, so it does not reveal whether the address exists.
-- The confirmation link and the reset link both open `/`.
-- Errors, under the form, one at a time:
-  - **Wrong email or password.**
-  - **Confirm your email, then come back.**
-  - **That email is already registered.**
-  - **Google sign-in was cancelled.**
+Company, Family, and Region go to `/play/new?category=…` once they are built. Custom is a later choice of models. There is no Latest card and no Origin card.
 
 ## Username (`/welcome`)
 
@@ -117,18 +135,6 @@ Shown once, when `profiles.username` is null.
 - Save goes to `/play`, or back to the play URL they were trying to open.
 
 Changing the username, and a profile with stats and past games, come later. Do not build `/me` in the first pass.
-
-## Lobby
-
-The lobby is the landing page. `/play` redirects to `/`.
-
-- **Play** sits on the category row. Signed out, it goes to `/login`. All models starts the round. The other rows stay **Not open yet** until they are built.
-- An open round turns that **Play** into **Continue**.
-- **Play** is disabled when the hour is full, the game is paused, or the All models pool has fewer than 2 models (**Not enough models.**).
-- Checkbox, directly under the All models **Play**, off by default: **Play without hints.** Subline: **No year or size hints. No match feedback. Score × 1.5.** It stays editable until Play.
-- **Admin** only when the server has already decided this session is the admin email, and only once admin exists. It is not in the markup otherwise.
-
-Company, Family, and Region go to `/play/new?category=…` once they are built. Custom is a later choice of models. There is no Latest card and no Origin card.
 
 ## Pool picker (`/play/new`)
 

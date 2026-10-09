@@ -67,7 +67,20 @@ button { cursor: pointer; }
   font-weight: 700;
   text-decoration: none;
 }
-.brand img { height: 64px; width: auto; }
+.brand img { height: 36px; width: auto; }
+.hero {
+  display: grid;
+  grid-template-columns: minmax(160px, 280px) minmax(0, 1fr);
+  gap: 28px 40px;
+  align-items: center;
+  padding: 36px 0 8px;
+}
+.hero-logo { width: 100%; height: auto; }
+.hero h1 { margin-top: 0; }
+@media (max-width: 720px) {
+  .hero { grid-template-columns: 1fr; }
+  .hero-logo { width: min(220px, 72%); }
+}
 .account { position: relative; }
 .account-button {
   width: 40px;
@@ -258,9 +271,47 @@ h2 { font-size: 22px; margin: 0 0 8px; }
   flex-wrap: wrap;
 }
 .category-check {
-  margin: 10px 0 2px auto;
-  max-width: 420px;
+  margin: 12px 0 0;
+  align-items: center;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: var(--canvas);
 }
+.hour-status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 16px;
+  margin: 0;
+  padding: 10px 14px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  font-size: 14px;
+}
+.disclose {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px 12px;
+  color: var(--text);
+  font-weight: 500;
+}
+.disclose svg { width: 18px; height: 18px; }
+.disclose[aria-expanded="true"] svg { transform: rotate(180deg); }
+.disclose-panel {
+  display: grid;
+  gap: 8px;
+  padding: 10px 2px 0;
+  color: var(--mute);
+  font-size: 14px;
+}
+.disclose-panel p { margin: 0; }
 .tag, .pill { color: var(--mute); }
 
 .tabs { display: flex; gap: 8px; margin-bottom: 12px; }

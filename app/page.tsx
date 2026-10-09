@@ -1,8 +1,5 @@
 import { redirect } from "next/navigation";
-import { HomeBoard } from "@/components/home-board";
 import { ResetPassword } from "@/components/reset-password";
-import { config } from "@/lib/config";
-import { listCategories, lobbyState } from "@/lib/rounds";
 import { currentProfile } from "@/lib/session";
 
 export const dynamic = "force-dynamic";
@@ -18,29 +15,38 @@ export default async function HomePage({
   const resetting = params.reset === "1";
   if (user && !username && !resetting) redirect("/welcome");
   const signedIn = Boolean(user && username);
-  const [categories, state] = await Promise.all([
-    listCategories(),
-    signedIn && user ? lobbyState(user.id) : Promise.resolve(null),
-  ]);
 
   return (
     <div className="stack">
       {resetting && user ? <ResetPassword hasUsername={Boolean(username)} /> : null}
-      <HomeBoard
-        signedIn={signedIn}
-        paused={state?.paused ?? false}
-        played={state?.played ?? 0}
-        cap={state?.cap ?? config.hourlyCap}
-        activeGameId={state?.activeGameId ?? null}
-        poolSize={state?.poolSize ?? 2}
-        nextAt={state?.nextAt ?? null}
-        categories={categories.map((category) => ({
-          id: category.id,
-          name: category.name,
-          blurb: category.blurb,
-          enabled: category.enabled,
-        }))}
-      />
+      <section className="hero">
+        <img className="hero-logo for-light" src="/brand/logo-light.png" alt="" />
+        <img className="hero-logo for-dark" src="/brand/logo-dark.png" alt="" />
+        <div className="stack">
+          <h1>Find the model.</h1>
+          <p>
+            A hidden model answers you. You have five messages. After each reply, name the one you think it is. Find it, and
+            the round is yours. Miss the name, and the company and the region can still count.
+          </p>
+          <div className="row">
+            {signedIn ? (
+              <a className="button" href="/play">
+                Play
+              </a>
+            ) : (
+              <>
+                <a className="button" href="/login?tab=create&next=/play">
+                  Sign up
+                </a>
+                <a className="button-quiet" href="/login?next=/play">
+                  Sign in
+                </a>
+              </>
+            )}
+          </div>
+          <p className="muted">The leaderboard is open to everyone. An account is only for playing.</p>
+        </div>
+      </section>
     </div>
   );
 }

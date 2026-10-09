@@ -32,7 +32,6 @@ export function lineup(categories: HomeCategory[]): HomeCategory[] {
 }
 
 export function HomeBoard({
-  signedIn,
   paused,
   played,
   cap,
@@ -41,7 +40,6 @@ export function HomeBoard({
   nextAt,
   categories,
 }: {
-  signedIn: boolean;
   paused: boolean;
   played: number;
   cap: number;
@@ -62,21 +60,13 @@ export function HomeBoard({
     return new Date(iso).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hour12: false });
   }
 
-  function remaining() {
-    if (!signedIn) return null;
-    if (paused) return "The game is paused.";
-    const games = left === 1 ? "1 game left" : `${left} games left`;
-    const when = nextAt ? localTime(nextAt) : "";
-    if (left === 0) return when ? `None left this hour. The next one opens at ${when}.` : "None left this hour.";
-    if (played > 0 && when) return `${games} this hour. One comes back at ${when}.`;
-    return `${games} this hour.`;
+  function slotLabel() {
+    if (paused || !nextAt || played === 0) return null;
+    const when = localTime(nextAt);
+    return left === 0 ? `Next one at ${when}` : `One back at ${when}`;
   }
 
   async function start(category: string) {
-    if (!signedIn) {
-      router.push("/login?next=/");
-      return;
-    }
     if (activeGameId && category === "all") {
       router.push(`/play/${activeGameId}`);
       return;
@@ -91,7 +81,7 @@ export function HomeBoard({
     const body = (await response.json().catch(() => ({}))) as { gameId?: string; error?: string; nextAt?: string };
     setBusy(false);
     if (response.status === 401) {
-      router.push("/login?next=/");
+      router.push("/login?next=/play");
       return;
     }
     if (body.gameId) {
@@ -112,7 +102,7 @@ export function HomeBoard({
       return;
     }
     if (body.error === "username") {
-      router.push("/welcome?next=/");
+      router.push("/welcome?next=/play");
       return;
     }
     if (body.error === "not_found") {
@@ -122,13 +112,18 @@ export function HomeBoard({
     setNotice("Not enough models.");
   }
 
-  const hourLine = remaining();
+  const slot = slotLabel();
+  const leftLabel = paused ? null : left === 0 ? "None left" : left === 1 ? "1 game left" : `${left} games left`;
 
   return (
     <div className="stack">
-      <h1 className="goal">Five messages. One hidden model. Name it.</h1>
-      {hourLine ? <p className="lede">{hourLine}</p> : null}
-      <p className="muted">{cap} games an hour, before the developer goes broke.</p>
+      <h1 className="goal">Find the model.</h1>
+      <p className="lede">It answers. You have five messages to say which one it was.</p>
+      <p className="hour-status">
+        <strong>{paused ? "The game is paused." : leftLabel}</strong>
+        {slot ? <span>{slot}</span> : null}
+        {paused ? null : <span className="muted">{cap} an hour, before the developer goes broke.</span>}
+      </p>
       <div className="card category-list">
         {cards.map((category) => {
           const open = category.enabled;
@@ -161,8 +156,8 @@ export function HomeBoard({
                 <label className="check category-check">
                   <input type="checkbox" checked={noHint} onChange={(event) => setNoHint(event.target.checked)} />
                   <span>
-                    Play without hints.
-                    <span className="muted"> No year or size hints. No match feedback. Score × 1.5.</span>
+                    <strong>Play without hints.</strong>
+                    <span className="muted"> No year or size. No match feedback. Score × 1.5.</span>
                   </span>
                 </label>
               ) : null}

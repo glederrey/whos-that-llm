@@ -4,9 +4,18 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createBrowserSupabase } from "@/lib/supabase/browser";
 
-export function LoginForm({ next, cancelled }: { next: string; cancelled: boolean }) {
+export function LoginForm({
+  next,
+  cancelled,
+  startOnCreate,
+}: {
+  next: string;
+  cancelled: boolean;
+  startOnCreate: boolean;
+}) {
   const router = useRouter();
-  const [tab, setTab] = useState<"sign-in" | "create">("sign-in");
+  const [tab, setTab] = useState<"sign-in" | "create">(startOnCreate ? "create" : "sign-in");
+  const [storedOpen, setStoredOpen] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState(cancelled ? "Google sign-in was cancelled." : "");
@@ -61,7 +70,7 @@ export function LoginForm({ next, cancelled }: { next: string; cancelled: boolea
         router.refresh();
         return;
       }
-      setNote("Supabase sent the confirmation link. Check your email.");
+      setNote("Supabase will email you a confirmation link. Check your email.");
       return;
     }
     const { error: authError } = await supabase.auth.signInWithPassword({ email, password });
@@ -125,14 +134,35 @@ export function LoginForm({ next, cancelled }: { next: string; cancelled: boolea
             Forgot password
           </button>
         ) : (
-          <div className="stack">
-            <p className="muted">Supabase emails you a confirmation link.</p>
-            <p className="muted">
-              A round stores your username, the messages, the replies, and the guesses. Supabase Auth keeps the email so you
-              can sign back in, and so a script cannot open a pile of games. The email stays off the leaderboard and off the
-              round itself.
-            </p>
+          <>
+          <p className="muted">Supabase will email you a confirmation link.</p>
+          <div>
+            <button
+              type="button"
+              className="disclose"
+              aria-expanded={storedOpen}
+              onClick={() => setStoredOpen((open) => !open)}
+            >
+              What we store
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="m6 9 6 6 6-6" />
+              </svg>
+            </button>
+            {storedOpen ? (
+              <div className="disclose-panel">
+                <p>
+                  We keep your username and your games. A game is the messages you send, the replies you receive, and the
+                  guesses you make. They are kept for research. The developer is a data scientist and studies how people
+                  question a hidden model.
+                </p>
+                <p>
+                  Nothing else is kept. The email address is not saved with the game. Sign-in goes through Supabase, which
+                  uses it only to confirm the account and to keep automated sign-ups out.
+                </p>
+              </div>
+            ) : null}
           </div>
+          </>
         )}
         <button type="submit" className="button" disabled={busy}>
           {signingIn ? "Sign in" : "Create account"}

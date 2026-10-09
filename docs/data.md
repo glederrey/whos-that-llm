@@ -128,7 +128,7 @@ One row, `id = 1`.
 
 | Column | Type | Notes |
 |---|---|---|
-| `id` | uuid, pk, fk `auth.users` | on delete cascade. This id links the auth user to the username. The email stays in Supabase Auth. It is not copied onto `games` or the leaderboard |
+| `id` | uuid, pk, fk `auth.users` | on delete cascade. The game keeps the username. The email is not copied onto `games`, `profiles`, or the leaderboard |
 | `username` | text, null | Null until `/welcome`. Not unique |
 | `created_at` | timestamptz | |
 

@@ -10,7 +10,7 @@ const font = Roboto({ subsets: ["latin"], weight: ["400", "500", "700"], variabl
 
 export const metadata: Metadata = {
   title: "Who's that LLM",
-  description: "Five messages. One hidden model. Name it.",
+  description: "Five messages to find the hidden model.",
   icons: { icon: "/brand/favicon.png" },
 };
 
