@@ -1,0 +1,79 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import { Avatar } from "./avatar";
+import { ThemeToggle } from "./theme-toggle";
+import { createBrowserSupabase } from "@/lib/supabase/browser";
+
+export function AccountMenu({ userId, username }: { userId: string | null; username: string | null }) {
+  const router = useRouter();
+  const [open, setOpen] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function onPointer(event: MouseEvent) {
+      if (!rootRef.current?.contains(event.target as Node)) setOpen(false);
+    }
+    document.addEventListener("mousedown", onPointer);
+    return () => document.removeEventListener("mousedown", onPointer);
+  }, []);
+
+  async function signOut() {
+    const supabase = createBrowserSupabase();
+    await supabase.auth.signOut();
+    setOpen(false);
+    router.push("/");
+    router.refresh();
+  }
+
+  return (
+    <div className="account" ref={rootRef}>
+      <button
+        type="button"
+        className="account-button"
+        aria-expanded={open}
+        aria-label={username ? username : "Account"}
+        onClick={() => setOpen((value) => !value)}
+      >
+        {userId ? <Avatar seed={userId} /> : <GuestIcon />}
+      </button>
+      {open ? (
+        <div className="menu" role="menu">
+          {username ? (
+            <p className="menu-name">
+              {userId ? <Avatar seed={userId} size={28} /> : null}
+              <span>{username}</span>
+            </p>
+          ) : null}
+          {userId ? null : (
+            <a href="/login" role="menuitem">
+              Sign in
+            </a>
+          )}
+          <div className="menu-row">
+            <span>Theme</span>
+            <ThemeToggle />
+          </div>
+          {userId ? (
+            <>
+              <div className="menu-rule" />
+              <button type="button" className="menu-item" onClick={() => void signOut()}>
+                Sign out
+              </button>
+            </>
+          ) : null}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function GuestIcon() {
+  return (
+    <svg className="guest-icon" viewBox="0 0 24 24" aria-hidden="true">
+      <circle cx="12" cy="8" r="3.2" fill="none" stroke="currentColor" strokeWidth="1.8" />
+      <path d="M5 19.2c1.4-3 4-4.5 7-4.5s5.6 1.5 7 4.5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
+  );
+}

@@ -17,6 +17,9 @@ export default async function LeaderboardPage({
 
   return (
     <div className="stack">
+      <a className="back" href="/">
+        ← Back
+      </a>
       <h1>Leaderboard</h1>
       <div className="tabs">
         {visible.map((tab) => (

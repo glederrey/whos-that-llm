@@ -7,9 +7,7 @@ export function SiteFooter() {
         <a href={config.tipUrl} target="_blank" rel="noreferrer">
           Tip
         </a>
-      ) : (
-        <span />
-      )}
+      ) : null}
       <p className="credit">
         <span>Created by</span>
         <a href="https://github.com/glederrey" target="_blank" rel="noreferrer">

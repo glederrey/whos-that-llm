@@ -15,7 +15,11 @@ export default async function PlayPage() {
     .map((category) => ({ id: category.id, name: category.name, blurb: category.blurb }));
 
   return (
-    <Lobby
+    <div className="stack">
+      <a className="back" href="/">
+        ← Back
+      </a>
+      <Lobby
       paused={state.paused}
       played={state.played}
       cap={state.cap}
@@ -24,5 +28,6 @@ export default async function PlayPage() {
       nextAt={state.nextAt}
       cards={cards}
     />
+    </div>
   );
 }

@@ -37,7 +37,7 @@ export default async function HomePage({
               <br />
               <span className="muted">{category.blurb}</span>
             </span>
-            {category.enabled ? null : <span className="tag">Not open yet.</span>}
+            {category.enabled ? null : <span className="pill">Not open yet</span>}
           </div>
         ))}
       </div>

@@ -57,6 +57,7 @@ export type PublicGame = {
     familySame: boolean;
     companyValue: string | null;
     regionValue: string | null;
+    familyValue: string | null;
   };
   hints: { year: string | null; size: string | null };
   candidates: PublicCandidate[];
@@ -418,6 +419,7 @@ export function toPublicGame(input: {
           familySame: !familyGiven && familyMatched,
           companyValue: !companyGiven && companyMatched ? hidden.companyName : null,
           regionValue: !regionGiven && regionMatched ? regionLabel(hidden.region) : null,
+          familyValue: !familyGiven && familyMatched ? hidden.familyName : null,
         }
       : null,
     hints: {

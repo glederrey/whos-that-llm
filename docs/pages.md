@@ -10,7 +10,7 @@ The site is English. A second language waits until there is a translation to shi
 
 ## Theme
 
-Light and dark are both first-class. The first visit follows the phone or the computer (`prefers-color-scheme`). A control in the header switches them and stores the choice in the browser, so it survives a refresh and applies on the landing page before anyone is signed in. It is not a column on the profile.
+Light and dark are both first-class. The first visit follows the phone or the computer (`prefers-color-scheme`). A control in the account menu switches them and stores the choice in the browser, so it survives a refresh and applies on the landing page before anyone is signed in. It is not a column on the profile. The account button sits at the top right. Signed out, it is a person icon and the menu has **Sign in**. Signed in, the icon is a pattern generated from the account id, and the menu shows the username.
 
 Same layout in both themes. Text, feedback, and the guess list stay readable. A match and a miss stay distinguishable without relying on color alone.
 
@@ -179,7 +179,7 @@ A stored assistant reply that is empty or whitespace still spends the message an
 
 Appears when `awaitingGuess` is true. Heading: **Guess for message 2.**
 
-Search field, placeholder **Search models**. Rows: logo, company, and name. Nothing else. Submit is enabled when a row is selected. There is no Skip.
+Search field, placeholder **Search models**. The rows stay closed until the field is focused, then open as a dropdown: logo, company, and name. Nothing else. Submit is enabled when a row is selected. There is no Skip.
 
 The list is the one the server already filtered. A guess the server rejects: **That model is not in the list.**
 
@@ -189,26 +189,20 @@ Origin replaces the search with **USA**, **China**, **Europe**. One tap submits 
 
 Hidden for the whole round when no-hint mode is on. Origin renders none of it.
 
-Given traits, when the pool has any, show even in no-hint mode: label, value, tag **Known**. A given year or size is shown here and has no buy button.
+The board sits on the right. Company, region, and family start as **Hidden**. A miss does not say wrong. A hit unveils that row: **Company · Anthropic**, **Region · USA** with the USA, China, or Europe flag, or **Family · Opus**. A trait the pool already shares is unveiled from the start, except year and size.
 
-After a guess, when feedback is allowed:
+Year and size stay hidden until the player clicks them. If the pool shares that trait, the click reveals it and costs nothing. If models differ, the button reads **Year · 100 points** or **Size · 100 points** and the click buys it.
 
-| Trait | Hit | Miss |
-|---|---|---|
-| Company | **Company · Anthropic** | **Wrong company** |
-| Region | **Region · USA** | **Wrong region** |
-| Family | **Same family.** | Say nothing |
-
-Point numbers stay off this board. They are on the result page. Naming the model leaves the round before another feedback pass.
+Point numbers for a match stay off this board. They are on the result page. Naming the model leaves the round before another feedback pass.
 
 ### Hints
 
 Under the feedback, after the first reply, when this category allows hints and no-hint mode is off.
 
-- **Year · 100 points**
-- **Size · 100 points**
+- **Year**, or **Year · 100 points** when the years differ
+- **Size**, or **Size · 100 points** when the sizes differ
 
-One click. The button disables until the response returns. A bought year shows the calendar year, such as **2026**. A bought size shows **Small**, **Medium**, or **Large**. The button does not come back. A trait the pool already shares is not listed.
+One click. The button disables until the response returns. A revealed year shows the calendar year, such as **2026**. A revealed size shows **Small**, **Medium**, or **Large**. The button does not come back.
 
 ### Failures on the round
 
