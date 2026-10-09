@@ -2,7 +2,7 @@
 
 One Supabase Postgres database. The catalog, the rounds, and the cost ledger are tables in it.
 
-The browser may read `companies`, `families`, and the view `models_public`. Those rows are the roster a player is allowed to see. `models_public` is `models` where `enabled` is true, and it omits `openrouter_id`, `provider_settings`, and the two prices. The secret is `games.model_id` on an open round, and the browser never queries `games`. Server routes use the service role. Row level security denies `anon` and `authenticated` on `games`, `messages`, `guesses`, and `usage`.
+The browser may read `companies`, `families`, and the view `models_public`. Those rows are the roster a player is allowed to see. `models_public` is `models` where `enabled` is true, and it omits `openrouter_id`, `provider_settings`, and the two prices. The secret is `games.model_id` on an open round, and the browser never queries `games`. Server routes use the secret key, which bypasses row level security. Row level security denies `anon` and `authenticated` on `games`, `messages`, `guesses`, and `usage`.
 
 There is no hints table. A hint is a column on the model. The fact that this player bought it is `games.revealed`.
 

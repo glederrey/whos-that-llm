@@ -16,7 +16,7 @@ The name on the site is **Who's that LLM**.
 | Vercel Hobby | Hosting, HTTPS, a `*.vercel.app` URL |
 | A Python notebook later | Charts the admin page does not have |
 
-The browser never receives the OpenRouter key, the Supabase service role key, or the hidden model id of an active round.
+The browser never receives the OpenRouter key, the Supabase secret key, or the hidden model id of an active round.
 
 Pages and route handlers are one Next.js app. The handlers are the backend: they hold the keys, call OpenRouter, and write the game. There is no second server. A split would add another deploy and another hop on every message, for a site with one client. Supabase is the database and the login, not an application server. The Python notebook stays outside, for charts.
 
@@ -38,10 +38,10 @@ No VPS, no extra email service, no second database.
 | What | What to do | When |
 |---|---|---|
 | **GitHub** | Already exists: `glederrey/whos-that-llm`. Vercel deploys from it. | Done |
-| **Supabase** | One project. Copy the project URL, the anon key, and the service role key. Turn on Email and Google under Authentication. | Before auth works |
+| **Supabase** | One project. Copy the project URL, the publishable key, and the secret key. Turn on Email and Google under Authentication. | Before auth works |
 | **Google Cloud** | One project on the existing Google account. No billing. OAuth client (Web). Authorized redirect: `https://<project-ref>.supabase.co/auth/v1/callback`. Paste the id and secret into the Supabase Google provider. | Before the Google button works |
 | **OpenRouter** | Account, about $10 of credit, one API key, a monthly cap around $20. The key stays in env vars. | Before the first real model call |
-| **Vercel** | Sign up with GitHub. Hobby. Paste the env vars from [Build](build.md). | When the app runs locally |
+| **Vercel** | Sign up with GitHub. Hobby. Paste the env vars from [Build](build.md). | When the app is deployed. Local play does not need it |
 | **Ko-fi** | One page for tips. Stay on the free setting, so a one-time tip pays no Ko-fi fee. Connect Stripe. Set the page currency to euros. Paste the page URL into `tipUrl`. | Before the footer shows **Tip** |
 | **Domain registrar** | Buy the name and add the two DNS records. | After someone besides us is playing |
 

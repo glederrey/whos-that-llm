@@ -1,6 +1,6 @@
 # Server
 
-All game mutations are route handlers. They create a Supabase client with the service role. The anon key is used for the session cookie and for reading the public catalog.
+All game mutations are route handlers. They create a Supabase client with the secret key. The publishable key is used for the session cookie and for reading the public catalog.
 
 A handler that touches a round loads it, checks `user_id` against the session, and continues. A missing round or a wrong owner is `404`, so one player cannot learn that another player's id exists.
 

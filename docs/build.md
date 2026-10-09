@@ -43,12 +43,12 @@ supabase/migrations/            the tables in Data
 | Name | Where |
 |---|---|
 | `NEXT_PUBLIC_SUPABASE_URL` | Browser and server |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Browser and server |
-| `SUPABASE_SERVICE_ROLE_KEY` | Server only |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Browser and server. The publishable key |
+| `SUPABASE_SECRET_KEY` | Server only. The secret key. Bypasses row level security |
 | `OPENROUTER_API_KEY` | Server only |
 | `ADMIN_EMAIL` | Server only. The one address that can open admin |
 
-Local values go in `.env.local`. That file stays untracked. Vercel gets the same names. The service role key, the OpenRouter key, and `ADMIN_EMAIL` are sensitive. Do not prefix `ADMIN_EMAIL` with `NEXT_PUBLIC_`.
+Those five names are already in `.env.local` at the repo root. Comments in the file do not matter. The values stay in that file: do not open it to check them, and do not copy them into docs, chat, or git. The file stays untracked. Vercel gets the same names. The secret key, the OpenRouter key, and `ADMIN_EMAIL` are sensitive. Do not prefix `ADMIN_EMAIL` or `SUPABASE_SECRET_KEY` with `NEXT_PUBLIC_`.
 
 ## First roster
 
