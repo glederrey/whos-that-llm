@@ -10,7 +10,7 @@ The name on the site is **Who's that LLM**.
 
 The playable roster is three small models: Claude Haiku 5.5, GPT-5.6 Luna, and DeepSeek V4 Flash. Every other seeded model stays off. Adding more is an admin job, and admin comes later.
 
-Company, family, region, latest, daily, and origin are specified in [Rules](rules.md) and come later. Size is a hint, not a category. The profile, the home weekly top 5, daily result stats, and the admin screens come later too. The pause flag exists from the first build, because a credit error pauses everyone.
+Daily, company, family, region, and custom are specified in [Rules](rules.md) and come later. The home page lists them, and only All models can be started. Size is a hint, not a category. The profile, the home weekly top 5, daily result stats, and the admin screens come later too. The pause flag exists from the first build, because a credit error pauses everyone.
 
 ## Stack
 

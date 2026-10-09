@@ -5,6 +5,7 @@ import {
   buildTraits,
   filterCandidates,
   knownValues,
+  missedGuesses,
   scoreRound,
   type FrozenModel,
 } from "./game";
@@ -141,4 +142,47 @@ test("no-hint mode does not narrow the list on a match", () => {
     filterCandidates(traits, blind, ["luna"]).map((row) => row.id),
     ["haiku", "flash"],
   );
+});
+
+test("a wrong guess keeps the model and names the traits it missed", () => {
+  const models = [
+    model({ id: "haiku", name: "Haiku", companyId: "anthropic", companyName: "Anthropic", familyId: "haiku", region: "us" }),
+    model({ id: "luna", name: "Luna", companyId: "openai", companyName: "OpenAI", familyId: "gpt", region: "us" }),
+    model({ id: "flash", name: "Flash", companyId: "deepseek", companyName: "DeepSeek", familyId: "deepseek", region: "cn" }),
+  ];
+  const traits = buildTraits(models);
+  const guesses = [
+    {
+      turn: 2,
+      modelId: "flash",
+      modelCorrect: false,
+      companyCorrect: false,
+      familyCorrect: false,
+      regionCorrect: false,
+    },
+    {
+      turn: 1,
+      modelId: "luna",
+      modelCorrect: false,
+      companyCorrect: false,
+      familyCorrect: false,
+      regionCorrect: true,
+    },
+    {
+      turn: 3,
+      modelId: "haiku",
+      modelCorrect: true,
+      companyCorrect: true,
+      familyCorrect: true,
+      regionCorrect: true,
+    },
+  ];
+  const named = missedGuesses(traits, guesses, false);
+  assert.deepEqual(
+    named.map((guess) => guess.id),
+    ["luna", "flash"],
+  );
+  assert.deepEqual(named[0]?.wrong, ["company", "family"]);
+  assert.deepEqual(named[1]?.wrong, ["company", "region", "family"]);
+  assert.deepEqual(missedGuesses(traits, guesses, true)[0]?.wrong, []);
 });

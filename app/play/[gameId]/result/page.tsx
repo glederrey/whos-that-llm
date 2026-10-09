@@ -18,7 +18,7 @@ export default async function ResultPage({ params }: { params: Promise<{ gameId:
   const again =
     game.category === "company" || game.category === "family" || game.category === "region"
       ? `/play/new?category=${game.category}`
-      : "/play";
+      : "/";
 
   const status =
     game.status === "solved"

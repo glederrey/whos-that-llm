@@ -240,21 +240,22 @@ The call is the same in every category: 5 messages, 500 characters, 500 output t
 
 | Category | Pool | Hints | Leaderboard | When |
 |---|---|---|---|---|
+| `daily` | One model, the same for every player that UTC day | Yes | Yes | Later |
 | `all` | Every enabled model | Yes | Yes | First build |
 | `company` | One company, at least 2 enabled models | No | No | Later |
 | `family` | One enabled family, at least 2 enabled models | No | No. Main families maybe later | Later |
 | `region` | `us`, `cn`, or `eu`, at least 2 enabled models | Yes | No | Later |
-| `latest` | The newest enabled model in each family | No | No | Later |
-| `daily` | One model, the same for every player that UTC day | Yes | Yes | Later |
-| `origin` | Every enabled model. One region guess | No | No | Later |
+| `custom` | A choice of models, picked before the round | No | No | Later |
 
 Size is not a category. It is only a hint.
 
-Company and family pools only care about traits that differ inside the pool. Company is given on a company pool, so the 300 is not paid. Family feedback is useful for a company that actually has families, such as Anthropic (Opus, Sonnet, Haiku). It is a weak split for OpenAI when the pool shares one family, so that pool is name-the-model only: the only base that pays is 1000. Year and size hints stay off on these narrow pools, and on Latest, because one hint removes too much of a small list.
+Company and family pools only care about traits that differ inside the pool. Company is given on a company pool, so the 300 is not paid. Family feedback is useful for a company that actually has families, such as Anthropic (Opus, Sonnet, Haiku). It is a weak split for OpenAI when the pool shares one family, so that pool is name-the-model only: the only base that pays is 1000. Year and size hints stay off on these narrow pools, because one hint removes too much of a small list.
 
-Special pools can still be scored. They do not get a leaderboard. A board on a small pool would be easy to game. Region is not on a leaderboard. Origin is not on a leaderboard.
+Special pools can still be scored. They do not get a leaderboard. A board on a small pool would be easy to game. Region is not on a leaderboard. Custom is not on a leaderboard.
 
-A pool with fewer than 2 enabled models is not listed, except daily and origin, which draw from the whole enabled roster. An empty roster is not playable. Europe will be thin. A row with fewer than 4 models still appears, and it shows the count. A category with `enabled = false` is not listed in the lobby. The main page still has its one-line explanation.
+A pool with fewer than 2 enabled models is not listed, except daily, which draws from the whole enabled roster. An empty roster is not playable. Europe will be thin. A row with fewer than 4 models still appears, and it shows the count. A category with `enabled = false` still has its sentence on the main page, with **Not open yet.**
+
+Latest is not a category. All models already draws from the roster. Origin is not a category. Region is that pool.
 
 Regions on companies:
 
@@ -268,15 +269,13 @@ Size, also manual, and only as a hint:
 - **medium:** the workhorse
 - **large:** the flagship, and only the large models we are willing to pay for
 
-Latest, when it is built: one model per family, the newest enabled one. Opus 5.5 is the latest Opus, so it is in the pool and an older Opus is not. The list stays small. `is_latest` is that flag, set by hand.
+`is_latest` stays on the model row for admin. It does not make a category.
 
 The first daily start of a UTC day draws one model from the enabled roster and freezes that id, that roster, and those traits on the day. Later starts copy them, so a model turned off at noon is still guessable today and a model turned on at noon is not added. Do not publish the id ahead of time. Starting spends the day, including a give-up before the first message.
 
-### Origin
+### Custom
 
-Later. Three buttons: USA, China, Europe. No model search, no year or size hints, no no-hint multiplier.
-
-The player still has five messages. They have one region guess for the whole round. After a reply they may send another message, submit the region, or give up. Sending another message does not require a guess, and there is no skip control. The fifth reply is the last chance to talk. Submitting a region ends the round. A correct region is `solved` and the base is `regionPoints` (100). A wrong region is `miss` and the base is 0. The rest of the formula is the same. `modelBase` is not used, because the player never names a model. The result page names the model. The round itself never does.
+Later. The player picks the models before the round. Disabled until that picker exists. No leaderboard.
 
 ### Leaderboards
 

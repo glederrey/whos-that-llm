@@ -57,30 +57,32 @@ Admin is usable on a phone and comfortable on a computer. Playing a round is the
 
 On every page, including the round and admin.
 
-- **Tip** opens the Ko-fi page in a new tab. The URL is `tipUrl` in `lib/config.ts`. An empty string hides the link, so the footer can ship before the page exists.
+- A line separates the footer from the page.
+- **The models invoice the developer. Cover a round on Ko-fi.** opens `tipUrl` in `lib/config.ts` in a new tab. An empty string keeps the sentence as a placeholder: **The models invoice the developer. A Ko-fi will sit here when you feel like covering a round.**
 - **Created by Gael Lederrey with Cursor**, with the Cursor logo. **Gael Lederrey** links to `https://github.com/glederrey`. **Cursor** and the logo link to `https://cursor.com`.
 
 A tip does not raise the hourly cap, change a score, or put a name on the leaderboard.
 
 ## Landing (`/`)
 
-Purpose: explain the game in one screen. Public. Playing requires a session.
+Purpose: explain the game and start it. Public. Playing requires a session. This is the only lobby. `/play` redirects here.
 
-- Title: **Who's that LLM**
-- Line: **Five messages. One hidden model. Name it.**
-- Limits, one line: **5 messages · 1 guess each · 10 games an hour**
-- Button: **Play**. Goes to `/login`, or `/play` when a session exists. Next to it, **Leaderboard** goes to `/leaderboard`. The header has the same link on every page.
-- Category lines, one sentence each, in `sort_order`. A category that is not enabled yet has **Not open yet.** and no button. The sentences are the `categories.blurb` column:
+The site name stays in the header. The page does not repeat it.
+
+- Heading: **Five messages. One hidden model. Name it.**
+- Signed in: **7 games left this hour.** When at least one round has started in the rolling hour, add **One comes back at 14:22.** The time is the oldest `started_at` in that window plus one hour, in the viewer's local zone. At the cap: **None left this hour. The next one opens at 14:22.**
+- Cap, one line: **10 games an hour, before the developer goes broke.** The number is `hourlyCap`.
+- Header: **Leaderboard**, with a trophy icon, on every page. The page body does not repeat that button.
+- Category rows. Daily first, then All models, Company, Family, Region, Custom. A category that is not enabled yet has **Not open yet.** and no button. The sentences are the `categories.blurb` column:
 
 | Card | Sentence |
 |---|---|
+| Daily | The same model for everyone today. |
 | All models | Any model in the roster. Name it, or take the region and the company. |
 | Company | The lab is already known. Name the model. |
 | Family | One family. Name the model. |
 | Region | USA, China, or Europe. |
-| Latest | The newest model in each family. |
-| Daily | The same model for everyone today. |
-| Origin | USA, China, or Europe. One guess. |
+| Custom | A custom choice of models. |
 
 - Daily block, later, and only when Daily is enabled: **Today's model is live.** Button **Play today's**. The name is absent. Disabled, with **The game is paused.**, when the game is paused. No session goes to `/login` and then into today's round. An open daily round shows **Continue**. A day already started, including a give-up, shows **You already played today's model.** and does not start another.
 - Weekly top 5, later: rank, name, and score from the All models board for the current week, limited to 5. Visible before login. If the week has no counted round: **No finished games this week.**
@@ -93,7 +95,8 @@ One narrow card. The heading is **Sign in** or **Create account**. A text link u
 
 - Button: **Continue with Google**
 - Fields: email, password
-- Create-account note: **We email you a confirmation link.**
+- Create-account note: **Supabase emails you a confirmation link.**
+- Under that, on create account: a round stores the username, the messages, the replies, and the guesses. Supabase Auth keeps the email so the player can sign back in, and so a script cannot open a pile of games. The email is not on the leaderboard and not on the round.
 - Link: **Forgot password**. Asks for an email. Supabase sends the reset. The page says **Check your email.** either way, so it does not reveal whether the address exists.
 - The confirmation link and the reset link both open `/`.
 - Errors, under the form, one at a time:
@@ -115,16 +118,17 @@ Shown once, when `profiles.username` is null.
 
 Changing the username, and a profile with stats and past games, come later. Do not build `/me` in the first pass.
 
-## Lobby (`/play`)
+## Lobby
 
-- **5 messages per game**
-- **4 of 10 this hour.** When the cap is full, cards disable and the line becomes **Next game at 14:22.** The time is `oldest started_at in the window + 1 hour`, in the viewer's local zone. The server compares in UTC.
-- An active round replaces the cards with **Continue your game.**
-- Category cards, in `sort_order`, only where `categories.enabled`. In the first build that is All models. Each card is the name, the blurb, and **Play**. Disabled when the pool cannot be formed, with **Not enough models.** When the game is paused, every card is disabled and the lobby says **The game is paused.**
-- Checkbox, off by default: **Play without hints.** Subline: **No year or size hints. No match feedback. Score × 1.5.** The checkbox is absent on Origin. It stays editable until Start.
-- Links: **Leaderboard**. **Admin** only when the server has already decided this session is the admin email, and only once admin exists. It is not in the markup otherwise.
+The lobby is the landing page. `/play` redirects to `/`.
 
-All models starts on click. Daily, Origin, and Latest start on click when they exist. Latest draws the newest enabled model in each family and does not ask the player to pick a family. Company, Family, and Region go to `/play/new?category=…`. The checkbox travels as `noHint=1`.
+- **Play** sits on the category row. Signed out, it goes to `/login`. All models starts the round. The other rows stay **Not open yet** until they are built.
+- An open round turns that **Play** into **Continue**.
+- **Play** is disabled when the hour is full, the game is paused, or the All models pool has fewer than 2 models (**Not enough models.**).
+- Checkbox, directly under the All models **Play**, off by default: **Play without hints.** Subline: **No year or size hints. No match feedback. Score × 1.5.** It stays editable until Play.
+- **Admin** only when the server has already decided this session is the admin email, and only once admin exists. It is not in the markup otherwise.
+
+Company, Family, and Region go to `/play/new?category=…` once they are built. Custom is a later choice of models. There is no Latest card and no Origin card.
 
 ## Pool picker (`/play/new`)
 
@@ -155,7 +159,7 @@ On a phone, feedback and hints sit under the transcript, as in [Phones](#phones)
 Always visible.
 
 - `Message 2 of 5`. Before the first send: `Message 1 of 5` with the input empty, so the cap is there before they type.
-- Pool label: `All models`, `Family · Opus`, `Company · Anthropic`, `Region · USA`, `Latest`, `Daily`, `Origin`
+- Pool label: `All models`, `Family · Opus`, `Company · Anthropic`, `Region · USA`, `Daily`, `Custom`
 - **No hints** when the box was checked
 - **Give up**. Asks **End the round? You will see the model. This round stays off the leaderboard.** Buttons **Keep playing** and **Give up**.
 
@@ -179,25 +183,25 @@ A stored assistant reply that is empty or whitespace still spends the message an
 
 Appears when `awaitingGuess` is true. Heading: **Guess for message 2.**
 
-Search field, placeholder **Search models**. The rows stay closed until the field is focused, then open as a dropdown: logo, company, and name. Nothing else. A chosen model replaces the placeholder in that field. Submit is enabled when a row is selected. There is no Skip. A wrong guess shakes the card, flashes **Wrong**, and that model leaves the list. A model already guessed is not offered again.
+Search field, placeholder **Search models**. The rows stay closed until the field is focused, then open as a dropdown: logo, company, and name. Nothing else. A chosen model replaces the placeholder in that field. Submit is enabled when a row is selected. There is no Skip. A wrong guess slides into **Previous guesses** and stays there. That model leaves the search list. A model already guessed is not offered again.
+
+Each previous guess shows the logo, the company, and the name, then the traits it missed: **Wrong company**, **Wrong region**, **Wrong family**. A trait the pool already shares is left off that line. A trait it got right is left off too, because the board unveils that row. If none of those three missed, the line is **Wrong model**. No-hint mode keeps the model and says **Wrong model**, with no trait words.
 
 The list is the one the server already filtered. A guess the server rejects: **That model is not in the list.**
-
-Origin replaces the search with **USA**, **China**, **Europe**. One tap submits the only guess of the round. Until the player taps one, or gives up, the message box stays available, up to five messages.
 
 ### Feedback
 
 Hidden for the whole round when no-hint mode is on. Origin renders none of it.
 
-The board sits on the right. Every row looks the same: the trait, then **Not found yet**, or the unveiled value. Company, region, and family start as **Not found yet**. A miss does not name the trait. A hit unveils that row: **Anthropic**, **USA** with the USA, China, or Europe flag, or **Opus**. A trait the pool already shares is unveiled from the start, except year and size.
+The board sits on the right. Every row looks the same: the trait, then **Not found yet**, or the unveiled value. Company, region, family, year, and size are on the board as soon as the round opens. A miss does not change a row to **Wrong**. The miss is named on the previous-guess card. A hit unveils that row: **Anthropic**, **USA** with the USA, China, or Europe flag, or **Opus**. A trait the pool already shares is unveiled from the start, except year and size.
 
-Year and size join the same list after the first reply. Until the click they read **Not found yet**, with **Reveal** when the pool shares that trait, or **Reveal (−100 pts)** when the models differ. The click reveals the year or the size. The button does not come back.
+Year and size read **Not found yet** until the click, with **Reveal** when the pool shares that trait, or **Reveal (−100 pts)** when the models differ. The click reveals the year or the size. The button does not come back.
 
 Point numbers for a match stay off this board. They are on the result page. Naming the model leaves the round before another feedback pass.
 
 ### Hints
 
-Under the feedback, after the first reply, when this category allows hints and no-hint mode is off.
+On the same board, from the moment the round opens, when this category allows hints and no-hint mode is off.
 
 - **Reveal**, or **Reveal (−100 pts)** when the years or the sizes differ
 
@@ -248,7 +252,9 @@ Daily stats, later, on a daily result, once at least one daily round has finishe
 
 ## Leaderboard (`/leaderboard`)
 
-Tabs are the categories with a leaderboard that have at least one counted round. That is All models, Daily when it exists, and a main family only if that board is turned on later. A card you turned off still has a tab when it has history. Company, Region, Latest, and Origin are not tabs.
+**Back** returns home. It is a text button with a chevron, larger than a footnote link.
+
+Tabs are the categories with a leaderboard that are enabled. That is All models, and Daily when it is open. A main family board can be turned on later. Company, Region, and Custom are not tabs.
 
 A second switch: **This week** and **All time**. Weeks start Monday 00:00 UTC. The tab label says **This week (UTC)**.
 

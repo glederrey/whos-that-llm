@@ -111,7 +111,7 @@ The first build is a playable All models round. Gael plays it locally, then the 
 4. `lib/game.ts`: frozen traits, server-filtered guess list, compare, hints, no-hint mode, score. All models, five messages, one guess after each reply, give up, no skip. The result page shows the breakdown and the short explanation, including a negative total. Play across the three enabled models. If a family is indistinguishable, disable that family. Do not change the schema to save it.
 5. The hourly cap and one active round. A credit error sets `app_settings.paused` for everyone.
 6. Leaderboard for All models: rank, name, best score.
-7. Later: company, family, region, latest, daily, origin. They are pool filters plus the given-trait rule. Origin is the three region buttons.
+7. Later: daily, company, family, region, custom. They are pool filters plus the given-trait rule. Custom is a choice of models. There is no Latest category and no Origin category.
 8. Later: home weekly top 5, daily result stats, profile with stats, past games, and username changes.
 9. Later: admin. Spend, stats, families, roster, logos in Supabase Storage with a URL fallback, pause switch, recent rounds.
 10. Deploy to the `*.vercel.app` URL. A domain comes after someone besides us is playing.

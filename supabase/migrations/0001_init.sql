@@ -609,11 +609,10 @@ insert into public.models (
 on conflict (id) do nothing;
 
 insert into public.categories (id, name, blurb, enabled, leaderboard, hints_allowed, sort_order) values
-  ('all', 'All models', 'Any model in the roster. Name it, or take the region and the company.', true, true, true, 1),
-  ('company', 'Company', 'The lab is already known. Name the model.', false, false, false, 2),
-  ('family', 'Family', 'One family. Name the model.', false, false, false, 3),
-  ('region', 'Region', 'USA, China, or Europe.', false, false, true, 4),
-  ('latest', 'Latest', 'The newest model in each family.', false, false, false, 5),
-  ('daily', 'Daily', 'The same model for everyone today.', false, true, true, 6),
-  ('origin', 'Origin', 'USA, China, or Europe. One guess.', false, false, false, 7)
+  ('daily', 'Daily', 'The same model for everyone today.', false, true, true, 1),
+  ('all', 'All models', 'Any model in the roster. Name it, or take the region and the company.', true, true, true, 2),
+  ('company', 'Company', 'The lab is already known. Name the model.', false, false, false, 3),
+  ('family', 'Family', 'One family. Name the model.', false, false, false, 4),
+  ('region', 'Region', 'USA, China, or Europe.', false, false, true, 5),
+  ('custom', 'Custom', 'A custom choice of models.', false, false, false, 6)
 on conflict (id) do nothing;

@@ -12,6 +12,7 @@ import {
   type GuessFlags,
   type HintKey,
   type PublicGame,
+  type RecordedGuess,
   type ScoreLine,
   type Traits,
 } from "./game";
@@ -125,7 +126,7 @@ export async function lobbyState(userId: string) {
     loadCatalog(client),
   ]);
   let nextAt: string | null = null;
-  if ((count ?? 0) >= config.hourlyCap) {
+  if ((count ?? 0) > 0) {
     const { data: oldest } = await client
       .from("games")
       .select("started_at")
@@ -191,16 +192,15 @@ export async function readPublicGame(gameId: string, userId: string): Promise<Pu
   if (!game) return null;
   const [{ data: messages }, { data: guesses }] = await Promise.all([
     client.from("messages").select("turn, role, content").eq("game_id", gameId).order("turn").order("role"),
-    client.from("guesses").select("guessed_model_id, model_correct, company_correct, family_correct, region_correct").eq("game_id", gameId),
+    client
+      .from("guesses")
+      .select("turn, guessed_model_id, model_correct, company_correct, family_correct, region_correct")
+      .eq("game_id", gameId)
+      .order("turn"),
   ]);
-  const flags: GuessFlags[] = (guesses ?? []).map((guess) => ({
-    modelCorrect: Boolean(guess.model_correct),
-    companyCorrect: Boolean(guess.company_correct),
-    familyCorrect: Boolean(guess.family_correct),
-    regionCorrect: Boolean(guess.region_correct),
-  }));
-  const guessedModelIds = (guesses ?? [])
-    .map((guess) => guess.guessed_model_id)
+  const recorded = recordedGuesses(guesses ?? []);
+  const guessedModelIds = recorded
+    .map((guess) => guess.modelId)
     .filter((id): id is string => typeof id === "string" && id.length > 0);
   return toPublicGame({
     id: game.id,
@@ -214,7 +214,7 @@ export async function readPublicGame(gameId: string, userId: string): Promise<Pu
     traits: game.traits,
     modelId: game.model_id,
     hints: game.hints ?? [],
-    guesses: flags,
+    guesses: recorded,
     guessedModelIds,
     transcript: sortTranscript(messages ?? []),
     score: game.score,
@@ -433,6 +433,26 @@ export async function leaderboard(category: string, period: string) {
   const { data, error } = await client.rpc("leaderboard", { category, since });
   if (error) throw new Error(error.message);
   return { rows: (data ?? []) as { rank: number; name: string; score: number }[] };
+}
+
+function recordedGuesses(
+  rows: {
+    turn?: number;
+    guessed_model_id: string | null;
+    model_correct: boolean;
+    company_correct: boolean;
+    family_correct: boolean;
+    region_correct: boolean;
+  }[],
+): RecordedGuess[] {
+  return rows.map((guess) => ({
+    turn: guess.turn ?? 0,
+    modelId: guess.guessed_model_id,
+    modelCorrect: Boolean(guess.model_correct),
+    companyCorrect: Boolean(guess.company_correct),
+    familyCorrect: Boolean(guess.family_correct),
+    regionCorrect: Boolean(guess.region_correct),
+  }));
 }
 
 function sortTranscript(

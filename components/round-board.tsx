@@ -20,8 +20,7 @@ export function RoundBoard({ initial }: { initial: PublicGame }) {
   const [hintBusy, setHintBusy] = useState<"year" | "size" | null>(null);
   const [listOpen, setListOpen] = useState(false);
   const [openedHints, setOpenedHints] = useState<Array<"year" | "size">>([]);
-  const [shake, setShake] = useState(false);
-  const [wrongFlash, setWrongFlash] = useState(false);
+  const [freshGuessId, setFreshGuessId] = useState<string | null>(null);
   const dialogRef = useRef<HTMLDialogElement>(null);
   const blurTimer = useRef<number | null>(null);
   const endRef = useRef<HTMLDivElement>(null);
@@ -44,7 +43,7 @@ export function RoundBoard({ initial }: { initial: PublicGame }) {
   const shown = game.awaitingGuess ? Math.max(game.messageNumber, 1) : Math.min(game.messageLimit, game.messageNumber + 1);
   const inputLocked = busy || game.awaitingGuess || game.messageNumber >= game.messageLimit || game.status !== "active";
   const given = new Map(game.given.map((row) => [row.key, row.value]));
-  const hintsOpen = game.hintsAllowed && !game.noHint && game.messageNumber >= 1;
+  const hintsOpen = game.hintsAllowed && !game.noHint;
   const showBoard = !game.noHint && game.category !== "origin";
   const selectedRow = game.candidates.find((row) => row.id === selected) ?? null;
 
@@ -160,6 +159,7 @@ export function RoundBoard({ initial }: { initial: PublicGame }) {
 
   async function guess() {
     if (!selected || guessBusy) return;
+    const guessedId = selected;
     setGuessBusy(true);
     setNotice("");
     const response = await fetch(`/api/games/${game.id}/guesses`, {
@@ -182,12 +182,7 @@ export function RoundBoard({ initial }: { initial: PublicGame }) {
       router.refresh();
       return;
     }
-    setShake(true);
-    setWrongFlash(true);
-    window.setTimeout(() => {
-      setShake(false);
-      setWrongFlash(false);
-    }, 700);
+    setFreshGuessId(guessedId);
     setGame(body);
     setSelected(null);
     setSearch("");
@@ -337,8 +332,30 @@ export function RoundBoard({ initial }: { initial: PublicGame }) {
             ) : null}
           </section>
         ) : null}
+        {game.pastGuesses.length > 0 ? (
+          <section className="card guess-history">
+            <h2>Previous guesses</h2>
+            {game.pastGuesses.map((guess) => (
+              <div key={guess.id} className={guess.id === freshGuessId ? "past-guess arrive" : "past-guess"}>
+                <div className="past-model">
+                  <img src={guess.logoPath} alt="" />
+                  <span>
+                    {guess.companyName}
+                    <br />
+                    {guess.name}
+                  </span>
+                </div>
+                {guess.wrong.length > 0 ? (
+                  <p className="wrong-line">{guess.wrong.map((trait) => `Wrong ${trait}`).join(" · ")}</p>
+                ) : (
+                  <p className="wrong-line">Wrong model</p>
+                )}
+              </div>
+            ))}
+          </section>
+        ) : null}
         {game.awaitingGuess ? (
-          <section className={`card stack guess-box${shake ? " shake" : ""}`}>
+          <section className="card stack guess-box">
             <h2>Guess for message {game.messageNumber}.</h2>
             <div className="guess-search">
               {selectedRow && !listOpen ? (
@@ -390,7 +407,6 @@ export function RoundBoard({ initial }: { initial: PublicGame }) {
                 </div>
               ) : null}
             </div>
-            {wrongFlash ? <p className="wrong-flash">Wrong</p> : null}
             <button type="button" className="button" disabled={!selected || guessBusy} onClick={() => void guess()}>
               Submit guess
             </button>

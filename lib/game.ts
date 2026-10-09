@@ -39,6 +39,19 @@ export type PublicCandidate = {
   logoPath: string;
 };
 
+export type RecordedGuess = GuessFlags & {
+  modelId: string | null;
+  turn: number;
+};
+
+export type PastGuess = {
+  id: string;
+  name: string;
+  companyName: string;
+  logoPath: string;
+  wrong: Array<"company" | "region" | "family">;
+};
+
 export type PublicGame = {
   id: string;
   category: string;
@@ -61,6 +74,7 @@ export type PublicGame = {
   };
   hints: { year: string | null; size: string | null };
   candidates: PublicCandidate[];
+  pastGuesses: PastGuess[];
   transcript: { turn: number; role: "user" | "assistant"; content: string }[];
   model?: {
     name: string;
@@ -156,6 +170,29 @@ export function knownValues(input: {
     if (guesses.some((guess) => guess.regionCorrect)) known.region = hidden.region;
   }
   return known;
+}
+
+export function missedGuesses(traits: Traits, guesses: RecordedGuess[], noHint: boolean): PastGuess[] {
+  const given = new Set(traits.given);
+  return [...guesses]
+    .filter((guess) => guess.modelId && !guess.modelCorrect && traits.models[guess.modelId])
+    .sort((a, b) => a.turn - b.turn)
+    .map((guess) => {
+      const model = traits.models[guess.modelId as string] as FrozenModel;
+      const wrong: PastGuess["wrong"] = [];
+      if (!noHint) {
+        if (!given.has("company") && !guess.companyCorrect) wrong.push("company");
+        if (!given.has("region") && !guess.regionCorrect) wrong.push("region");
+        if (!given.has("family") && !guess.familyCorrect) wrong.push("family");
+      }
+      return {
+        id: guess.modelId as string,
+        name: model.name,
+        companyName: model.companyName,
+        logoPath: model.logoPath,
+        wrong,
+      };
+    });
 }
 
 export function filterCandidates(
@@ -380,7 +417,7 @@ export function toPublicGame(input: {
   traits: Traits;
   modelId: string;
   hints: HintKey[];
-  guesses: GuessFlags[];
+  guesses: RecordedGuess[];
   guessedModelIds: string[];
   transcript: PublicGame["transcript"];
   score: number | null;
@@ -431,6 +468,7 @@ export function toPublicGame(input: {
       size: input.hints.includes("size") ? sizeLabel(hidden.size) : null,
     },
     candidates: filterCandidates(input.traits, known, input.guessedModelIds),
+    pastGuesses: missedGuesses(input.traits, input.guesses, input.noHint),
     transcript: input.transcript,
   };
 

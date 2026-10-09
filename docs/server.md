@@ -29,7 +29,15 @@ type PublicGame = {
     familySame: boolean;                // true only on a hit. A miss stays false and the UI says nothing
     companyValue: string | null;        // set on a company match
     regionValue: string | null;         // "USA", "China", or "Europe" on a region match
+    familyValue: string | null;         // family name on a family match
   };
+  pastGuesses: {                   // wrong model guesses, oldest first. Empty traits in no-hint mode
+    id: string;
+    name: string;
+    companyName: string;
+    logoPath: string;
+    wrong: ("company" | "region" | "family")[];
+  }[];
   hints: {
     year: string | null;     // "2026" once bought, else null
     size: string | null;     // "Small", "Medium", or "Large" once bought, else null
@@ -92,7 +100,7 @@ In one transaction:
 1. Reject if `profiles.username` is null (`422`, `username`). Reject if this user has a row with `status = 'active'` (`409`, `active_game`).
 2. Reject if they have 10 rows with `started_at` in the last hour (`429`, `hourly_cap`, body includes `nextAt`).
 3. For `daily`, reject a second `daily_key` of today (`409`, `daily_done`).
-4. Load the category and reject it unless `categories.enabled` (`404`). Build the pool. `all`, `daily`, and `origin` use every enabled model. `latest` uses the enabled models with `is_latest`, one per family, and takes no `poolKey`. `company` uses `poolKey` as a company id. `family` uses `poolKey` as a family id. `region` uses `poolKey` as `us`, `cn`, or `eu`. Reject a pool with fewer than 2 enabled models, except daily and origin. Daily and origin still reject an empty roster. The error is `422` `pool_too_small`. `poolKey` is required for company, family, and region, and rejected for the others.
+4. Load the category and reject it unless `categories.enabled` (`404`). Build the pool. `all` and `daily` use every enabled model. `company` uses `poolKey` as a company id. `family` uses `poolKey` as a family id. `region` uses `poolKey` as `us`, `cn`, or `eu`. `custom` is not built yet. Reject a pool with fewer than 2 enabled models, except daily, which still rejects an empty roster. The error is `422` `pool_too_small`. `poolKey` is required for company, family, and region, and rejected for the others.
 5. Draw a uniform model from that pool. Daily copies the model id, the `pool_model_ids`, and the trait snapshot already stored for today's `daily_key` when any player has started it. Otherwise draw once and that id, that roster, and those traits are what later rows copy. Two people starting the daily in the same instant must not draw two models: take a transaction-level lock on a single advisory key for the UTC date, then read-or-insert.
 6. Freeze traits from the current catalog into `games.traits`. Insert `games` with `pool_model_ids` set to that pool, `rules` copied from config, `rules.hintsAllowed` copied from `categories.hints_allowed`, `username` copied from the profile, `hints = '{}'`, `message_count = 0`, `awaiting_guess = false`, `no_hint` from the body. Origin stores `no_hint` false and `hintsAllowed` false. Do not write a score on insert.
 
@@ -114,7 +122,7 @@ An explicit credit error is a response whose status or error code says the key i
 
 ### `POST /api/games/:id/guesses`
 
-Body for a model guess: `{ modelId: string }`. Body for origin, later: `{ region: "us" | "cn" | "eu" }`.
+Body for a model guess: `{ modelId: string }`.
 
 Reject unless `awaiting_guess` is true. Lock the game row.
 
@@ -127,8 +135,6 @@ Pause does not block a guess, a hint, or a give-up. It blocks starting a round a
 If `model_correct`, set `status = 'solved'` and `finished_at`, and write `score`, `score_breakdown`, and `score_explanation`. The response includes `model`.
 
 If this was the last message and the model was not named, set `status = 'miss'` and `finished_at`, and write the score the same way. The response includes `model`.
-
-On origin, set `region_correct` and leave the other booleans false. A correct region is `solved` with base `rules.regionPoints`. A wrong region is `miss` with base 0. Either way the round ends and the response includes `model`. `rules.modelBase` is not used.
 
 ### `POST /api/games/:id/hints`
 
@@ -185,7 +191,7 @@ JSON body `{ error: string, ... }`. The page copy for each code is in [Pages](pa
 | 409 | `daily_done` | Daily already started today |
 | 409 | `conflict` | The guess is not in the filtered list |
 | 409 | `turn` | Guess when no guess is open, a second guess on the same message, or a message while a guess is open |
-| 422 | `pool_too_small` | Fewer than 2 models in the pool, or an empty roster for daily or origin |
+| 422 | `pool_too_small` | Fewer than 2 models in the pool, or an empty roster for daily |
 | 422 | `username` | Missing, or not 3–20 characters after trim |
 | 422 | `hint` | Hint rejected |
 | 429 | `hourly_cap` | Body includes `nextAt` |

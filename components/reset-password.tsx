@@ -21,7 +21,7 @@ export function ResetPassword({ hasUsername }: { hasUsername: boolean }) {
       setError("Wrong email or password.");
       return;
     }
-    router.push(hasUsername ? "/play" : "/welcome");
+    router.push(hasUsername ? "/" : "/welcome");
     router.refresh();
   }
 

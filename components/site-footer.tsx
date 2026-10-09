@@ -3,11 +3,14 @@ import { config } from "@/lib/config";
 export function SiteFooter() {
   return (
     <footer className="footer">
+      <div className="footer-inner">
       {config.tipUrl ? (
         <a href={config.tipUrl} target="_blank" rel="noreferrer">
-          Tip
+          The models invoice the developer. Cover a round on Ko-fi.
         </a>
-      ) : null}
+      ) : (
+        <p className="kofi">The models invoice the developer. A Ko-fi will sit here when you feel like covering a round.</p>
+      )}
       <p className="credit">
         <span>Created by</span>
         <a href="https://github.com/glederrey" target="_blank" rel="noreferrer">
@@ -24,6 +27,7 @@ export function SiteFooter() {
           </svg>
         </a>
       </p>
+      </div>
     </footer>
   );
 }

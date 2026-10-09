@@ -61,7 +61,7 @@ export function LoginForm({ next, cancelled }: { next: string; cancelled: boolea
         router.refresh();
         return;
       }
-      setNote("Check your email.");
+      setNote("Supabase sent the confirmation link. Check your email.");
       return;
     }
     const { error: authError } = await supabase.auth.signInWithPassword({ email, password });
@@ -125,7 +125,14 @@ export function LoginForm({ next, cancelled }: { next: string; cancelled: boolea
             Forgot password
           </button>
         ) : (
-          <p className="muted">We email you a confirmation link.</p>
+          <div className="stack">
+            <p className="muted">Supabase emails you a confirmation link.</p>
+            <p className="muted">
+              A round stores your username, the messages, the replies, and the guesses. Supabase Auth keeps the email so you
+              can sign back in, and so a script cannot open a pile of games. The email stays off the leaderboard and off the
+              round itself.
+            </p>
+          </div>
         )}
         <button type="submit" className="button" disabled={busy}>
           {signingIn ? "Sign in" : "Create account"}

@@ -74,7 +74,7 @@ The id is the stable key. Past rounds copy the display name into `games.traits`,
 | `open_weights` | boolean | Admin fact. Play does not read it |
 | `reasoning` | boolean | Admin fact. Play does not read it |
 | `provider_settings` | jsonb | default `{}`. Passed through on the call. Not a player-facing trait |
-| `is_latest` | boolean | The newest model in its family, for the later Latest pool |
+| `is_latest` | boolean | The newest model in its family. Admin only. It does not make a category |
 | `released_on` | date | Required while `enabled`. The year hint reads the calendar year |
 | `enabled` | boolean | default false. False keeps the row and pulls the model out of every draw |
 | `logo_path` | text, null | Overrides the company logo. Storage path or `https` URL |
@@ -102,12 +102,12 @@ The lobby and the leaderboard read this table. The built-in rows are seeded and 
 
 | Column | Type | Notes |
 |---|---|---|
-| `id` | text, pk | `all`, `daily`, `company`, … Never changes. `games.category` stores it |
+| `id` | text, pk | `daily`, `all`, `company`, `family`, `region`, `custom`. Never changes. `games.category` stores it |
 | `name` | text | Card title |
 | `blurb` | text | The one sentence on the main page and on the card |
 | `enabled` | boolean | False hides the lobby card. The main page still shows the blurb, with **Not open yet.** Past rounds stay |
 | `leaderboard` | boolean | True for `all` and `daily`. False for the others. A main family board can be turned on later |
-| `hints_allowed` | boolean | True for `all`, `region`, and `daily`. False for `company`, `family`, `latest`, and `origin` |
+| `hints_allowed` | boolean | True for `all`, `region`, and `daily`. False for `company`, `family`, and `custom` |
 | `sort_order` | int | Main page and lobby order |
 | `created_at` | timestamptz | |
 
@@ -128,7 +128,7 @@ One row, `id = 1`.
 
 | Column | Type | Notes |
 |---|---|---|
-| `id` | uuid, pk, fk `auth.users` | on delete cascade. This id links the email to the username |
+| `id` | uuid, pk, fk `auth.users` | on delete cascade. This id links the auth user to the username. The email stays in Supabase Auth. It is not copied onto `games` or the leaderboard |
 | `username` | text, null | Null until `/welcome`. Not unique |
 | `created_at` | timestamptz | |
 
@@ -144,7 +144,7 @@ One row per round.
 | `user_id` | uuid, fk `profiles` | on delete restrict. Deleting the auth user will not delete their rounds |
 | `username` | text | Copied at insert. Leaderboard name for that round |
 | `category` | text, fk `categories` | |
-| `pool_key` | text, null | `anthropic`, `opus`, `us`, `cn`, or `eu`. Null for `all`, `latest`, `daily`, and `origin` |
+| `pool_key` | text, null | `anthropic`, `opus`, `us`, `cn`, or `eu`. Null for `all`, `daily`, and `custom` |
 | `pool_model_ids` | text[] | The models that were legal when the round started |
 | `model_id` | text, fk `models` | |
 | `traits` | jsonb | Frozen at insert. Scoring, filtering, feedback, and the result page read this, not the live catalog |
@@ -237,9 +237,9 @@ One row per submitted guess, including the solve and a wrong fifth guess. Give-u
 | `id` | uuid, pk | |
 | `game_id` | uuid, fk | |
 | `turn` | int | |
-| `guessed_model_id` | text, fk `models`, null | Null for origin |
-| `guessed_region` | text, null | `us` / `cn` / `eu`. For a model guess, copy it from the frozen company. For origin, this is the guess |
-| `model_correct` | boolean | False for every origin guess |
+| `guessed_model_id` | text, fk `models`, null | The model the player named |
+| `guessed_region` | text, null | `us` / `cn` / `eu`. For a model guess, copy it from the frozen company |
+| `model_correct` | boolean | True when the named model is the hidden one |
 | `company_correct` | boolean | |
 | `family_correct` | boolean | Stored for feedback and for the later daily stat. Pays nothing |
 | `region_correct` | boolean | |

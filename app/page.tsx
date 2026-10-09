@@ -1,6 +1,8 @@
 import { redirect } from "next/navigation";
+import { HomeBoard } from "@/components/home-board";
 import { ResetPassword } from "@/components/reset-password";
-import { listCategories } from "@/lib/rounds";
+import { config } from "@/lib/config";
+import { listCategories, lobbyState } from "@/lib/rounds";
 import { currentProfile } from "@/lib/session";
 
 export const dynamic = "force-dynamic";
@@ -15,35 +17,30 @@ export default async function HomePage({
   const { user, username } = await currentProfile();
   const resetting = params.reset === "1";
   if (user && !username && !resetting) redirect("/welcome");
-  const categories = await listCategories();
-  const playHref = user ? (username ? "/play" : "/welcome") : "/login";
+  const signedIn = Boolean(user && username);
+  const [categories, state] = await Promise.all([
+    listCategories(),
+    signedIn && user ? lobbyState(user.id) : Promise.resolve(null),
+  ]);
 
   return (
     <div className="stack">
       {resetting && user ? <ResetPassword hasUsername={Boolean(username)} /> : null}
-      <h1>Who&apos;s that LLM</h1>
-      <p className="lede">Five messages. One hidden model. Name it.</p>
-      <p className="limits">5 messages · 1 guess each · 10 games an hour</p>
-      <div className="row">
-        <a className="button" href={playHref}>
-          Play
-        </a>
-        <a className="button-quiet" href="/leaderboard">
-          Leaderboard
-        </a>
-      </div>
-      <div className="card category-list">
-        {categories.map((category) => (
-          <div key={category.id}>
-            <span>
-              <strong>{category.name}</strong>
-              <br />
-              <span className="muted">{category.blurb}</span>
-            </span>
-            {category.enabled ? null : <span className="pill">Not open yet</span>}
-          </div>
-        ))}
-      </div>
+      <HomeBoard
+        signedIn={signedIn}
+        paused={state?.paused ?? false}
+        played={state?.played ?? 0}
+        cap={state?.cap ?? config.hourlyCap}
+        activeGameId={state?.activeGameId ?? null}
+        poolSize={state?.poolSize ?? 2}
+        nextAt={state?.nextAt ?? null}
+        categories={categories.map((category) => ({
+          id: category.id,
+          name: category.name,
+          blurb: category.blurb,
+          enabled: category.enabled,
+        }))}
+      />
     </div>
   );
 }
