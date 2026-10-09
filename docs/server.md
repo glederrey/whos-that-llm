@@ -17,6 +17,7 @@ type PublicGame = {
   poolLabel: string;
   noHint: boolean;
   hintsAllowed: boolean;
+  hintCost: number;              // from games.rules, so the hint button does not hardcode 100
   status: "active" | "solved" | "miss" | "given_up";
   messageNumber: number;     // replies already stored, 0–5
   messageLimit: number;      // from games.rules

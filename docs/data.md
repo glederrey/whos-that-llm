@@ -154,6 +154,7 @@ One row per round.
 | `daily_key` | date, null | UTC date. Set only for `daily` |
 | `started_at` | timestamptz | default `now()`. The hourly cap counts these |
 | `finished_at` | timestamptz, null | |
+| `call_started_at` | timestamptz, null | Set while a model call is in flight. A call older than 3 minutes can be claimed again, so a crashed request does not lock the round. Cleared when the reply is stored, aborted, or the round ends |
 
 Indexes:
 
