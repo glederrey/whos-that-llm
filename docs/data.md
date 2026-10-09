@@ -20,6 +20,8 @@ The text is kept. Later analysis reads `messages` joined to `games` on `game_id`
 
 A failed call writes `usage` and does not write `messages`, because there is no stored reply. The system prompt is not a row.
 
+`supabase/migrations/0002_transcripts.sql` is the file to run in the Supabase SQL editor for this table. It is safe after `0001_init.sql`. The create does nothing when `messages` is already there. The comments, row level security, and the service-role grant still apply.
+
 ## Access
 
 | Table | `anon` / `authenticated` | Service role |

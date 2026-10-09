@@ -18,7 +18,7 @@ const themeScript = `(function(){try{var s=localStorage.getItem("theme");var t=s
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={font.variable} suppressHydrationWarning>
-      <body>
+      <body suppressHydrationWarning>
         <Script id="theme-init" strategy="beforeInteractive">
           {themeScript}
         </Script>
