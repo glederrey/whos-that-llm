@@ -44,10 +44,10 @@ A failed call writes `usage` and does not write `messages`, because there is no 
 | `id` | text, pk | `anthropic` |
 | `name` | text | |
 | `region` | text | `us`, `cn`, `eu`. Shown as USA, China, Europe |
-| `logo_path` | text | A path in Supabase Storage, or an `https` URL when upload is unavailable |
+| `logo_path` | text | `logos/{company_id}.png` in the public `logos` bucket, or an `https` URL |
 | `created_at` | timestamptz | default `now()` |
 
-Logo upload is part of admin, which is later. Until then a seed path such as `/logos/anthropic.svg` is enough, and the file has to resolve.
+The object name is `{company_id}.png`. The bucket also accepts SVG and WebP, at most 1 MB. The game reads that path. A missing file shows no image. Files in `public/logos` are not these logos.
 
 ### `families`
 
@@ -205,7 +205,7 @@ Indexes:
       "region": "us",
       "size": "medium",
       "year": 2026,
-      "logoPath": "/logos/anthropic.svg"
+      "logoPath": "https://example.supabase.co/storage/v1/object/public/logos/anthropic.png"
     }
   }
 }

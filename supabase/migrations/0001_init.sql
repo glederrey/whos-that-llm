@@ -611,10 +611,10 @@ grant execute on function public.apply_give_up(uuid, uuid, int, jsonb, text[]) t
 insert into public.app_settings (id, paused) values (1, false) on conflict (id) do nothing;
 
 insert into public.companies (id, name, region, logo_path) values
-  ('anthropic', 'Anthropic', 'us', '/logos/anthropic.svg'),
-  ('openai', 'OpenAI', 'us', '/logos/openai.svg'),
-  ('deepseek', 'DeepSeek', 'cn', '/logos/deepseek.svg'),
-  ('mistral', 'Mistral', 'eu', '/logos/mistral.svg')
+  ('anthropic', 'Anthropic', 'us', 'logos/anthropic.png'),
+  ('openai', 'OpenAI', 'us', 'logos/openai.png'),
+  ('deepseek', 'DeepSeek', 'cn', 'logos/deepseek.png'),
+  ('mistral', 'Mistral', 'eu', 'logos/mistral.png')
 on conflict (id) do nothing;
 
 insert into public.families (id, name, enabled) values

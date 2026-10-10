@@ -1,4 +1,5 @@
 import { notFound, redirect } from "next/navigation";
+import { CompanyLogo } from "@/components/company-logo";
 import { MarkdownMessage } from "@/components/markdown-message";
 import { listCategories, readPublicGame } from "@/lib/rounds";
 import { currentProfile } from "@/lib/session";
@@ -32,7 +33,7 @@ export default async function ResultPage({ params }: { params: Promise<{ gameId:
   return (
     <div className="stack">
       <div className="model-lockup">
-        <img src={game.model.logoPath} alt="" />
+        <CompanyLogo src={game.model.logoPath} />
         <div>
           <h1>{game.model.name}</h1>
           <div className="model-facts">

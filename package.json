@@ -5,7 +5,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "test": "tsx --test lib/game.test.ts lib/words.test.ts lib/openrouter.test.ts lib/profile.test.ts",
+    "test": "tsx --test lib/game.test.ts lib/words.test.ts lib/openrouter.test.ts lib/profile.test.ts lib/logos.test.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { config } from "@/lib/config";
 import type { PublicGame } from "@/lib/game";
+import { CompanyLogo } from "./company-logo";
 import { MarkdownMessage } from "./markdown-message";
 import { RegionFlag } from "./region-flag";
 
@@ -346,7 +347,7 @@ export function RoundBoard({ initial }: { initial: PublicGame }) {
             {game.pastGuesses.map((guess) => (
               <div key={guess.id} className={guess.id === freshGuessId ? "past-guess arrive" : "past-guess"}>
                 <div className="past-model">
-                  <img src={guess.logoPath} alt="" />
+                  <CompanyLogo src={guess.logoPath} />
                   <span>
                     {guess.companyName}
                     <br />
@@ -373,7 +374,7 @@ export function RoundBoard({ initial }: { initial: PublicGame }) {
             <div className="guess-search">
               {selectedRow && !listOpen ? (
                 <button type="button" className="picked" onClick={() => setListOpen(true)}>
-                  <img src={selectedRow.logoPath} alt="" />
+                  <CompanyLogo src={selectedRow.logoPath} />
                   <span>
                     {selectedRow.companyName}
                     <br />
@@ -409,7 +410,7 @@ export function RoundBoard({ initial }: { initial: PublicGame }) {
                         setListOpen(false);
                       }}
                     >
-                      <img src={row.logoPath} alt="" />
+                      <CompanyLogo src={row.logoPath} />
                       <span>
                         {row.companyName}
                         <br />

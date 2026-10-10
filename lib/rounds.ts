@@ -16,7 +16,9 @@ import {
   type ScoreLine,
   type Traits,
 } from "./game";
+import { logoPathForPlay, logoPublicUrl } from "./logos";
 import { cleanUsername } from "./profile";
+import { publicEnv } from "./supabase/env";
 import { createServiceClient, createSessionClient } from "./supabase/server";
 
 type GameRow = {
@@ -95,7 +97,7 @@ async function loadCatalog(client: SupabaseClient): Promise<CatalogModel[]> {
       region: company.region,
       size: row.size as FrozenModel["size"],
       year: new Date(`${row.released_on}T00:00:00Z`).getUTCFullYear(),
-      logoPath: (row.logo_path as string | null) || company.logo_path,
+      logoPath: presentLogo((row.logo_path as string | null) || company.logo_path, row.company_id as string),
       openrouterId: row.openrouter_id as string,
       providerSettings: row.provider_settings,
     };
@@ -105,6 +107,21 @@ async function loadCatalog(client: SupabaseClient): Promise<CatalogModel[]> {
 function first<T>(value: T | T[] | null): T {
   if (Array.isArray(value)) return value[0] as T;
   return value as T;
+}
+
+function presentLogo(path: string, companyId: string): string {
+  const stored = logoPathForPlay(path, companyId);
+  const base = publicEnv()?.url;
+  if (!base) return stored;
+  return logoPublicUrl(base, stored);
+}
+
+function presentTraits(traits: Traits): Traits {
+  const models: Traits["models"] = {};
+  for (const [id, model] of Object.entries(traits.models)) {
+    models[id] = { ...model, logoPath: presentLogo(model.logoPath, model.companyId) };
+  }
+  return { given: traits.given, models };
 }
 
 export async function listCategories() {
@@ -212,7 +229,7 @@ export async function readPublicGame(gameId: string, userId: string): Promise<Pu
     messageCount: game.message_count,
     awaitingGuess: game.awaiting_guess,
     rules: game.rules,
-    traits: game.traits,
+    traits: presentTraits(game.traits),
     modelId: game.model_id,
     hints: game.hints ?? [],
     guesses: recorded,

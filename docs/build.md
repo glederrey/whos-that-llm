@@ -24,7 +24,7 @@ lib/
   supabase/server.ts            session client and service-role client
 components/                     feedback, hints, guess bar, transcript, theme toggle, footer
 app/globals.css                 light and dark tokens. Default follows the system
-public/logos/                   seed marks until Storage upload exists
+public/logos/                   unused letter marks. The game reads Storage `logos/{company_id}.png`
 public/brand/                   site logo copies. tail_right when the text is on the right, tail_left when it is on the left
 supabase/migrations/            the tables in Data
 ```
