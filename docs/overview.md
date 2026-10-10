@@ -70,7 +70,7 @@ Email confirmation stays on. Confirmation and password-reset links return to `/`
 
 A username is 3–20 characters after trimming. Capitals and punctuation are allowed. It does not have to be unique. An empty name is rejected. `profiles.id` is the internal id that links the auth user (and therefore the email) to the username. A rename updates `profiles.username` and every `games.username` for that user id, so the leaderboard and past games show the new name. The old name is not kept.
 
-A signed-in player can delete their own account from the profile page or from **Delete account**. They confirm first. The action uses the session id and ignores any other id. It removes that player's profile, picture, games, messages, guesses, and usage, so the name leaves the leaderboard. Then it deletes the auth user, signs them out, and returns to `/`.
+A signed-in player can delete their own account from the profile page. They confirm first. An unchecked click does not submit. The action uses the session id and ignores any other id. It removes that player's profile, picture, games, messages, guesses, and usage, so the name leaves the leaderboard. Then it deletes the auth user, signs them out, and returns to `/`.
 
 ## Credits
 

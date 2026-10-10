@@ -73,9 +73,6 @@ export function AccountMenu({
                   Profile
                 </a>
               ) : null}
-              <a href="/account/delete" role="menuitem">
-                Delete account
-              </a>
               <div className="menu-rule" />
               <button type="button" className="menu-item" onClick={() => void signOut()}>
                 Sign out

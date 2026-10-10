@@ -96,7 +96,12 @@ test("account deletion uses only the signed-in user", () => {
   assert.match(profile, /DeleteAccountForm/);
   const form = fs.readFileSync(path.join(root, "components/delete-account-form.tsx"), "utf8");
   assert.match(form, /name="confirm"/);
+  assert.match(form, /preventDefault\(\)/);
+  assert.match(form, /returnTo !== "profile"/);
   assert.doesNotMatch(form, /name="(?:id|userId|user_id|email)"/);
+  const menu = fs.readFileSync(path.join(root, "components/account-menu.tsx"), "utf8");
+  assert.equal(menu.includes("/account/delete"), false);
+  assert.equal(menu.includes("Delete account"), false);
   const editor = fs.readFileSync(path.join(root, "components/profile-form.tsx"), "utf8");
   assert.doesNotMatch(editor, /deleteUser|deleteSignedInAccount|deleteAccount/);
 });
