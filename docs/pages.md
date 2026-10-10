@@ -39,11 +39,16 @@ On a light page the mark flips: black question mark, the same teal dot, paper be
 
 Neat and simple. A player should see the game, not a generated marketing page.
 
-Flat color from the palette above. No gradient fills, no glass, no blur, no glow behind the logo. One typeface. Corners stay slight. Motion is a reply arriving word by word, and a feedback row changing state.
+Flat color from the palette above. No gradient fills, no glass, no blur, no glow behind the logo. One typeface. Corners stay slight. Motion stays small: a reply arriving word by word, waiting dots, a trait chip unveiling, a short shake on a wrong guess. No decorative loops, no bouncing logo, no animated background.
 
 The landing page is the title, one sentence, the limits, a short line for each category, and Play. No feature grid, no quotes, no logo wall, no animated background. Teal marks the next action. It is not a wash across the page.
 
-The header mark follows the theme. Light theme uses `logo/light`. Dark theme uses `logo/dark`. The mark sits to the left of the name **Who's that LLM**. The favicon is the dot version. Next serves files from `public/`, so those files are copied there. The folders are named for the theme.
+The logo has two versions, and the rule is about where the text sits.
+
+- **Text on the right of the logo: use `tail_right`.** The tail points toward the title. This is the header and the landing lockup, where the title is to the right of the mark.
+- **Text on the left of the logo: use `tail_left`.** Same idea, mirrored layout.
+
+The source files are Gael's, in `logo/light/` and `logo/dark/`, named `whos_that_llm_logo_tail_right.png` and `whos_that_llm_logo_tail_left.png`. Never edit, flip, or redraw them. The site uses byte copies in `public/brand/`, named `logo-tail-right-light.png`, `logo-tail-right-dark.png`, `logo-tail-left-light.png`, and `logo-tail-left-dark.png`. Light theme uses the light files and dark theme uses the dark files. Where no text sits beside the mark, leave the mark out rather than picking a side. The favicon is the dot version.
 
 ## Phones
 
@@ -278,7 +283,9 @@ A counted round is `solved` or `miss`. Give-up does not appear. Rank is the best
 | Name | Username copied onto that round |
 | Score | That best score |
 
-Two players may share a username. They are separate rows, because the account id is different. The page shows the name only. The signed-in player's row is highlighted. The account id is not shown.
+Two players may share a username. They are separate rows, because the account id is different. The page shows the name only. The account id is not shown.
+
+Row colors, on the leaderboard page and on the landing top 5. Rank 1 is gold, rank 2 is silver, rank 3 is bronze. The signed-in player's row is teal. If the signed-in player is rank 1, 2, or 3, the row keeps its gold, silver, or bronze. It is not replaced by teal. That row is marked with a teal ring and a **You** tag instead, so both facts show. On any other rank, the signed-in row is teal with the same ring and tag.
 
 Twenty rows per page. **Previous** and **Next** move the page. **Your place** appears when the signed-in player has a row and it is not on the current page. It opens the page that contains them.
 

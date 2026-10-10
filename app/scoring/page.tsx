@@ -10,21 +10,42 @@ export default function ScoringPage() {
         Back
       </a>
       <h1>How scoring works</h1>
-      <p>A round starts from a base, then the chat stretches or shrinks it.</p>
-      <ul>
-        <li>Naming the model sets the base to 1,000. Region and company do not add on top of that.</li>
-        <li>If you never name it, a matching region is 100 and a matching company is 300. A trait the round already showed you adds nothing.</li>
-        <li>Tokens: 1,000 divided by the tokens the replies used. Fewer tokens score higher. Zero tokens counts as 1, so the math never divides by zero.</li>
-        <li>Messages: 10 divided by the replies you used. The first reply is ×10. The tenth is ×1.</li>
-        <li>No-hint play multiplies by 1.5.</li>
-        <li>Each hint you buy, year or size, subtracts 100 after those multipliers.</li>
-        <li>Each wrong model subtracts 50, also after the multipliers. Naming the right model does not take that 50. Earlier wrong names still do, even if you solve the round later.</li>
-      </ul>
-      <p>The total can be negative. The result page shows that number.</p>
+      <p className="lede">A round starts from a base, then the chat stretches or shrinks it.</p>
+      <div className="card">
+        <ul className="rule-list">
+          <li>
+            <strong>Naming the model</strong>
+            <span>Naming the model sets the base to 1,000. Region and company do not add on top of that.</span>
+          </li>
+          <li>
+            <strong>Never naming it</strong>
+            <span>If you never name it, a matching region is 100 and a matching company is 300. A trait the round already showed you adds nothing.</span>
+          </li>
+          <li>
+            <strong>Tokens</strong>
+            <span>1,000 divided by the tokens the replies used. Fewer tokens score higher. Zero tokens counts as 1, so the math never divides by zero.</span>
+          </li>
+          <li>
+            <strong>Messages</strong>
+            <span>10 divided by the replies you used. The first reply is ×10. The tenth is ×1.</span>
+          </li>
+          <li>
+            <strong>No hints</strong>
+            <span>No-hint play multiplies by 1.5.</span>
+          </li>
+          <li>
+            <strong>Hints</strong>
+            <span>Each hint you buy, year or size, subtracts 100 after those multipliers.</span>
+          </li>
+          <li>
+            <strong>Wrong models</strong>
+            <span>Each wrong model subtracts 50, also after the multipliers. Naming the right model does not take that 50. Earlier wrong names still do, even if you solve the round later.</span>
+          </li>
+        </ul>
+      </div>
+      <p className="muted">The total can be negative. The result page shows that number.</p>
       <h2>One round</h2>
-      <p>
-        Two replies used 500 tokens. The first name was wrong. You bought the year. The second name was the model.
-      </p>
+      <p>Two replies used 500 tokens. The first name was wrong. You bought the year. The second name was the model.</p>
       <pre className="formula">{`base  = 1000
 score = round(1000 × (1000 / 500) × (10 / 2)) − 100 − 50
       = round(1000 × 2 × 5) − 150

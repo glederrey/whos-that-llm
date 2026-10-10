@@ -134,7 +134,7 @@ export function HomeBoard({
           const continueGame = Boolean(activeGameId) && category.id === "all";
           const disabled = !open || paused || busy || small || (full && !continueGame) || (Boolean(activeGameId) && !continueGame);
           return (
-            <div key={category.id} className="category-block">
+            <div key={category.id} className={open ? "category-block" : "category-block closed"}>
               <div className="category-main">
                 <span>
                   <strong>{category.name}</strong>

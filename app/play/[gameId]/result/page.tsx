@@ -21,6 +21,7 @@ export default async function ResultPage({ params }: { params: Promise<{ gameId:
       ? `/play/new?category=${game.category}`
       : "/play";
 
+  const state = game.status === "solved" ? "solved" : game.status === "miss" ? "miss" : "given-up";
   const status =
     game.status === "solved"
       ? `Solved on message ${game.messageNumber}.`
@@ -34,15 +35,22 @@ export default async function ResultPage({ params }: { params: Promise<{ gameId:
         <img src={game.model.logoPath} alt="" />
         <div>
           <h1>{game.model.name}</h1>
-          <p className="muted">
-            {game.model.companyName} · {game.model.region} · {game.model.family} · {game.model.year} · {game.model.size}
-          </p>
+          <div className="model-facts">
+            {[game.model.companyName, game.model.region, game.model.family, game.model.year, game.model.size].map((fact, index) => (
+              <span key={index} className="pill">
+                {fact}
+              </span>
+            ))}
+          </div>
         </div>
       </div>
-      <p>{status}</p>
+      <p className="status" data-state={state}>
+        {status}
+      </p>
       {game.score !== undefined && game.breakdown && game.explanation ? (
-        <div className="round">
-          <section>
+        <div className="result-grid">
+          <section className="card score-card">
+            <p className="score-label">Your score</p>
             <p className="score">{game.score.toLocaleString("en-US")}</p>
             <table className="breakdown">
               <tbody>
@@ -74,6 +82,9 @@ export default async function ResultPage({ params }: { params: Promise<{ gameId:
           <a href="/scoring">How scoring works</a>
         </p>
       )}
+      <div className="chat-head">
+        <h2>The chat</h2>
+      </div>
       <div className="transcript">
         {game.transcript.map((message) => (
           <div key={`${message.turn}-${message.role}`} className={`bubble ${message.role}`}>

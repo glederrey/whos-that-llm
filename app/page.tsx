@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { BoardTable } from "@/components/board-table";
 import { ResetPassword } from "@/components/reset-password";
 import { landingSnapshot } from "@/lib/rounds";
 import { currentProfile } from "@/lib/session";
@@ -19,39 +20,56 @@ export default async function HomePage({
   const snapshot = await landingSnapshot(user?.id);
 
   return (
-    <div className="stack">
+    <div className="stack landing">
       {resetting && user ? <ResetPassword hasUsername={Boolean(username)} /> : null}
       <section className="hero">
-        <img className="hero-logo for-light" src="/brand/logo-light.png" alt="" />
-        <img className="hero-logo for-dark" src="/brand/logo-dark.png" alt="" />
+        <img className="hero-logo for-light" src="/brand/logo-tail-right-light.png" alt="" />
+        <img className="hero-logo for-dark" src="/brand/logo-tail-right-dark.png" alt="" />
         <div className="stack">
           <h1>Find the model.</h1>
-          <p>
+          <p className="hero-copy">
             A hidden model answers you. You have ten messages. Name it when you want. Find it, and the round is yours. Miss
             the name, and the company and the region can still count.
           </p>
           <div className="row">
             {signedIn ? (
-              <a className="button" href="/play">
+              <a className="button button-lg" href="/play">
                 Play
               </a>
             ) : (
               <>
-                <a className="button" href="/login?tab=create&next=/play">
+                <a className="button button-lg" href="/login?tab=create&next=/play">
                   Sign up
                 </a>
-                <a className="button-quiet" href="/login?next=/play">
+                <a className="button-quiet button-lg" href="/login?next=/play">
                   Sign in
                 </a>
               </>
             )}
           </div>
-          <p className="muted">
+          <p className="muted hero-note">
             The leaderboard is open to everyone. An account is only for playing.{" "}
             <a href="/scoring">How scoring works</a>
           </p>
         </div>
       </section>
+      <ol className="steps">
+        <li>
+          <span className="step-no">1</span>
+          <strong>Ask anything</strong>
+          <span>Ten messages with a model you cannot see.</span>
+        </li>
+        <li>
+          <span className="step-no">2</span>
+          <strong>Guess when you want</strong>
+          <span>Name it, or stay in the chat. A guess is never forced.</span>
+        </li>
+        <li>
+          <span className="step-no">3</span>
+          <strong>Score high</strong>
+          <span>Few messages and few tokens score the most.</span>
+        </li>
+      </ol>
       <dl className="stats">
         <div>
           <dt>Models in play</dt>
@@ -67,32 +85,15 @@ export default async function HomePage({
         </div>
       </dl>
       <section className="stack">
-        <h2>Top 5 · All models</h2>
-        {snapshot.top.length === 0 ? (
-          <p>No finished games yet.</p>
-        ) : (
-          <table className="board">
-            <thead>
-              <tr>
-                <th>Rank</th>
-                <th>Name</th>
-                <th>Score</th>
-              </tr>
-            </thead>
-            <tbody>
-              {snapshot.top.map((row) => (
-                <tr key={row.rank} className={row.mine ? "mine" : undefined}>
-                  <td>{row.rank}</td>
-                  <td>{row.name}</td>
-                  <td>{row.score.toLocaleString("en-US")}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-        <p>
+        <div className="section-head">
+          <h2>Top 5 · All models</h2>
           <a href="/leaderboard?category=all&period=all">Full leaderboard</a>
-        </p>
+        </div>
+        {snapshot.top.length === 0 ? (
+          <div className="card empty">No finished games yet. Be the first on the board.</div>
+        ) : (
+          <BoardTable rows={snapshot.top} />
+        )}
       </section>
     </div>
   );

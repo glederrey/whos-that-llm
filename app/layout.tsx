@@ -27,8 +27,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <div className="shell">
           <header className="header">
             <a className="brand" href="/">
-              <img className="for-light" src="/brand/logo-light.png" alt="" />
-              <img className="for-dark" src="/brand/logo-dark.png" alt="" />
+              <img className="for-light" src="/brand/logo-tail-right-light.png" alt="" />
+              <img className="for-dark" src="/brand/logo-tail-right-dark.png" alt="" />
               <span>Who&apos;s that LLM</span>
             </a>
             <nav className="header-nav">

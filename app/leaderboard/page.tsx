@@ -1,3 +1,4 @@
+import { BoardTable } from "@/components/board-table";
 import { leaderboard, listCategories } from "@/lib/rounds";
 import { currentProfile } from "@/lib/session";
 
@@ -40,65 +41,50 @@ export default async function LeaderboardPage({
         Back
       </a>
       <h1>Leaderboard</h1>
-      <div className="tabs">
-        {visible.map((tab) => (
-          <a key={tab.id} className="button-quiet" aria-pressed={tab.id === category} href={boardHref(tab.id, period, 1)}>
-            {tab.name}
+      <div className="filters">
+        <div className="segmented" role="group" aria-label="Category">
+          {visible.map((tab) => (
+            <a key={tab.id} aria-pressed={tab.id === category} href={boardHref(tab.id, period, 1)}>
+              {tab.name}
+            </a>
+          ))}
+        </div>
+        <div className="segmented" role="group" aria-label="Period">
+          <a aria-pressed={period === "week"} href={boardHref(category, "week", 1)}>
+            This week (UTC)
           </a>
-        ))}
-      </div>
-      <div className="tabs">
-        <a className="button-quiet" aria-pressed={period === "week"} href={boardHref(category, "week", 1)}>
-          This week (UTC)
-        </a>
-        <a className="button-quiet" aria-pressed={period === "all"} href={boardHref(category, "all", 1)}>
-          All time
-        </a>
+          <a aria-pressed={period === "all"} href={boardHref(category, "all", 1)}>
+            All time
+          </a>
+        </div>
       </div>
       {rows.length === 0 ? (
-        <p>No finished games on this board yet.</p>
+        <div className="card empty">No finished games on this board yet.</div>
       ) : (
         <>
-          <div style={{ overflowX: "auto" }}>
-            <table className="board">
-              <thead>
-                <tr>
-                  <th>Rank</th>
-                  <th>Name</th>
-                  <th>Score</th>
-                </tr>
-              </thead>
-              <tbody>
-                {slice.map((row) => (
-                  <tr key={row.rank} className={row.mine ? "mine" : undefined}>
-                    <td>{row.rank}</td>
-                    <td>{row.name}</td>
-                    <td>{row.score.toLocaleString("en-US")}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <BoardTable rows={slice} />
           <div className="row pager">
-            {page > 1 ? (
-              <a className="button-quiet" href={boardHref(category, period, page - 1)}>
-                Previous
-              </a>
-            ) : (
-              <span className="button-quiet is-disabled">Previous</span>
-            )}
-            <span className="muted">
-              Page {page} of {pageCount}
-            </span>
-            {page < pageCount ? (
-              <a className="button-quiet" href={boardHref(category, period, page + 1)}>
-                Next
-              </a>
-            ) : (
-              <span className="button-quiet is-disabled">Next</span>
-            )}
+            <div className="row">
+              {page > 1 ? (
+                <a className="button-quiet" href={boardHref(category, period, page - 1)}>
+                  Previous
+                </a>
+              ) : (
+                <span className="button-quiet is-disabled">Previous</span>
+              )}
+              <span className="muted">
+                Page {page} of {pageCount}
+              </span>
+              {page < pageCount ? (
+                <a className="button-quiet" href={boardHref(category, period, page + 1)}>
+                  Next
+                </a>
+              ) : (
+                <span className="button-quiet is-disabled">Next</span>
+              )}
+            </div>
             {minePage && minePage !== page ? (
-              <a className="button-quiet" href={boardHref(category, period, minePage)}>
+              <a className="button" href={boardHref(category, period, minePage)}>
                 Your place
               </a>
             ) : null}

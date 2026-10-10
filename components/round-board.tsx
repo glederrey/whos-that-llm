@@ -238,13 +238,20 @@ export function RoundBoard({ initial }: { initial: PublicGame }) {
     <div className="round">
       <header>
         <div className="meta round-bar">
-          <span>
-            <strong>
-              Message {shown} of {game.messageLimit}
-            </strong>
-            <span className="muted"> · {game.poolLabel}</span>
-            {game.noHint ? <span className="pill">No hints</span> : null}
-          </span>
+          <div className="round-title">
+            <span>
+              <strong>
+                Message {shown} of {game.messageLimit}
+              </strong>
+              <span className="muted"> · {game.poolLabel}</span>
+              {game.noHint ? <span className="pill">No hints</span> : null}
+            </span>
+            <span className="progress" aria-hidden="true">
+              {Array.from({ length: game.messageLimit }, (_, index) => (
+                <i key={index} className={index < game.messageNumber ? "on" : index === game.messageNumber ? "now" : undefined} />
+              ))}
+            </span>
+          </div>
           <button type="button" className="button-quiet give-up" onClick={() => dialogRef.current?.showModal()} disabled={busy}>
             Give up
           </button>
