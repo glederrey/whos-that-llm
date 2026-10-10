@@ -496,15 +496,16 @@ html[data-theme="dark"] .hour-status strong { color: var(--teal); }
   background: var(--soft);
   border-bottom: 1px solid var(--line);
 }
-.board td { text-align: left; padding: 13px 20px; border-top: 1px solid var(--line); }
+.board td { text-align: left; vertical-align: middle; padding: 13px 20px; border-top: 1px solid var(--line); }
 .board tbody tr:first-child td { border-top: 0; }
 .board tbody tr:not(.medal):not(.mine):hover td { background: var(--soft); }
 .board .rank { width: 76px; }
 .board .num, .board th.num { text-align: right; font-variant-numeric: tabular-nums; }
 .board td.name { font-weight: 500; }
-.board .player { display: inline-flex; align-items: center; gap: 10px; }
+.board .player { display: flex; align-items: center; gap: 10px; min-height: 28px; line-height: 1.2; }
 .board .player .avatar { flex: none; width: 28px; height: 28px; }
-.board .player .you-tag { margin-left: 0; }
+.board .player .you-tag { margin-left: 0; vertical-align: baseline; line-height: 1.5; }
+.board .rank .rank-chip { display: flex; width: fit-content; }
 .board-card { padding: 0; overflow-x: auto; }
 .board tr.mine td { background: var(--teal-wash); font-weight: 700; }
 
