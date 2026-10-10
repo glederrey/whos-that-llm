@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { avatarError, avatarFileError } from "@/lib/profile";
 
 export function WelcomeForm({ next }: { next: string }) {
   const router = useRouter();
@@ -15,12 +16,18 @@ export function WelcomeForm({ next }: { next: string }) {
     setBusy(true);
     setError("");
     if (file) {
+      const pictureError = avatarFileError(file);
+      if (pictureError) {
+        setBusy(false);
+        setError(pictureError);
+        return;
+      }
       const body = new FormData();
       body.set("avatar", file);
       const uploaded = await fetch("/api/me/avatar", { method: "POST", body });
       if (!uploaded.ok) {
         setBusy(false);
-        setError("Use a JPEG, PNG, WebP, or GIF under 2 MB.");
+        setError(avatarError);
         return;
       }
     }
@@ -58,8 +65,12 @@ export function WelcomeForm({ next }: { next: string }) {
         Picture
         <input
           type="file"
-          accept="image/jpeg,image/png,image/webp,image/gif"
-          onChange={(event) => setFile(event.target.files?.[0] ?? null)}
+          accept="image/jpeg,image/png,image/webp"
+          onChange={(event) => {
+            const next = event.target.files?.[0] ?? null;
+            setFile(next);
+            setError(next ? (avatarFileError(next) ?? "") : "");
+          }}
         />
       </label>
       <p className="muted">Optional. Skip it and add one later from your profile.</p>

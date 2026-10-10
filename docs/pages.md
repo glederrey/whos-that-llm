@@ -141,7 +141,7 @@ Shown once, when `profiles.username` is null.
 - Shape error: **3 to 20 characters.**
 - Capitals and punctuation are allowed. Shared names are allowed. Save stores the name on that profile.
 - Save goes to `/play`, or back to the play URL they were trying to open.
-- **Picture** is optional. A JPEG, PNG, WebP, or GIF under 2 MB. Skipping it leaves the generated mark. They can add one later from the profile.
+- **Picture** is optional. A JPEG, PNG, or WebP under 1 MB. Anything else shows **Use a JPEG, PNG, or WebP under 1 MB.** Skipping it leaves the generated mark. They can add one later from the profile.
 
 ## Pool picker (`/play/new`)
 
@@ -297,7 +297,7 @@ The landing top 5 is this board for All models, all time, five rows: rank, name,
 Private. The account menu shows **Profile** once the player has a username. No session goes to `/login?next=/profile`. No username goes to `/welcome?next=/profile`. There is no id in the URL, so a player only opens their own page.
 
 - Username field, same rules as welcome. **Save** updates the profile and every game row for that user id. The leaderboard follows. An empty name is rejected.
-- **Picture.** Optional upload. It replaces the generated mark in the header. People who skipped it on welcome add it here.
+- **Picture.** Optional upload, JPEG, PNG, or WebP, at most 1 MB. A larger file or any other type shows **Use a JPEG, PNG, or WebP under 1 MB.** It replaces the generated mark in the header. People who skipped it on welcome add it here.
 - Stats: games played, solved, missed, given up, solve rate, best score, average score, average messages on a solved game.
 - Games: 10 per page, **Previous** and **Next**. Opening a row shows a summary on this page: date, model, status, score, messages used, and whether company and region were found. No transcript. An open round hides the model name and links to **Continue**.
 

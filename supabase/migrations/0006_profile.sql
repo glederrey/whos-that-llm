@@ -36,8 +36,8 @@ values (
   'avatars',
   'avatars',
   true,
-  2097152,
-  array['image/jpeg', 'image/png', 'image/webp', 'image/gif']
+  1048576,
+  array['image/jpeg', 'image/png', 'image/webp']
 )
 on conflict (id) do update
 set public = true,

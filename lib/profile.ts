@@ -1,6 +1,10 @@
 import type { GameStatus } from "./game";
 
-const maxAvatarBytes = 2 * 1024 * 1024;
+const maxAvatarBytes = 1024 * 1024;
+
+export const avatarError = "Use a JPEG, PNG, or WebP under 1 MB.";
+
+const avatarMimes = new Set(["image/jpeg", "image/jpg", "image/png", "image/webp"]);
 
 const imageKinds = [
   { mime: "image/jpeg", ext: "jpg", test: (bytes: Uint8Array) => bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff },
@@ -9,7 +13,6 @@ const imageKinds = [
     ext: "png",
     test: (bytes: Uint8Array) => bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4e && bytes[3] === 0x47,
   },
-  { mime: "image/gif", ext: "gif", test: (bytes: Uint8Array) => bytes[0] === 0x47 && bytes[1] === 0x49 && bytes[2] === 0x46 && bytes[3] === 0x38 },
   {
     mime: "image/webp",
     ext: "webp",
@@ -89,6 +92,12 @@ export function avatarPublicUrl(baseUrl: string, path: string | null): string | 
     .map((part) => encodeURIComponent(part))
     .join("/");
   return `${baseUrl.replace(/\/$/, "")}/storage/v1/object/public/avatars/${safe}`;
+}
+
+export function avatarFileError(file: { size: number; type: string }): string | null {
+  const type = file.type.toLowerCase();
+  if (file.size > maxAvatarBytes || (type !== "" && !avatarMimes.has(type))) return avatarError;
+  return null;
 }
 
 export function readImage(bytes: Uint8Array): { mime: string; ext: string } | null {

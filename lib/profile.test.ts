@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { avatarPublicUrl, cleanUsername, profileStats, readImage, traitFound } from "./profile";
+import { avatarError, avatarFileError, avatarPublicUrl, cleanUsername, profileStats, readImage, traitFound } from "./profile";
 
 test("a username trims and rejects an empty name", () => {
   assert.equal(cleanUsername("  Ada  "), "Ada");
@@ -55,14 +55,16 @@ test("an avatar url stays inside the public avatars bucket", () => {
   assert.equal(avatarPublicUrl("https://example.supabase.co", null), null);
 });
 
-test("a picture has to be a small jpeg, png, webp, or gif", () => {
+test("a picture has to be a jpeg, png, or webp under 1 MB", () => {
   assert.equal(readImage(Uint8Array.from([0xff, 0xd8, 0xff])), null);
   const jpeg = new Uint8Array(16);
   jpeg.set([0xff, 0xd8, 0xff]);
   assert.deepEqual(readImage(jpeg), { mime: "image/jpeg", ext: "jpg" });
-  assert.equal(readImage(new Uint8Array(maxPlus())), null);
+  const gif = new Uint8Array(16);
+  gif.set([0x47, 0x49, 0x46, 0x38]);
+  assert.equal(readImage(gif), null);
+  assert.equal(readImage(new Uint8Array(1024 * 1024 + 1)), null);
+  assert.equal(avatarFileError({ size: 1024 * 1024 + 1, type: "image/png" }), avatarError);
+  assert.equal(avatarFileError({ size: 100, type: "image/gif" }), avatarError);
+  assert.equal(avatarFileError({ size: 100, type: "image/webp" }), null);
 });
-
-function maxPlus() {
-  return 2 * 1024 * 1024 + 1;
-}

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { avatarError, avatarFileError } from "@/lib/profile";
 import { Avatar } from "./avatar";
 
 export function ProfileForm({
@@ -26,6 +27,11 @@ export function ProfileForm({
     setBusy(true);
     setError("");
     setNote("");
+    if (file && avatarFileError(file)) {
+      setBusy(false);
+      setError(avatarError);
+      return;
+    }
     const response = await fetch("/api/me", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -46,7 +52,7 @@ export function ProfileForm({
       const uploaded = await fetch("/api/me/avatar", { method: "POST", body });
       if (!uploaded.ok) {
         setBusy(false);
-        setError("Use a JPEG, PNG, WebP, or GIF under 2 MB.");
+        setError(avatarError);
         router.refresh();
         return;
       }
@@ -74,8 +80,13 @@ export function ProfileForm({
           <input
             key={fileKey}
             type="file"
-            accept="image/jpeg,image/png,image/webp,image/gif"
-            onChange={(event) => setFile(event.target.files?.[0] ?? null)}
+            accept="image/jpeg,image/png,image/webp"
+            onChange={(event) => {
+              const next = event.target.files?.[0] ?? null;
+              setFile(next);
+              setNote("");
+              setError(next ? (avatarFileError(next) ?? "") : "");
+            }}
           />
         </label>
         <p className="muted">Optional. Until you upload one, the generated mark stays.</p>
