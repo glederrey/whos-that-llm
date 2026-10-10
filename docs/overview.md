@@ -10,7 +10,7 @@ The name on the site is **Who's that LLM?**.
 
 The playable roster is six small models: Claude Haiku 4.5, Claude Haiku 5.5, GPT-5.6 Luna, GPT-5.6 Luna Pro, GPT-6 Luna, and DeepSeek V4 Flash. Every other seeded model stays off. OpenRouter lists no other small Anthropic model, so Haiku 4.5 is the only extra Anthropic row. Adding more is an admin job, and admin comes later.
 
-Daily, company, family, region, and custom are specified in [Rules](rules.md) and come later. The home page lists them, and only All models can be started. Size is a hint, not a category. The profile, the home weekly top 5, daily result stats, and the admin screens come later too. The pause flag exists from the first build, because a credit error pauses everyone.
+Daily, company, family, region, and custom are specified in [Rules](rules.md) and come later. The home page lists them, and only All models can be started. Size is a hint, not a category. The profile page is in this prototype. The home weekly top 5, daily result stats, and the admin screens come later. The pause flag exists from the first build, because a credit error pauses everyone.
 
 ## Stack
 
@@ -68,7 +68,7 @@ Both methods stay on, and both write into `auth.users`. Link identities that sha
 
 Email confirmation stays on. Confirmation and password-reset links return to `/`. The main page completes the session from that return. The first session with no username goes to `/welcome`.
 
-A username is 3–20 characters after trimming. Capitals and punctuation are allowed. It does not have to be unique. `profiles.id` is the internal id that links the auth user (and therefore the email) to the username. Changing the username, and a profile with stats and past games, come later. The game row keeps a copy of the username from the moment the round started, so a later rename does not rewrite history.
+A username is 3–20 characters after trimming. Capitals and punctuation are allowed. It does not have to be unique. An empty name is rejected. `profiles.id` is the internal id that links the auth user (and therefore the email) to the username. A rename updates `profiles.username` and every `games.username` for that user id, so the leaderboard and past games show the new name. The old name is not kept.
 
 ## Credits
 

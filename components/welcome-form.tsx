@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 export function WelcomeForm({ next }: { next: string }) {
   const router = useRouter();
   const [username, setUsername] = useState("Human");
+  const [file, setFile] = useState<File | null>(null);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -13,6 +14,16 @@ export function WelcomeForm({ next }: { next: string }) {
     event.preventDefault();
     setBusy(true);
     setError("");
+    if (file) {
+      const body = new FormData();
+      body.set("avatar", file);
+      const uploaded = await fetch("/api/me/avatar", { method: "POST", body });
+      if (!uploaded.ok) {
+        setBusy(false);
+        setError("Use a JPEG, PNG, WebP, or GIF under 2 MB.");
+        return;
+      }
+    }
     const response = await fetch("/api/me", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -43,6 +54,15 @@ export function WelcomeForm({ next }: { next: string }) {
           autoComplete="nickname"
         />
       </label>
+      <label>
+        Picture
+        <input
+          type="file"
+          accept="image/jpeg,image/png,image/webp,image/gif"
+          onChange={(event) => setFile(event.target.files?.[0] ?? null)}
+        />
+      </label>
+      <p className="muted">Optional. Skip it and add one later from your profile.</p>
       <button type="submit" className="button" disabled={busy}>
         Save
       </button>

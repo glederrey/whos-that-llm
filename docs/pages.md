@@ -10,7 +10,7 @@ The site is English. A second language waits until there is a translation to shi
 
 ## Theme
 
-Light and dark are both first-class. The first visit follows the phone or the computer (`prefers-color-scheme`). A control in the account menu switches them and stores the choice in the browser, so it survives a refresh and applies on the landing page before anyone is signed in. It is not a column on the profile. The account button sits at the top right. Signed out, it is a person icon and the menu has **Sign in**. Signed in, the icon is a pattern generated from the account id, and the menu shows the username.
+Light and dark are both first-class. The first visit follows the phone or the computer (`prefers-color-scheme`). A control in the account menu switches them and stores the choice in the browser, so it survives a refresh and applies on the landing page before anyone is signed in. It is not a column on the profile. The account button sits at the top right. Signed out, it is a person icon and the menu has **Sign in**. Signed in, the icon is a pattern generated from the account id until they upload a picture, and the menu shows the username and **Profile**.
 
 Same layout in both themes. Text, feedback, and the guess list stay readable. A match and a miss stay distinguishable without relying on color alone.
 
@@ -141,8 +141,7 @@ Shown once, when `profiles.username` is null.
 - Shape error: **3 to 20 characters.**
 - Capitals and punctuation are allowed. Shared names are allowed. Save stores the name on that profile.
 - Save goes to `/play`, or back to the play URL they were trying to open.
-
-Changing the username, and a profile with stats and past games, come later. Do not build `/me` in the first pass.
+- **Picture** is optional. A JPEG, PNG, WebP, or GIF under 2 MB. Skipping it leaves the generated mark. They can add one later from the profile.
 
 ## Pool picker (`/play/new`)
 
@@ -293,11 +292,14 @@ Empty: **No finished games on this board yet.**
 
 The landing top 5 is this board for All models, all time, five rows: rank, name, score.
 
-## Profile
+## Profile (`/profile`)
 
-Later. Not in the first build.
+Private. The account menu shows **Profile** once the player has a username. No session goes to `/login?next=/profile`. No username goes to `/welcome?next=/profile`. There is no id in the URL, so a player only opens their own page.
 
-`/me` will show the username, a way to change it, stats, and past games. The same username rules apply. Names stay non-unique. Past games open the result page when the round is over, and the round page when it is still active. The model name is absent while the round is active.
+- Username field, same rules as welcome. **Save** updates the profile and every game row for that user id. The leaderboard follows. An empty name is rejected.
+- **Picture.** Optional upload. It replaces the generated mark in the header. People who skipped it on welcome add it here.
+- Stats: games played, solved, missed, given up, solve rate, best score, average score, average messages on a solved game.
+- Games: 10 per page, **Previous** and **Next**. Opening a row shows a summary on this page: date, model, status, score, messages used, and whether company and region were found. No transcript. An open round hides the model name and links to **Continue**.
 
 ## Admin
 

@@ -27,7 +27,7 @@ A failed call writes `usage` and does not write `messages`, because there is no 
 | Table | `anon` / `authenticated` | Service role |
 |---|---|---|
 | `companies`, `families`, `models_public`, `categories` where `enabled` | `select`. The table grant is required as well as the policy. A new Supabase project does not add it | write on the base tables |
-| `profiles` | `select` own row. `update` own `username` only, and only while that column is null until profile edits exist | write |
+| `profiles` | `select` own row. `update` own row only while `username` is null. A later rename goes through `set_username` | write |
 | `games`, `messages`, `guesses`, `usage` | no privileges | read and write |
 | `leaderboard(category, since)` | `execute` | execute |
 
@@ -128,8 +128,9 @@ One row, `id = 1`.
 
 | Column | Type | Notes |
 |---|---|---|
-| `id` | uuid, pk, fk `auth.users` | on delete cascade. The game keeps the username. The email is not copied onto `games`, `profiles`, or the leaderboard |
-| `username` | text, null | Null until `/welcome`. Not unique |
+| `id` | uuid, pk, fk `auth.users` | on delete cascade. The email is not copied onto `games`, `profiles`, or the leaderboard |
+| `username` | text, null | Null until `/welcome`. Not unique. A rename rewrites this and every `games.username` for this id |
+| `avatar_path` | text, null | Object path in the public `avatars` bucket. Null keeps the generated mark |
 | `created_at` | timestamptz | |
 
 When `username` is not null, its trimmed length is 3–20. Capitals and punctuation are allowed. The check is on length after trim, not on a character class. Two profiles may share a username. The account is `id`.
@@ -142,7 +143,7 @@ One row per round.
 |---|---|---|
 | `id` | uuid, pk | default `gen_random_uuid()` |
 | `user_id` | uuid, fk `profiles` | on delete restrict. Deleting the auth user will not delete their rounds |
-| `username` | text | Copied at insert. Leaderboard name for that round |
+| `username` | text | Copied at insert, then rewritten when that user renames. Leaderboard name for that round |
 | `category` | text, fk `categories` | |
 | `pool_key` | text, null | `anthropic`, `opus`, `us`, `cn`, or `eu`. Null for `all`, `daily`, and `custom` |
 | `pool_model_ids` | text[] | The models that were legal when the round started |
@@ -316,7 +317,7 @@ from best
 order by score desc, message_count asc, finished_at asc, username;
 ```
 
-`given_up` is excluded. A negative score remains. Grouping is by `user_id`, so shared usernames do not merge. The name on the row is the username copied onto that best round.
+`given_up` is excluded. A negative score remains. Grouping is by `user_id`, so shared usernames do not merge. The name on the row is `games.username` from that best round. A rename rewrites it.
 
 Right company, never named the model. "Found" means any guess in that round hit it.
 

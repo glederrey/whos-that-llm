@@ -1,3 +1,4 @@
+import { currentAvatarUrl } from "./profile-data";
 import { createSessionClient } from "./supabase/server";
 
 export async function currentUser() {
@@ -9,12 +10,16 @@ export async function currentUser() {
 
 export async function currentProfile() {
   const user = await currentUser();
-  if (!user) return { user: null, username: null as string | null };
+  if (!user) return { user: null, username: null as string | null, avatarUrl: null as string | null };
   const supabase = await createSessionClient();
   const { data } = await supabase!
     .from("profiles")
-    .select("username")
+    .select("username, avatar_path")
     .eq("id", user.id)
     .maybeSingle();
-  return { user, username: (data?.username as string | null) ?? null };
+  return {
+    user,
+    username: (data?.username as string | null) ?? null,
+    avatarUrl: currentAvatarUrl((data?.avatar_path as string | null) ?? null),
+  };
 }

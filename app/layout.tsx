@@ -17,7 +17,7 @@ export const metadata: Metadata = {
 const themeScript = `(function(){try{var s=localStorage.getItem("theme");var t=s==="light"||s==="dark"?s:(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");document.documentElement.dataset.theme=t;}catch(e){}})();`;
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const { user, username } = await currentProfile();
+  const { user, username, avatarUrl } = await currentProfile();
   return (
     <html lang="en" className={font.variable} suppressHydrationWarning>
       <body suppressHydrationWarning>
@@ -45,7 +45,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                 </svg>
                 Leaderboard
               </a>
-              <AccountMenu userId={user?.id ?? null} username={username} />
+              <AccountMenu userId={user?.id ?? null} username={username} avatarUrl={avatarUrl} />
             </nav>
           </header>
           <main className="page">{children}</main>

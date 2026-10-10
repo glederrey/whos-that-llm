@@ -1,6 +1,6 @@
 # Build
 
-**All models** is the first build. Auth, one round, hints, no-hint mode, the score, and the result page. The other categories, the profile, the weekly top 5, daily stats, and admin come later. Do not publish this spec as a site page.
+**All models** is the first build. Auth, one round, hints, no-hint mode, the score, the result page, and the profile. The other categories, the weekly top 5, daily stats, and admin come later. Do not publish this spec as a site page.
 
 ## Layout
 
@@ -120,7 +120,7 @@ The first build is a playable All models round. Gael plays it locally, then the 
 5. The hourly cap and one active round. A credit error sets `app_settings.paused` for everyone.
 6. Leaderboard for All models: rank, name, best score.
 7. Later: daily, company, family, region, custom. They are pool filters plus the given-trait rule. Custom is a choice of models. There is no Latest category and no Origin category.
-8. Later: home weekly top 5, daily result stats, profile with stats, past games, and username changes.
+8. Later: home weekly top 5 and daily result stats. The profile, with stats, past games, and username changes, is in this prototype.
 9. Later: admin. Spend, stats, families, roster, logos in Supabase Storage with a URL fallback, pause switch, recent rounds.
 10. Deploy to the `*.vercel.app` URL. A domain comes after someone besides us is playing.
 

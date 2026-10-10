@@ -6,7 +6,15 @@ import { Avatar } from "./avatar";
 import { ThemeToggle } from "./theme-toggle";
 import { createBrowserSupabase } from "@/lib/supabase/browser";
 
-export function AccountMenu({ userId, username }: { userId: string | null; username: string | null }) {
+export function AccountMenu({
+  userId,
+  username,
+  avatarUrl,
+}: {
+  userId: string | null;
+  username: string | null;
+  avatarUrl: string | null;
+}) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
@@ -36,13 +44,13 @@ export function AccountMenu({ userId, username }: { userId: string | null; usern
         aria-label={username ? username : "Account"}
         onClick={() => setOpen((value) => !value)}
       >
-        {userId ? <Avatar seed={userId} /> : <GuestIcon />}
+        {userId ? <Avatar seed={userId} src={avatarUrl} /> : <GuestIcon />}
       </button>
       {open ? (
         <div className="menu" role="menu">
           {username ? (
             <p className="menu-name">
-              {userId ? <Avatar seed={userId} size={28} /> : null}
+              {userId ? <Avatar seed={userId} src={avatarUrl} size={28} /> : null}
               <span>{username}</span>
             </p>
           ) : null}
@@ -57,6 +65,11 @@ export function AccountMenu({ userId, username }: { userId: string | null; usern
           </div>
           {userId ? (
             <>
+              {username ? (
+                <a href="/profile" role="menuitem">
+                  Profile
+                </a>
+              ) : null}
               <div className="menu-rule" />
               <button type="button" className="menu-item" onClick={() => void signOut()}>
                 Sign out

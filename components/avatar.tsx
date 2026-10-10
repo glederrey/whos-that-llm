@@ -1,4 +1,7 @@
-export function Avatar({ seed, size = 40 }: { seed: string; size?: number }) {
+export function Avatar({ seed, size = 40, src = null }: { seed: string; size?: number; src?: string | null }) {
+  if (src) {
+    return <img className="avatar" src={src} alt="" width={size} height={size} />;
+  }
   const bits = pattern(seed);
   const paint = bits[0] % 2 === 0 ? "#00bbc9" : "#141414";
   const cells: { x: number; y: number }[] = [];

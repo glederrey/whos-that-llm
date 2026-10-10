@@ -16,6 +16,7 @@ import {
   type ScoreLine,
   type Traits,
 } from "./game";
+import { cleanUsername } from "./profile";
 import { createServiceClient, createSessionClient } from "./supabase/server";
 
 type GameRow = {
@@ -572,18 +573,16 @@ function mondayUtc() {
 }
 
 export async function setUsername(userId: string, raw: string): Promise<ApiFailure | null> {
-  const username = raw.trim();
-  if (username.length < 3 || username.length > 20 || /[\n\r]/.test(username)) return fail(422, "username");
+  if (!cleanUsername(raw)) return fail(422, "username");
   const session = await createSessionClient();
   if (!session) return fail(401, "unauthorized");
-  const { data, error } = await session
-    .from("profiles")
-    .update({ username })
-    .eq("id", userId)
-    .is("username", null)
-    .select("username")
-    .maybeSingle();
-  if (error) return fail(422, "username");
-  if (!data) return fail(422, "username");
+  const { data: userData } = await session.auth.getUser();
+  if (!userData.user || userData.user.id !== userId) return fail(401, "unauthorized");
+  const { data, error } = await session.rpc("set_username", { p_username: raw });
+  const result = data as { ok?: boolean; error?: string } | null;
+  if (error || !result?.ok) {
+    if (result?.error === "unauthorized") return fail(401, "unauthorized");
+    return fail(422, "username");
+  }
   return null;
 }
