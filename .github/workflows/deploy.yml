@@ -37,7 +37,13 @@ jobs:
         run: vercel pull --yes --environment=production
 
       - name: Build
-        run: vercel build --prod
+        run: vercel build --prod --standalone
+
+      - name: Check prebuilt output
+        run: |
+          du -sh .vercel/output
+          find .vercel/output -type f | wc -l
+          find .vercel/output -type l | wc -l
 
       - name: Deploy to production
-        run: vercel deploy --prebuilt --prod
+        run: vercel deploy --prebuilt --prod --archive=tgz
