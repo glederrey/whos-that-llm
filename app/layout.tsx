@@ -40,7 +40,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               <span>Who&apos;s that LLM?</span>
             </a>
             <nav className="header-nav">
-              <a href="/scoring">
+              <a href="/scoring" aria-label="Scoring">
                 <svg className="nav-icon" viewBox="0 0 24 24" aria-hidden="true">
                   <path
                     fill="none"
@@ -51,9 +51,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                     d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3V4zM5 17a3 3 0 0 1 3-3h11M9 8h6"
                   />
                 </svg>
-                Scoring
+                <span className="nav-label">Scoring</span>
               </a>
-              <a href="/leaderboard">
+              <a href="/leaderboard" aria-label="Leaderboard">
                 <svg className="nav-icon" viewBox="0 0 24 24" aria-hidden="true">
                   <path
                     fill="none"
@@ -64,7 +64,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                     d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4zM7 6H4.5A2.5 2.5 0 0 0 7 9M17 6h2.5A2.5 2.5 0 0 1 17 9"
                   />
                 </svg>
-                Leaderboard
+                <span className="nav-label">Leaderboard</span>
               </a>
               <AccountMenu userId={user?.id ?? null} username={username} avatarUrl={avatarUrl}>
                 {owner ? (
