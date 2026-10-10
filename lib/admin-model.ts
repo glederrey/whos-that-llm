@@ -11,10 +11,10 @@ const notices: Record<RosterNotice, string> = {
   save: "Could not save that model.",
 };
 
-export function emailsMatch(session: string | null | undefined, owner: string): boolean {
-  const left = session?.trim().toLowerCase() ?? "";
-  const right = owner.trim().toLowerCase();
-  return left.length > 0 && right.length > 0 && left === right;
+export function hasAdminFlag(user: { app_metadata?: object | null } | null | undefined): boolean {
+  const metadata = user?.app_metadata;
+  if (!metadata) return false;
+  return (metadata as { admin?: unknown }).admin === true;
 }
 
 export function validOpenRouterId(value: string): boolean {

@@ -61,9 +61,8 @@ There is no `rules/page.tsx`. There is no `me/page.tsx` in the first build.
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Browser and server. The publishable key |
 | `SUPABASE_SECRET_KEY` | Server only. The secret key. Bypasses row level security |
 | `OPENROUTER_API_KEY` | Server only |
-| `ADMIN_EMAIL` | Server only. Admin matches the signed-in Supabase email to this value |
 
-Those five names are already in `.env.local` at the repo root. Comments in the file do not matter. The values stay in that file: do not open it to check them, and do not copy them into docs, chat, or git. The file stays untracked. Vercel gets the same names. The secret key, the OpenRouter key, and `ADMIN_EMAIL` are sensitive. Do not prefix `ADMIN_EMAIL` or `SUPABASE_SECRET_KEY` with `NEXT_PUBLIC_`.
+Those four names are already in `.env.local` at the repo root. Comments in the file do not matter. The values stay in that file: do not open it to check them, and do not copy them into docs, chat, or git. The file stays untracked. Vercel gets the same names. The secret key and the OpenRouter key are sensitive. Do not prefix `SUPABASE_SECRET_KEY` with `NEXT_PUBLIC_`. Admin is `app_metadata.admin === true` on the signed-in user, not an env var.
 
 In Supabase, set the site URL and the email redirect URLs to the site root `/`, so confirmation and password reset return to the main page.
 

@@ -4,7 +4,6 @@ import path from "node:path";
 import test from "node:test";
 
 const root = path.resolve(import.meta.dirname, "..");
-const ownerPath = path.join(root, "lib/admin-owner.ts");
 
 function files(dir: string): string[] {
   const out: string[] = [];
@@ -17,14 +16,21 @@ function files(dir: string): string[] {
   return out;
 }
 
-test("admin reads ADMIN_EMAIL and the tree stores no address", () => {
-  const owner = fs.readFileSync(ownerPath, "utf8");
-  assert.match(owner, /import "server-only"/);
-  assert.match(owner, /process\.env\.ADMIN_EMAIL/);
-  assert.doesNotMatch(owner, /@/);
+test("admin reads app_metadata and the tree stores no address", () => {
+  const access = fs.readFileSync(path.join(root, "lib/admin-access.ts"), "utf8");
+  const proxy = fs.readFileSync(path.join(root, "lib/supabase/proxy.ts"), "utf8");
+  assert.match(access, /import "server-only"/);
+  assert.match(access, /hasAdminFlag\(user\)/);
+  assert.match(proxy, /hasAdminFlag\(data\.user\)/);
+  assert.doesNotMatch(access, /ADMIN_EMAIL/);
+  assert.doesNotMatch(proxy, /ADMIN_EMAIL/);
+  const extra = [path.join(root, ".env.example")];
   const email = /[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}/gi;
-  for (const file of files(root)) {
-    const found = fs.readFileSync(file, "utf8").match(email) ?? [];
+  for (const file of [...files(root), ...extra]) {
+    if (file.endsWith(`${path.sep}lib${path.sep}admin-surface.test.ts`)) continue;
+    const text = fs.readFileSync(file, "utf8");
+    assert.equal(text.includes("ADMIN_EMAIL"), false, path.relative(root, file));
+    const found = text.match(email) ?? [];
     for (const address of found) {
       assert.equal(address.toLowerCase().endsWith("@example.com"), true, path.relative(root, file));
     }

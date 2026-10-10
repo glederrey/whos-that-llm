@@ -3,7 +3,7 @@ import test from "node:test";
 import {
   canTurnOn,
   companyIdFromName,
-  emailsMatch,
+  hasAdminFlag,
   modelIdFromOpenRouter,
   parseModelFields,
   parseRegion,
@@ -12,12 +12,13 @@ import {
   rosterNotice,
 } from "./admin-model";
 
-test("email match is case-insensitive and rejects blanks", () => {
-  assert.equal(emailsMatch(" Owner@Example.com ", "owner@example.com"), true);
-  assert.equal(emailsMatch("other@example.com", "owner@example.com"), false);
-  assert.equal(emailsMatch(null, "owner@example.com"), false);
-  assert.equal(emailsMatch("owner@example.com", ""), false);
-  assert.equal(emailsMatch("  ", "owner@example.com"), false);
+test("admin is only a true app_metadata flag", () => {
+  assert.equal(hasAdminFlag({ app_metadata: { admin: true } }), true);
+  assert.equal(hasAdminFlag({ app_metadata: { admin: false } }), false);
+  assert.equal(hasAdminFlag({ app_metadata: { admin: "true" } }), false);
+  assert.equal(hasAdminFlag({ app_metadata: {} }), false);
+  assert.equal(hasAdminFlag({}), false);
+  assert.equal(hasAdminFlag(null), false);
 });
 
 test("model ids come from the OpenRouter id", () => {
