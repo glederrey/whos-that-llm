@@ -9,6 +9,7 @@ export type HistoryRow = {
   status: GameStatus;
   score: number | null;
   messageCount: number;
+  tokens: number;
   modelName: string | null;
   companyName: string | null;
   logoPath: string | null;
@@ -65,7 +66,19 @@ export async function loadHistory(userId: string, page: number) {
 
   const ids = (data ?? []).map((row) => row.id as string);
   const flags = new Map<string, { company: boolean; region: boolean }>();
+  const tokens = new Map<string, number>();
   if (ids.length > 0) {
+    const { data: usage, error: usageError } = await client
+      .from("usage")
+      .select("game_id, input_tokens, output_tokens")
+      .in("game_id", ids)
+      .is("error_code", null);
+    if (usageError) throw new Error("Could not read profile history.");
+    for (const entry of usage ?? []) {
+      const key = entry.game_id as string;
+      tokens.set(key, (tokens.get(key) ?? 0) + Number(entry.input_tokens ?? 0) + Number(entry.output_tokens ?? 0));
+    }
+
     const { data: guesses, error: guessError } = await client
       .from("guesses")
       .select("game_id, company_correct, region_correct")
@@ -96,6 +109,7 @@ export async function loadHistory(userId: string, page: number) {
       status,
       score: row.score as number | null,
       messageCount: Number(row.message_count ?? 0),
+      tokens: tokens.get(row.id as string) ?? 0,
       modelName: finished ? (model?.name ?? "Unknown model") : null,
       companyName: finished ? (company?.name ?? null) : null,
       logoPath:

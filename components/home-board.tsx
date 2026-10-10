@@ -13,7 +13,29 @@ export type HomeCategory = {
 const order = ["daily", "all", "company", "family", "region", "custom"];
 const hidden = new Set(["latest", "origin"]);
 
-const numberWords = ["Zero", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten", "Eleven", "Twelve"];
+const numberWords = [
+  "Zero",
+  "One",
+  "Two",
+  "Three",
+  "Four",
+  "Five",
+  "Six",
+  "Seven",
+  "Eight",
+  "Nine",
+  "Ten",
+  "Eleven",
+  "Twelve",
+  "Thirteen",
+  "Fourteen",
+  "Fifteen",
+  "Sixteen",
+  "Seventeen",
+  "Eighteen",
+  "Nineteen",
+  "Twenty",
+];
 
 export function capSentence(cap: number): string {
   const count = numberWords[cap] ?? String(cap);
@@ -70,7 +92,7 @@ export function HomeBoard({
   function slotLabel() {
     if (paused || !nextAt || played === 0) return null;
     const when = localTime(nextAt);
-    return left === 0 ? `Next one at ${when}` : `One back at ${when}`;
+    return left === 0 ? `Next one at ${when}` : `Adding a new game to the pool at ${when}`;
   }
 
   async function start(category: string) {
@@ -167,7 +189,7 @@ export function HomeBoard({
                   <input type="checkbox" checked={noHint} onChange={(event) => setNoHint(event.target.checked)} />
                   <span>
                     <strong>Play without hints.</strong>
-                    <span className="muted"> No year or size. No match feedback. Score × 1.5.</span>
+                    <span className="muted"> No hints. No match feedback. Score × 1.5.</span>
                   </span>
                 </label>
               ) : null}

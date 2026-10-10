@@ -17,7 +17,7 @@ type PublicGame = {
   poolLabel: string;
   noHint: boolean;
   hintsAllowed: boolean;
-  hintCost: number;              // from games.rules, so the hint button does not hardcode 100
+  hintCosts: Record<"company" | "family" | "region" | "year" | "size", number>;  // so the hint buttons do not hardcode prices
   status: "active" | "solved" | "miss" | "given_up";
   messageNumber: number;     // replies already stored, 0–10
   messageLimit: number;      // from games.rules
@@ -39,6 +39,9 @@ type PublicGame = {
     wrong: ("company" | "region" | "family")[];
   }[];
   hints: {
+    company: string | null;  // the company name once bought, else null
+    family: string | null;   // the family name once bought, else null
+    region: string | null;   // "USA", "China", or "Europe" once bought, else null
     year: string | null;     // "2026" once bought, else null
     size: string | null;     // "Small", "Medium", or "Large" once bought, else null
   };
@@ -53,7 +56,7 @@ type PublicGame = {
     year: number;
     size: string;
   };
-  score?: number;            // present when the round has a score, including negatives
+  score?: number;            // present when the round has a score, never negative
   breakdown?: { label: string; points: number }[];
   explanation?: string[];    // the short public lines
 };
@@ -73,7 +76,7 @@ Do not tell the client which traits the highlighted row would hit. That preview 
 | `GET /api/games/:id` | The public object |
 | `POST /api/games/:id/messages` | Send a message, stream the model |
 | `POST /api/games/:id/guesses` | One guess for the open turn |
-| `POST /api/games/:id/hints` | Buy year or size |
+| `POST /api/games/:id/hints` | Buy a company, family, region, year, or size hint |
 | `POST /api/games/:id/give-up` | End the round, show the model, stay off the leaderboard |
 | `GET /api/leaderboard?category=&period=week\|all` | Rank, name, score |
 | `PATCH /api/me` | Set `{ username }`. Also rewrites `games.username` for that user id |
@@ -101,7 +104,7 @@ In one transaction:
 
 0. If `app_settings.paused`, return `503` `paused`.
 1. Reject if `profiles.username` is null (`422`, `username`). Reject if this user has a row with `status = 'active'` (`409`, `active_game`).
-2. Reject if they have 10 rows with `started_at` in the last hour (`429`, `hourly_cap`, body includes `nextAt`).
+2. Reject if they have 20 rows with `started_at` in the last hour (`429`, `hourly_cap`, body includes `nextAt`).
 3. For `daily`, reject a second `daily_key` of today (`409`, `daily_done`).
 4. Load the category and reject it unless `categories.enabled` (`404`). Build the pool. `all` and `daily` use every enabled model. `company` uses `poolKey` as a company id. `family` uses `poolKey` as a family id. `region` uses `poolKey` as `us`, `cn`, or `eu`. `custom` is not built yet. Reject a pool with fewer than 2 enabled models, except daily, which still rejects an empty roster. The error is `422` `pool_too_small`. `poolKey` is required for company, family, and region, and rejected for the others.
 5. Draw a uniform model from that pool. Daily copies the model id, the `pool_model_ids`, and the trait snapshot already stored for today's `daily_key` when any player has started it. Otherwise draw once and that id, that roster, and those traits are what later rows copy. Two people starting the daily in the same instant must not draw two models: take a transaction-level lock on a single advisory key for the UTC date, then read-or-insert.
@@ -145,7 +148,7 @@ If this was the last message and the model was not named, set `status = 'miss'` 
 
 Body: `{ key: "year" | "size" }`.
 
-Lock the game row. Reject when `no_hint`, when `rules.hintsAllowed` is false, when the round is not `active`, when `message_count` is 0, when the key is already in `hints`, when the key is not `year` or `size`, and when that trait is given. Append the key. The next `candidates` list drops models whose frozen year or size disagrees. Return `PublicGame`. The cost is not subtracted until the round ends.
+Lock the game row. Reject when `no_hint`, when `rules.hintsAllowed` is false, when the round is not `active`, when `message_count` is 0, when the key is already in `hints`, when the key is not one of `company`, `family`, `region`, `year`, or `size`, when that trait is given, and when a guess already matched that company, region, or family. Append the key. The next `candidates` list drops models whose frozen value for that trait disagrees. Return `PublicGame`. The price (company 600, family 600, region 400, year 100, size 100) is not subtracted until the round ends.
 
 ### `POST /api/games/:id/give-up`
 

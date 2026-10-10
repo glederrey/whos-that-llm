@@ -49,7 +49,7 @@ test("client modules do not import the owner check", () => {
     assert.equal(text.includes("showAdmin"), false, path.relative(root, file));
     assert.equal(text.includes("isAdmin"), false, path.relative(root, file));
     assert.equal(text.includes("account-delete"), false, path.relative(root, file));
-    assert.equal(text.includes("openrouter-prices"), false, path.relative(root, file));
+    assert.equal(text.includes("openrouter-spend"), false, path.relative(root, file));
   }
 });
 
@@ -68,12 +68,19 @@ test("the admin link is rendered on the server for that session", () => {
   }
 });
 
-test("public prices do not use the API key", () => {
-  const text = fs.readFileSync(path.join(root, "lib/openrouter-prices.ts"), "utf8");
-  assert.match(text, /https:\/\/openrouter\.ai\/api\/v1\/models/);
-  assert.doesNotMatch(text, /OPENROUTER_API_KEY/);
-  assert.doesNotMatch(text, /authorization/i);
-  assert.doesNotMatch(text, /api\/v1\/key/);
+test("OpenRouter spend is read at request time on the server", () => {
+  const text = fs.readFileSync(path.join(root, "lib/openrouter-spend.ts"), "utf8");
+  assert.match(text, /import "server-only"/);
+  assert.match(text, /await requireOwner\(\)/);
+  assert.match(text, /process\.env\.OPENROUTER_API_KEY/);
+  assert.match(text, /cache: "no-store"/);
+  assert.match(text, /\/key`/);
+  assert.match(text, /\/activity`/);
+  assert.doesNotMatch(text, /sk-or-/);
+  const page = fs.readFileSync(path.join(root, "app/admin/page.tsx"), "utf8");
+  assert.match(page, /export const dynamic = "force-dynamic"/);
+  assert.match(page, /await requireOwner\(\)/);
+  assert.doesNotMatch(page, /OPENROUTER_API_KEY/);
 });
 
 test("account deletion uses only the signed-in user", () => {

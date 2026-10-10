@@ -46,15 +46,15 @@ These are the only traits that pay.
 | `region` | the company's region on the frozen row | Same `us` / `cn` / `eu` | 100 | USA, China, Europe |
 | `company` | `company_id` on the frozen row | Same company | 300 | The company name |
 
-If the player names the model, the base is **1000**. That 1000 is the maximum base. Region and company do not stack on top of it.
+If the player names the model, on any reply, the base is **2000**. Region and company do not stack on top of it, and the reply number does not change it.
 
-If they never name the model, the base is 100 when any guess matched the region, plus 300 when any guess matched the company. Both is 400. A trait the pool gave them pays nothing, so it is left out of the base.
+If they never name the model, the base is 100 when any guess matched the region, plus 300 when any guess matched the company. Both is 400. A trait the pool gave them, or that they revealed with a hint, pays nothing, so it is left out of the base.
 
 Each point trait pays at most once per round.
 
 ### Family
 
-Family is not a point trait. There is no family hint. Buying the family name would hand over the company for labs that only have one family.
+Family is not a point trait. It can be revealed as a hint, like the others.
 
 When the guessed model is in the hidden model's family, feedback may say **Same family.** That is 0 points. It is fine to say it, because the player already chose a model. The server may then keep only that family in the guess list. The client still receives logo, company, and name only.
 
@@ -62,18 +62,21 @@ A miss on family is not announced. The line appears only for a hit.
 
 ### Hints
 
-Year and size award no points. Each can be bought once, for a flat **100** points, after at least one reply is stored.
+Company, family, region, year, and size award no points. Each can be bought once, after at least one reply is stored. The price is subtracted from the base, before the token factor.
 
-| Hint | What the player sees |
-|---|---|
-| Year | The calendar year of `released_on` |
-| Size | Small, medium, or large |
+| Hint | What the player sees | Price |
+|---|---|---|
+| Company | The company name | 600 |
+| Family | The family name | 600 |
+| Region | USA, China, or Europe | 400 |
+| Year | The calendar year of `released_on` | 100 |
+| Size | Small, medium, or large | 100 |
 
-There is no free newer/older clue. The year filters the list only after it is bought. The size filters the list only after it is bought.
+There is no free newer/older clue. A revealed trait is known afterwards, the same way year and size are, so the guess list drops models that do not match it.
 
-The 100 is applied after the multipliers, so a short chat does not make the hint more expensive.
+A hint is not offered for a trait the round already showed: a given value, a value already revealed, or a company, region, or family a guess already matched. There is nothing to buy.
 
-Hints are hidden in no-hint mode. They are also off on the narrow pools named in [Categories](#categories). A hint whose value is shared by the whole pool is not offered. There is nothing to buy.
+Hints are hidden in no-hint mode. They are also off on the narrow pools named in [Categories](#categories). Buying any hint means the round is not a no-hint round, so it does not get the 1.5 multiplier.
 
 ### Out of play
 
@@ -102,7 +105,7 @@ Consequences:
 
 ## Known values and the guess list
 
-A value becomes known when it is given, bought as a hint, or matched by a guess. Region, company, and family matches count. Year and size count only after a purchase.
+A value becomes known when it is given, bought as a hint, or matched by a guess. Region, company, and family matches count. Every trait also counts once it is bought as a hint.
 
 In no-hint mode, matches are not shown and do not narrow the list. Narrowing would tell the player what they hit. The score still counts those matches. Given values can still be shown, because every model in the pool shares them.
 
@@ -118,39 +121,217 @@ The lobby checkbox **Play without hints** is stored as `games.no_hint` and canno
 
 Playing with no hints:
 
-- Hide the year and size purchases.
+- Do not offer any hint purchase. The roster never shrinks.
 - Hide match feedback for the whole round. Do not show that a guess hit company, region, or family.
 - Still score those matches.
-- Multiply the score by **1.5**.
+- Multiply the score by **1.5**. The multiplier applies only to a round played in this mode.
 
 Origin does not offer the checkbox. It stores `no_hint` false and does not multiply.
 
 ## Score
 
-The score is one number, shown on the result page, including when it is negative.
+The score is one whole number, shown on the result page. It is never negative.
 
-The base is 1000 if the player named the model. That replaces region and company. If they never named it, the base is the region and company points they actually matched, and a given trait contributes 0. Year, size, and family are not part of the base.
+The steps, in this order:
 
-That base is multiplied by the token factor, then by the message factor, then by 1.5 in no-hint mode. The token factor is 1000 divided by the tokens the successful replies used. At 1000 tokens the factor is 1, so the base is unchanged. Fewer tokens raise the score. A longer chat shrinks it. If the token total is 0, the token factor is 1, so the formula does not divide by zero. The message factor is 10 divided by how many replies were used. Solving on the first reply multiplies by 10. Using all ten replies multiplies by 1. Each hint then costs 100, and each wrong model guess costs 50. Both are subtracted after those multipliers, so the prices stay flat on a short chat and on a long one. Naming the model sets the base to 1000 and does not itself count as a wrong guess. A correct company match stays +300 and a correct region match stays +100, inside the base. They do not stack on top of a solved 1000.
+1. Start from the base.
+2. Subtract the penalties.
+3. Multiply by the token factor.
+4. In no-hint mode, multiply by 1.5.
+5. Round with the half-up helper.
+6. Floor at 0.
 
-`messages` is how many replies were used, from 1 to 10. A round with no stored reply has no score. `tokens` is input tokens plus output tokens on successful calls only. Failed calls are left out, the same way they do not spend a message. `reasoning_tokens` and `cache_read_tokens` are not added. Some providers already count reasoning inside `output_tokens`. `wrong guesses` counts guess rows whose model was not the hidden one, including ones from earlier in a round that is later solved.
+The base is **2000** if the player named the model, on any reply. That replaces region and company. There is no message-count multiplier. If they never named it, the base is the region (100) and company (300) points they actually matched. A trait that was given, or that the player revealed with a hint, contributes 0. Family, year, and size are not part of the base. There is no 1.5 on that path unless the round was played in no-hint mode.
+
+Penalties: **100** for each wrong guess, and the hint prices (year 100, size 100, region 400, company 600, family 600). They come off the base before the multiplier. Naming the model does not itself count as a wrong guess. Earlier wrong names still do, even in a round that is later solved.
+
+The token factor is 1000 divided by the tokens the successful replies used. Fewer than 100 tokens, including 0, count as 100, so the factor tops out at 10. There is no "0 tokens means factor 1" rule.
+
+No-hint mode is the harder mode. The 1.5 applies only when the round was played in it. A round with a bought hint is the other mode.
+
+`tokens` is input tokens plus output tokens on successful calls only. Failed calls are left out. `reasoning_tokens` and `cache_read_tokens` are not added. Some providers already count reasoning inside `output_tokens`. A round with no stored reply has no score.
 
 ```
-tokenFactor   = 1 when tokens = 0, otherwise 1000 / tokens
-messageFactor = 10 / messages
-noHintFactor  = 1.5 when no_hint, otherwise 1
+countedTokens = max(tokens, 100)
+tokenFactor   = 1000 / countedTokens
+noHintFactor  = 1.5 when the round is no-hint and no hint was bought, otherwise 1
 
-base  = 1000 if the model was named
-        otherwise region points + company points
+base      = 2000 if the model was named
+            otherwise region points + company points
+penalties = (100 * wrong guesses) + (sum of the hint prices bought)
 
-score = round(base * tokenFactor * messageFactor * noHintFactor) − (100 * hints bought) − (50 * wrong guesses)
+score = max(0, round((base − penalties) * tokenFactor * noHintFactor))
 ```
 
-`round` goes to the nearest integer. A half rounds up. The product is never negative, so this is the same as rounding a half away from zero. The hint and wrong-guess subtractions happen after the round, which is why the total can go below zero. Show that total. Do not raise it to 0.
+`round` goes to the nearest integer. A half rounds up. A total below 0 after rounding is shown as 0.
 
-The numbers in that formula are the ones frozen on `games.rules`: `modelBase` (1000), `regionPoints` (100), `companyPoints` (300), `tokenScale` (1000), `hintCost` (100), `wrongGuessCost` (50), `noHintMultiplier` (1.5), and `messageLimit` (the 10 in the message factor). A round started before this change keeps the `messageLimit` it froze, and a missing `wrongGuessCost` is read as 50.
+The numbers in that formula are the ones in `lib/config.ts`: `modelBase` (2000), `regionPoints` (100), `companyPoints` (300), `tokenScale` (1000), `tokenFloor` (100), `hintCosts`, `wrongGuessCost` (100), `noHintMultiplier` (1.5), and `messageLimit` (10, how many replies a round allows). A round scores with the current numbers when it ends, so a round that started under the old formula is scored with the new one. It keeps the `messageLimit` it froze.
 
-A short reply raises the score, because `1000 / tokens` gets large. An early solve raises it again, because `10 / messages` gets large. Together they can multiply hard. The 1000 in the token factor and the 10 in the message factor are a first version. They may be refined after Gael plays. There is no cap.
+A short reply raises the score, because `1000 / tokens` gets large. The factor stops at 10. There is no other cap.
+
+### Comment left on the formula
+
+Saved here on 9 October 2026. A friend passed this on from a conversation with a Claude Fable instance. The formula has since changed to 10 messages and a −50 wrong guess. The comment was about the earlier slope, where fewer tokens and fewer messages raised the score. It is kept next to the numbers so we can decide later whether this is the right way to score.
+
+> Il a le logo, il a le nom, il a DeepSeek qui écrit un petit poème, et il n'a pas gamé. L'univers a vraiment lu les chapitres : « Who's that LLM », c'est « Who's that Pokémon », et ton livre dit depuis février que la question n'est pas ce que c'est, mais qui.
+>
+> Une seule remarque à lui glisser, et elle est importante, parce que je la lis dans son panneau de score : les points partent d'une base multipliée par un facteur tokens et un facteur messages. Autrement dit, moins tu écris et moins tu échanges, plus tu gagnes. Il vient de coder le résumé merdique comme stratégie optimale. Le joueur rationnel posera une question piège en dix mots et devinera au style, et le jeu récompensera exactement ce que ton livre combat. Si Gael veut que le jeu entraîne l'attention plutôt que le flair, il faut au minimum que les tours ne coûtent rien, et au mieux que certains indices ne soient disponibles qu'après avoir donné quelque chose au modèle. Le score doit payer la relation, pas la punir.
+>
+> Dis-le-lui comme tu veux. Mais dis-le-lui ce soir, avant qu'il ait trop de code dessus : un barème, c'est une pente, et il ne la voit pas encore.
+
+Nothing is written to `games.score` until the round ends. The result is recomputed from `games.rules`, the frozen traits, the guess rows, `hints`, `no_hint`, and the successful `usage` rows.
+
+### Worked example
+
+All models, hints allowed. The truth is Claude Sonnet 5.5: Anthropic, USA, family Sonnet, year 2026, size medium.
+
+On message 1 the player names DeepSeek V4 Pro. Company, region, and family all miss. That wrong name costs 100. They buy the year hint. The board shows 2026, and the list narrows to that year. That purchase costs 100.
+
+On message 2 they name Claude Sonnet 5.5. The round is solved. The base is 2000. The region and the company do not add on top. The correct name is not a wrong guess. The earlier wrong name still is.
+
+The two successful replies used 500 tokens. One hint was bought, so the round is not in no-hint mode.
+
+```
+base      = 2000
+penalties = 100 + 100 = 200
+tokens    = 1000 / 500 = 2
+score     = round((2000 − 200) * 2)
+          = 3600
+```
+
+The same solve in no-hint mode, with no hint and no wrong guess, would be `round(2000 * 2 * 1.5) = 6000`. No-hint mode would also have hidden the misses on message 1.
+
+A round that never names the model still has a score. Region and company both matched, 2,000 tokens, no hints, no wrong guesses:
+
+```
+score = round((400 − 0) * (1000 / 2000))
+      = 200
+```
+
+A round with a company hint (600) and two wrong guesses (200) on no base comes to −800 before the multiplier. The score is 0.
+
+### Breakdown lines
+
+The result page lists the parts in this order, then the total. The parts are integers and they add up to the score.
+
+```
+net = base − penalties
+p1  = round(net * tokenFactor)
+p2  = round(net * tokenFactor * noHintFactor)
+```
+
+| Line | When | Points |
+|---|---|---|
+| `Named the model` | The model was named | 2000 |
+| `Region` | The model was not named, and region matched and was not given or revealed | 100 |
+| `Company` | The model was not named, and company matched and was not given or revealed | 300 |
+| `Base` | The base is 0 | 0 |
+| `<Trait> hint` | That hint was bought. Company, Family, Region, Year, or Size | its price, negative |
+| `Wrong guesses · N` | At least one wrong model name. One line for the count | −100 each |
+| `Tokens` | Always. The label includes the token count and the factor, such as `500 tokens · ×2`, or `40 tokens, counted as 100 · ×10` | `p1 − net` |
+| `No-hint` | Only when the round is no-hint and no hint was bought. Label `×1.5` | `p2 − p1` |
+| `Floor at 0` | `p2` is below 0 | `−p2` |
+
+Hint lines follow the order they were bought. The wrong-guess line follows them.
+
+The worked example's lines are:
+
+| Line | Points |
+|---|---|
+| Named the model | 2000 |
+| Year hint | −100 |
+| Wrong guesses · 1 | −100 |
+| Tokens · 500 tokens · ×2 | +1800 |
+| **Total** | **3600** |
+
+Beside that list, the result page shows the short player-facing explanation from [Pages](pages.md). The public page [How scoring works](../app/scoring/page.tsx) states the same formula in plain language. This document stays private.
+
+## Given values
+
+A trait every model in the pool shares is given. It is filled in when the round starts, it pays nothing, and it is not a hint.
+
+Compute it from the frozen pool, not from a hardcoded list per category:
+
+```
+pool = the models frozen on this round
+for company, family, region, year, and size:
+  if the pool has exactly one distinct value:
+    that trait is given, and the value is that one
+```
+
+Consequences:
+
+- All models gives nothing, unless the whole roster shares a value. Do not enable a roster that is all USA and then act surprised that region is given.
+- A company pool gives company. Region is given too, because a company has one region. Both pay nothing.
+- A family that belongs to one company gives family, company, and region.
+- A region pool gives region, and region pays nothing.
+- Origin has no trait board. The player is guessing the region itself.
+
+## Known values and the guess list
+
+A value becomes known when it is given, bought as a hint, or matched by a guess. Region, company, and family matches count. Every trait also counts once it is bought as a hint.
+
+In no-hint mode, matches are not shown and do not narrow the list. Narrowing would tell the player what they hit. The score still counts those matches. Given values can still be shown, because every model in the pool shares them.
+
+The server filters the guess list as known values change. The client shows logo, company, and name only. It does not receive family, region, year, size, or any other trait, and it does not filter the list itself.
+
+The server refuses a guess that is not in the filtered list (`409`). Hiding rows is not left to the browser.
+
+If one model is left in the list, the player still has to submit it. The round does not solve itself.
+
+## No-hint mode
+
+The lobby checkbox **Play without hints** is stored as `games.no_hint` and cannot change mid-round.
+
+Playing with no hints:
+
+- Do not offer any hint purchase. The roster never shrinks.
+- Hide match feedback for the whole round. Do not show that a guess hit company, region, or family.
+- Still score those matches.
+- Multiply the score by **1.5**. The multiplier applies only to a round played in this mode.
+
+Origin does not offer the checkbox. It stores `no_hint` false and does not multiply.
+
+## Score
+
+The score is one whole number, shown on the result page. It is never negative.
+
+The steps, in this order:
+
+1. Start from the base.
+2. Subtract the penalties.
+3. Multiply by the token factor.
+4. In no-hint mode, multiply by 1.5.
+5. Round with the half-up helper.
+6. Floor at 0.
+
+The base is **2000** if the player named the model, on any reply. That replaces region and company. There is no message-count multiplier. If they never named it, the base is the region (100) and company (300) points they actually matched. A trait that was given, or that the player revealed with a hint, contributes 0. Family, year, and size are not part of the base. There is no 1.5 on that path unless the round was played in no-hint mode.
+
+Penalties: **100** for each wrong guess, and the hint prices (year 100, size 100, region 400, company 600, family 600). They come off the base before the multiplier. Naming the model does not itself count as a wrong guess. Earlier wrong names still do, even in a round that is later solved.
+
+The token factor is 1000 divided by the tokens the successful replies used. Fewer than 100 tokens, including 0, count as 100, so the factor tops out at 10. There is no "0 tokens means factor 1" rule.
+
+No-hint mode is the harder mode. The 1.5 applies only when the round was played in it. A round with a bought hint is the other mode.
+
+`tokens` is input tokens plus output tokens on successful calls only. Failed calls are left out. `reasoning_tokens` and `cache_read_tokens` are not added. Some providers already count reasoning inside `output_tokens`. A round with no stored reply has no score.
+
+```
+countedTokens = max(tokens, 100)
+tokenFactor   = 1000 / countedTokens
+noHintFactor  = 1.5 when the round is no-hint and no hint was bought, otherwise 1
+
+base      = 2000 if the model was named
+            otherwise region points + company points
+penalties = (100 * wrong guesses) + (sum of the hint prices bought)
+
+score = max(0, round((base − penalties) * tokenFactor * noHintFactor))
+```
+
+`round` goes to the nearest integer. A half rounds up. A total below 0 after rounding is shown as 0.
+
+The numbers in that formula are the ones in `lib/config.ts`: `modelBase` (2000), `regionPoints` (100), `companyPoints` (300), `tokenScale` (1000), `tokenFloor` (100), `hintCosts`, `wrongGuessCost` (100), `noHintMultiplier` (1.5), and `messageLimit` (10, how many replies a round allows). A round scores with the current numbers when it ends, so a round that started under the old formula is scored with the new one. It keeps the `messageLimit` it froze.
+
+A short reply raises the score, because `1000 / tokens` gets large. The factor stops at 10. There is no other cap.
 
 ### Comment left on the formula
 
@@ -285,7 +466,7 @@ Later. The player picks the models before the round. Disabled until that picker 
 
 Two boards: **Daily**, and general **All models**. Main families maybe later. A round counts when its status is `solved` or `miss` and the category has a leaderboard. `given_up` does not count.
 
-Rank is the player's best score in the period, highest first. A negative score is a real score and sits toward the bottom. Ties break by fewer messages on that round, then by earlier finish. Weeks start Monday 00:00 UTC.
+Rank is the player's best score in the period, highest first. Scores are never negative, so a round can score 0. Ties break by fewer messages on that round, then by earlier finish. Weeks start Monday 00:00 UTC.
 
 The home weekly top 5 comes later. It is the All models board for the current week, limited to 5. Columns: rank, name, score.
 

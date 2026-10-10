@@ -67,7 +67,7 @@ export default async function HomePage({
         <li>
           <span className="step-no">3</span>
           <strong>Score high</strong>
-          <span>Few messages and few tokens score the most.</span>
+          <span>Few tokens and few hints score the most.</span>
         </li>
       </ol>
       <dl className="stats">

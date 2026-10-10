@@ -3,7 +3,7 @@ import type { Rules } from "./config";
 export type Region = "us" | "cn" | "eu";
 export type Size = "small" | "medium" | "large";
 export type TraitKey = "company" | "family" | "region" | "year" | "size";
-export type HintKey = "year" | "size";
+export type HintKey = TraitKey;
 export type GameStatus = "active" | "solved" | "miss" | "given_up";
 
 export type FrozenModel = {
@@ -58,7 +58,7 @@ export type PublicGame = {
   poolLabel: string;
   noHint: boolean;
   hintsAllowed: boolean;
-  hintCost: number;
+  hintCosts: Record<HintKey, number>;
   status: GameStatus;
   messageNumber: number;
   messageLimit: number;
@@ -72,7 +72,7 @@ export type PublicGame = {
     regionValue: string | null;
     familyValue: string | null;
   };
-  hints: { year: string | null; size: string | null };
+  hints: Record<HintKey, string | null>;
   candidates: PublicCandidate[];
   pastGuesses: PastGuess[];
   transcript: { turn: number; role: "user" | "assistant"; content: string }[];
@@ -159,9 +159,9 @@ export function knownValues(input: {
 }): Known {
   const known: Known = {};
   const { traits, hidden, guesses, hints, noHint } = input;
-  if (traits.given.includes("company")) known.companyId = hidden.companyId;
-  if (traits.given.includes("family")) known.familyId = hidden.familyId;
-  if (traits.given.includes("region")) known.region = hidden.region;
+  if (traits.given.includes("company") || hints.includes("company")) known.companyId = hidden.companyId;
+  if (traits.given.includes("family") || hints.includes("family")) known.familyId = hidden.familyId;
+  if (traits.given.includes("region") || hints.includes("region")) known.region = hidden.region;
   if (traits.given.includes("year") || hints.includes("year")) known.year = hidden.year;
   if (traits.given.includes("size") || hints.includes("size")) known.size = hidden.size;
   if (!noHint) {
@@ -170,6 +170,23 @@ export function knownValues(input: {
     if (guesses.some((guess) => guess.regionCorrect)) known.region = hidden.region;
   }
   return known;
+}
+
+export function hintOffered(input: {
+  key: HintKey;
+  traits: Traits;
+  hidden: FrozenModel;
+  guesses: GuessFlags[];
+  hints: HintKey[];
+  noHint: boolean;
+}): boolean {
+  if (input.noHint || input.hints.includes(input.key)) return false;
+  const known = knownValues(input);
+  if (input.key === "company") return known.companyId === undefined;
+  if (input.key === "family") return known.familyId === undefined;
+  if (input.key === "region") return known.region === undefined;
+  if (input.key === "year") return known.year === undefined;
+  return known.size === undefined;
 }
 
 export function missedGuesses(traits: Traits, guesses: RecordedGuess[], noHint: boolean): PastGuess[] {
@@ -240,7 +257,7 @@ function formatFactor(value: number): string {
   return String(rounded);
 }
 
-export function scoreRound(input: {
+export type ScoreInput = {
   rules: Rules;
   namedModel: boolean;
   regionMatched: boolean;
@@ -248,18 +265,28 @@ export function scoreRound(input: {
   regionGiven: boolean;
   companyGiven: boolean;
   tokens: number;
-  messages: number;
   noHint: boolean;
   hints: HintKey[];
   wrongGuesses?: number;
-}): { score: number; breakdown: ScoreLine[]; explanation: string[] } {
+};
+
+const hintNames: Record<HintKey, string> = {
+  company: "Company",
+  family: "Family",
+  region: "Region",
+  year: "Year",
+  size: "Size",
+};
+
+export function scoreRound(input: ScoreInput): { score: number; breakdown: ScoreLine[]; explanation: string[] } {
   const { rules } = input;
-  const messages = input.messages;
   const wrongGuesses = input.wrongGuesses ?? 0;
-  const wrongCost = rules.wrongGuessCost ?? 50;
-  const tokenFactor = input.tokens === 0 ? 1 : rules.tokenScale / input.tokens;
-  const messageFactor = rules.messageLimit / messages;
-  const noHintFactor = input.noHint ? rules.noHintMultiplier : 1;
+  const regionKnown = input.regionGiven || input.hints.includes("region");
+  const companyKnown = input.companyGiven || input.hints.includes("company");
+  const countedTokens = Math.max(input.tokens, rules.tokenFloor);
+  const tokenFactor = rules.tokenScale / countedTokens;
+  const noHintMode = input.noHint && input.hints.length === 0;
+  const noHintFactor = noHintMode ? rules.noHintMultiplier : 1;
 
   let base = 0;
   const breakdown: ScoreLine[] = [];
@@ -267,114 +294,101 @@ export function scoreRound(input: {
     base = rules.modelBase;
     breakdown.push({ label: "Named the model", points: rules.modelBase });
   } else {
-    if (input.regionMatched && !input.regionGiven) {
+    if (input.regionMatched && !regionKnown) {
       base += rules.regionPoints;
       breakdown.push({ label: "Region", points: rules.regionPoints });
     }
-    if (input.companyMatched && !input.companyGiven) {
+    if (input.companyMatched && !companyKnown) {
       base += rules.companyPoints;
       breakdown.push({ label: "Company", points: rules.companyPoints });
     }
     if (base === 0) breakdown.push({ label: "Base", points: 0 });
   }
 
-  const p0 = base;
-  const p1 = roundHalfUp(base * tokenFactor);
-  const p2 = roundHalfUp(base * tokenFactor * messageFactor);
-  const p3 = roundHalfUp(base * tokenFactor * messageFactor * noHintFactor);
-
-  breakdown.push({
-    label: `Tokens · ${formatInt(input.tokens)} tokens · ×${formatFactor(tokenFactor)}`,
-    points: p1 - p0,
-  });
-  breakdown.push({
-    label: `Messages · ${messages} ${messages === 1 ? "reply" : "replies"} · ×${formatFactor(messageFactor)}`,
-    points: p2 - p1,
-  });
-  if (input.noHint) {
-    breakdown.push({
-      label: `No-hint · ×${formatFactor(noHintFactor)}`,
-      points: p3 - p2,
-    });
-  }
+  let penalties = 0;
   for (const hint of input.hints) {
-    breakdown.push({
-      label: hint === "year" ? "Year" : "Size",
-      points: -rules.hintCost,
-    });
+    const cost = rules.hintCosts[hint];
+    penalties += cost;
+    breakdown.push({ label: `${hintNames[hint]} hint`, points: -cost });
   }
   if (wrongGuesses > 0) {
-    breakdown.push({
-      label: `Wrong guesses · ${wrongGuesses}`,
-      points: -wrongCost * wrongGuesses,
-    });
+    const cost = rules.wrongGuessCost * wrongGuesses;
+    penalties += cost;
+    breakdown.push({ label: `Wrong guesses · ${wrongGuesses}`, points: -cost });
   }
 
-  const score = p3 - rules.hintCost * input.hints.length - wrongCost * wrongGuesses;
-  const explanation = explainScore(input, base, wrongGuesses, wrongCost);
-  return { score, breakdown, explanation };
+  const net = base - penalties;
+  const afterTokens = roundHalfUp(net * tokenFactor);
+  const afterMode = roundHalfUp(net * tokenFactor * noHintFactor);
+  const tokenNote =
+    input.tokens < rules.tokenFloor
+      ? `${formatInt(input.tokens)} tokens, counted as ${formatInt(countedTokens)}`
+      : `${formatInt(input.tokens)} tokens`;
+  breakdown.push({
+    label: `Tokens · ${tokenNote} · ×${formatFactor(tokenFactor)}`,
+    points: afterTokens - net,
+  });
+  if (noHintMode) {
+    breakdown.push({ label: `No-hint · ×${formatFactor(noHintFactor)}`, points: afterMode - afterTokens });
+  }
+  const score = Math.max(0, afterMode);
+  if (afterMode < 0) breakdown.push({ label: "Floor at 0", points: score - afterMode });
+
+  return { score, breakdown, explanation: explainScore(input, base, penalties, afterMode, noHintMode) };
 }
 
 function explainScore(
-  input: {
-    rules: Rules;
-    namedModel: boolean;
-    regionMatched: boolean;
-    companyMatched: boolean;
-    regionGiven: boolean;
-    companyGiven: boolean;
-    tokens: number;
-    messages: number;
-    noHint: boolean;
-    hints: HintKey[];
-    wrongGuesses?: number;
-  },
+  input: ScoreInput,
   base: number,
-  wrongGuesses: number,
-  wrongCost: number,
+  penalties: number,
+  total: number,
+  noHintMode: boolean,
 ): string[] {
   const { rules } = input;
+  const wrongGuesses = input.wrongGuesses ?? 0;
+  const regionKnown = input.regionGiven || input.hints.includes("region");
+  const companyKnown = input.companyGiven || input.hints.includes("company");
   const lines = [
-    "Your score starts from the base, multiplies by the token factor and the message factor, then by 1.5 if you played with no hints, then subtracts 100 for each hint and 50 for each wrong model guess.",
+    "Your score starts from the base and subtracts penalties. That is multiplied by the token factor, then by 1.5 if you played with no hints. It is rounded and never goes below 0.",
   ];
   if (input.namedModel) {
     lines.push(`Base: ${formatInt(rules.modelBase)} for naming the model.`);
   } else if (base === 0) {
     lines.push("Base: 0.");
-  } else if (input.regionMatched && !input.regionGiven && input.companyMatched && !input.companyGiven) {
+  } else if (input.regionMatched && !regionKnown && input.companyMatched && !companyKnown) {
     lines.push(
       `Base: ${formatInt(base)} — region ${formatInt(rules.regionPoints)}, company ${formatInt(rules.companyPoints)}.`,
     );
-  } else if (input.regionMatched && !input.regionGiven) {
+  } else if (input.regionMatched && !regionKnown) {
     lines.push(`Base: ${formatInt(rules.regionPoints)} for the region.`);
   } else {
     lines.push(`Base: ${formatInt(rules.companyPoints)} for the company.`);
   }
 
-  if (input.tokens === 0) {
-    lines.push("Tokens: 0. Token factor 1.");
-  } else {
-    lines.push(
-      `Tokens: ${formatInt(input.tokens)}. Token factor ${formatInt(rules.tokenScale)}/${formatInt(input.tokens)}.`,
-    );
-  }
-  lines.push(
-    `Messages: ${input.messages} ${input.messages === 1 ? "reply" : "replies"}. Message factor ${rules.messageLimit}/${input.messages}.`,
-  );
-  if (input.noHint) lines.push(`No-hint: ×${formatFactor(rules.noHintMultiplier)}.`);
   if (input.hints.length === 0) {
     lines.push("Hints: none.");
   } else {
-    const parts = input.hints.map(
-      (hint) => `${hint === "year" ? "Year" : "Size"} −${formatInt(rules.hintCost)}`,
-    );
+    const parts = input.hints.map((hint) => `${hintNames[hint]} −${formatInt(rules.hintCosts[hint])}`);
     lines.push(`Hints: ${parts.join(". ")}.`);
   }
   if (wrongGuesses === 0) {
     lines.push("Wrong guesses: none.");
   } else {
-    lines.push(`Wrong guesses: ${wrongGuesses} × −${formatInt(wrongCost)}.`);
+    lines.push(`Wrong guesses: ${wrongGuesses} × −${formatInt(rules.wrongGuessCost)}.`);
   }
+  lines.push(`Before the multiplier: ${formatInt(base)} − ${formatInt(penalties)} = ${formatInt(base - penalties)}.`);
+
+  if (input.tokens < rules.tokenFloor) {
+    lines.push(
+      `Tokens: ${formatInt(input.tokens)}, counted as ${formatInt(rules.tokenFloor)}. Token factor ${formatInt(rules.tokenScale)}/${formatInt(rules.tokenFloor)}.`,
+    );
+  } else {
+    lines.push(
+      `Tokens: ${formatInt(input.tokens)}. Token factor ${formatInt(rules.tokenScale)}/${formatInt(input.tokens)}.`,
+    );
+  }
+  if (noHintMode) lines.push(`No-hint: ×${formatFactor(rules.noHintMultiplier)}.`);
+  if (total < 0) lines.push("The total came to less than 0, so it is shown as 0.");
   return lines;
 }
 
@@ -464,7 +478,7 @@ export function toPublicGame(input: {
     poolLabel: poolLabel(input.category, input.poolKey, input.traits),
     noHint: input.noHint,
     hintsAllowed: input.rules.hintsAllowed,
-    hintCost: input.rules.hintCost,
+    hintCosts: input.rules.hintCosts,
     status: input.status,
     messageNumber: input.messageCount,
     messageLimit: input.rules.messageLimit,
@@ -481,8 +495,11 @@ export function toPublicGame(input: {
         }
       : null,
     hints: {
-      year: input.hints.includes("year") ? String(hidden.year) : null,
-      size: input.hints.includes("size") ? sizeLabel(hidden.size) : null,
+      company: input.hints.includes("company") ? displayValue(hidden, "company") : null,
+      family: input.hints.includes("family") ? displayValue(hidden, "family") : null,
+      region: input.hints.includes("region") ? displayValue(hidden, "region") : null,
+      year: input.hints.includes("year") ? displayValue(hidden, "year") : null,
+      size: input.hints.includes("size") ? displayValue(hidden, "size") : null,
     },
     candidates: filterCandidates(input.traits, known, input.guessedModelIds),
     pastGuesses: missedGuesses(input.traits, input.guesses, input.noHint),

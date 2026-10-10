@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { BoardTable } from "@/components/board-table";
 import { leaderboard, listCategories } from "@/lib/rounds";
 import { currentProfile } from "@/lib/session";
@@ -66,9 +67,9 @@ export default async function LeaderboardPage({
           <div className="row pager">
             <div className="row">
               {page > 1 ? (
-                <a className="button-quiet" href={boardHref(category, period, page - 1)}>
+                <Link className="button-quiet" href={boardHref(category, period, page - 1)} scroll={false}>
                   Previous
-                </a>
+                </Link>
               ) : (
                 <span className="button-quiet is-disabled">Previous</span>
               )}
@@ -76,17 +77,17 @@ export default async function LeaderboardPage({
                 Page {page} of {pageCount}
               </span>
               {page < pageCount ? (
-                <a className="button-quiet" href={boardHref(category, period, page + 1)}>
+                <Link className="button-quiet" href={boardHref(category, period, page + 1)} scroll={false}>
                   Next
-                </a>
+                </Link>
               ) : (
                 <span className="button-quiet is-disabled">Next</span>
               )}
             </div>
             {minePage && minePage !== page ? (
-              <a className="button" href={boardHref(category, period, minePage)}>
+              <Link className="button" href={boardHref(category, period, minePage)} scroll={false}>
                 Your place
-              </a>
+              </Link>
             ) : null}
           </div>
         </>
