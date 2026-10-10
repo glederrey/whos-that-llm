@@ -72,7 +72,7 @@ A tip does not raise the hourly cap, change a score, or put a name on the leader
 
 Purpose: present the game. Public. Playing requires a session, and that happens on `/play`. The leaderboard does not.
 
-The header keeps the name and a logo the same height as that text, plus **Leaderboard** and the account menu.
+The header keeps the name and a logo the same height as that text, plus **Scoring** (links to `/scoring`), **Leaderboard** and the account menu.
 
 Two columns. On a narrow screen they stack.
 

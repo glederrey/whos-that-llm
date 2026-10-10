@@ -33,6 +33,19 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               <span>Who&apos;s that LLM?</span>
             </a>
             <nav className="header-nav">
+              <a href="/scoring">
+                <svg className="nav-icon" viewBox="0 0 24 24" aria-hidden="true">
+                  <path
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.8"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3V4zM5 17a3 3 0 0 1 3-3h11M9 8h6"
+                  />
+                </svg>
+                Scoring
+              </a>
               <a href="/leaderboard">
                 <svg className="nav-icon" viewBox="0 0 24 24" aria-hidden="true">
                   <path
