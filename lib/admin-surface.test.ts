@@ -72,7 +72,9 @@ test("OpenRouter spend is read at request time on the server", () => {
   const text = fs.readFileSync(path.join(root, "lib/openrouter-spend.ts"), "utf8");
   assert.match(text, /import "server-only"/);
   assert.match(text, /await requireOwner\(\)/);
-  assert.match(text, /process\.env\.OPENROUTER_API_KEY/);
+  assert.match(text, /readServerEnv\("OPENROUTER_MANAGEMENT_KEY"\)/);
+  assert.match(text, /readServerEnv\("OPENROUTER_API_KEY"\)/);
+  assert.doesNotMatch(text, /process\.env\.OPENROUTER_/);
   assert.match(text, /cache: "no-store"/);
   assert.match(text, /\/key`/);
   assert.match(text, /\/activity`/);
@@ -81,6 +83,7 @@ test("OpenRouter spend is read at request time on the server", () => {
   assert.match(page, /export const dynamic = "force-dynamic"/);
   assert.match(page, /await requireOwner\(\)/);
   assert.doesNotMatch(page, /OPENROUTER_API_KEY/);
+  assert.doesNotMatch(page, /OPENROUTER_MANAGEMENT_KEY/);
 });
 
 test("account deletion uses only the signed-in user", () => {
