@@ -25,7 +25,7 @@ jobs:
         with:
           ref: ${{ github.event.release.tag_name }}
 
-      - name: Use Node 22
+      - name: Use Node 24
         uses: actions/setup-node@v4
         with:
           node-version: 24
