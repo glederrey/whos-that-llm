@@ -213,11 +213,12 @@ Point numbers for a match stay off this board. They are on the result page. Nami
 
 ### Hints
 
-On the same board, from the moment the round opens, when this category allows hints and no-hint mode is off.
+On the same board, from the moment the round opens, when this category allows hints and no-hint mode is off. No-hint rounds do not show these buttons.
 
 - **Reveal**, or **Reveal (−100 pts)** when the years or the sizes differ
+- **Reveal (−600 pts)** on company and on family, and **Reveal (−400 pts)** on region, when that trait is not already unveiled. A trait the pool shares stays unveiled with no button.
 
-One click. The button disables until the response returns. A revealed year shows the calendar year, such as **2026**. A revealed size shows **Small**, **Medium**, or **Large**. The button does not come back.
+One click. The button disables until the response returns. A revealed year shows the calendar year, such as **2026**. A revealed size shows **Small**, **Medium**, or **Large**. A revealed company, family, or region shows that value. The button does not come back.
 
 ### Failures on the round
 
