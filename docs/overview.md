@@ -58,7 +58,7 @@ Ko-fi does not price a page in francs, so euros avoids a second conversion on a 
 
 Supabase sends confirmation and password-reset mail. Both links return to the main page. That quota is enough to start. Custom SMTP is the fix if those emails start failing.
 
-Admin is not a role you hand out. It is a later screen. `ADMIN_EMAIL` in the server env is the one address that can open `/admin`. Sign in with that address (Google or email/password, as long as the session email matches). Everyone else gets the same 404 as a missing page, and the site renders no Admin link for them. An empty `ADMIN_EMAIL` means there is no admin.
+Admin is not a role you hand out. `/admin` and `/admin/models` render only when the server matches the signed-in Supabase email to the owner address. Everyone else gets the same 404 as a missing page. The site renders no link to those pages.
 
 ## Auth
 

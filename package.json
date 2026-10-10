@@ -5,7 +5,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "test": "tsx --test lib/game.test.ts lib/words.test.ts lib/openrouter.test.ts lib/profile.test.ts lib/logos.test.ts",
+    "test": "tsx --test lib/game.test.ts lib/words.test.ts lib/openrouter.test.ts lib/profile.test.ts lib/logos.test.ts lib/admin-model.test.ts lib/admin-surface.test.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
@@ -16,7 +16,8 @@
     "next": "^16.4.0",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
-    "react-markdown": "^10.1.0"
+    "react-markdown": "^10.1.0",
+    "server-only": "^0.0.1"
   },
   "devDependencies": {
     "@types/node": "^26.6.4",

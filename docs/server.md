@@ -89,7 +89,7 @@ Do not tell the client which traits the highlighted row would hit. That preview 
 | `POST /api/admin/companies` | Admin, later. `{ id, name, region }` plus a logo upload or a logo URL |
 | `POST /api/admin/logos` | Admin, later. Upload to Supabase Storage. The response is the path to store |
 
-Admin handlers call `isAdmin`: the session email, lowercased, equals `ADMIN_EMAIL`. Anyone else gets `404`, the same shape as a missing route. There is no admin client flag to trust. Those routes wait until admin is built. The pause flag itself is written from the first build, by a credit error.
+The roster pages check the signed-in Supabase email against the owner address in a server-only module. Anyone else gets `404`, the same shape as a missing route. Roster edits are server actions that repeat the check, then write with the server key. anon and authenticated cannot write the roster tables. The counts on `/admin` are not granted to the public API. There is no admin client flag. The `/api/admin` routes in the table above wait until the rest of admin is built. The pause flag itself is written from the first build, by a credit error.
 
 ### `POST /api/games`
 

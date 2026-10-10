@@ -1,16 +1,20 @@
 # Admin
 
-Later. Not in the first build. The first build still pauses the game for everyone when OpenRouter returns 402 or an explicit credit error. Until this screen exists, Gael clears `app_settings.paused` in the database after he tops up credits on OpenRouter. He tops up there himself. The site does not take a payment for credits.
+This build has two pages, `/admin` and `/admin/models`. The rest of this document is the later cockpit.
 
-When admin exists, this is the cockpit. It is not a role, and it is not in the navigation for anyone else. Gael edits the game here, without opening the database.
+The server reads the signed-in Supabase user and compares that email, case-insensitive, to the owner address in a server-only module. `ADMIN_EMAIL` is not the switch. A profile edit cannot grant access. There is no role column and no client flag.
 
-`ADMIN_EMAIL` is a server env var, one address. On every `/admin` page and every `/api/admin` route, the server reads the session user from Supabase and compares that email, case-insensitive, to `ADMIN_EMAIL`.
+- Match: the two pages render. The site does not link to them. The owner opens the URL.
+- Anything else, including no session: `notFound()`. The response looks like any other missing URL. There is no "forbidden" page, no login wall, and no admin link in the HTML.
+- The address is not sent to the browser.
 
-- Match: the pages render, and the public header shows an **Admin** link.
-- Anything else, including no session and an empty `ADMIN_EMAIL`: `notFound()`. The response looks like any other missing URL. There is no "forbidden" page and no admin link in the HTML.
-- The email is never sent to the browser as configuration. The link is rendered by a server component after the check.
+Google and email/password both work when the session email is the owner address. A second person does not get access by editing `app_metadata` or their username.
 
-Sign in with that address. Google and email/password both work if the session email is the same one. A second person does not get access by editing `app_metadata` or their username.
+Roster changes are server actions. Each one repeats the check, then writes with the server key. anon and authenticated cannot insert, update, or delete `models`, `companies`, or `families`. The counts on `/admin` are not a public function.
+
+The game still pauses for everyone when OpenRouter returns 402 or an explicit credit error. The pause switch on this page is later. Until then, clear `app_settings.paused` in the database after topping up credits on OpenRouter. The site does not take a payment for credits.
+
+When the rest of this cockpit exists, it is still not a role, and it is still not in the navigation.
 
 ## Pages
 

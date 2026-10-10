@@ -127,7 +127,6 @@ Requires a session. No session goes to `/login?next=/play`. No username goes to 
 - An open round turns that **Play** into **Continue**.
 - **Play** is disabled when the hour is full, the game is paused, or the All models pool has fewer than 2 models (**Not enough models.**).
 - Under the All models row, a full-width option, off by default: **Play without hints.** Beside it: **No year or size. No match feedback. Score × 1.5.** It stays editable until Play.
-- **Admin** only when the server has already decided this session is the admin email, and only once admin exists. It is not in the markup otherwise.
 
 Company, Family, and Region go to `/play/new?category=…` once they are built. Custom is a later choice of models. There is no Latest card and no Origin card.
 
@@ -301,6 +300,12 @@ Private. The account menu shows **Profile** once the player has a username. No s
 - Stats: games played, solved, missed, given up, solve rate, best score, average score, average messages on a solved game.
 - Games: 10 per page, **Previous** and **Next**. Clicking a row opens its summary in place, directly under that row, and clicking it again closes it. One row is open at a time. The summary shows the company logo and model name, date, status, score, messages used, and whether company and region were found. No transcript. A logo that fails to load is hidden. An open round hides the model and logo and links to **Continue**.
 
-## Admin
+## Private pages
 
-Later. The screens are specified in [Admin](admin.md). The first build does not link to them.
+`/admin` and `/admin/models` are not linked from the header, the footer, the account menu, or any public page. The server reads the signed-in Supabase user and compares that email to the owner address in a server-only module. Anyone else, including a signed-out visitor and a player who edits their profile, gets the same not-found page as a missing URL. There is no role column and no client flag.
+
+`/admin` shows five counts: models in the roster, active models, players, games today (UTC), and total games. Players are distinct accounts that have started a game. Those counts are read with the server key after the check. They are not a public API.
+
+`/admin/models` lists every model with company, region, year, size, OpenRouter id, and whether it is active. Turn one on or off without deleting it. Add one by typing an OpenRouter id, a display name, a company, a region, a year, and a size. Edit those fields on a row. A new model starts off. Past games keep the traits they froze. Company logos come from the `logos` bucket. Logo upload, categories, and scoring settings are not on these pages.
+
+The later cockpit (spend, categories, families, confusion, transcripts) is still specified in [Admin](admin.md).

@@ -96,6 +96,8 @@ Region is not a column here. It comes from the company. The year hint uses `extr
 
 Editing `company_id`, `family_id`, `size`, `released_on`, or the company region applies to new games only. A round already started keeps `games.traits`.
 
+anon and authenticated cannot insert, update, or delete `models`, `companies`, or `families`. The server key does that after the owner check. There is no public function for the private roster counts.
+
 ### `categories`
 
 The lobby and the leaderboard read this table. The built-in rows are seeded and cannot be deleted.

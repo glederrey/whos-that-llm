@@ -71,7 +71,7 @@ In Supabase, set the site URL and the email redirect URLs to the site root `/`, 
 
 Verify every slug on OpenRouter before enabling it. Prices and dates below are for seeding, not for billing. Billing uses `usage.cost_usd`. Families with one model stay disabled until a second model exists, so the later Family card is not a one-model pool. All models can still draw a model whose family is disabled.
 
-The prototype turns on six small models and leaves every other row disabled. There is no admin page yet, so this seed is the roster you can try:
+The prototype turns on six small models and leaves every other row disabled. The owner can change that roster from `/admin/models`. This seed is the roster you can try:
 
 - Claude Haiku 4.5 (`claude-haiku-4-5`)
 - Claude Haiku 5.5 (`claude-haiku-5-5`)
