@@ -31,7 +31,7 @@ Pages and route handlers are one Next.js app. The handlers are the backend: they
 
 ## Hosting
 
-A push to GitHub builds the site on Vercel, runs the server routes, and serves HTTPS. Hobby is free. A function may run for several minutes, which covers a reply. There is no machine to patch.
+Publishing a GitHub Release deploys that tag to Vercel production. A push or a pull request does not. The workflow reads `VERCEL_TOKEN`, `VERCEL_ORG_ID`, and `VERCEL_PROJECT_ID` from GitHub Actions secrets. The app env stays on the Vercel project. Hobby is free. A function may run for several minutes, which covers a reply. There is no machine to patch.
 
 The game is on a `something.vercel.app` address before any domain exists. Buy a domain when the game is worth showing. In the Vercel project, Settings → Domains, add the name. At the registrar, add the records Vercel shows:
 
@@ -46,7 +46,7 @@ No VPS, no extra email service, no second database.
 
 | What | What to do | When |
 |---|---|---|
-| **GitHub** | Already exists: `glederrey/whos-that-llm`. Vercel deploys from it. | Done |
+| **GitHub** | Already exists: `glederrey/whos-that-llm`. Publishing a release deploys that tag. | Done |
 | **Supabase** | One project. Copy the project URL, the publishable key, and the secret key. Turn on Email and Google under Authentication. Set the site URL and the redirect URLs to the main page, `/`. | Before auth works |
 | **Google Cloud** | One project on the existing Google account. No billing. OAuth client (Web). Authorized redirect: `https://<project-ref>.supabase.co/auth/v1/callback`. Paste the id and secret into the Supabase Google provider. | Before the Google button works |
 | **OpenRouter** | Account, about $10 of credit, one API key, a monthly cap around $20. The key stays in env vars. Gael tops up credits himself. | Before the first real model call |

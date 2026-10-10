@@ -121,6 +121,6 @@ The first build is a playable All models round. Gael plays it locally, then the 
 7. Later: daily, company, family, region, custom. They are pool filters plus the given-trait rule. Custom is a choice of models. There is no Latest category and no Origin category.
 8. Later: home weekly top 5 and daily result stats. The profile, with stats, past games, and username changes, is in this prototype.
 9. Later: admin. Spend, stats, families, roster, logos in Supabase Storage with a URL fallback, pause switch, recent rounds.
-10. Deploy to the `*.vercel.app` URL. A domain comes after someone besides us is playing.
+10. Publish a GitHub Release. That deploys the release tag to the `*.vercel.app` URL. A domain comes after someone besides us is playing.
 
 Step 4 is allowed to set models `enabled = false`. It is not allowed to add a mechanic that is not in [Rules](rules.md). Do not add a cap on the token factor. If a credit error pauses the game before the admin page exists, clear `app_settings.paused` after topping up on OpenRouter.
