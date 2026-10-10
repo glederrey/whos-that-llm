@@ -299,12 +299,13 @@ Private. The account menu shows **Profile** once the player has a username. No s
 - **Picture.** Optional upload, JPEG, PNG, or WebP, at most 1 MB. A larger file or any other type shows **Use a JPEG, PNG, or WebP under 1 MB.** It replaces the generated mark in the header. People who skipped it on welcome add it here.
 - Stats: games played, solved, missed, given up, solve rate, best score, average score, average messages on a solved game.
 - Games: 10 per page, **Previous** and **Next**. Clicking a row opens its summary in place, directly under that row, and clicking it again closes it. One row is open at a time. The summary shows the company logo and model name, date, status, score, messages used, and whether company and region were found. No transcript. A logo that fails to load is hidden. An open round hides the model and logo and links to **Continue**.
+- **Delete account.** Under the games. The player checks **I want to delete my account.** and submits **Delete account**. Nothing is removed until that box is checked. The same form is on `/account/delete`.
 
-## Delete account (`/account/delete`)
+## Delete account (`/account/delete` and `/profile`)
 
-Any signed-in player can open this page from **Delete account** in the account menu. No session goes to `/login?next=/account/delete`. The page says the sign-in is removed and games already played stay under the username.
+Any signed-in player can open `/account/delete` from **Delete account** in the account menu, or use the form on their own profile. No session goes to `/login?next=/account/delete`. There is no control that names another player.
 
-The player checks **I want to delete my sign-in.** and submits **Delete account**. The server uses the session id. A user id in the form is ignored. The picture in the `avatars` bucket is removed when it can be, then the auth user is deleted and the session ends on `/`. An unchecked box stays on the page with **Confirm that you want to delete your sign-in.** A failed delete stays on the page with **Could not delete this account.** Rounds are not deleted. Run [`0013_keep_games_on_account_delete.sql`](../supabase/migrations/0013_keep_games_on_account_delete.sql) before a player who already has games can delete their sign-in.
+The copy says this removes the profile, the picture, and the games, including the name on the leaderboard. The server uses the session id. A user id in the form is ignored. It deletes that user's `usage` rows and `games` rows. Messages and guesses go with the games. The picture in the `avatars` bucket is removed, then the auth user is deleted, which removes the profile. The session ends on `/`. An unchecked box stays on the same page with **Confirm that you want to delete your account.** A failed delete stays there with **Could not delete this account.** Run [`0014_delete_games_with_account.sql`](../supabase/migrations/0014_delete_games_with_account.sql) so the games foreign key cascades. The server deletes the rows itself, so the account can be removed before that file is applied.
 
 ## Private pages
 

@@ -72,17 +72,32 @@ test("account deletion uses only the signed-in user", () => {
   const lib = fs.readFileSync(path.join(root, "lib/account-delete.ts"), "utf8");
   assert.match(lib, /import "server-only"/);
   assert.match(lib, /deleteUser\(user\.id, false\)/);
+  assert.match(lib, /\.from\("usage"\)\.delete\(\)\.eq\("user_id", userId\)/);
+  assert.match(lib, /\.from\("games"\)\.delete\(\)\.eq\("user_id", userId\)/);
+  const rowsAt = lib.indexOf("removeOwnedRows(client, user.id)");
+  const avatarAt = lib.indexOf("removeAvatars(client, user.id)");
+  const authAt = lib.indexOf("deleteUser(user.id, false)");
+  assert.ok(rowsAt !== -1 && rowsAt < avatarAt && avatarAt < authAt);
   assert.doesNotMatch(lib, /formData/);
   const action = fs.readFileSync(path.join(root, "app/account/delete/actions.ts"), "utf8");
   assert.match(action, /deleteSignedInAccount\(confirmed\)/);
   assert.match(action, /formData\.get\("confirm"\)/);
+  assert.match(action, /formData\.get\("return"\) === "profile"/);
   assert.doesNotMatch(action, /formData\.get\(\s*["'](?:id|user|userId|user_id|email)/);
+  const profile = fs.readFileSync(path.join(root, "app/profile/page.tsx"), "utf8");
+  assert.match(profile, /DeleteAccountForm/);
+  const form = fs.readFileSync(path.join(root, "components/delete-account-form.tsx"), "utf8");
+  assert.match(form, /name="confirm"/);
+  assert.doesNotMatch(form, /name="(?:id|userId|user_id|email)"/);
+  const editor = fs.readFileSync(path.join(root, "components/profile-form.tsx"), "utf8");
+  assert.doesNotMatch(editor, /deleteUser|deleteSignedInAccount|deleteAccount/);
 });
 
-test("deleting a sign-in keeps the rounds", () => {
-  const sql = fs.readFileSync(path.join(root, "supabase/migrations/0013_keep_games_on_account_delete.sql"), "utf8");
-  assert.match(sql, /drop constraint if exists games_user_id_fkey/);
-  assert.doesNotMatch(sql, /delete from public\.games/i);
+test("deleting an account removes that player's rounds", () => {
+  const sql = fs.readFileSync(path.join(root, "supabase/migrations/0014_delete_games_with_account.sql"), "utf8");
+  assert.match(sql, /games_user_id_fkey/);
+  assert.match(sql, /on delete cascade/);
+  assert.doesNotMatch(sql, /on delete restrict/);
 });
 
 test("client roles cannot write the roster", () => {

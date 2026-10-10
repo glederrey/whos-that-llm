@@ -6,7 +6,8 @@ import { deleteSignedInAccount } from "@/lib/account-delete";
 export async function deleteAccount(formData: FormData) {
   const confirmed = formData.get("confirm") === "yes";
   const result = await deleteSignedInAccount(confirmed);
-  if (result === "auth") redirect("/login?next=/account/delete");
-  if (result) redirect(`/account/delete?notice=${result}`);
+  const back = formData.get("return") === "profile" ? "/profile" : "/account/delete";
+  if (result === "auth") redirect(back === "/profile" ? "/login?next=/profile" : "/login?next=/account/delete");
+  if (result) redirect(`${back}?notice=${result}`);
   redirect("/");
 }

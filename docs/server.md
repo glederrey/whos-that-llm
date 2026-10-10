@@ -91,7 +91,7 @@ Do not tell the client which traits the highlighted row would hit. That preview 
 
 The roster pages check the signed-in Supabase email against the owner address in a server-only module. Anyone else gets `404`, the same shape as a missing route. The account menu includes **Admin** only for that session, rendered on the server, with no admin flag in client JavaScript. Roster edits are server actions that repeat the check, then write with the server key. anon and authenticated cannot write the roster tables. The counts on `/admin` are not granted to the public API. List prices on that page come from the public OpenRouter model list and do not send the API key. There is no admin client flag. The `/api/admin` routes in the table above wait until the rest of admin is built. The pause flag itself is written from the first build, by a credit error.
 
-Deleting a sign-in is a server action, not a route that accepts an account id. It deletes the session user only. Rounds stay.
+Deleting an account is a server action, not a route that accepts an account id. It checks the session, then deletes that user's usage, games, avatar, and auth user. Messages and guesses cascade from the games. The name leaves the leaderboard. A client request cannot name another user or skip the session check.
 
 ### `POST /api/games`
 

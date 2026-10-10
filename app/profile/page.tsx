@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { DeleteAccountForm, deleteNotice } from "@/components/delete-account-form";
 import { HistoryList } from "@/components/history-list";
 import { ProfileForm } from "@/components/profile-form";
 import type { GameStatus } from "@/lib/game";
@@ -41,7 +42,7 @@ function statusLabel(status: GameStatus) {
 export default async function ProfilePage({
   searchParams,
 }: {
-  searchParams: Promise<{ page?: string }>;
+  searchParams: Promise<{ page?: string; notice?: string }>;
 }) {
   const params = await searchParams;
   const { user, username, avatarUrl } = await currentProfile();
@@ -123,6 +124,7 @@ export default async function ProfilePage({
           </div>
         </>
       )}
+      <DeleteAccountForm notice={deleteNotice(params.notice)} returnTo="profile" />
     </div>
   );
 }

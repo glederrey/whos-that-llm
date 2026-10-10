@@ -16,7 +16,7 @@ Each round is one row in `games`. That row's `id` is the session id. The player'
 
 A user message is at most 500 characters. A reply is at most 500 tokens, about 2 KB. A full round is about 15 KB. Ten thousand rounds are about 150 MB.
 
-The text is kept. Later analysis reads `messages` joined to `games` on `game_id`. The admin round page also reads it, because a 500-token reply has room to say its own name. Score, guesses, and the leaderboard do not read `messages`, so a point does not depend on the text. That is not a reason to delete the rows. A round and its transcript stay.
+The text is kept while the account exists. Later analysis reads `messages` joined to `games` on `game_id`. The admin round page also reads it, because a 500-token reply has room to say its own name. Score, guesses, and the leaderboard do not read `messages`, so a point does not depend on the text. Deleting an account removes that player's games, messages, guesses, and usage. Other players' rounds stay.
 
 A failed call writes `usage` and does not write `messages`, because there is no stored reply. The system prompt is not a row.
 
@@ -144,7 +144,7 @@ One row per round.
 | Column | Type | Notes |
 |---|---|---|
 | `id` | uuid, pk | default `gen_random_uuid()` |
-| `user_id` | uuid | Historical account id. Not a foreign key. Deleting the auth user removes the profile and leaves the rounds. `username` on the row is what the leaderboard still shows |
+| `user_id` | uuid, fk `profiles` | on delete cascade, after `0014_delete_games_with_account.sql`. Deleting the account removes these rounds, so the leaderboard name goes with them |
 | `username` | text | Copied at insert, then rewritten when that user renames. Leaderboard name for that round |
 | `category` | text, fk `categories` | |
 | `pool_key` | text, null | `anthropic`, `opus`, `us`, `cn`, or `eu`. Null for `all`, `daily`, and `custom` |
@@ -172,7 +172,7 @@ Indexes:
 - unique `(user_id, daily_key)` where `daily_key is not null`
 - `(category, status, finished_at)` for the leaderboard
 
-`0013_keep_games_on_account_delete.sql` drops `games_user_id_fkey`. The column stays. Until that file is run, deleting an auth user who already has games fails and the rounds stay. After it is run, the rounds still stay and the profile can cascade away. The leaderboard reads `games.username` and left-joins `profiles` for the picture, so a deleted account keeps its name and loses the picture.
+`0014_delete_games_with_account.sql` puts `games_user_id_fkey` back as `on delete cascade`. `0013_keep_games_on_account_delete.sql` had dropped that key. Messages and guesses cascade from `games`. A `usage` row points at `games` the same way, and `usage.user_id` has no foreign key, so the server deletes `usage` for the session user before it deletes the games. The leaderboard reads `games`, so a deleted account has no row left. anon and authenticated still cannot delete these tables. The server action uses the service key after it has read the session.
 
 `rules` shape:
 
