@@ -12,7 +12,11 @@ Google and email/password both work when that session has the flag. A second per
 
 Roster changes are server actions. Each one repeats the check, then writes with the server key. anon and authenticated cannot insert, update, or delete `models`, `companies`, or `families`. The counts on `/admin` are not a public function.
 
-`/admin` also lists each roster model's public OpenRouter prompt and completion price, per million tokens, matched on the OpenRouter id. The request is `GET https://openrouter.ai/api/v1/models` with no API key. A missing model shows **No price**. A failed request says the prices could not be loaded.
+`/admin` is the stats page. It shows three things, in this order:
+
+- **OpenRouter spend**, read from OpenRouter on every load with `OPENROUTER_API_KEY` (a runtime variable, never baked at build time). `GET /api/v1/key` gives what that key has paid: all time, this UTC week, this UTC month, today. `GET /api/v1/activity` gives requests, tokens, and spend per model for the last 7 and last 30 completed UTC days. OpenRouter only serves activity to a management key and covers the whole account, so set `OPENROUTER_MANAGEMENT_KEY` if the game key is not one. Each call fails on its own: the page says so in that section and still renders the rest.
+- **Games**, from our tables: solve rate, give-ups, correct guesses, messages, tokens, and cost per game, cost per solved game, failed calls, and games started per UTC day for 14 days. Tokens and cost are the `usage` rows saved from each OpenRouter reply.
+- **Which models are hardest to find**: per hidden model, games, solve rate, messages when solved, requests, tokens, cost, and cost per game, hardest first.
 
 `/admin/models` shows the display name and the family beside company, region, year, size, OpenRouter id, and active. Add and edit include the family. **Turn on** is green. **Turn off** is red.
 

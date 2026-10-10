@@ -33,7 +33,7 @@ The brand is three flat colors, taken from the logo. No fourth brand hue, and no
 
 `#FF4436` stays off the logo and off big fills. Full teal against full red buzzes. The row still says **Wrong**, so the state is not carried by color alone.
 
-On a light page the mark flips: black question mark, the same teal dot, paper behind it. The dot does not change between themes. At full size the period is a robot head the size of that dot: a small rounded square, square eyes, a straight mouth, no antenna. A round face reads as a person, and the LLM joke disappears. The head does not grow into a body under the question mark. The favicon keeps the plain teal dot. At 16 pixels the eyes turn the period into a broken mark.
+On a light page the mark flips: black question mark, the same teal dot, paper behind it. The dot does not change between themes. At full size the period is a robot head the size of that dot: a small rounded square, square eyes, a straight mouth, no antenna. A round face reads as a person, and the LLM joke disappears. The head does not grow into a body under the question mark. 
 
 ## Look
 
@@ -48,7 +48,7 @@ The logo has two versions, and the rule is about where the text sits.
 - **Text on the right of the logo: use `tail_right`.** The tail points toward the title. This is the header and the landing lockup, where the title is to the right of the mark.
 - **Text on the left of the logo: use `tail_left`.** Same idea, mirrored layout.
 
-The source files are Gael's, in `logo/light/` and `logo/dark/`, named `whos_that_llm_logo_tail_right.png` and `whos_that_llm_logo_tail_left.png`. Never edit, flip, or redraw them. The site uses byte copies in `public/brand/`, named `logo-tail-right-light.png`, `logo-tail-right-dark.png`, `logo-tail-left-light.png`, and `logo-tail-left-dark.png`. Light theme uses the light files and dark theme uses the dark files. Where no text sits beside the mark, leave the mark out rather than picking a side. The favicon is the dot version.
+The source files are Gael's, in `logo/light/` and `logo/dark/`, named `whos_that_llm_logo_tail_right.png` and `whos_that_llm_logo_tail_left.png`. Never edit, flip, or redraw them. The site uses byte copies in `public/brand/`, named `logo-tail-right-light.png`, `logo-tail-right-dark.png`, `logo-tail-left-light.png`, and `logo-tail-left-dark.png`. Light theme uses the light files and dark theme uses the dark files. Where no text sits beside the mark, leave the mark out rather than picking a side. The favicon is the no-dot artwork, `whos_that_llm_favicon.png`. Light theme gets the file in `logo/light/` and dark theme the file in `logo/dark/`, chosen with `prefers-color-scheme`. `public/brand/favicon-{light,dark}-{32,96,512}.png` are the same files cropped to the circle and resampled so a tab icon stays sharp, and `app/apple-icon.png` is the light one on white. Never use the `_dot` files.
 
 ## Phones
 
