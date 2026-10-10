@@ -11,6 +11,7 @@ export type HistoryItem = {
   score: string;
   best: boolean;
   messages: number;
+  tokens: string;
   modelName: string | null;
   companyName: string | null;
   logoPath: string | null;
@@ -43,6 +44,7 @@ export function HistoryList({ items }: { items: HistoryItem[] }) {
                 {item.score}
                 {item.best ? <span className="history-best-note"> (best score)</span> : null}
               </span>
+              <span className="history-tokens">{item.tokens} tokens</span>
             </button>
             {open ? (
               <div id={panel} className="history-detail">
@@ -72,6 +74,8 @@ export function HistoryList({ items }: { items: HistoryItem[] }) {
                     {item.score}
                     {item.best ? " (best score)" : ""}
                   </dd>
+                  <dt>Tokens</dt>
+                  <dd>{item.tokens}</dd>
                   <dt>Messages used</dt>
                   <dd>{item.messages}</dd>
                   <dt>Company</dt>
