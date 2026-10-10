@@ -4,7 +4,7 @@ import { HistoryList } from "@/components/history-list";
 import { ProfileForm } from "@/components/profile-form";
 import type { GameStatus } from "@/lib/game";
 import { loadHistory, loadProfileStats, profilePageSize } from "@/lib/profile-data";
-import type { ProfileStats } from "@/lib/profile";
+import { isBestGame, type ProfileStats } from "@/lib/profile";
 import { currentProfile } from "@/lib/session";
 
 export const dynamic = "force-dynamic";
@@ -93,6 +93,7 @@ export default async function ProfilePage({
               status: statusLabel(row.status),
               state: row.status,
               score: row.score === null ? "—" : row.score.toLocaleString("en-US"),
+              best: isBestGame(row, stats.best),
               messages: row.messageCount,
               modelName: row.modelName,
               companyName: row.companyName,

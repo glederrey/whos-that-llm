@@ -9,6 +9,7 @@ export type HistoryItem = {
   status: string;
   state: "active" | "solved" | "miss" | "given_up";
   score: string;
+  best: boolean;
   messages: number;
   modelName: string | null;
   companyName: string | null;
@@ -35,8 +36,13 @@ export function HistoryList({ items }: { items: HistoryItem[] }) {
               onClick={() => setOpenId(open ? null : item.id)}
             >
               <span>{item.when}</span>
-              <span>{item.status}</span>
-              <span>{item.score}</span>
+              <span className="history-status" data-state={item.state}>
+                {item.status}
+              </span>
+              <span className="history-score" data-best={item.best ? "true" : undefined}>
+                {item.score}
+                {item.best ? <span className="history-best-note"> (best score)</span> : null}
+              </span>
             </button>
             {open ? (
               <div id={panel} className="history-detail">
@@ -62,7 +68,10 @@ export function HistoryList({ items }: { items: HistoryItem[] }) {
                   <dt>Status</dt>
                   <dd>{item.status}</dd>
                   <dt>Score</dt>
-                  <dd>{item.score}</dd>
+                  <dd>
+                    {item.score}
+                    {item.best ? " (best score)" : ""}
+                  </dd>
                   <dt>Messages used</dt>
                   <dd>{item.messages}</dd>
                   <dt>Company</dt>

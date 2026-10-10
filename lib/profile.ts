@@ -54,19 +54,29 @@ export function cleanUsername(raw: string): string | null {
   return username;
 }
 
+export function bestScore(games: { status: GameStatus; score: number | null }[]): number | null {
+  const scores = games.flatMap((game) => (game.status === "active" || game.score === null ? [] : [game.score]));
+  return scores.length === 0 ? null : Math.max(...scores);
+}
+
+export function isBestGame(game: { status: GameStatus; score: number | null }, best: number | null): boolean {
+  return best !== null && game.status !== "active" && game.score !== null && game.score === best;
+}
+
 export function profileStats(games: CountedGame[]): ProfileStats {
   const solvedGames = games.filter((game) => game.status === "solved");
   const missed = games.filter((game) => game.status === "miss").length;
   const givenUp = games.filter((game) => game.status === "given_up").length;
   const finished = solvedGames.length + missed + givenUp;
   const scored = games.flatMap((game) => (game.score === null ? [] : [game.score]));
+  const best = bestScore(games);
   return {
     played: games.length,
     solved: solvedGames.length,
     missed,
     givenUp,
     solveRate: finished === 0 ? null : solvedGames.length / finished,
-    best: scored.length === 0 ? null : Math.max(...scored),
+    best,
     average: scored.length === 0 ? null : scored.reduce((sum, score) => sum + score, 0) / scored.length,
     averageMessages:
       solvedGames.length === 0

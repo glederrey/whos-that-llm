@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { avatarError, avatarFileError, avatarPublicUrl, cleanUsername, profileStats, publicImageCacheControl, readImage, traitFound } from "./profile";
+import { avatarError, avatarFileError, avatarPublicUrl, bestScore, cleanUsername, isBestGame, profileStats, publicImageCacheControl, readImage, traitFound } from "./profile";
 
 test("a username trims and rejects an empty name", () => {
   assert.equal(cleanUsername("  Ada  "), "Ada");
@@ -30,6 +30,22 @@ test("stats count finished games and leave an empty player blank", () => {
   assert.equal(empty.best, null);
   assert.equal(empty.average, null);
   assert.equal(empty.averageMessages, null);
+});
+
+test("the best score covers every finished game and marks each tie", () => {
+  const games = [
+    { status: "solved" as const, score: 900 },
+    { status: "solved" as const, score: 900 },
+    { status: "miss" as const, score: 300 },
+    { status: "given_up" as const, score: null },
+    { status: "active" as const, score: 5000 },
+  ];
+  const best = bestScore(games);
+  assert.equal(best, 900);
+  assert.deepEqual(games.map((game) => isBestGame(game, best)), [true, true, false, false, false]);
+  const noScores = [{ status: "given_up" as const, score: null }];
+  assert.equal(bestScore(noScores), null);
+  assert.equal(isBestGame(noScores[0], bestScore(noScores)), false);
 });
 
 test("company and region count as found when the model is named or the trait matched", () => {
