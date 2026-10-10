@@ -12,20 +12,22 @@ function files(dir: string): string[] {
     if (entry.name === "node_modules" || entry.name === ".next" || entry.name === ".git") continue;
     const full = path.join(dir, entry.name);
     if (entry.isDirectory()) out.push(...files(full));
-    else if (/\.(ts|tsx|js|jsx|css|md|sql|json)$/.test(entry.name)) out.push(full);
+    else if (/\.(ts|tsx|js|jsx|css|md|sql|json|yml|yaml)$/.test(entry.name)) out.push(full);
   }
   return out;
 }
 
-test("the owner address stays in the server module", () => {
+test("admin reads ADMIN_EMAIL and the tree stores no address", () => {
   const owner = fs.readFileSync(ownerPath, "utf8");
   assert.match(owner, /import "server-only"/);
-  const email = owner.match(/[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}/i)?.[0];
-  assert.ok(email);
+  assert.match(owner, /process\.env\.ADMIN_EMAIL/);
+  assert.doesNotMatch(owner, /@/);
+  const email = /[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}/gi;
   for (const file of files(root)) {
-    if (file === ownerPath) continue;
-    const text = fs.readFileSync(file, "utf8");
-    assert.equal(text.includes(email!), false, path.relative(root, file));
+    const found = fs.readFileSync(file, "utf8").match(email) ?? [];
+    for (const address of found) {
+      assert.equal(address.toLowerCase().endsWith("@example.com"), true, path.relative(root, file));
+    }
   }
 });
 

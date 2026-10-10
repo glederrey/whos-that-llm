@@ -1,3 +1,5 @@
 import "server-only";
 
-export const ownerAddress = "";
+export function adminEmail(): string {
+  return process.env.ADMIN_EMAIL ?? "";
+}

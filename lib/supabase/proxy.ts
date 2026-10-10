@@ -1,7 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { emailsMatch } from "@/lib/admin-model";
-import { ownerAddress } from "@/lib/admin-owner";
+import { adminEmail } from "@/lib/admin-owner";
 import { publicEnv } from "./env";
 
 function isPrivatePath(pathname: string) {
@@ -47,6 +47,6 @@ export async function updateSession(request: NextRequest) {
   }
 
   const { data } = await supabase.auth.getUser();
-  if (hidden && !emailsMatch(data.user?.email, ownerAddress)) return hide(request);
+  if (hidden && !emailsMatch(data.user?.email, adminEmail())) return hide(request);
   return response;
 }

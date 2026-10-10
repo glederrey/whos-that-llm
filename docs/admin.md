@@ -2,13 +2,13 @@
 
 This build has two pages, `/admin` and `/admin/models`. The rest of this document is the later cockpit.
 
-The server reads the signed-in Supabase user and compares that email, case-insensitive, to the owner address in a server-only module. `ADMIN_EMAIL` is not the switch. A profile edit cannot grant access. There is no role column and no client flag.
+The server reads the signed-in Supabase user and compares that email, case-insensitive, to `ADMIN_EMAIL`. A profile edit cannot grant access. There is no role column and no client flag. An empty `ADMIN_EMAIL` matches nobody.
 
 - Match: the two pages render. The account menu includes **Admin** for that session only. The item is rendered on the server. It is not a flag in client JavaScript.
 - Anything else, including no session: `notFound()`. The response looks like any other missing URL. There is no "forbidden" page, no login wall, and no admin link in that HTML.
-- The address is not sent to the browser.
+- `ADMIN_EMAIL` is not sent to the browser.
 
-Google and email/password both work when the session email is the owner address. A second person does not get access by editing `app_metadata` or their username.
+Google and email/password both work when the session email matches `ADMIN_EMAIL`. A second person does not get access by editing `app_metadata` or their username.
 
 Roster changes are server actions. Each one repeats the check, then writes with the server key. anon and authenticated cannot insert, update, or delete `models`, `companies`, or `families`. The counts on `/admin` are not a public function.
 

@@ -309,7 +309,7 @@ The copy says this removes the profile, the picture, and the games, including th
 
 ## Private pages
 
-`/admin` and `/admin/models` are linked from the account menu only when the server matches the signed-in Supabase user to the owner address in a server-only module. The footer, the landing page, and every other session have no admin link. Anyone else, including a signed-out visitor and a player who edits their profile, gets the same not-found page as a missing URL. There is no role column and no client flag.
+`/admin` and `/admin/models` are linked from the account menu only when the server matches the signed-in Supabase email to `ADMIN_EMAIL`. The footer, the landing page, and every other session have no admin link. Anyone else, including a signed-out visitor and a player who edits their profile, gets the same not-found page as a missing URL. There is no role column and no client flag.
 
 `/admin` shows five counts: models in the roster, active models, players, games today (UTC), and total games. Players are distinct accounts that have started a game. Those counts are read with the server key after the check. They are not a public API. Under the counts, each roster model shows its OpenRouter list price for prompt and completion, per million tokens. The page reads the public model list and does not send the API key. A model missing from that list, or a price that is not a number, shows **No price**. If the list cannot be loaded, the page says **OpenRouter prices could not be loaded.** and does not invent a number.
 
