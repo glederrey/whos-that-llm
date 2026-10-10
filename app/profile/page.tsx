@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { DeleteAccountForm } from "@/components/delete-account-form";
 import { HistoryList } from "@/components/history-list";
@@ -95,6 +96,7 @@ export default async function ProfilePage({
               score: row.score === null ? "—" : row.score.toLocaleString("en-US"),
               best: isBestGame(row, stats.best),
               messages: row.messageCount,
+              tokens: row.tokens.toLocaleString("en-US"),
               modelName: row.modelName,
               companyName: row.companyName,
               logoPath: row.logoPath,
@@ -105,9 +107,9 @@ export default async function ProfilePage({
           <div className="row pager">
             <div className="row">
               {shownPage > 1 ? (
-                <a className="button-quiet" href={profileHref(shownPage - 1)}>
+                <Link className="button-quiet" href={profileHref(shownPage - 1)} scroll={false}>
                   Previous
-                </a>
+                </Link>
               ) : (
                 <span className="button-quiet is-disabled">Previous</span>
               )}
@@ -115,9 +117,9 @@ export default async function ProfilePage({
                 Page {shownPage} of {realPageCount}
               </span>
               {shownPage < realPageCount ? (
-                <a className="button-quiet" href={profileHref(shownPage + 1)}>
+                <Link className="button-quiet" href={profileHref(shownPage + 1)} scroll={false}>
                   Next
-                </a>
+                </Link>
               ) : (
                 <span className="button-quiet is-disabled">Next</span>
               )}
