@@ -1,6 +1,6 @@
 # Spec
 
-This folder is the source of truth for Who's that LLM. Build from it. If the code and a page here disagree, change one of them in the same pass so they match again.
+This folder is the source of truth for Who's that LLM?. Build from it. If the code and a page here disagree, change one of them in the same pass so they match again.
 
 These files are the design doc. Do not publish them as a page on the site. There is no `/rules` route. The only scoring text a player sees is the short explanation on the result page, specified in [Pages](pages.md).
 

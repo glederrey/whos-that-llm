@@ -9,7 +9,7 @@ import "./globals.css";
 const font = Roboto({ subsets: ["latin"], weight: ["400", "500", "700"], variable: "--font" });
 
 export const metadata: Metadata = {
-  title: "Who's that LLM",
+  title: "Who's that LLM?",
   description: "Ten messages to find the hidden model.",
   icons: { icon: "/brand/favicon.png" },
 };
@@ -29,7 +29,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             <a className="brand" href="/">
               <img className="for-light" src="/brand/logo-tail-right-light.png" alt="" />
               <img className="for-dark" src="/brand/logo-tail-right-dark.png" alt="" />
-              <span>Who&apos;s that LLM</span>
+              <span>Who&apos;s that LLM?</span>
             </a>
             <nav className="header-nav">
               <a href="/leaderboard">

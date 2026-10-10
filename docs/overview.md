@@ -2,7 +2,7 @@
 
 A chat game. A hidden model answers. The player has ten messages. They can name a model after a reply, or send the next message with no guess, or give up. Naming the model sets the base to 1000, and that is the maximum base. If they never name it, the base is 100 for the region and 300 for the company, when those matched. A wrong model name subtracts 50 after the multipliers. Year and size can be bought as hints. They add no points.
 
-The name on the site is **Who's that LLM**.
+The name on the site is **Who's that LLM?**.
 
 ## First build
 
