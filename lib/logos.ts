@@ -6,7 +6,7 @@ export function companyLogoPath(companyId: string): string {
   return `logos/${companyId}.png`;
 }
 
-/** Path the game should load. Files in public/logos are not company logos. */
+/** Path the game should load from the logos bucket. */
 export function logoPathForPlay(path: string, companyId: string): string {
   if (/^https?:\/\//i.test(path)) return path;
   const bare = path.replace(/^\/+/, "");

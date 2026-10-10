@@ -24,7 +24,6 @@ lib/
   supabase/server.ts            session client and service-role client
 components/                     feedback, hints, guess bar, transcript, theme toggle, footer
 app/globals.css                 light and dark tokens. Default follows the system
-public/logos/                   unused letter marks. The game reads the uploaded Storage files anthropic.png, openai.png, deepseek.png, and mistral.png
 public/brand/                   site logo copies. tail_right when the text is on the right, tail_left when it is on the left
 supabase/migrations/            the tables in Data
 ```
@@ -105,7 +104,7 @@ Slugs checked against public listings in October 2026. Re-check on the day of th
 
 Leave Fable out. The Reasoning column is an admin fact for `provider_settings` and for cost. It is not a chip. For each reasoning model, the seed starts with `{ "reasoning": { "effort": "low" } }`. Play one round of each enabled model. If `reasoning_tokens` stays high, set that model back to `enabled = false` and change the object before turning it on again.
 
-Companies to insert first: Anthropic `us`, OpenAI `us`, DeepSeek `cn`, Mistral `eu`. Labels on screen are USA, China, and Europe. Logos can be simple letter marks until real files exist. The path still has to resolve. Storage upload comes with admin.
+Companies to insert first: Anthropic `us`, OpenAI `us`, DeepSeek `cn`, Mistral `eu`. Labels on screen are USA, China, and Europe. Company logos are the PNG files in the Supabase `logos` bucket.
 
 The seed script inserts missing ids and does not update a row whose `updated_at` is newer than the seed file. Admin edits survive a re-seed. Built-in categories get `sort_order` in the order of the blurb table in [Pages](pages.md). Seed All models enabled. Seed the other categories disabled. Seed leaderboard and hint flags as in [Data](data.md).
 

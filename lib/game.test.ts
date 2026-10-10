@@ -22,7 +22,7 @@ function model(
     region: "us",
     size: "small",
     year: 2026,
-    logoPath: "/logos/x.svg",
+    logoPath: "logos/x.png",
     ...partial,
   };
 }

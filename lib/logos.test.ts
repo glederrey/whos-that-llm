@@ -14,7 +14,7 @@ test("a company logo is logos/{id}.png in the public logos bucket", () => {
   );
 });
 
-test("letter marks in public/logos are not the company logo", () => {
+test("an old stored logo path still resolves to the bucket png", () => {
   assert.equal(logoPathForPlay("/logos/openai.svg", "openai"), "logos/openai.png");
   assert.equal(logoPathForPlay("logos/deepseek.png", "deepseek"), "logos/deepseek.png");
   assert.equal(logoPathForPlay("https://cdn.example/mistral.webp", "mistral"), "https://cdn.example/mistral.webp");

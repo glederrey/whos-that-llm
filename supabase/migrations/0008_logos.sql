@@ -1,5 +1,5 @@
 -- Company logos live in their own public bucket, separate from profile pictures.
--- The bucket stays empty here. Files in public/logos are not the company logos.
+-- The bucket stays empty here. Rows point at logos/{id}.png.
 
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 values (
