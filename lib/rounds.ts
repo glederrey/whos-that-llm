@@ -17,7 +17,7 @@ import {
   type Traits,
 } from "./game";
 import { logoPathForPlay, logoPublicUrl } from "./logos";
-import { cleanUsername } from "./profile";
+import { avatarPublicUrl, cleanUsername } from "./profile";
 import { publicEnv } from "./supabase/env";
 import { createServiceClient, createSessionClient } from "./supabase/server";
 
@@ -444,7 +444,35 @@ async function scoreFrom(client: SupabaseClient, game: GameRow, guesses: GuessFl
   });
 }
 
-export type BoardRow = { rank: number; name: string; score: number; mine: boolean };
+export type BoardRow = {
+  rank: number;
+  name: string;
+  score: number;
+  mine: boolean;
+  avatarUrl: string | null;
+  seed: string;
+};
+
+type BoardEntry = {
+  rank: number;
+  name: string;
+  score: number;
+  mine?: boolean;
+  user_id?: string | null;
+  avatar_path?: string | null;
+};
+
+function toBoardRow(entry: BoardEntry, mine: boolean): BoardRow {
+  const userId = typeof entry.user_id === "string" ? entry.user_id : "";
+  return {
+    rank: Number(entry.rank),
+    name: entry.name,
+    score: Number(entry.score),
+    mine,
+    avatarUrl: avatarPublicUrl(publicEnv()?.url ?? "", entry.avatar_path ?? null),
+    seed: userId || entry.name,
+  };
+}
 
 export async function leaderboard(category: string, period: string, viewerId?: string | null) {
   const client = serviceOrThrow();
@@ -457,29 +485,18 @@ export async function leaderboard(category: string, period: string, viewerId?: s
     viewer: viewerId ?? null,
   });
   if (!fresh.error) {
-    const rows = ((fresh.data ?? []) as { rank: number; name: string; score: number; mine: boolean }[]).map((entry) => ({
-      rank: Number(entry.rank),
-      name: entry.name,
-      score: Number(entry.score),
-      mine: Boolean(entry.mine),
-    }));
+    const rows = ((fresh.data ?? []) as BoardEntry[]).map((entry) => toBoardRow(entry, Boolean(entry.mine)));
     return { rows };
   }
   const legacy = await client.rpc("leaderboard", { category, since });
   if (legacy.error) throw new Error(legacy.error.message);
-  const rows = await markLegacyMine(
-    client,
-    (legacy.data ?? []) as { rank: number; name: string; score: number }[],
-    viewerId,
-    category,
-    since,
-  );
+  const rows = await markLegacyMine(client, (legacy.data ?? []) as BoardEntry[], viewerId, category, since);
   return { rows };
 }
 
 async function markLegacyMine(
   client: SupabaseClient,
-  data: { rank: number; name: string; score: number }[],
+  data: BoardEntry[],
   viewerId: string | null | undefined,
   category: string,
   since: string,
@@ -500,12 +517,9 @@ async function markLegacyMine(
     const row = games?.[0];
     if (row && typeof row.score === "number") best = { username: row.username as string, score: row.score };
   }
-  return data.map((entry) => ({
-    rank: Number(entry.rank),
-    name: entry.name,
-    score: Number(entry.score),
-    mine: Boolean(best && entry.name === best.username && Number(entry.score) === best.score),
-  }));
+  return data.map((entry) =>
+    toBoardRow(entry, Boolean(best && entry.name === best.username && Number(entry.score) === best.score)),
+  );
 }
 
 export async function landingSnapshot(viewerId?: string | null) {

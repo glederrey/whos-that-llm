@@ -14,10 +14,8 @@ set public = true,
     file_size_limit = excluded.file_size_limit,
     allowed_mime_types = excluded.allowed_mime_types;
 
-drop policy if exists logos_read on storage.objects;
-create policy logos_read on storage.objects
-  for select to anon, authenticated
-  using (bucket_id = 'logos');
+-- A public bucket serves /object/public/logos/{name} with no SELECT policy.
+-- A SELECT policy would let clients list every object.
 
 update public.companies
 set logo_path = 'logos/' || id || '.png'

@@ -1,4 +1,13 @@
-export type BoardRow = { rank: number; name: string; score: number; mine?: boolean };
+import { Avatar } from "./avatar";
+
+export type BoardRow = {
+  rank: number;
+  name: string;
+  score: number;
+  mine?: boolean;
+  avatarUrl?: string | null;
+  seed?: string;
+};
 
 export function BoardTable({ rows }: { rows: BoardRow[] }) {
   return (
@@ -23,8 +32,11 @@ export function BoardTable({ rows }: { rows: BoardRow[] }) {
                   </span>
                 </td>
                 <td className="name">
-                  {row.name}
-                  {row.mine ? <span className="you-tag">You</span> : null}
+                  <span className="player">
+                    <Avatar seed={row.seed || row.name} src={row.avatarUrl} size={28} />
+                    <span>{row.name}</span>
+                    {row.mine ? <span className="you-tag">You</span> : null}
+                  </span>
                 </td>
                 <td className="num">{row.score.toLocaleString("en-US")}</td>
               </tr>

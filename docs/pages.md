@@ -79,7 +79,7 @@ Two columns. On a narrow screen they stack.
 - Left: the logo, large.
 - Right: **Find the model.** Then: a hidden model answers you. You have ten messages. Name it when you want. Find it, and the round is yours. Miss the name, and the company and the region can still count.
 - Under the buttons: three counts. **Models in play** is the enabled roster. **Games today (UTC)** counts games whose `started_at` is on the current UTC day. **Players** is the number of distinct accounts that have started a game.
-- Under the counts: **Top 5 · All models**, all-time, columns rank, name, score. **Full leaderboard** opens `/leaderboard?category=all&period=all`.
+- Under the counts: **Top 5 · All models**, all-time, columns rank, name, score. The name has that player's profile picture beside it. **Full leaderboard** opens `/leaderboard?category=all&period=all`.
 - **How scoring works** links to `/scoring`.
 - Signed out: **Sign up** goes to `/login?tab=create&next=/play`. **Sign in** goes to `/login?next=/play`.
 - Signed in: **Play** goes to `/play`.
@@ -279,10 +279,10 @@ A counted round is `solved` or `miss`. Give-up does not appear. Rank is the best
 | Column | Meaning |
 |---|---|
 | Rank | Position by best score |
-| Name | Username copied onto that round |
+| Name | Username copied onto that round, with the player's picture beside it |
 | Score | That best score |
 
-Two players may share a username. They are separate rows, because the account id is different. The page shows the name only. The account id is not shown.
+Two players may share a username. They are separate rows, because the account id is different. The page shows the name and the picture. The account id is not shown. A player with no uploaded picture keeps the generated mark.
 
 Row colors, on the leaderboard page and on the landing top 5. Rank 1 is gold, rank 2 is silver, rank 3 is bronze. The signed-in player's row is teal. If the signed-in player is rank 1, 2, or 3, the row keeps its gold, silver, or bronze. It is not replaced by teal. That row is marked with a teal ring and a **You** tag instead, so both facts show. On any other rank, the signed-in row is teal with the same ring and tag.
 
@@ -290,7 +290,7 @@ Twenty rows per page. **Previous** and **Next** move the page. **Your place** ap
 
 Empty: **No finished games on this board yet.**
 
-The landing top 5 is this board for All models, all time, five rows: rank, name, score.
+The landing top 5 is this board for All models, all time, five rows: rank, name, score, with the same picture beside the name.
 
 ## Profile (`/profile`)
 

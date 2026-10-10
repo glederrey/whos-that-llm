@@ -31,7 +31,7 @@ A failed call writes `usage` and does not write `messages`, because there is no 
 | `games`, `messages`, `guesses`, `usage` | no privileges | read and write |
 | `leaderboard(category, since)` | `execute` | execute |
 
-`leaderboard` is a security definer function, not a view of game rows. It exposes rank, name, and score only. `anon` can call it, so the landing page can show the weekly top 5 before login, once that block exists.
+`leaderboard` is a security definer function, not a view of game rows. It returns rank, name, score, whether the row is the signed-in player, and that player's `avatar_path`. The page shows the public picture, or the generated mark when there is no file. It does not show the account id. `anon` can call it, so the landing page can show the top 5 before login.
 
 `profiles` is created by a trigger on `auth.users`. The user does not insert their own profile row.
 
@@ -47,7 +47,7 @@ A failed call writes `usage` and does not write `messages`, because there is no 
 | `logo_path` | text | `logos/{company_id}.png` in the public `logos` bucket, or an `https` URL |
 | `created_at` | timestamptz | default `now()` |
 
-The uploaded objects are `anthropic.png`, `openai.png`, `deepseek.png`, and `mistral.png`. The bucket also accepts SVG and WebP, at most 1 MB. The game reads `logo_path`. A missing file shows no image.
+The uploaded objects are `anthropic.png`, `openai.png`, `deepseek.png`, and `mistral.png`. The bucket also accepts SVG and WebP, at most 1 MB. The game reads `logo_path`. A missing file shows no image. The bucket is public, so those URLs load. There is no SELECT policy, so clients cannot list the objects.
 
 ### `families`
 

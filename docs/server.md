@@ -202,6 +202,6 @@ JSON body `{ error: string, ... }`. The page copy for each code is in [Pages](pa
 
 ## Leaderboard and profile
 
-`GET /api/leaderboard` calls `leaderboard(category, since)` with the user-scoped client. The function is granted to `anon` and `authenticated`. A category with `leaderboard` false is `404`. `period=week` sets `since` to Monday 00:00 UTC of the current week. `period=all` uses no lower bound. The columns are rank, name, and score, as in the query in [Data](data.md).
+`GET /api/leaderboard` calls `leaderboard(category, since)` with the user-scoped client. The function is granted to `anon` and `authenticated`. A category with `leaderboard` false is `404`. `period=week` sets `since` to Monday 00:00 UTC of the current week. `period=all` uses no lower bound. The columns are rank, name, and score. The name is shown with that player's profile picture.
 
 `PATCH /api/me` calls `set_username` as the signed-in user. It sets `profiles.username` and every `games.username` for that user id. Empty, and any name outside 3–20 characters after trim, is `422` `username`. `POST /api/me/avatar` stores the file in the public `avatars` bucket and saves `profiles.avatar_path`. Only a JPEG, PNG, or WebP of at most 1 MB is accepted. The header shows that picture. Until then it keeps the generated mark.
