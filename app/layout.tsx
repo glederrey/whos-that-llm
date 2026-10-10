@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { Roboto } from "next/font/google";
-import Script from "next/script";
 import { AccountMenu } from "@/components/account-menu";
 import { SiteFooter } from "@/components/site-footer";
+import { ThemeInit } from "@/components/theme-init";
 import { sessionIsOwner } from "@/lib/admin-access";
 import { currentProfile } from "@/lib/session";
 import "./globals.css";
@@ -15,16 +15,14 @@ export const metadata: Metadata = {
   icons: { icon: "/brand/favicon.png" },
 };
 
-const themeScript = `(function(){try{var s=localStorage.getItem("theme");var t=s==="light"||s==="dark"?s:(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");document.documentElement.dataset.theme=t;}catch(e){}})();`;
-
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const [{ user, username, avatarUrl }, owner] = await Promise.all([currentProfile(), sessionIsOwner()]);
   return (
     <html lang="en" className={font.variable} suppressHydrationWarning>
+      <head>
+        <ThemeInit />
+      </head>
       <body suppressHydrationWarning>
-        <Script id="theme-init" strategy="beforeInteractive">
-          {themeScript}
-        </Script>
         <div className="shell">
           <header className="header">
             <a className="brand" href="/">

@@ -13,10 +13,11 @@ export function DeleteAccountForm({
   notice,
   returnTo,
 }: {
-  notice: string | null;
+  notice?: string;
   returnTo: "profile" | "account";
 }) {
   const [blocked, setBlocked] = useState(false);
+  const serverNotice = deleteNotice(notice);
 
   function blockUnchecked(form: HTMLFormElement) {
     if (returnTo !== "profile") return false;
@@ -36,7 +37,7 @@ export function DeleteAccountForm({
     event.preventDefault();
   }
 
-  const shown = blocked ? "Confirm that you want to delete your account." : notice;
+  const shown = blocked ? "Confirm that you want to delete your account." : serverNotice;
 
   return (
     <form action={deleteAccount} className="card stack" onSubmit={onSubmit}>

@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { DeleteAccountForm, deleteNotice } from "@/components/delete-account-form";
+import { DeleteAccountForm } from "@/components/delete-account-form";
 import { HistoryList } from "@/components/history-list";
 import { ProfileForm } from "@/components/profile-form";
 import type { GameStatus } from "@/lib/game";
@@ -125,7 +125,7 @@ export default async function ProfilePage({
           </div>
         </>
       )}
-      <DeleteAccountForm notice={deleteNotice(params.notice)} returnTo="profile" />
+      <DeleteAccountForm notice={params.notice} returnTo="profile" />
     </div>
   );
 }

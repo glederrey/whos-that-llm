@@ -94,7 +94,18 @@ test("account deletion uses only the signed-in user", () => {
   assert.doesNotMatch(action, /formData\.get\(\s*["'](?:id|user|userId|user_id|email)/);
   const profile = fs.readFileSync(path.join(root, "app/profile/page.tsx"), "utf8");
   assert.match(profile, /DeleteAccountForm/);
+  assert.doesNotMatch(profile, /deleteNotice/);
+  const deletePage = fs.readFileSync(path.join(root, "app/account/delete/page.tsx"), "utf8");
+  assert.doesNotMatch(deletePage, /deleteNotice/);
+  const layout = fs.readFileSync(path.join(root, "app/layout.tsx"), "utf8");
+  assert.doesNotMatch(layout, /next\/script/);
+  assert.match(layout, /ThemeInit/);
+  const theme = fs.readFileSync(path.join(root, "components/theme-init.tsx"), "utf8");
+  assert.match(theme, /localStorage\.getItem\("theme"\)/);
+  assert.match(theme, /prefers-color-scheme: dark/);
+  assert.match(theme, /text\/plain/);
   const form = fs.readFileSync(path.join(root, "components/delete-account-form.tsx"), "utf8");
+  assert.match(form, /deleteNotice\(notice\)/);
   assert.match(form, /name="confirm"/);
   assert.match(form, /preventDefault\(\)/);
   assert.match(form, /returnTo !== "profile"/);
