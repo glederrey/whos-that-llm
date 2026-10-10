@@ -13,6 +13,13 @@ export type HomeCategory = {
 const order = ["daily", "all", "company", "family", "region", "custom"];
 const hidden = new Set(["latest", "origin"]);
 
+const numberWords = ["Zero", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten", "Eleven", "Twelve"];
+
+export function capSentence(cap: number): string {
+  const count = numberWords[cap] ?? String(cap);
+  return `${count} ${cap === 1 ? "game" : "games"} an hour. One more, and the developer goes broke.`;
+}
+
 export function lineup(categories: HomeCategory[]): HomeCategory[] {
   const byId = new Map(categories.filter((category) => !hidden.has(category.id)).map((category) => [category.id, category]));
   if (!byId.has("custom")) {
@@ -117,15 +124,15 @@ export function HomeBoard({
 
   return (
     <div className="stack">
-      <h1 className="goal">Find the model.</h1>
+      <h1 className="goal">Game categories</h1>
       <p className="lede">
-        It answers. You have ten messages to say which one it was.{" "}
+        One LLM, 10 messages. Guess which one it is, and earn a place on the leaderboard.{" "}
         <a href="/scoring">How scoring works</a>
       </p>
       <p className="hour-status">
         <strong>{paused ? "The game is paused." : leftLabel}</strong>
         {slot ? <span>{slot}</span> : null}
-        {paused ? null : <span className="muted">{cap} an hour, before the developer goes broke.</span>}
+        {paused ? null : <span className="hour-note">{capSentence(cap)}</span>}
       </p>
       <div className="card category-list">
         {cards.map((category) => {

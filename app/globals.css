@@ -465,6 +465,7 @@ html[data-theme="dark"] .text-link { color: var(--teal); }
   border-radius: var(--radius);
   font-size: 14px;
 }
+.hour-status .hour-note { margin-left: auto; text-align: right; color: var(--mute); }
 .hour-status strong { color: var(--teal-press); }
 html[data-theme="dark"] .hour-status strong { color: var(--teal); }
 .category-list { display: grid; margin: 4px 0; }

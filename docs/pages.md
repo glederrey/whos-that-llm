@@ -107,9 +107,9 @@ One narrow card. The heading is **Sign in** or **Create account**. A text link u
 
 Requires a session. No session goes to `/login?next=/play`. No username goes to `/welcome?next=/play`.
 
-- Heading: **Find the model.**
-- Line: **It answers. You have ten messages to say which one it was.** **How scoring works** links to `/scoring`.
-- A status bar: **7 games left**, then **One back at 14:22** when a round has already started in the rolling hour. The time is the oldest `started_at` in that window plus one hour, in the viewer's local zone. At the cap: **None left** and **Next one at 14:22.** Beside that: **10 an hour, before the developer goes broke.** The number is `hourlyCap`. When the game is paused, the bar says **The game is paused.**
+- Heading: **Game categories**
+- Line: **One LLM, 10 messages. Guess which one it is, and earn a place on the leaderboard.** **How scoring works** links to `/scoring`.
+- A status bar: **7 games left**, then **One back at 14:22** when a round has already started in the rolling hour. The time is the oldest `started_at` in that window plus one hour, in the viewer's local zone. At the cap: **None left** and **Next one at 14:22.** Right-aligned on the same row: **Ten games an hour. One more, and the developer goes broke.** The number is `hourlyCap`, written as a word up to twelve. When the game is paused, the bar says **The game is paused.**
 - Category rows. Daily first, then All models, Company, Family, Region, Custom. A category that is not enabled yet has **Not open yet.** and no button. The sentences are the `categories.blurb` column:
 
 | Card | Sentence |
