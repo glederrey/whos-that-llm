@@ -1016,7 +1016,8 @@ html[data-theme="dark"] .history-status[data-state="given_up"] { color: var(--mi
   .composer .meta .button { padding: 10px 22px; }
   .trait { flex-wrap: wrap; gap: 8px 12px; }
   .trait-side { flex-wrap: wrap; justify-content: flex-end; }
-  .reveal { padding: 8px 12px; }
+  .reveal { padding: 8px 12px; min-height: 40px; }
+  .button-quiet.give-up { padding: 8px 12px; min-height: 40px; }
   .candidate { padding: 10px 8px; }
   .score { font-size: 44px; }
   .model-lockup { align-items: flex-start; }
