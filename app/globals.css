@@ -267,8 +267,10 @@ html[data-theme="dark"] .button-danger { color: var(--miss); border-color: var(-
 html[data-theme="dark"] .button-danger:hover { color: var(--miss); }
 .button-on { background: #1c7c43; color: white; border-color: #1c7c43; }
 .button-on:hover { background: #166537; color: white; }
-.button-off { background: var(--miss); color: white; border-color: var(--miss); }
-.button-off:hover { background: var(--miss-press); color: white; }
+.button-off { background: var(--miss-press); color: white; border-color: var(--miss-press); }
+.button-off:hover { background: #9e1510; border-color: #9e1510; color: white; }
+html[data-theme="dark"] .button-off { background: var(--miss); border-color: var(--miss); }
+html[data-theme="dark"] .button-off:hover { background: var(--miss-press); border-color: var(--miss-press); }
 .button-quiet.is-disabled { opacity: 0.45; pointer-events: none; }
 .reveal { padding: 4px 10px; font-size: 13px; }
 
@@ -759,6 +761,7 @@ html[data-theme="dark"] .wrong-line { color: var(--miss); }
   box-shadow: var(--lift);
 }
 .dialog p { margin-bottom: 18px; }
+.dialog .button-danger { margin-left: auto; }
 .dialog::backdrop { background: rgba(20, 20, 20, 0.5); }
 
 /* Result */
@@ -848,21 +851,29 @@ html[data-theme="dark"] .score { color: var(--teal); }
 html[data-theme="dark"] .md a { color: var(--teal); }
 
 /* Profile */
-.profile-form { display: grid; grid-template-columns: 72px minmax(0, 1fr); gap: 20px; align-items: start; }
+.profile-form { display: grid; gap: 16px; }
+.profile-photo-row { display: flex; align-items: center; gap: 16px; }
 .profile-picture {
   width: 72px;
   height: 72px;
+  flex: none;
   border-radius: 999px;
   overflow: hidden;
   border: 1px solid var(--line);
 }
 .profile-picture .avatar { width: 72px; height: 72px; }
+.profile-photo { flex: 1 1 220px; min-width: 0; max-width: 420px; }
+.profile-photo-name { display: flex; align-items: baseline; gap: 8px; }
+.profile-photo-name .muted { font-weight: 400; }
+.profile-name { max-width: 420px; }
+.profile-save { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.profile-save .muted, .profile-save .error { margin: 0; }
 .profile-stats { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 .profile-stats dd { font-size: 28px; }
 .history { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
 .history-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 6.5rem 6.5rem 8rem;
+  grid-template-columns: minmax(0, 1fr) 6.5rem 6.5rem;
   gap: 12px;
   align-items: center;
   width: 100%;
@@ -880,7 +891,6 @@ html[data-theme="dark"] .md a { color: var(--teal); }
 .history-status[data-state="given_up"] { color: var(--miss-press); font-weight: 600; }
 html[data-theme="dark"] .history-status[data-state="solved"] { color: #4cc27d; }
 html[data-theme="dark"] .history-status[data-state="given_up"] { color: var(--miss); }
-.history-tokens { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; color: var(--mute); }
 .history-score { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .history-score[data-best="true"] {
   justify-self: end;
@@ -985,13 +995,15 @@ html[data-theme="dark"] .history-status[data-state="given_up"] { color: var(--mi
   .daybars { gap: 3px; }
   .daybar-count { font-size: 10px; }
   .daybar-date { display: none; }
-  .profile-form { grid-template-columns: 1fr; }
+  .profile-photo, .profile-name { max-width: none; }
   .history-row { grid-template-columns: 1fr; }
   .roster-form { grid-template-columns: 1fr; }
   .bubble { max-width: 94%; }
 }
 
 @media (max-width: 560px) {
+  .profile-photo-row { flex-direction: column; align-items: flex-start; }
+  .profile-photo { width: 100%; }
   .header, .page, .footer-inner { width: calc(100% - 24px); }
   .header { padding-top: 14px; gap: 8px; min-height: 64px; }
   .brand { font-size: 17px; gap: 10px; white-space: nowrap; min-width: 0; }

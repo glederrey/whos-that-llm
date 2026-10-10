@@ -44,7 +44,6 @@ export function HistoryList({ items }: { items: HistoryItem[] }) {
                 {item.score}
                 {item.best ? <span className="history-best-note"> (best score)</span> : null}
               </span>
-              <span className="history-tokens">{item.tokens} tokens</span>
             </button>
             {open ? (
               <div id={panel} className="history-detail">
