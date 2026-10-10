@@ -1,16 +1,24 @@
 # Admin
 
-Later. Not in the first build. The first build still pauses the game for everyone when OpenRouter returns 402 or an explicit credit error. Until this screen exists, Gael clears `app_settings.paused` in the database after he tops up credits on OpenRouter. He tops up there himself. The site does not take a payment for credits.
+This build has two pages, `/admin` and `/admin/models`. The rest of this document is the later cockpit.
 
-When admin exists, this is the cockpit. It is not a role, and it is not in the navigation for anyone else. Gael edits the game here, without opening the database.
+The server reads the signed-in Supabase user and allows admin only when `app_metadata.admin === true`. Players cannot write `app_metadata`. A profile edit cannot grant access. There is no role column and no client flag. A missing flag matches nobody.
 
-`ADMIN_EMAIL` is a server env var, one address. On every `/admin` page and every `/api/admin` route, the server reads the session user from Supabase and compares that email, case-insensitive, to `ADMIN_EMAIL`.
+- Match: the two pages render. The account menu includes **Admin** for that session only. The item is rendered on the server. It is not a flag in client JavaScript.
+- Anything else, including no session: `notFound()`. The response looks like any other missing URL. There is no "forbidden" page, no login wall, and no admin link in that HTML.
+- The flag is not sent to the browser.
 
-- Match: the pages render, and the public header shows an **Admin** link.
-- Anything else, including no session and an empty `ADMIN_EMAIL`: `notFound()`. The response looks like any other missing URL. There is no "forbidden" page and no admin link in the HTML.
-- The email is never sent to the browser as configuration. The link is rendered by a server component after the check.
+Google and email/password both work when that session has the flag. A second person does not get access by editing their username.
 
-Sign in with that address. Google and email/password both work if the session email is the same one. A second person does not get access by editing `app_metadata` or their username.
+Roster changes are server actions. Each one repeats the check, then writes with the server key. anon and authenticated cannot insert, update, or delete `models`, `companies`, or `families`. The counts on `/admin` are not a public function.
+
+`/admin` also lists each roster model's public OpenRouter prompt and completion price, per million tokens, matched on the OpenRouter id. The request is `GET https://openrouter.ai/api/v1/models` with no API key. A missing model shows **No price**. A failed request says the prices could not be loaded.
+
+`/admin/models` shows the display name and the family beside company, region, year, size, OpenRouter id, and active. Add and edit include the family. **Turn on** is green. **Turn off** is red.
+
+The game still pauses for everyone when OpenRouter returns 402 or an explicit credit error. The pause switch on this page is later. Until then, clear `app_settings.paused` in the database after topping up credits on OpenRouter. The site does not take a payment for credits.
+
+When the rest of this cockpit exists, it is still not a role, and it is still not in the navigation.
 
 ## Pages
 
@@ -56,9 +64,9 @@ Add, edit, and turn off. The column is `models.enabled`.
 
 Open weights and reasoning are stored on the model as admin facts. Play does not use them. Size and release year are hints in All models, Region, and Daily. They are not points.
 
-**Logo.** Upload the company logo to Supabase Storage. The form stores the returned path on `companies.logo_path` or, for an override, on `models.logo_path`. If the upload is unavailable, paste an `https` URL instead. A model logo overrides the company logo.
+**Logo.** Upload the company logo to the public `logos` bucket as `{company_id}.png` (PNG, SVG, or WebP, at most 1 MB). The row stores `logos/{company_id}.png` on `companies.logo_path`, or a model override on `models.logo_path`. If the upload is unavailable, paste an `https` URL instead. A model logo overrides the company logo.
 
-**Turn off.** The normal way to remove a model. `enabled = false`. It leaves every draw. The row stays. Rounds already played still show the name from `games.traits`. A round already open keeps the model it drew and the traits it froze, including one you just edited, so a player in the middle of five messages is not rewritten. New rounds use the edited row.
+**Turn off.** The normal way to remove a model. `enabled = false`. It leaves every draw. The row stays. Rounds already played still show the name from `games.traits`. A round already open keeps the model it drew and the traits it froze, including one you just edited, so a player in the middle of ten messages is not rewritten. New rounds use the edited row.
 
 **Turn on.** Runs the checks above, then the model is eligible wherever its company, family, region, or latest flag puts it.
 
@@ -106,4 +114,4 @@ Family pays nothing. Feedback can still say **Same family.** A company pool for 
 
 ## Rounds (`/admin/rounds`)
 
-When, username, category, pool, model name, status, score, messages, cost, reasoning tokens. Filters for today, for open rounds, and for one model. Open a row for the transcript and each guess. This is how a model that says its own name gets caught. Check it after the first evening, and after any prompt change. The score on a give-up is shown here even though that round is off the leaderboard. A negative score is shown as stored.
+When, username, category, pool, model name, status, score, messages, cost, reasoning tokens. Filters for today, for open rounds, and for one model. Open a row for the transcript and each guess. This is how a model that says its own name gets caught. The same rows stay after that check. They are the chat dataset, joined to the round by `games.id`. Check it after the first evening, and after any prompt change. The score on a give-up is shown here even though that round is off the leaderboard. A negative score is shown as stored.

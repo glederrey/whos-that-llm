@@ -1,16 +1,16 @@
 # Overview
 
-A chat game. A hidden model answers. The player has five messages. After each reply they name one model, or give up. Naming the model sets the base to 1000, and that is the maximum base. If they never name it, the base is 100 for the region and 300 for the company, when those matched. Year and size can be bought as hints. They add no points.
+A chat game. A hidden model answers. The player has ten messages. They can name a model after a reply, or send the next message with no guess, or give up. Naming the model sets the base to 1000, and that is the maximum base. If they never name it, the base is 100 for the region and 300 for the company, when those matched. A wrong model name subtracts 50 after the multipliers. Year and size can be bought as hints. They add no points.
 
-The name on the site is **Who's that LLM**.
+The name on the site is **Who's that LLM?**.
 
 ## First build
 
-**All models** is the game to build first. One site. A player signs up or logs in before they can play. They get five messages, a word-by-word reply, a guess or a give-up after each reply, year and size hints, no-hint mode, and a result page.
+**All models** is the game to build first. One site. A player signs up or logs in before they can play. They get ten messages, a word-by-word reply, an optional guess, year and size hints, no-hint mode, and a result page.
 
-The playable roster is three small models: Claude Haiku 5.5, GPT-5.6 Luna, and DeepSeek V4 Flash. Every other seeded model stays off. Adding more is an admin job, and admin comes later.
+The playable roster is six small models: Claude Haiku 4.5, Claude Haiku 5.5, GPT-5.6 Luna, GPT-5.6 Luna Pro, GPT-6 Luna, and DeepSeek V4 Flash. Every other seeded model stays off. OpenRouter lists no other small Anthropic model, so Haiku 4.5 is the only extra Anthropic row. Adding more is an admin job, and admin comes later.
 
-Company, family, region, latest, daily, and origin are specified in [Rules](rules.md) and come later. Size is a hint, not a category. The profile, the home weekly top 5, daily result stats, and the admin screens come later too. The pause flag exists from the first build, because a credit error pauses everyone.
+Daily, company, family, region, and custom are specified in [Rules](rules.md) and come later. The home page lists them, and only All models can be started. Size is a hint, not a category. The profile page is in this prototype. The home weekly top 5, daily result stats, and the admin screens come later. The pause flag exists from the first build, because a credit error pauses everyone.
 
 ## Stack
 
@@ -19,7 +19,7 @@ Company, family, region, latest, daily, and origin are specified in [Rules](rule
 | Next.js on Node 22 | The site, and the only code that talks to a model |
 | Vercel AI SDK `ai` v7 and `@openrouter/ai-sdk-provider` | One call shape for every model. Replies stream word by word |
 | Supabase Auth | Google and email/password, same user table |
-| Supabase Postgres | Catalog, games, guesses, cost ledger |
+| Supabase Postgres | Catalog, games, the message transcript, guesses, cost ledger |
 | Supabase Storage | Later. Company logos, with a URL as the fallback |
 | OpenRouter | One API key, one bill, USA / Europe / China models |
 | Vercel Hobby | Hosting, HTTPS, a `*.vercel.app` URL |
@@ -31,7 +31,7 @@ Pages and route handlers are one Next.js app. The handlers are the backend: they
 
 ## Hosting
 
-A push to GitHub builds the site on Vercel, runs the server routes, and serves HTTPS. Hobby is free. A function may run for several minutes, which covers a reply. There is no machine to patch.
+Publishing a GitHub Release deploys that tag to Vercel production. A push or a pull request does not. The workflow reads `VERCEL_TOKEN`, `VERCEL_ORG_ID`, and `VERCEL_PROJECT_ID` from GitHub Actions secrets. The app env stays on the Vercel project. Hobby is free. A function may run for several minutes, which covers a reply. There is no machine to patch.
 
 The game is on a `something.vercel.app` address before any domain exists. Buy a domain when the game is worth showing. In the Vercel project, Settings → Domains, add the name. At the registrar, add the records Vercel shows:
 
@@ -46,7 +46,7 @@ No VPS, no extra email service, no second database.
 
 | What | What to do | When |
 |---|---|---|
-| **GitHub** | Already exists: `glederrey/whos-that-llm`. Vercel deploys from it. | Done |
+| **GitHub** | Already exists: `glederrey/whos-that-llm`. Publishing a release deploys that tag. | Done |
 | **Supabase** | One project. Copy the project URL, the publishable key, and the secret key. Turn on Email and Google under Authentication. Set the site URL and the redirect URLs to the main page, `/`. | Before auth works |
 | **Google Cloud** | One project on the existing Google account. No billing. OAuth client (Web). Authorized redirect: `https://<project-ref>.supabase.co/auth/v1/callback`. Paste the id and secret into the Supabase Google provider. | Before the Google button works |
 | **OpenRouter** | Account, about $10 of credit, one API key, a monthly cap around $20. The key stays in env vars. Gael tops up credits himself. | Before the first real model call |
@@ -58,7 +58,7 @@ Ko-fi does not price a page in francs, so euros avoids a second conversion on a 
 
 Supabase sends confirmation and password-reset mail. Both links return to the main page. That quota is enough to start. Custom SMTP is the fix if those emails start failing.
 
-Admin is not a role you hand out. It is a later screen. `ADMIN_EMAIL` in the server env is the one address that can open `/admin`. Sign in with that address (Google or email/password, as long as the session email matches). Everyone else gets the same 404 as a missing page, and the site renders no Admin link for them. An empty `ADMIN_EMAIL` means there is no admin.
+Admin is not a role you hand out. `/admin` and `/admin/models` render only when the signed-in Supabase user has `app_metadata.admin === true`. A missing flag matches nobody. Everyone else gets the same 404 as a missing page. The account menu shows **Admin** only for that session. Other sessions have no link.
 
 ## Auth
 
@@ -68,7 +68,9 @@ Both methods stay on, and both write into `auth.users`. Link identities that sha
 
 Email confirmation stays on. Confirmation and password-reset links return to `/`. The main page completes the session from that return. The first session with no username goes to `/welcome`.
 
-A username is 3–20 characters after trimming. Capitals and punctuation are allowed. It does not have to be unique. `profiles.id` is the internal id that links the auth user (and therefore the email) to the username. Changing the username, and a profile with stats and past games, come later. The game row keeps a copy of the username from the moment the round started, so a later rename does not rewrite history.
+A username is 3–20 characters after trimming. Capitals and punctuation are allowed. It does not have to be unique. An empty name is rejected. `profiles.id` is the internal id that links the auth user (and therefore the email) to the username. A rename updates `profiles.username` and every `games.username` for that user id, so the leaderboard and past games show the new name. The old name is not kept.
+
+A signed-in player can delete their own account from the profile page. They confirm first. An unchecked click does not submit. The action uses the session id and ignores any other id. It removes that player's profile, picture, games, messages, guesses, and usage, so the name leaves the leaderboard. Then it deletes the auth user, signs them out, and returns to `/`.
 
 ## Credits
 
@@ -80,8 +82,8 @@ These three are on the landing page, the lobby, and the round.
 
 | Limit | Value | On screen |
 |---|---|---|
-| Messages in a round | **5** | `Message 2 of 5` |
-| Guesses | **1 per message** | `Guess for message 2`, after the reply |
+| Messages in a round | **10** | `Message 2 of 10` |
+| Guesses | **optional, one per message** | `Guess for message 2`, or send the next message |
 | Games | **10 per rolling hour** | `4 of 10 this hour`, plus when the next slot frees |
 
 Also:
@@ -97,11 +99,11 @@ The hourly check and the insert run in one transaction. Two tabs cannot both tak
 
 ## What a round costs
 
-Five replies are 2,500 output tokens, plus the growing transcript on the way in. A thinking model can spend part of that budget before any visible words. That spend is an admin cost fact. It is not a trait the player can score or buy. October 2026 list prices, for a full round:
+Ten replies are 5,000 output tokens, plus the growing transcript on the way in. A thinking model can spend part of that budget before any visible words. That spend is an admin cost fact. It is not a trait the player can score or buy. October 2026 list prices, for a full round:
 
 | Tier | Examples | About one full round |
 |---|---|---|
-| Small | Haiku 5.5, a small GPT, DeepSeek Flash | under 1 cent |
+| Small | Haiku 5.5, the Lunas, DeepSeek Flash | under 1 cent. Haiku 4.5 is a few cents |
 | Medium | Sonnet 5.5, GPT-5.6 Sol | about 5 cents |
 | Large | Opus 5.5 | about 10 cents, more when the model spends heavily before the visible reply |
 | Leave out | Fable | several times an Opus round |

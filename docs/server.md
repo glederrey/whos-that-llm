@@ -17,8 +17,9 @@ type PublicGame = {
   poolLabel: string;
   noHint: boolean;
   hintsAllowed: boolean;
+  hintCost: number;              // from games.rules, so the hint button does not hardcode 100
   status: "active" | "solved" | "miss" | "given_up";
-  messageNumber: number;     // replies already stored, 0–5
+  messageNumber: number;     // replies already stored, 0–10
   messageLimit: number;      // from games.rules
   awaitingGuess: boolean;
   given: { key: "company" | "family" | "region" | "year" | "size"; label: string; value: string }[];
@@ -28,7 +29,15 @@ type PublicGame = {
     familySame: boolean;                // true only on a hit. A miss stays false and the UI says nothing
     companyValue: string | null;        // set on a company match
     regionValue: string | null;         // "USA", "China", or "Europe" on a region match
+    familyValue: string | null;         // family name on a family match
   };
+  pastGuesses: {                   // wrong model guesses, oldest first. Empty traits in no-hint mode
+    id: string;
+    name: string;
+    companyName: string;
+    logoPath: string;
+    wrong: ("company" | "region" | "family")[];
+  }[];
   hints: {
     year: string | null;     // "2026" once bought, else null
     size: string | null;     // "Small", "Medium", or "Large" once bought, else null
@@ -50,7 +59,7 @@ type PublicGame = {
 };
 ```
 
-`feedback` is null for the whole round when `noHint` is true, and on Origin. `given` is still sent. `candidates` is the filtered list: logo, company, and name only. The server removes models that contradict a known trait before it sends the list. The client does not receive family, region, year, size, weights, or reasoning, and it does not filter.
+`feedback` is null for the whole round when `noHint` is true, and on Origin. `given` is still sent. `candidates` is the filtered list: logo, company, and name only. The server removes models that contradict a known trait, and models already guessed, before it sends the list. The client does not receive family, region, year, size, weights, or reasoning, and it does not filter.
 
 Known traits are given values, bought hints, and matched company, region, and family. In no-hint mode, matches are stored on the guess row and do not become known, so they do not narrow `candidates`.
 
@@ -67,7 +76,8 @@ Do not tell the client which traits the highlighted row would hit. That preview 
 | `POST /api/games/:id/hints` | Buy year or size |
 | `POST /api/games/:id/give-up` | End the round, show the model, stay off the leaderboard |
 | `GET /api/leaderboard?category=&period=week\|all` | Rank, name, score |
-| `PATCH /api/me` | Set `{ username }` once, while it is null |
+| `PATCH /api/me` | Set `{ username }`. Also rewrites `games.username` for that user id |
+| `POST /api/me/avatar` | Upload a picture. Field `avatar`. JPEG, PNG, or WebP, at most 1 MB. Anything else is `422` `avatar` |
 | `GET /api/admin/spend` | Admin, later |
 | `GET /api/admin/stats` | Admin, later |
 | `PATCH /api/admin/settings` | Admin, later. `{ paused }` |
@@ -79,7 +89,9 @@ Do not tell the client which traits the highlighted row would hit. That preview 
 | `POST /api/admin/companies` | Admin, later. `{ id, name, region }` plus a logo upload or a logo URL |
 | `POST /api/admin/logos` | Admin, later. Upload to Supabase Storage. The response is the path to store |
 
-Admin handlers call `isAdmin`: the session email, lowercased, equals `ADMIN_EMAIL`. Anyone else gets `404`, the same shape as a missing route. There is no admin client flag to trust. Those routes wait until admin is built. The pause flag itself is written from the first build, by a credit error.
+The roster pages check `app_metadata.admin === true` on the signed-in Supabase user in a server-only module. Players cannot write `app_metadata`. A missing flag matches nobody. Anyone else gets `404`, the same shape as a missing route. The account menu includes **Admin** only for that session, rendered on the server, with no admin flag in client JavaScript. Roster edits are server actions that repeat the check, then write with the server key. anon and authenticated cannot write the roster tables. The counts on `/admin` are not granted to the public API. List prices on that page come from the public OpenRouter model list and do not send the API key. There is no admin client flag. The `/api/admin` routes in the table above wait until the rest of admin is built. The pause flag itself is written from the first build, by a credit error.
+
+Deleting an account is a server action, not a route that accepts an account id. It checks the session, then deletes that user's usage, games, avatar, and auth user. Messages and guesses cascade from the games. The name leaves the leaderboard. A client request cannot name another user or skip the session check.
 
 ### `POST /api/games`
 
@@ -91,7 +103,7 @@ In one transaction:
 1. Reject if `profiles.username` is null (`422`, `username`). Reject if this user has a row with `status = 'active'` (`409`, `active_game`).
 2. Reject if they have 10 rows with `started_at` in the last hour (`429`, `hourly_cap`, body includes `nextAt`).
 3. For `daily`, reject a second `daily_key` of today (`409`, `daily_done`).
-4. Load the category and reject it unless `categories.enabled` (`404`). Build the pool. `all`, `daily`, and `origin` use every enabled model. `latest` uses the enabled models with `is_latest`, one per family, and takes no `poolKey`. `company` uses `poolKey` as a company id. `family` uses `poolKey` as a family id. `region` uses `poolKey` as `us`, `cn`, or `eu`. Reject a pool with fewer than 2 enabled models, except daily and origin. Daily and origin still reject an empty roster. The error is `422` `pool_too_small`. `poolKey` is required for company, family, and region, and rejected for the others.
+4. Load the category and reject it unless `categories.enabled` (`404`). Build the pool. `all` and `daily` use every enabled model. `company` uses `poolKey` as a company id. `family` uses `poolKey` as a family id. `region` uses `poolKey` as `us`, `cn`, or `eu`. `custom` is not built yet. Reject a pool with fewer than 2 enabled models, except daily, which still rejects an empty roster. The error is `422` `pool_too_small`. `poolKey` is required for company, family, and region, and rejected for the others.
 5. Draw a uniform model from that pool. Daily copies the model id, the `pool_model_ids`, and the trait snapshot already stored for today's `daily_key` when any player has started it. Otherwise draw once and that id, that roster, and those traits are what later rows copy. Two people starting the daily in the same instant must not draw two models: take a transaction-level lock on a single advisory key for the UTC date, then read-or-insert.
 6. Freeze traits from the current catalog into `games.traits`. Insert `games` with `pool_model_ids` set to that pool, `rules` copied from config, `rules.hintsAllowed` copied from `categories.hints_allowed`, `username` copied from the profile, `hints = '{}'`, `message_count = 0`, `awaiting_guess = false`, `no_hint` from the body. Origin stores `no_hint` false and `hintsAllowed` false. Do not write a score on insert.
 
@@ -101,19 +113,21 @@ Response: `{ gameId }` and nothing else.
 
 Body: `{ text: string }`.
 
-Reject when the round is not `active`, when `app_settings.paused` (`503` `paused`), when `awaiting_guess` is true, when `message_count` is already the limit, or when the trimmed text is empty or over `rules.maxUserChars`. Origin may send another message without a guess having been submitted. Every other category rejects a message while a guess is open.
+Reject when the round is not `active`, when `app_settings.paused` (`503` `paused`), when `message_count` is already the limit, or when the trimmed text is empty or over `rules.maxUserChars`. A message is allowed while a guess is open. Claiming the call sets `awaiting_guess` false, so a guess submitted in the same moment loses.
 
-Lock the game row for the rest of the transaction. A second request waits, then loses because `awaiting_guess` is already true or the count has moved. That is what keeps a double click from paying for two calls. Guess, hint, and give-up lock the same row.
+Lock the game row for the rest of the transaction. A second request waits, then loses because a call is already in flight or the count has moved. That is what keeps a double click from paying for two calls. Guess, hint, and give-up lock the same row.
 
 Then call OpenRouter. The reply streams word by word to the client. The guess stays closed until the assistant row is stored. On success, insert the user row and the assistant row for `turn = message_count + 1`, insert `usage`, set `message_count` and `awaiting_guess = true`, and return `PublicGame`. If the successful text is empty or whitespace, still do that. The message is spent.
 
-On failure, including a stream that drops before a completed reply, insert `usage` with `cost_usd = 0` and `error_code`, leave `message_count` unchanged, and return `502`. For HTTP 402, and for an explicit credit error, set `app_settings.paused = true` in the same failure path and return `paused: true`. Otherwise `paused: false`. The client keeps the draft either way. Do not leave a user row without its assistant row.
+On failure, including a stream that drops before a completed reply, insert `usage` with `cost_usd = 0` and `error_code`, leave `message_count` unchanged, and return `502`. If that turn still has a stored assistant reply and no guess, set `awaiting_guess` true again so the skipped guess comes back. For HTTP 402, and for an explicit credit error, set `app_settings.paused = true` in the same failure path and return `paused: true`. Otherwise `paused: false`. The client keeps the draft either way. Do not leave a user row without its assistant row.
+
+The call sends the full chat: the new user text plus every earlier user and assistant turn, in order. The system prompt stays separate. It does not include previous rounds.
 
 An explicit credit error is a response whose status or error code says the key is out of credits, even when the status is not 402.
 
 ### `POST /api/games/:id/guesses`
 
-Body for a model guess: `{ modelId: string }`. Body for origin, later: `{ region: "us" | "cn" | "eu" }`.
+Body for a model guess: `{ modelId: string }`.
 
 Reject unless `awaiting_guess` is true. Lock the game row.
 
@@ -126,8 +140,6 @@ Pause does not block a guess, a hint, or a give-up. It blocks starting a round a
 If `model_correct`, set `status = 'solved'` and `finished_at`, and write `score`, `score_breakdown`, and `score_explanation`. The response includes `model`.
 
 If this was the last message and the model was not named, set `status = 'miss'` and `finished_at`, and write the score the same way. The response includes `model`.
-
-On origin, set `region_correct` and leave the other booleans false. A correct region is `solved` with base `rules.regionPoints`. A wrong region is `miss` with base 0. Either way the round ends and the response includes `model`. `rules.modelBase` is not used.
 
 ### `POST /api/games/:id/hints`
 
@@ -184,7 +196,7 @@ JSON body `{ error: string, ... }`. The page copy for each code is in [Pages](pa
 | 409 | `daily_done` | Daily already started today |
 | 409 | `conflict` | The guess is not in the filtered list |
 | 409 | `turn` | Guess when no guess is open, a second guess on the same message, or a message while a guess is open |
-| 422 | `pool_too_small` | Fewer than 2 models in the pool, or an empty roster for daily or origin |
+| 422 | `pool_too_small` | Fewer than 2 models in the pool, or an empty roster for daily |
 | 422 | `username` | Missing, or not 3–20 characters after trim |
 | 422 | `hint` | Hint rejected |
 | 429 | `hourly_cap` | Body includes `nextAt` |
@@ -192,6 +204,6 @@ JSON body `{ error: string, ... }`. The page copy for each code is in [Pages](pa
 
 ## Leaderboard and profile
 
-`GET /api/leaderboard` calls `leaderboard(category, since)` with the user-scoped client. The function is granted to `anon` and `authenticated`. A category with `leaderboard` false is `404`. `period=week` sets `since` to Monday 00:00 UTC of the current week. `period=all` uses no lower bound. The columns are rank, name, and score, as in the query in [Data](data.md).
+`GET /api/leaderboard` calls `leaderboard(category, since)` with the user-scoped client. The function is granted to `anon` and `authenticated`. A category with `leaderboard` false is `404`. `period=week` sets `since` to Monday 00:00 UTC of the current week. `period=all` uses no lower bound. The columns are rank, name, and score. The name is shown with that player's profile picture.
 
-`PATCH /api/me` sets `profiles.username` for `auth.uid()` only, and only while the current value is null. It does not touch `games.username`. Changing a username that is already set waits for the profile, which is later.
+`PATCH /api/me` calls `set_username` as the signed-in user. It sets `profiles.username` and every `games.username` for that user id. Empty, and any name outside 3–20 characters after trim, is `422` `username`. `POST /api/me/avatar` stores the file in the public `avatars` bucket and saves `profiles.avatar_path`. Only a JPEG, PNG, or WebP of at most 1 MB is accepted. The header shows that picture. Until then it keeps the generated mark.
