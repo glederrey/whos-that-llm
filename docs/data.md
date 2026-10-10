@@ -47,7 +47,7 @@ A failed call writes `usage` and does not write `messages`, because there is no 
 | `logo_path` | text | `logos/{company_id}.png` in the public `logos` bucket, or an `https` URL |
 | `created_at` | timestamptz | default `now()` |
 
-The object name is `{company_id}.png`. The bucket also accepts SVG and WebP, at most 1 MB. The game reads that path. A missing file shows no image. Files in `public/logos` are not these logos.
+The uploaded objects are `anthropic.png`, `openai.png`, `deepseek.png`, and `mistral.png`. The bucket also accepts SVG and WebP, at most 1 MB. The game reads `logo_path`. A missing file shows no image. Files in `public/logos` are not these logos.
 
 ### `families`
 
