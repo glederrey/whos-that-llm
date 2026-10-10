@@ -10,9 +10,9 @@ Scoring numbers live in `lib/config.ts` and are copied onto the game when it sta
 stateDiagram-v2
   [*] --> AwaitReply: round starts, model already drawn
   AwaitReply --> AwaitGuess: reply stored, including an empty one
-  AwaitGuess --> AwaitReply: a guess, the model was not named, and a message remains
+  AwaitGuess --> AwaitReply: a miss, or the next message with no guess, while a message remains
   AwaitGuess --> Solved: exact model
-  AwaitGuess --> Miss: fifth guess, model not named
+  AwaitGuess --> Miss: wrong guess on the tenth reply
   AwaitReply --> GivenUp: give up
   AwaitGuess --> GivenUp: give up
   Solved --> Result
@@ -20,14 +20,14 @@ stateDiagram-v2
   GivenUp --> Result
 ```
 
-1. The player sends a message. The header reads `Message 1 of 5`.
+1. The player sends a message. The header reads `Message 1 of 10`.
 2. The server calls the hidden model. The reply streams word by word. The guess opens only after the reply is stored. A failed call does not spend the message. A successful call spends the message even when the stored reply is empty or whitespace.
-3. The player names one model from the list the server still allows, or gives up. There is no skip. A second guess on that message is rejected.
-4. Naming the exact model ends the round as `solved`.
-5. A wrong fifth guess ends the round as `miss`. The region and company matches still count.
+3. The player may name one model from the list the server still allows, send the next message with no guess, or give up. A second guess on that same message is rejected.
+4. Naming the exact model ends the round as `solved`. That correct name does not take the wrong-guess penalty. Earlier wrong names still do.
+5. A wrong guess on the tenth reply ends the round as `miss`. The region and company matches still count. The round does not end by itself when the tenth reply arrives. The player can still guess or give up.
 6. Give up ends the round as `given_up`, shows which model it was, and keeps that round off the leaderboard. Give up asks for confirmation.
 
-The next message stays disabled while a guess is open. Refresh restores the same state from the server.
+Sending the next message while a guess is open drops that guess. The composer stays open until the tenth reply is stored, or the round ends. Refresh restores the same state from the server.
 
 Guesses and hint purchases do not call OpenRouter.
 
@@ -131,30 +131,30 @@ The score is one number, shown on the result page, including when it is negative
 
 The base is 1000 if the player named the model. That replaces region and company. If they never named it, the base is the region and company points they actually matched, and a given trait contributes 0. Year, size, and family are not part of the base.
 
-That base is multiplied by the token factor, then by the message factor, then by 1.5 in no-hint mode. The token factor is 1000 divided by the tokens the successful replies used. At 1000 tokens the factor is 1, so the base is unchanged. Fewer tokens raise the score. A longer chat shrinks it. If the token total is 0, the token factor is 1, so the formula does not divide by zero. The message factor is 5 divided by how many replies were used. Solving on the first reply multiplies by 5. Using all five replies multiplies by 1. Each hint then costs 100, subtracted after those multipliers, so the price stays 100 on a short chat and on a long one.
+That base is multiplied by the token factor, then by the message factor, then by 1.5 in no-hint mode. The token factor is 1000 divided by the tokens the successful replies used. At 1000 tokens the factor is 1, so the base is unchanged. Fewer tokens raise the score. A longer chat shrinks it. If the token total is 0, the token factor is 1, so the formula does not divide by zero. The message factor is 10 divided by how many replies were used. Solving on the first reply multiplies by 10. Using all ten replies multiplies by 1. Each hint then costs 100, and each wrong model guess costs 50. Both are subtracted after those multipliers, so the prices stay flat on a short chat and on a long one. Naming the model sets the base to 1000 and does not itself count as a wrong guess. A correct company match stays +300 and a correct region match stays +100, inside the base. They do not stack on top of a solved 1000.
 
-`messages` is how many replies were used, from 1 to 5. A round with no stored reply has no score. `tokens` is input tokens plus output tokens on successful calls only. Failed calls are left out, the same way they do not spend a message. `reasoning_tokens` and `cache_read_tokens` are not added. Some providers already count reasoning inside `output_tokens`.
+`messages` is how many replies were used, from 1 to 10. A round with no stored reply has no score. `tokens` is input tokens plus output tokens on successful calls only. Failed calls are left out, the same way they do not spend a message. `reasoning_tokens` and `cache_read_tokens` are not added. Some providers already count reasoning inside `output_tokens`. `wrong guesses` counts guess rows whose model was not the hidden one, including ones from earlier in a round that is later solved.
 
 ```
 tokenFactor   = 1 when tokens = 0, otherwise 1000 / tokens
-messageFactor = 5 / messages
+messageFactor = 10 / messages
 noHintFactor  = 1.5 when no_hint, otherwise 1
 
 base  = 1000 if the model was named
         otherwise region points + company points
 
-score = round(base * tokenFactor * messageFactor * noHintFactor) − (100 * hints bought)
+score = round(base * tokenFactor * messageFactor * noHintFactor) − (100 * hints bought) − (50 * wrong guesses)
 ```
 
-`round` goes to the nearest integer. A half rounds up. The product is never negative, so this is the same as rounding a half away from zero. The hint subtraction happens after the round, which is why the total can go below zero. Show that total. Do not raise it to 0.
+`round` goes to the nearest integer. A half rounds up. The product is never negative, so this is the same as rounding a half away from zero. The hint and wrong-guess subtractions happen after the round, which is why the total can go below zero. Show that total. Do not raise it to 0.
 
-The numbers in that formula are the ones frozen on `games.rules`: `modelBase` (1000), `regionPoints` (100), `companyPoints` (300), `tokenScale` (1000), `hintCost` (100), `noHintMultiplier` (1.5), and `messageLimit` (the 5 in the message factor).
+The numbers in that formula are the ones frozen on `games.rules`: `modelBase` (1000), `regionPoints` (100), `companyPoints` (300), `tokenScale` (1000), `hintCost` (100), `wrongGuessCost` (50), `noHintMultiplier` (1.5), and `messageLimit` (the 10 in the message factor). A round started before this change keeps the `messageLimit` it froze, and a missing `wrongGuessCost` is read as 50.
 
-A short reply raises the score, because `1000 / tokens` gets large. An early solve raises it again, because `5 / messages` gets large. Together they can multiply hard. The 1000 in the token factor and the 5 in the message factor are a first version. They may be refined after Gael plays. There is no cap.
+A short reply raises the score, because `1000 / tokens` gets large. An early solve raises it again, because `10 / messages` gets large. Together they can multiply hard. The 1000 in the token factor and the 10 in the message factor are a first version. They may be refined after Gael plays. There is no cap.
 
 ### Comment left on the formula
 
-Saved here on 9 October 2026. A friend passed this on from a conversation with a Claude Fable instance. The formula above is still the one the game uses. It is kept next to the numbers so we can decide later whether this is the right way to score.
+Saved here on 9 October 2026. A friend passed this on from a conversation with a Claude Fable instance. The formula has since changed to 10 messages and a −50 wrong guess. The comment was about the earlier slope, where fewer tokens and fewer messages raised the score. It is kept next to the numbers so we can decide later whether this is the right way to score.
 
 > Il a le logo, il a le nom, il a DeepSeek qui écrit un petit poème, et il n'a pas gamé. L'univers a vraiment lu les chapitres : « Who's that LLM », c'est « Who's that Pokémon », et ton livre dit depuis février que la question n'est pas ce que c'est, mais qui.
 >
@@ -168,32 +168,34 @@ Nothing is written to `games.score` until the round ends. The result is recomput
 
 All models, hints allowed. The truth is Claude Sonnet 5.5: Anthropic, USA, family Sonnet, year 2026, size medium.
 
-On message 1 the player names DeepSeek V4 Pro. Company, region, and family all miss. They buy the year hint. The board shows 2026, and the list narrows to that year. That purchase will cost 100 at the end.
+On message 1 the player names DeepSeek V4 Pro. Company, region, and family all miss. That wrong name will cost 50 at the end. They buy the year hint. The board shows 2026, and the list narrows to that year. That purchase will cost 100 at the end.
 
-On message 2 they name Claude Sonnet 5.5. The round is solved. The base is 1000. The region and the company do not add on top.
+On message 2 they name Claude Sonnet 5.5. The round is solved. The base is 1000. The region and the company do not add on top. The correct name does not take another 50. The earlier wrong name still does.
 
-The two successful replies used 500 tokens. Messages used: 2. One hint was bought.
+The two successful replies used 500 tokens. Messages used: 2. One hint was bought. One wrong guess.
 
 ```
 tokenFactor   = 1000 / 500 = 2
-messageFactor = 5 / 2 = 2.5
+messageFactor = 10 / 2 = 5
 noHintFactor  = 1
 base          = 1000
 
-score = round(1000 * 2 * 2.5 * 1) − 100
-      = 5000 − 100
-      = 4900
+score = round(1000 * 2 * 5 * 1) − 100 − 50
+      = 10000 − 150
+      = 9850
 ```
 
-The same solve with no hints, and without the year purchase, would be `round(1000 * 2 * 2.5 * 1.5) − 0 = 7500`. No-hint mode would also have hidden the misses on message 1.
+The same solve with no hints, and without the year purchase, would be `round(1000 * 2 * 5 * 1.5) − 50 = 14950` if that first wrong name still happened. No-hint mode would also have hidden the misses on message 1.
 
-A round that never names the model still has a score. Region and company both matched, all 5 replies used, 2,000 tokens, no hints:
+A round that never names the model still has a score. Region and company both matched, 5 replies used, 2,000 tokens, no hints, and this line counts the multipliers before the wrong-guess penalty:
 
 ```
-score = round(400 * (1000 / 2000) * (5 / 5)) − 0
-      = round(200)
-      = 200
+score = round(400 * (1000 / 2000) * (10 / 5)) − 0
+      = round(400)
+      = 400
 ```
+
+Each wrong model name on that round would then subtract another 50.
 
 Family would not have changed either total.
 
@@ -215,12 +217,13 @@ p3 = round(base * tokenFactor * messageFactor * noHintFactor)
 | `Company` | The model was not named, and company matched and was not given | 300 |
 | `Base` | The base is 0 | 0 |
 | `Tokens` | Always. The label includes the token count and the factor, such as `500 tokens · ×2`, or `0 tokens · ×1` | `p1 − p0` |
-| `Messages` | Always. The label includes the replies and the factor, such as `2 replies · ×2.5` | `p2 − p1` |
+| `Messages` | Always. The label includes the replies and the factor, such as `2 replies · ×5` | `p2 − p1` |
 | `No-hint` | Only when no-hint mode is on. Label `×1.5` | `p3 − p2` |
 | `Year` | The year hint was bought | −100 |
 | `Size` | The size hint was bought | −100 |
+| `Wrong guesses · N` | At least one wrong model name. One line for the count | −50 each |
 
-Hint lines follow the order they were bought. The total under the list is `p3 − (100 * hints bought)`. It is the score. It is shown when it is negative.
+Hint lines follow the order they were bought. The wrong-guess line follows them. The total under the list is `p3 − (100 * hints bought) − (50 * wrong guesses)`. It is the score. It is shown when it is negative.
 
 The worked example's lines are:
 
@@ -228,15 +231,16 @@ The worked example's lines are:
 |---|---|
 | Named the model | 1000 |
 | Tokens · 500 tokens · ×2 | +1000 |
-| Messages · 2 replies · ×2.5 | +3000 |
+| Messages · 2 replies · ×5 | +8000 |
 | Year | −100 |
-| **Total** | **4900** |
+| Wrong guesses · 1 | −50 |
+| **Total** | **9850** |
 
-Beside that list, the result page shows the short player-facing explanation from [Pages](pages.md). Those few lines are the only scoring text on the site. This document stays private.
+Beside that list, the result page shows the short player-facing explanation from [Pages](pages.md). The public page [How scoring works](../app/scoring/page.tsx) states the same formula in plain language. This document stays private.
 
 ## Categories
 
-The call is the same in every category: 5 messages, 500 characters, 500 output tokens, one system prompt. A category changes the pool, which traits are given, whether year and size can be bought, and whether the round can appear on a leaderboard. The score formula does not change. Which cards exist is the `categories` table.
+The call is the same in every category: 10 messages, 500 characters, 500 output tokens, one system prompt. A category changes the pool, which traits are given, whether year and size can be bought, and whether the round can appear on a leaderboard. The score formula does not change. Which cards exist is the `categories` table.
 
 | Category | Pool | Hints | Leaderboard | When |
 |---|---|---|---|---|

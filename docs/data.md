@@ -152,8 +152,8 @@ One row per round.
 | `no_hint` | boolean | |
 | `rules` | jsonb | The config snapshot. Scoring reads this, not today's file |
 | `hints` | text[] | default `'{}'`. `year`, `size`, or both. Empty when no-hint, and when the category disallows hints |
-| `message_count` | int | 0–5. User messages stored. Also the number of stored replies |
-| `awaiting_guess` | boolean | True after a stored reply, false after a guess. Give-up ends the round instead |
+| `message_count` | int | 0–10. User messages stored. Also the number of stored replies |
+| `awaiting_guess` | boolean | True after a stored reply. False after a guess, and while the next message is being called. A failed call sets it true again when that turn still has a reply and no guess. Give-up ends the round instead |
 | `score` | int, null | Written once, at the end, when `message_count` is at least 1. May be negative. Null when they give up before any reply |
 | `score_breakdown` | jsonb, null | The integer lines, in order, not including the total |
 | `score_explanation` | text[], null | The short public lines |
@@ -173,7 +173,7 @@ Indexes:
 
 ```json
 {
-  "messageLimit": 5,
+  "messageLimit": 10,
   "maxUserChars": 500,
   "maxOutputTokens": 500,
   "modelBase": 1000,
@@ -181,6 +181,7 @@ Indexes:
   "companyPoints": 300,
   "tokenScale": 1000,
   "hintCost": 100,
+  "wrongGuessCost": 50,
   "noHintMultiplier": 1.5,
   "hintsAllowed": true
 }

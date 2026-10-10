@@ -4,7 +4,7 @@
 create table if not exists public.messages (
   id uuid primary key default gen_random_uuid(),
   game_id uuid not null references public.games (id) on delete cascade,
-  turn int not null check (turn between 1 and 5),
+  turn int not null check (turn between 1 and 10),
   role text not null check (role in ('user', 'assistant')),
   content text not null,
   created_at timestamptz not null default now(),
@@ -18,7 +18,7 @@ comment on column public.messages.game_id is
   'The round. games.id is the session id.';
 
 comment on column public.messages.turn is
-  '1 to 5. The player row and the model row of one exchange share this number.';
+  '1 to 10. The player row and the model row of one exchange share this number.';
 
 comment on column public.messages.role is
   'user or assistant.';

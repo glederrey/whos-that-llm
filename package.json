@@ -5,7 +5,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "test": "tsx --test lib/game.test.ts lib/words.test.ts",
+    "test": "tsx --test lib/game.test.ts lib/words.test.ts lib/openrouter.test.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
@@ -15,7 +15,8 @@
     "ai": "^7.0.137",
     "next": "^16.4.0",
     "react": "^19.3.0",
-    "react-dom": "^19.3.0"
+    "react-dom": "^19.3.0",
+    "react-markdown": "^10.1.0"
   },
   "devDependencies": {
     "@types/node": "^26.6.4",

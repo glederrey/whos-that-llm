@@ -118,7 +118,10 @@ export function HomeBoard({
   return (
     <div className="stack">
       <h1 className="goal">Find the model.</h1>
-      <p className="lede">It answers. You have five messages to say which one it was.</p>
+      <p className="lede">
+        It answers. You have ten messages to say which one it was.{" "}
+        <a href="/scoring">How scoring works</a>
+      </p>
       <p className="hour-status">
         <strong>{paused ? "The game is paused." : leftLabel}</strong>
         {slot ? <span>{slot}</span> : null}

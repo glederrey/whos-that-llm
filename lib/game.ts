@@ -251,9 +251,12 @@ export function scoreRound(input: {
   messages: number;
   noHint: boolean;
   hints: HintKey[];
+  wrongGuesses?: number;
 }): { score: number; breakdown: ScoreLine[]; explanation: string[] } {
   const { rules } = input;
   const messages = input.messages;
+  const wrongGuesses = input.wrongGuesses ?? 0;
+  const wrongCost = rules.wrongGuessCost ?? 50;
   const tokenFactor = input.tokens === 0 ? 1 : rules.tokenScale / input.tokens;
   const messageFactor = rules.messageLimit / messages;
   const noHintFactor = input.noHint ? rules.noHintMultiplier : 1;
@@ -300,9 +303,15 @@ export function scoreRound(input: {
       points: -rules.hintCost,
     });
   }
+  if (wrongGuesses > 0) {
+    breakdown.push({
+      label: `Wrong guesses · ${wrongGuesses}`,
+      points: -wrongCost * wrongGuesses,
+    });
+  }
 
-  const score = p3 - rules.hintCost * input.hints.length;
-  const explanation = explainScore(input, base);
+  const score = p3 - rules.hintCost * input.hints.length - wrongCost * wrongGuesses;
+  const explanation = explainScore(input, base, wrongGuesses, wrongCost);
   return { score, breakdown, explanation };
 }
 
@@ -318,12 +327,15 @@ function explainScore(
     messages: number;
     noHint: boolean;
     hints: HintKey[];
+    wrongGuesses?: number;
   },
   base: number,
+  wrongGuesses: number,
+  wrongCost: number,
 ): string[] {
   const { rules } = input;
   const lines = [
-    "Your score starts from the base, multiplies by the token factor and the message factor, then by 1.5 if you played with no hints, then subtracts 100 for each hint.",
+    "Your score starts from the base, multiplies by the token factor and the message factor, then by 1.5 if you played with no hints, then subtracts 100 for each hint and 50 for each wrong model guess.",
   ];
   if (input.namedModel) {
     lines.push(`Base: ${formatInt(rules.modelBase)} for naming the model.`);
@@ -357,6 +369,11 @@ function explainScore(
       (hint) => `${hint === "year" ? "Year" : "Size"} −${formatInt(rules.hintCost)}`,
     );
     lines.push(`Hints: ${parts.join(". ")}.`);
+  }
+  if (wrongGuesses === 0) {
+    lines.push("Wrong guesses: none.");
+  } else {
+    lines.push(`Wrong guesses: ${wrongGuesses} × −${formatInt(wrongCost)}.`);
   }
   return lines;
 }

@@ -36,7 +36,7 @@ There is no `rules/page.tsx`. There is no `me/page.tsx` in the first build.
 
 ```ts
 {
-  messageLimit: 5,
+  messageLimit: 10,
   maxUserChars: 500,
   maxOutputTokens: 500,
   modelBase: 1000,
@@ -44,6 +44,7 @@ There is no `rules/page.tsx`. There is no `me/page.tsx` in the first build.
   companyPoints: 300,
   tokenScale: 1000,
   hintCost: 100,
+  wrongGuessCost: 50,
   noHintMultiplier: 1.5,
   hourlyCap: 10,
   tipUrl: ""
@@ -108,7 +109,7 @@ The first build is a playable All models round. Gael plays it locally, then the 
 1. Migration from [Data](data.md). Seed the roster. Enable only Haiku 5.5, GPT-5.6 Luna, and DeepSeek V4 Flash. Seed All models enabled as a category, and the other categories disabled.
 2. App shell: landing page, login, welcome, footer, theme. Email links return to `/`. A session is required before `/play`.
 3. `lib/openrouter.ts` and `lib/prompt.ts`. Stream the reply word by word. Play one round on Haiku. Read `reasoning_tokens` and the transcript. Confirm it does not name itself. Confirm an empty successful reply still spends the message.
-4. `lib/game.ts`: frozen traits, server-filtered guess list, compare, hints, no-hint mode, score. All models, five messages, one guess after each reply, give up, no skip. The result page shows the breakdown and the short explanation, including a negative total. Play across the three enabled models. If a family is indistinguishable, disable that family. Do not change the schema to save it.
+4. `lib/game.ts`: frozen traits, server-filtered guess list, compare, hints, no-hint mode, score. All models, ten messages, a guess the player can skip, give up. The result page shows the breakdown and the short explanation, including a negative total. Play across the three enabled models. If a family is indistinguishable, disable that family. Do not change the schema to save it.
 5. The hourly cap and one active round. A credit error sets `app_settings.paused` for everyone.
 6. Leaderboard for All models: rank, name, best score.
 7. Later: daily, company, family, region, custom. They are pool filters plus the given-trait rule. Custom is a choice of models. There is no Latest category and no Origin category.

@@ -58,7 +58,7 @@ Open weights and reasoning are stored on the model as admin facts. Play does not
 
 **Logo.** Upload the company logo to Supabase Storage. The form stores the returned path on `companies.logo_path` or, for an override, on `models.logo_path`. If the upload is unavailable, paste an `https` URL instead. A model logo overrides the company logo.
 
-**Turn off.** The normal way to remove a model. `enabled = false`. It leaves every draw. The row stays. Rounds already played still show the name from `games.traits`. A round already open keeps the model it drew and the traits it froze, including one you just edited, so a player in the middle of five messages is not rewritten. New rounds use the edited row.
+**Turn off.** The normal way to remove a model. `enabled = false`. It leaves every draw. The row stays. Rounds already played still show the name from `games.traits`. A round already open keeps the model it drew and the traits it froze, including one you just edited, so a player in the middle of ten messages is not rewritten. New rounds use the edited row.
 
 **Turn on.** Runs the checks above, then the model is eligible wherever its company, family, region, or latest flag puts it.
 

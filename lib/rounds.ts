@@ -377,10 +377,10 @@ export async function giveUp(gameId: string, userId: string): Promise<ApiFailure
   if (game.message_count >= 1) {
     const { data: guesses } = await client
       .from("guesses")
-      .select("company_correct, region_correct")
+      .select("model_correct, company_correct, region_correct")
       .eq("game_id", gameId);
     const flags: GuessFlags[] = (guesses ?? []).map((guess) => ({
-      modelCorrect: false,
+      modelCorrect: Boolean(guess.model_correct),
       companyCorrect: Boolean(guess.company_correct),
       familyCorrect: false,
       regionCorrect: Boolean(guess.region_correct),
@@ -422,17 +422,113 @@ async function scoreFrom(client: SupabaseClient, game: GameRow, guesses: GuessFl
     messages: game.message_count,
     noHint: game.no_hint,
     hints: game.hints ?? [],
+    wrongGuesses: guesses.filter((guess) => !guess.modelCorrect).length,
   });
 }
 
-export async function leaderboard(category: string, period: string) {
+export type BoardRow = { rank: number; name: string; score: number; mine: boolean };
+
+export async function leaderboard(category: string, period: string, viewerId?: string | null) {
   const client = serviceOrThrow();
   const { data: row } = await client.from("categories").select("leaderboard").eq("id", category).maybeSingle();
   if (!row?.leaderboard) return fail(404, "not_found");
   const since = period === "week" ? mondayUtc() : "1970-01-01T00:00:00.000Z";
-  const { data, error } = await client.rpc("leaderboard", { category, since });
-  if (error) throw new Error(error.message);
-  return { rows: (data ?? []) as { rank: number; name: string; score: number }[] };
+  const fresh = await client.rpc("leaderboard", {
+    category,
+    since,
+    viewer: viewerId ?? null,
+  });
+  if (!fresh.error) {
+    const rows = ((fresh.data ?? []) as { rank: number; name: string; score: number; mine: boolean }[]).map((entry) => ({
+      rank: Number(entry.rank),
+      name: entry.name,
+      score: Number(entry.score),
+      mine: Boolean(entry.mine),
+    }));
+    return { rows };
+  }
+  const legacy = await client.rpc("leaderboard", { category, since });
+  if (legacy.error) throw new Error(legacy.error.message);
+  const rows = await markLegacyMine(
+    client,
+    (legacy.data ?? []) as { rank: number; name: string; score: number }[],
+    viewerId,
+    category,
+    since,
+  );
+  return { rows };
+}
+
+async function markLegacyMine(
+  client: SupabaseClient,
+  data: { rank: number; name: string; score: number }[],
+  viewerId: string | null | undefined,
+  category: string,
+  since: string,
+): Promise<BoardRow[]> {
+  let best: { username: string; score: number } | null = null;
+  if (viewerId) {
+    const { data: games, error } = await client
+      .from("games")
+      .select("username, score")
+      .eq("user_id", viewerId)
+      .eq("category", category)
+      .in("status", ["solved", "miss"])
+      .gte("finished_at", since)
+      .not("score", "is", null)
+      .order("score", { ascending: false })
+      .limit(1);
+    if (error) throw new Error(error.message);
+    const row = games?.[0];
+    if (row && typeof row.score === "number") best = { username: row.username as string, score: row.score };
+  }
+  return data.map((entry) => ({
+    rank: Number(entry.rank),
+    name: entry.name,
+    score: Number(entry.score),
+    mine: Boolean(best && entry.name === best.username && Number(entry.score) === best.score),
+  }));
+}
+
+export async function landingSnapshot(viewerId?: string | null) {
+  const client = serviceOrThrow();
+  const stats = await readPublicStats(client);
+  const board = await leaderboard("all", "all", viewerId);
+  const top = "rows" in board ? board.rows.slice(0, 5) : [];
+  return { ...stats, top };
+}
+
+async function readPublicStats(client: SupabaseClient) {
+  const { data, error } = await client.rpc("public_stats");
+  if (!error && data && typeof data === "object") {
+    const stats = data as { models?: number; gamesToday?: number; players?: number };
+    return {
+      models: Number(stats.models ?? 0),
+      gamesToday: Number(stats.gamesToday ?? 0),
+      players: Number(stats.players ?? 0),
+    };
+  }
+  const midnight = new Date();
+  const start = new Date(Date.UTC(midnight.getUTCFullYear(), midnight.getUTCMonth(), midnight.getUTCDate())).toISOString();
+  const [models, gamesToday, players] = await Promise.all([
+    client.from("models").select("id", { count: "exact", head: true }).eq("enabled", true),
+    client.from("games").select("id", { count: "exact", head: true }).gte("started_at", start),
+    countPlayers(client),
+  ]);
+  if (models.error) throw new Error(models.error.message);
+  if (gamesToday.error) throw new Error(gamesToday.error.message);
+  return { models: models.count ?? 0, gamesToday: gamesToday.count ?? 0, players };
+}
+
+async function countPlayers(client: SupabaseClient) {
+  const ids = new Set<string>();
+  for (let from = 0; from < 20000; from += 1000) {
+    const { data, error } = await client.from("games").select("user_id").range(from, from + 999);
+    if (error) throw new Error(error.message);
+    for (const row of data ?? []) ids.add(row.user_id as string);
+    if (!data || data.length < 1000) break;
+  }
+  return ids.size;
 }
 
 function recordedGuesses(

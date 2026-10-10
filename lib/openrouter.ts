@@ -27,21 +27,27 @@ function numberFrom(value: unknown): number {
   return Number.isFinite(n) ? n : 0;
 }
 
+export function buildModelMessages(
+  transcript: { role: "user" | "assistant"; content: string }[],
+): ModelMessage[] {
+  return transcript.map((message) => ({
+    role: message.role,
+    content: message.content,
+  }));
+}
+
 export async function streamHiddenReply(input: {
   openrouterId: string;
   providerSettings: unknown;
   maxOutputTokens: number;
-  transcript: { role: "user" | "assistant"; content: string }[];
+  messages: ModelMessage[];
   onWord: (word: string) => void;
 }): Promise<StreamedReply> {
   const apiKey = process.env.OPENROUTER_API_KEY;
   if (!apiKey) return { ok: false, paused: false, message: "Missing OpenRouter key." };
 
   const openrouter = createOpenRouter({ apiKey });
-  const messages: ModelMessage[] = input.transcript.map((message) => ({
-    role: message.role,
-    content: message.content,
-  }));
+  const messages = input.messages;
 
   let streamError: unknown = null;
   const result = streamText({

@@ -1,5 +1,5 @@
 import { apiError, apiJson } from "@/lib/http";
-import { streamHiddenReply } from "@/lib/openrouter";
+import { buildModelMessages, streamHiddenReply } from "@/lib/openrouter";
 import { abortReply, claimCall, hiddenCall, readPublicGame, saveReply } from "@/lib/rounds";
 import { currentUser } from "@/lib/session";
 
@@ -31,7 +31,10 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
           openrouterId: hidden.openrouterId,
           providerSettings: hidden.providerSettings,
           maxOutputTokens: hidden.game.rules.maxOutputTokens,
-          transcript: [...hidden.transcript, { role: "user", content: trimmed }],
+          messages: buildModelMessages([
+            ...hidden.transcript,
+            { role: "user", content: trimmed },
+          ]),
           onWord(word) {
             send({ type: "word", text: word });
           },

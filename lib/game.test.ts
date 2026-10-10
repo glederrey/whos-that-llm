@@ -27,7 +27,7 @@ function model(
   };
 }
 
-test("solved example scores 4900", () => {
+test("solved example scores 9900 before a wrong guess", () => {
   const result = scoreRound({
     rules,
     namedModel: true,
@@ -40,19 +40,40 @@ test("solved example scores 4900", () => {
     noHint: false,
     hints: ["year"],
   });
-  assert.equal(result.score, 4900);
+  assert.equal(result.score, 9900);
   assert.deepEqual(
     result.breakdown.map((line) => line.points),
-    [1000, 1000, 3000, -100],
+    [1000, 1000, 8000, -100],
   );
-  assert.equal(result.breakdown.reduce((sum, line) => sum + line.points, 0), 4900);
+  assert.equal(result.breakdown.reduce((sum, line) => sum + line.points, 0), 9900);
   assert.match(result.explanation[1] ?? "", /1,000 for naming the model/);
   assert.match(result.explanation.join("\n"), /Token factor 1,000\/500/);
-  assert.match(result.explanation.join("\n"), /Message factor 5\/2/);
+  assert.match(result.explanation.join("\n"), /Message factor 10\/2/);
   assert.match(result.explanation.join("\n"), /Year −100/);
+  assert.match(result.explanation.join("\n"), /Wrong guesses: none/);
 });
 
-test("no-hint solve without a year purchase scores 7500", () => {
+test("one wrong guess subtracts 50 after the multipliers", () => {
+  const result = scoreRound({
+    rules,
+    namedModel: true,
+    regionMatched: true,
+    companyMatched: true,
+    regionGiven: false,
+    companyGiven: false,
+    tokens: 500,
+    messages: 2,
+    noHint: false,
+    hints: ["year"],
+    wrongGuesses: 1,
+  });
+  assert.equal(result.score, 9850);
+  assert.deepEqual(result.breakdown.map((line) => line.points), [1000, 1000, 8000, -100, -50]);
+  assert.equal(result.breakdown.reduce((sum, line) => sum + line.points, 0), result.score);
+  assert.match(result.explanation.join("\n"), /Wrong guesses: 1 × −50/);
+});
+
+test("no-hint solve without a year purchase scores 15000", () => {
   const result = scoreRound({
     rules,
     namedModel: true,
@@ -65,13 +86,13 @@ test("no-hint solve without a year purchase scores 7500", () => {
     noHint: true,
     hints: [],
   });
-  assert.equal(result.score, 7500);
+  assert.equal(result.score, 15000);
   assert.equal(result.breakdown.at(-1)?.label.startsWith("No-hint"), true);
   assert.match(result.explanation.join("\n"), /No-hint: ×1\.5/);
   assert.match(result.explanation.join("\n"), /Hints: none/);
 });
 
-test("a miss with region and company scores 200", () => {
+test("a miss with region and company scores 400 before wrong guesses", () => {
   const result = scoreRound({
     rules,
     namedModel: false,
@@ -84,8 +105,8 @@ test("a miss with region and company scores 200", () => {
     noHint: false,
     hints: [],
   });
-  assert.equal(result.score, 200);
-  assert.equal(result.breakdown.reduce((sum, line) => sum + line.points, 0), 200);
+  assert.equal(result.score, 400);
+  assert.equal(result.breakdown.reduce((sum, line) => sum + line.points, 0), 400);
 });
 
 test("zero tokens use a factor of 1 and hints can make the total negative", () => {
@@ -118,7 +139,7 @@ test("fractional tokens round on the multiplier lines and still add up", () => {
     noHint: false,
     hints: [],
   });
-  assert.equal(result.score, 67);
+  assert.equal(result.score, 133);
   assert.equal(result.breakdown.reduce((sum, line) => sum + line.points, 0), result.score);
 });
 

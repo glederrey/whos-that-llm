@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { config } from "@/lib/config";
 import type { PublicGame } from "@/lib/game";
+import { MarkdownMessage } from "./markdown-message";
 import { RegionFlag } from "./region-flag";
 
 export function RoundBoard({ initial }: { initial: PublicGame }) {
@@ -41,7 +42,7 @@ export function RoundBoard({ initial }: { initial: PublicGame }) {
   }, [game.id]);
 
   const shown = game.awaitingGuess ? Math.max(game.messageNumber, 1) : Math.min(game.messageLimit, game.messageNumber + 1);
-  const inputLocked = busy || game.awaitingGuess || game.messageNumber >= game.messageLimit || game.status !== "active";
+  const inputLocked = busy || game.messageNumber >= game.messageLimit || game.status !== "active";
   const given = new Map(game.given.map((row) => [row.key, row.value]));
   const hintsOpen = game.hintsAllowed && !game.noHint;
   const showBoard = !game.noHint && game.category !== "origin";
@@ -252,12 +253,12 @@ export function RoundBoard({ initial }: { initial: PublicGame }) {
       <div className="transcript">
         {game.transcript.map((message) => (
           <div key={`${message.turn}-${message.role}`} className={`bubble ${message.role}`}>
-            {message.content}
+            {message.role === "assistant" ? <MarkdownMessage text={message.content} /> : message.content}
           </div>
         ))}
         {liveUser !== null ? <div className="bubble user">{liveUser}</div> : null}
         {liveAssistant !== null ? (
-          <div className="bubble" aria-live="polite">
+          <div className="bubble assistant" aria-live="polite">
             {liveAssistant === "" ? (
               <span className="typing" aria-label="Waiting for the reply">
                 <i />
@@ -265,7 +266,7 @@ export function RoundBoard({ initial }: { initial: PublicGame }) {
                 <i />
               </span>
             ) : (
-              liveAssistant
+              <MarkdownMessage text={liveAssistant} />
             )}
           </div>
         ) : null}
@@ -357,6 +358,11 @@ export function RoundBoard({ initial }: { initial: PublicGame }) {
         {game.awaitingGuess ? (
           <section className="card stack guess-box">
             <h2>Guess for message {game.messageNumber}.</h2>
+            <p className="muted">
+              {game.messageNumber < game.messageLimit
+                ? "You can guess, or send another message."
+                : "Last message. Name the model, or give up."}
+            </p>
             <div className="guess-search">
               {selectedRow && !listOpen ? (
                 <button type="button" className="picked" onClick={() => setListOpen(true)}>
@@ -407,7 +413,7 @@ export function RoundBoard({ initial }: { initial: PublicGame }) {
                 </div>
               ) : null}
             </div>
-            <button type="button" className="button" disabled={!selected || guessBusy} onClick={() => void guess()}>
+            <button type="button" className="button" disabled={!selected || guessBusy || busy} onClick={() => void guess()}>
               Submit guess
             </button>
           </section>

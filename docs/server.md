@@ -19,7 +19,7 @@ type PublicGame = {
   hintsAllowed: boolean;
   hintCost: number;              // from games.rules, so the hint button does not hardcode 100
   status: "active" | "solved" | "miss" | "given_up";
-  messageNumber: number;     // replies already stored, 0–5
+  messageNumber: number;     // replies already stored, 0–10
   messageLimit: number;      // from games.rules
   awaitingGuess: boolean;
   given: { key: "company" | "family" | "region" | "year" | "size"; label: string; value: string }[];
@@ -110,13 +110,15 @@ Response: `{ gameId }` and nothing else.
 
 Body: `{ text: string }`.
 
-Reject when the round is not `active`, when `app_settings.paused` (`503` `paused`), when `awaiting_guess` is true, when `message_count` is already the limit, or when the trimmed text is empty or over `rules.maxUserChars`. Origin may send another message without a guess having been submitted. Every other category rejects a message while a guess is open.
+Reject when the round is not `active`, when `app_settings.paused` (`503` `paused`), when `message_count` is already the limit, or when the trimmed text is empty or over `rules.maxUserChars`. A message is allowed while a guess is open. Claiming the call sets `awaiting_guess` false, so a guess submitted in the same moment loses.
 
-Lock the game row for the rest of the transaction. A second request waits, then loses because `awaiting_guess` is already true or the count has moved. That is what keeps a double click from paying for two calls. Guess, hint, and give-up lock the same row.
+Lock the game row for the rest of the transaction. A second request waits, then loses because a call is already in flight or the count has moved. That is what keeps a double click from paying for two calls. Guess, hint, and give-up lock the same row.
 
 Then call OpenRouter. The reply streams word by word to the client. The guess stays closed until the assistant row is stored. On success, insert the user row and the assistant row for `turn = message_count + 1`, insert `usage`, set `message_count` and `awaiting_guess = true`, and return `PublicGame`. If the successful text is empty or whitespace, still do that. The message is spent.
 
-On failure, including a stream that drops before a completed reply, insert `usage` with `cost_usd = 0` and `error_code`, leave `message_count` unchanged, and return `502`. For HTTP 402, and for an explicit credit error, set `app_settings.paused = true` in the same failure path and return `paused: true`. Otherwise `paused: false`. The client keeps the draft either way. Do not leave a user row without its assistant row.
+On failure, including a stream that drops before a completed reply, insert `usage` with `cost_usd = 0` and `error_code`, leave `message_count` unchanged, and return `502`. If that turn still has a stored assistant reply and no guess, set `awaiting_guess` true again so the skipped guess comes back. For HTTP 402, and for an explicit credit error, set `app_settings.paused = true` in the same failure path and return `paused: true`. Otherwise `paused: false`. The client keeps the draft either way. Do not leave a user row without its assistant row.
+
+The call sends the full chat: the new user text plus every earlier user and assistant turn, in order. The system prompt stays separate. It does not include previous rounds.
 
 An explicit credit error is a response whose status or error code says the key is out of credits, even when the status is not 402.
 

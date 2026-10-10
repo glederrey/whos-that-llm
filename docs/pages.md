@@ -72,10 +72,13 @@ The header keeps the name and a logo the same height as that text, plus **Leader
 Two columns. On a narrow screen they stack.
 
 - Left: the logo, large.
-- Right: **Find the model.** Then: a hidden model answers you. You have five messages. After each reply, name the one you think it is. Find it, and the round is yours. Miss the name, and the company and the region can still count.
+- Right: **Find the model.** Then: a hidden model answers you. You have ten messages. Name it when you want. Find it, and the round is yours. Miss the name, and the company and the region can still count.
+- Under the buttons: three counts. **Models in play** is the enabled roster. **Games today (UTC)** counts games whose `started_at` is on the current UTC day. **Players** is the number of distinct accounts that have started a game.
+- Under the counts: **Top 5 · All models**, all-time, columns rank, name, score. **Full leaderboard** opens `/leaderboard?category=all&period=all`.
+- **How scoring works** links to `/scoring`.
 - Signed out: **Sign up** goes to `/login?tab=create&next=/play`. **Sign in** goes to `/login?next=/play`.
 - Signed in: **Play** goes to `/play`.
-- Under the buttons: **The leaderboard is open to everyone. An account is only for playing.**
+- Under the buttons: **The leaderboard is open to everyone. An account is only for playing.** The scoring link sits in that line.
 
 A confirmation or password-reset link returns here. If the URL carries a session and the profile has no username, send the player to `/welcome`.
 
@@ -100,7 +103,7 @@ One narrow card. The heading is **Sign in** or **Create account**. A text link u
 Requires a session. No session goes to `/login?next=/play`. No username goes to `/welcome?next=/play`.
 
 - Heading: **Find the model.**
-- Line: **It answers. You have five messages to say which one it was.**
+- Line: **It answers. You have ten messages to say which one it was.** **How scoring works** links to `/scoring`.
 - A status bar: **7 games left**, then **One back at 14:22** when a round has already started in the rolling hour. The time is the oldest `started_at` in that window plus one hour, in the viewer's local zone. At the cap: **None left** and **Next one at 14:22.** Beside that: **10 an hour, before the developer goes broke.** The number is `hourlyCap`. When the game is paused, the bar says **The game is paused.**
 - Category rows. Daily first, then All models, Company, Family, Region, Custom. A category that is not enabled yet has **Not open yet.** and no button. The sentences are the `categories.blurb` column:
 
@@ -164,7 +167,7 @@ On a phone, feedback and hints sit under the transcript, as in [Phones](#phones)
 
 Always visible.
 
-- `Message 2 of 5`. Before the first send: `Message 1 of 5` with the input empty, so the cap is there before they type.
+- `Message 2 of 10`. Before the first send: `Message 1 of 10` with the input empty, so the cap is there before they type.
 - Pool label: `All models`, `Family · Opus`, `Company · Anthropic`, `Region · USA`, `Daily`, `Custom`
 - **No hints** when the box was checked
 - **Give up**. Asks **End the round? You will see the model. This round stays off the leaderboard.** Buttons **Keep playing** and **Give up**.
@@ -173,14 +176,14 @@ The score is not shown in the header. It is computed when the round ends.
 
 ### Transcript
 
-User and assistant bubbles. The system prompt is never rendered. The assistant bubble streams word by word. Until the first word arrives, the bubble shows a waiting animation. The guess stays closed until the full reply is stored.
+User and assistant bubbles. The system prompt is never rendered. The user bubble is plain text. The assistant bubble is Markdown: bold, lists, and code. Raw HTML is not rendered. The assistant bubble streams word by word. Until the first word arrives, the bubble shows a waiting animation. The guess stays closed until the full reply is stored.
 
 Input under the transcript:
 
 - Placeholder: **Ask something**
 - Counter: `120 / 500`
 - Enter sends. Shift+Enter inserts a newline.
-- Disabled while a reply streams, while a guess is open, at five messages, or when the round is over.
+- Disabled while a reply streams, at ten messages, or when the round is over. A guess being open does not lock the composer.
 - Empty and whitespace-only sends are ignored. They do not spend a message.
 
 A stored assistant reply that is empty or whitespace still spends the message and opens the guess. The bubble can be blank.
@@ -189,7 +192,7 @@ A stored assistant reply that is empty or whitespace still spends the message an
 
 Appears when `awaitingGuess` is true. Heading: **Guess for message 2.**
 
-Search field, placeholder **Search models**. The rows stay closed until the field is focused, then open as a dropdown: logo, company, and name. Nothing else. A chosen model replaces the placeholder in that field. Submit is enabled when a row is selected. There is no Skip. A wrong guess slides into **Previous guesses** and stays there. That model leaves the search list. A model already guessed is not offered again.
+Search field, placeholder **Search models**. The rows stay closed until the field is focused, then open as a dropdown: logo, company, and name. Nothing else. A chosen model replaces the placeholder in that field. Submit is enabled when a row is selected. Under the heading: **You can guess, or send another message.** On the tenth reply: **Last message. Name the model, or give up.** A wrong guess slides into **Previous guesses** and stays there. That model leaves the search list. A model already guessed is not offered again. Sending the next message leaves that turn without a guess.
 
 Each previous guess shows the logo, the company, and the name, then the traits it missed: **Wrong company**, **Wrong region**, **Wrong family**. A trait the pool already shares is left off that line. A trait it got right is left off too, because the board unveils that row. If none of those three missed, the line is **Wrong model**. No-hint mode keeps the model and says **Wrong model**, with no trait words.
 
@@ -238,16 +241,19 @@ The breakdown is the lines from [Rules](rules.md), in that order, then **Total**
 
 Next to the breakdown, heading **How this score works**, these lines and no others. Fill them with this round's numbers.
 
-> Your score starts from the base, multiplies by the token factor and the message factor, then by 1.5 if you played with no hints, then subtracts 100 for each hint.
+> Your score starts from the base, multiplies by the token factor and the message factor, then by 1.5 if you played with no hints, then subtracts 100 for each hint and 50 for each wrong model guess.
 
 - Base: **1,000** for naming the model.
 - Or, when the model was not named: **Base: 400** — region 100, company 300. Drop a trait that did not match or was given, so a region-only base reads **Base: 100** for the region, a company-only base reads **Base: 300** for the company, and nothing matched reads **Base: 0**.
 - **Tokens: 500.** Token factor **1,000/500.** When the token total is 0: **Tokens: 0.** Token factor **1.**
-- **Messages: 2 replies.** Message factor **5/2.**
+- **Messages: 2 replies.** Message factor **10/2.**
 - When no-hint mode was on: **No-hint: ×1.5.**
 - **Hints: Year −100. Size −100.** When none were bought: **Hints: none.**
+- **Wrong guesses: 1 × −50.** When none were made: **Wrong guesses: none.**
 
-That block is the only scoring explanation on the site.
+**How scoring works** links to `/scoring`, including when the round has no score. The public page states the formula once, with one worked example. This result block stays this round's own lines.
+
+That block, plus the public scoring page, is the scoring explanation on the site.
 
 Daily stats, later, on a daily result, once at least one daily round has finished:
 
@@ -272,11 +278,13 @@ A counted round is `solved` or `miss`. Give-up does not appear. Rank is the best
 | Name | Username copied onto that round |
 | Score | That best score |
 
-Two players may share a username. They are separate rows, because the account id is different. The page shows the name only.
+Two players may share a username. They are separate rows, because the account id is different. The page shows the name only. The signed-in player's row is highlighted. The account id is not shown.
+
+Twenty rows per page. **Previous** and **Next** move the page. **Your place** appears when the signed-in player has a row and it is not on the current page. It opens the page that contains them.
 
 Empty: **No finished games on this board yet.**
 
-The home weekly top 5, later, is this board for All models, this week, five rows: rank, name, score.
+The landing top 5 is this board for All models, all time, five rows: rank, name, score.
 
 ## Profile
 

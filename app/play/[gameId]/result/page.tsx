@@ -1,4 +1,5 @@
 import { notFound, redirect } from "next/navigation";
+import { MarkdownMessage } from "@/components/markdown-message";
 import { listCategories, readPublicGame } from "@/lib/rounds";
 import { currentProfile } from "@/lib/session";
 
@@ -63,13 +64,20 @@ export default async function ResultPage({ params }: { params: Promise<{ gameId:
             {game.explanation.map((line) => (
               <p key={line}>{line}</p>
             ))}
+            <p>
+              <a href="/scoring">How scoring works</a>
+            </p>
           </section>
         </div>
-      ) : null}
+      ) : (
+        <p>
+          <a href="/scoring">How scoring works</a>
+        </p>
+      )}
       <div className="transcript">
         {game.transcript.map((message) => (
           <div key={`${message.turn}-${message.role}`} className={`bubble ${message.role}`}>
-            {message.content}
+            {message.role === "assistant" ? <MarkdownMessage text={message.content} /> : message.content}
           </div>
         ))}
       </div>

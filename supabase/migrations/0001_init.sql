@@ -83,7 +83,7 @@ create table if not exists public.games (
   no_hint boolean not null default false,
   rules jsonb not null,
   hints text[] not null default '{}',
-  message_count int not null default 0 check (message_count between 0 and 5),
+  message_count int not null default 0 check (message_count between 0 and 10),
   awaiting_guess boolean not null default false,
   score int,
   score_breakdown jsonb,
@@ -97,7 +97,7 @@ create table if not exists public.games (
 create table if not exists public.messages (
   id uuid primary key default gen_random_uuid(),
   game_id uuid not null references public.games (id) on delete cascade,
-  turn int not null check (turn between 1 and 5),
+  turn int not null check (turn between 1 and 10),
   role text not null check (role in ('user', 'assistant')),
   content text not null,
   created_at timestamptz not null default now(),
@@ -161,8 +161,8 @@ create trigger on_auth_user_created
 after insert on auth.users
 for each row execute function public.handle_new_user();
 
-create or replace function public.leaderboard(category text, since timestamptz)
-returns table (rank bigint, name text, score int)
+create or replace function public.leaderboard(category text, since timestamptz, viewer uuid default null)
+returns table (rank bigint, name text, score int, mine boolean)
 language sql
 stable
 security definer
@@ -189,9 +189,28 @@ as $$
            order by best.score desc, best.message_count asc, best.finished_at asc, best.username
          )::bigint as rank,
          best.username as name,
-         best.score
+         best.score,
+         (leaderboard.viewer is not null and best.user_id = leaderboard.viewer) as mine
   from best
   order by best.score desc, best.message_count asc, best.finished_at asc, best.username;
+$$;
+
+create or replace function public.public_stats()
+returns jsonb
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select jsonb_build_object(
+    'models', (select count(*)::int from public.models where enabled),
+    'gamesToday', (
+      select count(*)::int
+      from public.games
+      where started_at >= (date_trunc('day', now() at time zone 'utc') at time zone 'utc')
+    ),
+    'players', (select count(distinct user_id)::int from public.games)
+  );
 $$;
 
 create or replace function public.start_game(
@@ -292,14 +311,17 @@ begin
   if coalesce((select paused from public.app_settings where id = 1), false) then
     return jsonb_build_object('ok', false, 'error', 'paused');
   end if;
-  limit_count := coalesce((g.rules ->> 'messageLimit')::int, 5);
-  if g.status <> 'active' or g.awaiting_guess or g.message_count >= limit_count then
+  limit_count := coalesce((g.rules ->> 'messageLimit')::int, 10);
+  if g.status <> 'active' or g.message_count >= limit_count then
     return jsonb_build_object('ok', false, 'error', 'turn');
   end if;
   if g.call_started_at is not null and g.call_started_at > now() - interval '3 minutes' then
     return jsonb_build_object('ok', false, 'error', 'turn');
   end if;
-  update public.games set call_started_at = now() where id = g.id;
+  update public.games
+  set call_started_at = now(),
+      awaiting_guess = false
+  where id = g.id;
   return jsonb_build_object('ok', true);
 end;
 $$;
@@ -374,7 +396,20 @@ begin
   ) values (
     g.id, p_user_id, g.model_id, 0, 0, 0, 0, 0, p_error_code
   );
-  update public.games set call_started_at = null where id = g.id;
+  update public.games
+  set call_started_at = null,
+      awaiting_guess = (
+        g.message_count >= 1
+        and exists (
+          select 1 from public.messages m
+          where m.game_id = g.id and m.turn = g.message_count and m.role = 'assistant'
+        )
+        and not exists (
+          select 1 from public.guesses q
+          where q.game_id = g.id and q.turn = g.message_count
+        )
+      )
+  where id = g.id;
   if p_pause then
     update public.app_settings set paused = true where id = 1;
   end if;
@@ -413,10 +448,10 @@ begin
   if not (p_model_id = any (g.pool_model_ids)) then
     return jsonb_build_object('ok', false, 'error', 'conflict');
   end if;
-  if p_finish = 'miss' and g.message_count < coalesce((g.rules ->> 'messageLimit')::int, 5) then
+  if p_finish = 'miss' and g.message_count < coalesce((g.rules ->> 'messageLimit')::int, 10) then
     return jsonb_build_object('ok', false, 'error', 'turn');
   end if;
-  if p_finish = 'continue' and (p_model_correct or g.message_count >= coalesce((g.rules ->> 'messageLimit')::int, 5)) then
+  if p_finish = 'continue' and (p_model_correct or g.message_count >= coalesce((g.rules ->> 'messageLimit')::int, 10)) then
     return jsonb_build_object('ok', false, 'error', 'turn');
   end if;
 
@@ -554,7 +589,8 @@ grant select, insert, update, delete on
   public.usage
 to service_role;
 grant select on public.models_public to service_role;
-grant execute on function public.leaderboard(text, timestamptz) to anon, authenticated, service_role;
+grant execute on function public.leaderboard(text, timestamptz, uuid) to anon, authenticated, service_role;
+grant execute on function public.public_stats() to anon, authenticated, service_role;
 
 revoke all on function public.start_game(uuid, int, text, text, boolean, text, text[], jsonb, jsonb) from public, anon, authenticated;
 revoke all on function public.claim_model_call(uuid, uuid) from public, anon, authenticated;

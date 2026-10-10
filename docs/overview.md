@@ -1,12 +1,12 @@
 # Overview
 
-A chat game. A hidden model answers. The player has five messages. After each reply they name one model, or give up. Naming the model sets the base to 1000, and that is the maximum base. If they never name it, the base is 100 for the region and 300 for the company, when those matched. Year and size can be bought as hints. They add no points.
+A chat game. A hidden model answers. The player has ten messages. They can name a model after a reply, or send the next message with no guess, or give up. Naming the model sets the base to 1000, and that is the maximum base. If they never name it, the base is 100 for the region and 300 for the company, when those matched. A wrong model name subtracts 50 after the multipliers. Year and size can be bought as hints. They add no points.
 
 The name on the site is **Who's that LLM**.
 
 ## First build
 
-**All models** is the game to build first. One site. A player signs up or logs in before they can play. They get five messages, a word-by-word reply, a guess or a give-up after each reply, year and size hints, no-hint mode, and a result page.
+**All models** is the game to build first. One site. A player signs up or logs in before they can play. They get ten messages, a word-by-word reply, an optional guess, year and size hints, no-hint mode, and a result page.
 
 The playable roster is three small models: Claude Haiku 5.5, GPT-5.6 Luna, and DeepSeek V4 Flash. Every other seeded model stays off. Adding more is an admin job, and admin comes later.
 
@@ -80,8 +80,8 @@ These three are on the landing page, the lobby, and the round.
 
 | Limit | Value | On screen |
 |---|---|---|
-| Messages in a round | **5** | `Message 2 of 5` |
-| Guesses | **1 per message** | `Guess for message 2`, after the reply |
+| Messages in a round | **10** | `Message 2 of 10` |
+| Guesses | **optional, one per message** | `Guess for message 2`, or send the next message |
 | Games | **10 per rolling hour** | `4 of 10 this hour`, plus when the next slot frees |
 
 Also:
@@ -97,7 +97,7 @@ The hourly check and the insert run in one transaction. Two tabs cannot both tak
 
 ## What a round costs
 
-Five replies are 2,500 output tokens, plus the growing transcript on the way in. A thinking model can spend part of that budget before any visible words. That spend is an admin cost fact. It is not a trait the player can score or buy. October 2026 list prices, for a full round:
+Ten replies are 5,000 output tokens, plus the growing transcript on the way in. A thinking model can spend part of that budget before any visible words. That spend is an admin cost fact. It is not a trait the player can score or buy. October 2026 list prices, for a full round:
 
 | Tier | Examples | About one full round |
 |---|---|---|

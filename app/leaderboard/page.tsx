@@ -1,19 +1,35 @@
 import { leaderboard, listCategories } from "@/lib/rounds";
+import { currentProfile } from "@/lib/session";
 
 export const dynamic = "force-dynamic";
+
+const pageSize = 20;
+
+function boardHref(category: string, period: string, page: number) {
+  const params = new URLSearchParams({ category, period });
+  if (page > 1) params.set("page", String(page));
+  return `/leaderboard?${params.toString()}`;
+}
 
 export default async function LeaderboardPage({
   searchParams,
 }: {
-  searchParams: Promise<{ category?: string; period?: string }>;
+  searchParams: Promise<{ category?: string; period?: string; page?: string }>;
 }) {
   const params = await searchParams;
+  const { user } = await currentProfile();
   const categories = await listCategories();
   const visible = categories.filter((category) => category.leaderboard && category.enabled);
   const category = visible.some((tab) => tab.id === params.category) ? (params.category as string) : (visible[0]?.id ?? "all");
   const period = params.period === "all" ? "all" : "week";
-  const result = await leaderboard(category, period);
+  const result = await leaderboard(category, period, user?.id);
   const rows = "rows" in result ? result.rows : [];
+  const pageCount = Math.max(1, Math.ceil(rows.length / pageSize));
+  const requested = Number(params.page);
+  const page = Number.isFinite(requested) && requested >= 1 ? Math.min(Math.trunc(requested), pageCount) : 1;
+  const slice = rows.slice((page - 1) * pageSize, page * pageSize);
+  const mineIndex = rows.findIndex((row) => row.mine);
+  const minePage = mineIndex >= 0 ? Math.floor(mineIndex / pageSize) + 1 : null;
 
   return (
     <div className="stack">
@@ -26,42 +42,68 @@ export default async function LeaderboardPage({
       <h1>Leaderboard</h1>
       <div className="tabs">
         {visible.map((tab) => (
-          <a key={tab.id} className="button-quiet" aria-pressed={tab.id === category} href={`/leaderboard?category=${tab.id}&period=${period}`}>
+          <a key={tab.id} className="button-quiet" aria-pressed={tab.id === category} href={boardHref(tab.id, period, 1)}>
             {tab.name}
           </a>
         ))}
       </div>
       <div className="tabs">
-        <a className="button-quiet" aria-pressed={period === "week"} href={`/leaderboard?category=${category}&period=week`}>
+        <a className="button-quiet" aria-pressed={period === "week"} href={boardHref(category, "week", 1)}>
           This week (UTC)
         </a>
-        <a className="button-quiet" aria-pressed={period === "all"} href={`/leaderboard?category=${category}&period=all`}>
+        <a className="button-quiet" aria-pressed={period === "all"} href={boardHref(category, "all", 1)}>
           All time
         </a>
       </div>
       {rows.length === 0 ? (
         <p>No finished games on this board yet.</p>
       ) : (
-        <div style={{ overflowX: "auto" }}>
-          <table className="board">
-            <thead>
-              <tr>
-                <th>Rank</th>
-                <th>Name</th>
-                <th>Score</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((row) => (
-                <tr key={`${row.rank}-${row.name}-${row.score}`}>
-                  <td>{row.rank}</td>
-                  <td>{row.name}</td>
-                  <td>{row.score.toLocaleString("en-US")}</td>
+        <>
+          <div style={{ overflowX: "auto" }}>
+            <table className="board">
+              <thead>
+                <tr>
+                  <th>Rank</th>
+                  <th>Name</th>
+                  <th>Score</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {slice.map((row) => (
+                  <tr key={row.rank} className={row.mine ? "mine" : undefined}>
+                    <td>{row.rank}</td>
+                    <td>{row.name}</td>
+                    <td>{row.score.toLocaleString("en-US")}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <div className="row pager">
+            {page > 1 ? (
+              <a className="button-quiet" href={boardHref(category, period, page - 1)}>
+                Previous
+              </a>
+            ) : (
+              <span className="button-quiet is-disabled">Previous</span>
+            )}
+            <span className="muted">
+              Page {page} of {pageCount}
+            </span>
+            {page < pageCount ? (
+              <a className="button-quiet" href={boardHref(category, period, page + 1)}>
+                Next
+              </a>
+            ) : (
+              <span className="button-quiet is-disabled">Next</span>
+            )}
+            {minePage && minePage !== page ? (
+              <a className="button-quiet" href={boardHref(category, period, minePage)}>
+                Your place
+              </a>
+            ) : null}
+          </div>
+        </>
       )}
     </div>
   );
