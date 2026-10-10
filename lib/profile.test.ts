@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { avatarError, avatarFileError, avatarPublicUrl, cleanUsername, profileStats, readImage, traitFound } from "./profile";
+import { avatarError, avatarFileError, avatarPublicUrl, cleanUsername, profileStats, publicImageCacheControl, readImage, traitFound } from "./profile";
 
 test("a username trims and rejects an empty name", () => {
   assert.equal(cleanUsername("  Ada  "), "Ada");
@@ -53,6 +53,8 @@ test("an avatar url stays inside the public avatars bucket", () => {
     "https://example.supabase.co/storage/v1/object/public/avatars/user/avatar.jpg",
   );
   assert.equal(avatarPublicUrl("https://example.supabase.co", null), null);
+  assert.equal(avatarPublicUrl("https://example.supabase.co", "user/1.png")?.includes("?"), false);
+  assert.equal(publicImageCacheControl, "31536000");
 });
 
 test("a picture has to be a jpeg, png, or webp under 1 MB", () => {

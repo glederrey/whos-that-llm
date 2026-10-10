@@ -1,5 +1,5 @@
 import type { GameStatus } from "./game";
-import { avatarPublicUrl, profileStats, readImage, traitFound, type ProfileStats } from "./profile";
+import { avatarPublicUrl, profileStats, publicImageCacheControl, readImage, traitFound, type ProfileStats } from "./profile";
 import { serviceOrThrow } from "./rounds";
 import { publicEnv } from "./supabase/env";
 
@@ -105,6 +105,7 @@ export async function saveAvatar(userId: string, bytes: Uint8Array): Promise<{ e
   const path = `${userId}/${Date.now()}.${image.ext}`;
   const { error } = await client.storage.from("avatars").upload(path, new Blob([bytes as BlobPart], { type: image.mime }), {
     contentType: image.mime,
+    cacheControl: publicImageCacheControl,
     upsert: false,
   });
   if (error) return { error: "avatar" };

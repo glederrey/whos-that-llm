@@ -47,7 +47,7 @@ A failed call writes `usage` and does not write `messages`, because there is no 
 | `logo_path` | text | `logos/{company_id}.png` in the public `logos` bucket, or an `https` URL |
 | `created_at` | timestamptz | default `now()` |
 
-The uploaded objects are `anthropic.png`, `openai.png`, `deepseek.png`, and `mistral.png`. The bucket also accepts SVG and WebP, at most 1 MB. The game reads `logo_path`. A missing file shows no image. The bucket is public, so those URLs load. There is no SELECT policy, so clients cannot list the objects.
+The uploaded objects are `anthropic.png`, `openai.png`, `deepseek.png`, and `mistral.png`. The bucket also accepts SVG and WebP, at most 1 MB. The game reads `logo_path`. A missing file shows no image. The bucket is public, so those URLs load. There is no SELECT policy, so clients cannot list the objects. Each object is cached for a year. The URL stays the same between visits.
 
 ### `families`
 
@@ -130,7 +130,7 @@ One row, `id = 1`.
 |---|---|---|
 | `id` | uuid, pk, fk `auth.users` | on delete cascade. The email is not copied onto `games`, `profiles`, or the leaderboard |
 | `username` | text, null | Null until `/welcome`. Not unique. A rename rewrites this and every `games.username` for this id |
-| `avatar_path` | text, null | Object path in the public `avatars` bucket. Null keeps the generated mark |
+| `avatar_path` | text, null | Object path in the public `avatars` bucket, `{user id}/{timestamp}.{ext}`. Null keeps the generated mark. Cached for a year. A new upload uses a new path, so the new picture shows up |
 | `created_at` | timestamptz | |
 
 When `username` is not null, its trimmed length is 3–20. Capitals and punctuation are allowed. The check is on length after trim, not on a character class. Two profiles may share a username. The account is `id`.

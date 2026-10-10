@@ -2,6 +2,9 @@ import type { GameStatus } from "./game";
 
 const maxAvatarBytes = 1024 * 1024;
 
+/** One year. Avatar paths include a timestamp, so a new upload is a new URL. */
+export const publicImageCacheControl = "31536000";
+
 export const avatarError = "Use a JPEG, PNG, or WebP under 1 MB.";
 
 const avatarMimes = new Set(["image/jpeg", "image/jpg", "image/png", "image/webp"]);
