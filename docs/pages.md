@@ -126,7 +126,7 @@ Requires a session. No session goes to `/login?next=/play`. No username goes to 
 - **Play** sits on the category row. All models starts the round. The other rows stay **Not open yet** until they are built.
 - An open round turns that **Play** into **Continue**.
 - **Play** is disabled when the hour is full, the game is paused, or the All models pool has fewer than 2 models (**Not enough models.**).
-- Under the All models row, a full-width option, off by default: **Play without hints.** Beside it: **No year or size. No match feedback. Score × 1.5.** It stays editable until Play.
+- Under the All models row, a full-width option, off by default: **Play without hints.** Beside it: **No hints. No match feedback. Score × 1.5.** It stays editable until Play.
 
 Company, Family, and Region go to `/play/new?category=…` once they are built. Custom is a later choice of models. There is no Latest card and no Origin card.
 
@@ -152,7 +152,7 @@ Region rows are labeled **USA**, **China**, and **Europe**. Latest has no picker
 
 Empty state: **Nothing to play in this category yet.** Link back to the lobby.
 
-The no-hint checkbox is on this page too. Company and Family do not offer year and size hints, so the subline is **No match feedback. Score × 1.5.** Region keeps **No year or size hints. No match feedback. Score × 1.5.**
+The no-hint checkbox is on this page too. Company and Family have nothing to hint, so the subline is **No match feedback. Score × 1.5.** Region keeps **No hints. No match feedback. Score × 1.5.**
 
 Start calls `POST /api/games` and routes to `/play/[gameId]`. Failures:
 
@@ -238,21 +238,22 @@ A page, not a popup. Only for `solved`, `miss`, and `given_up`. An active round 
 - **Play again** returns to the lobby. It does not start a round. A company, family, or region round returns to that category's pool picker. Latest returns to the lobby.
 - **Leaderboard**, shown when this category has a leaderboard and the status is `solved` or `miss`
 
-The score is the integer from [Rules](rules.md), including a negative total. There is no line that raises it to zero.
+The score is the integer from [Rules](rules.md), never below 0. When the total comes to less than 0 before the floor, a **Floor at 0** line brings it to 0.
 
 The breakdown is the lines from [Rules](rules.md), in that order, then **Total**. The parts add up to the total.
 
 Next to the breakdown, heading **How this score works**, these lines and no others. Fill them with this round's numbers.
 
-> Your score starts from the base, multiplies by the token factor and the message factor, then by 1.5 if you played with no hints, then subtracts 100 for each hint and 50 for each wrong model guess.
+> Your score starts from the base and subtracts penalties. That is multiplied by the token factor, then by 1.5 if you played with no hints. It is rounded and never goes below 0.
 
-- Base: **1,000** for naming the model.
-- Or, when the model was not named: **Base: 400** — region 100, company 300. Drop a trait that did not match or was given, so a region-only base reads **Base: 100** for the region, a company-only base reads **Base: 300** for the company, and nothing matched reads **Base: 0**.
-- **Tokens: 500.** Token factor **1,000/500.** When the token total is 0: **Tokens: 0.** Token factor **1.**
-- **Messages: 2 replies.** Message factor **10/2.**
-- When no-hint mode was on: **No-hint: ×1.5.**
+- Base: **2,000** for naming the model.
+- Or, when the model was not named: **Base: 400** — region 100, company 300. Drop a trait that did not match, was given, or was revealed, so a region-only base reads **Base: 100** for the region, a company-only base reads **Base: 300** for the company, and nothing matched reads **Base: 0**.
 - **Hints: Year −100. Size −100.** When none were bought: **Hints: none.**
-- **Wrong guesses: 1 × −50.** When none were made: **Wrong guesses: none.**
+- **Wrong guesses: 1 × −100.** When none were made: **Wrong guesses: none.**
+- **Before the multiplier: 2,000 − 200 = 1,800.**
+- **Tokens: 500.** Token factor **1,000/500.** Under 100 tokens: **Tokens: 40, counted as 100.** Token factor **1,000/100.**
+- When no-hint mode was on and no hint was bought: **No-hint: ×1.5.**
+- When the total came to less than 0: **The total came to less than 0, so it is shown as 0.**
 
 **How scoring works** links to `/scoring`, including when the round has no score. The public page states the formula once, with one worked example. This result block stays this round's own lines.
 
@@ -273,7 +274,7 @@ Tabs are the categories with a leaderboard that are enabled. That is All models,
 
 A second switch: **This week** and **All time**. Weeks start Monday 00:00 UTC. The tab label says **This week (UTC)**.
 
-A counted round is `solved` or `miss`. Give-up does not appear. Rank is the best score, highest first. Ties break by fewer messages on that round, then by earlier finish. A negative score stays on the board.
+A counted round is `solved` or `miss`. Give-up does not appear. Rank is the best score, highest first. Ties break by fewer messages on that round, then by earlier finish. A score of 0 stays on the board.
 
 | Column | Meaning |
 |---|---|
@@ -313,6 +314,6 @@ The copy says this removes the profile, the picture, and the games, including th
 
 `/admin` shows five counts: models in the roster, active models, players, games today (UTC), and total games. Players are distinct accounts that have started a game. Those counts are read with the server key after the check. They are not a public API. Under the counts, each roster model shows its OpenRouter list price for prompt and completion, per million tokens. The page reads the public model list and does not send the API key. A model missing from that list, or a price that is not a number, shows **No price**. If the list cannot be loaded, the page says **OpenRouter prices could not be loaded.** and does not invent a number.
 
-`/admin/models` lists every model with display name, family, company, region, year, size, OpenRouter id, and whether it is active. **Turn on** is green. **Turn off** is red. Turning a model off leaves it out of new rounds. Add one by typing an OpenRouter id, a display name, a company, a family, a region, a year, and a size. Edit those fields on a row, including the family. A new family name is saved when it is not already in the list. A new model starts off. Past games keep the traits they froze. Company logos come from the `logos` bucket. Logo upload, categories, and scoring settings are not on these pages.
+`/admin/models` has a closed **Add a model** dropdown, a search box (display name, family, company), and two tables: active models first, inactive second. Each lists display name, family, company, region, year, and size, 10 per page with **Previous** and **Next**, paged on its own. Paging keeps the scroll position. **Turn on** is green. **Turn off** is red, and **Edit** sits next to it. The OpenRouter id is only in the edit form. Turning a model off leaves it out of new rounds. Add one by typing an OpenRouter id, a display name, a company, a family, a region, a year, and a size. Edit those fields on a row, including the family. A new family name is saved when it is not already in the list. A new model starts off. Past games keep the traits they froze. Company logos come from the `logos` bucket. Logo upload, categories, and scoring settings are not on these pages.
 
 The later cockpit (spend, categories, families, confusion, transcripts) is still specified in [Admin](admin.md).

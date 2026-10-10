@@ -157,7 +157,7 @@ One row per round.
 | `hints` | text[] | default `'{}'`. `year`, `size`, or both. Empty when no-hint, and when the category disallows hints |
 | `message_count` | int | 0–10. User messages stored. Also the number of stored replies |
 | `awaiting_guess` | boolean | True after a stored reply. False after a guess, and while the next message is being called. A failed call sets it true again when that turn still has a reply and no guess. Give-up ends the round instead |
-| `score` | int, null | Written once, at the end, when `message_count` is at least 1. May be negative. Null when they give up before any reply |
+| `score` | int, null | Written once, at the end, when `message_count` is at least 1. Never negative. Null when they give up before any reply |
 | `score_breakdown` | jsonb, null | The integer lines, in order, not including the total |
 | `score_explanation` | text[], null | The short public lines |
 | `daily_key` | date, null | UTC date. Set only for `daily` |
@@ -181,18 +181,19 @@ Indexes:
   "messageLimit": 10,
   "maxUserChars": 500,
   "maxOutputTokens": 500,
-  "modelBase": 1000,
+  "modelBase": 2000,
   "regionPoints": 100,
   "companyPoints": 300,
   "tokenScale": 1000,
-  "hintCost": 100,
-  "wrongGuessCost": 50,
+  "tokenFloor": 100,
+  "hintCosts": { "year": 100, "size": 100, "region": 400, "company": 600, "family": 600 },
+  "wrongGuessCost": 100,
   "noHintMultiplier": 1.5,
   "hintsAllowed": true
 }
 ```
 
-`hintsAllowed` is copied from `categories.hints_allowed` at start. The other fields are copied from config. `hints` may only contain `year` and `size`, each once. The route checks that.
+`hintsAllowed` is copied from `categories.hints_allowed` at start. The other fields are copied from config. Scoring reads the current config numbers when the round ends, so a stored copy from an older version does not change the score. `hints` may only contain `company`, `family`, `region`, `year`, and `size`, each once. The route checks that.
 
 `traits` shape:
 
@@ -217,7 +218,7 @@ Indexes:
 
 One entry per id in `pool_model_ids`, including the hidden model. `given` lists traits whose value is the same on every entry. Weights and reasoning are absent on purpose.
 
-`score_breakdown` is an array of `{ "label": "Named the model", "points": 1000 }`, in the order [Rules](rules.md) specifies. `score_explanation` is the public lines, in the order [Pages](pages.md) specifies.
+`score_breakdown` is an array of `{ "label": "Named the model", "points": 2000 }`, in the order [Rules](rules.md) specifies. `score_explanation` is the public lines, in the order [Pages](pages.md) specifies.
 
 ### `messages`
 
@@ -321,7 +322,7 @@ from best
 order by score desc, message_count asc, finished_at asc, username;
 ```
 
-`given_up` is excluded. A negative score remains. Grouping is by `user_id`, so shared usernames do not merge. The name on the row is `games.username` from that best round. A rename rewrites it.
+`given_up` is excluded. A score of 0 remains. Grouping is by `user_id`, so shared usernames do not merge. The name on the row is `games.username` from that best round. A rename rewrites it.
 
 Right company, never named the model. "Found" means any guess in that round hit it.
 

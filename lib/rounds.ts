@@ -1,9 +1,10 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { config, rulesForCategory, type Rules } from "./config";
+import { config, currentRules, rulesForCategory, type Rules } from "./config";
 import {
   buildTraits,
   compareModel,
   filterCandidates,
+  hintOffered,
   knownValues,
   scoreRound,
   toPublicGame,
@@ -201,7 +202,8 @@ export async function startAllModels(userId: string, noHint: boolean): Promise<{
 async function loadGame(client: SupabaseClient, gameId: string, userId: string): Promise<GameRow | null> {
   const { data, error } = await client.from("games").select("*").eq("id", gameId).eq("user_id", userId).maybeSingle();
   if (error) throw new Error(error.message);
-  return (data as GameRow | null) ?? null;
+  const game = (data as GameRow | null) ?? null;
+  return game ? { ...game, rules: currentRules(game.rules) } : null;
 }
 
 export async function readPublicGame(gameId: string, userId: string): Promise<PublicGame | null> {
@@ -378,10 +380,36 @@ export async function submitGuess(gameId: string, userId: string, modelId: strin
   );
 }
 
+const hintKeys: HintKey[] = ["company", "family", "region", "year", "size"];
+
 export async function buyHint(gameId: string, userId: string, key: string): Promise<ApiFailure | null> {
-  if (key !== "year" && key !== "size") return fail(422, "hint");
+  const hint = hintKeys.find((candidate) => candidate === key);
+  if (!hint) return fail(422, "hint");
   const client = serviceOrThrow();
-  return fromRpc(await rpc(client, "apply_hint", { p_game_id: gameId, p_user_id: userId, p_key: key }));
+  const game = await loadGame(client, gameId, userId);
+  if (!game) return fail(404, "not_found");
+  const hidden = game.traits.models[game.model_id];
+  if (!hidden) return fail(409, "conflict");
+  const { data: guesses } = await client
+    .from("guesses")
+    .select("model_correct, company_correct, family_correct, region_correct")
+    .eq("game_id", gameId);
+  const flags: GuessFlags[] = (guesses ?? []).map((guess) => ({
+    modelCorrect: Boolean(guess.model_correct),
+    companyCorrect: Boolean(guess.company_correct),
+    familyCorrect: Boolean(guess.family_correct),
+    regionCorrect: Boolean(guess.region_correct),
+  }));
+  const offered = hintOffered({
+    key: hint,
+    traits: game.traits,
+    hidden,
+    guesses: flags,
+    hints: game.hints ?? [],
+    noHint: game.no_hint,
+  });
+  if (!offered) return fail(422, "hint");
+  return fromRpc(await rpc(client, "apply_hint", { p_game_id: gameId, p_user_id: userId, p_key: hint }));
 }
 
 export async function giveUp(gameId: string, userId: string): Promise<ApiFailure | null> {
@@ -437,7 +465,6 @@ async function scoreFrom(client: SupabaseClient, game: GameRow, guesses: GuessFl
     regionGiven: game.traits.given.includes("region"),
     companyGiven: game.traits.given.includes("company"),
     tokens,
-    messages: game.message_count,
     noHint: game.no_hint,
     hints: game.hints ?? [],
     wrongGuesses: guesses.filter((guess) => !guess.modelCorrect).length,

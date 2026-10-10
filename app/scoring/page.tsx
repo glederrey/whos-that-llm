@@ -1,8 +1,13 @@
+import { config } from "@/lib/config";
+
 export const dynamic = "force-dynamic";
 
+const n = (value: number) => value.toLocaleString("en-US");
+
 export default function ScoringPage() {
+  const { hintCosts } = config;
   return (
-    <div className="stack narrow">
+    <div className="stack">
       <a className="back" href="/">
         <svg viewBox="0 0 24 24" aria-hidden="true">
           <path fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M15 6 9 12l6 6" />
@@ -10,47 +15,64 @@ export default function ScoringPage() {
         Back
       </a>
       <h1>How scoring works</h1>
-      <p className="lede">A round starts from a base, then the chat stretches or shrinks it.</p>
+      <p className="lede">
+        A round starts from a base. Penalties come off it, then the tokens the replies used stretch or shrink what is left.
+      </p>
       <div className="card">
-        <ul className="rule-list">
+        <ol className="rule-list">
           <li>
-            <strong>Naming the model</strong>
-            <span>Naming the model sets the base to 1,000. Region and company do not add on top of that.</span>
+            <strong>1. Base</strong>
+            <span>
+              Name the model, on any reply, and the base is {n(config.modelBase)}. How many messages you used does not change it. If you never
+              name it, the base is the region ({n(config.regionPoints)}) and the company ({n(config.companyPoints)}) your guesses matched. A
+              trait the round already showed you, or that you revealed, adds nothing.
+            </span>
           </li>
           <li>
-            <strong>Never naming it</strong>
-            <span>If you never name it, a matching region is 100 and a matching company is 300. A trait the round already showed you adds nothing.</span>
+            <strong>2. Penalties</strong>
+            <span>
+              Each wrong guess costs {n(config.wrongGuessCost)}. A hint costs what its trait is worth: year {n(hintCosts.year)}, size{" "}
+              {n(hintCosts.size)}, region {n(hintCosts.region)}, company {n(hintCosts.company)}, family {n(hintCosts.family)}. The right name
+              is never a wrong guess. Earlier wrong names still count. Penalties are subtracted from the base, before the token factor.
+            </span>
           </li>
           <li>
-            <strong>Tokens</strong>
-            <span>1,000 divided by the tokens the replies used. Fewer tokens score higher. Zero tokens counts as 1, so the math never divides by zero.</span>
+            <strong>3. Tokens</strong>
+            <span>
+              Multiply by {n(config.tokenScale)} divided by the tokens the replies used. Fewer tokens score higher. Anything under{" "}
+              {n(config.tokenFloor)} tokens, including 0, counts as {n(config.tokenFloor)}, so the factor tops out at{" "}
+              {n(config.tokenScale / config.tokenFloor)}.
+            </span>
           </li>
           <li>
-            <strong>Messages</strong>
-            <span>10 divided by the replies you used. The first reply is ×10. The tenth is ×1.</span>
+            <strong>4. No-hint mode</strong>
+            <span>
+              Play without hints and the roster never shrinks and no hint buttons are offered. A round played that way is multiplied by{" "}
+              {config.noHintMultiplier}. Buying a hint means you are in the other mode, so there is no multiplier.
+            </span>
           </li>
           <li>
-            <strong>No hints</strong>
-            <span>No-hint play multiplies by 1.5.</span>
+            <strong>5. Rounding</strong>
+            <span>The result rounds to the nearest whole number, halves up. It never goes below 0.</span>
           </li>
-          <li>
-            <strong>Hints</strong>
-            <span>Each hint you buy, year or size, subtracts 100 after those multipliers.</span>
-          </li>
-          <li>
-            <strong>Wrong models</strong>
-            <span>Each wrong model subtracts 50, also after the multipliers. Naming the right model does not take that 50. Earlier wrong names still do, even if you solve the round later.</span>
-          </li>
-        </ul>
+        </ol>
       </div>
-      <p className="muted">The total can be negative. The result page shows that number.</p>
+      <h2>Hints</h2>
+      <p>
+        Company, family, region, year, and size can each be revealed once, after the first reply. A revealed trait is known from then on, and
+        the guess list drops models that do not match it. A trait the round already showed you has no hint.
+      </p>
       <h2>One round</h2>
-      <p>Two replies used 500 tokens. The first name was wrong. You bought the year. The second name was the model.</p>
-      <pre className="formula">{`base  = 1000
-score = round(1000 × (1000 / 500) × (10 / 2)) − 100 − 50
-      = round(1000 × 2 × 5) − 150
-      = 9,850`}</pre>
-      <p className="muted">Your own result page still lists the lines for that round.</p>
+      <p>
+        Two replies used 500 tokens. The first name was wrong. You bought the year. The second name was the model. You were not in no-hint
+        mode, because you bought a hint.
+      </p>
+      <pre className="formula">{`base      = 2,000                    (named the model)
+penalties = 100 + 100 = 200          (year hint, one wrong guess)
+tokens    = 1,000 / 500 = 2
+score     = round((2,000 − 200) × 2)
+          = 3,600`}</pre>
+      <p className="muted">Your own result page lists the lines for that round.</p>
     </div>
   );
 }

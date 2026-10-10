@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { config } from "@/lib/config";
-import type { PublicGame } from "@/lib/game";
+import type { HintKey, PublicGame } from "@/lib/game";
 import { CompanyLogo } from "./company-logo";
 import { MarkdownMessage } from "./markdown-message";
 import { RegionFlag } from "./region-flag";
@@ -19,7 +19,7 @@ export function RoundBoard({ initial }: { initial: PublicGame }) {
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<string | null>(null);
   const [guessBusy, setGuessBusy] = useState(false);
-  const [hintBusy, setHintBusy] = useState<"year" | "size" | null>(null);
+  const [hintBusy, setHintBusy] = useState<HintKey | null>(null);
   const [listOpen, setListOpen] = useState(false);
   const [openedHints, setOpenedHints] = useState<Array<"year" | "size">>([]);
   const [freshGuessId, setFreshGuessId] = useState<string | null>(null);
@@ -57,6 +57,25 @@ export function RoundBoard({ initial }: { initial: PublicGame }) {
 
   function hintShown(key: "year" | "size") {
     return Boolean(game.hints[key]) || openedHints.includes(key);
+  }
+
+  function purchasable(key: "company" | "region" | "family") {
+    const visible =
+      given.has(key) ||
+      Boolean(game.hints[key]) ||
+      (key === "company" && game.feedback?.company === "match") ||
+      (key === "region" && game.feedback?.region === "match") ||
+      (key === "family" && game.feedback?.familySame);
+    if (!hintsOpen || visible || game.status !== "active" || game.messageNumber === 0) return null;
+    return { label: `Reveal (−${game.hintCosts[key]} pts)`, busy: hintBusy !== null, onOpen: () => void buy(key) };
+  }
+
+  function yearSizeReveal(key: "year" | "size") {
+    return {
+      label: given.has(key) ? "Reveal" : `Reveal (−${game.hintCosts[key]} pts)`,
+      busy: hintBusy !== null,
+      onOpen: () => (given.has(key) ? revealGiven(key) : void buy(key)),
+    };
   }
 
   const rows = useMemo(() => {
@@ -191,7 +210,7 @@ export function RoundBoard({ initial }: { initial: PublicGame }) {
     setListOpen(false);
   }
 
-  async function buy(key: "year" | "size") {
+  async function buy(key: HintKey) {
     setHintBusy(key);
     setNotice("");
     const response = await fetch(`/api/games/${game.id}/hints`, {
@@ -302,41 +321,34 @@ export function RoundBoard({ initial }: { initial: PublicGame }) {
       <aside className="side">
         {showBoard ? (
           <section className="card feedback">
-            <TraitLine label="Company" value={given.get("company") ?? (game.feedback?.company === "match" ? game.feedback.companyValue : null)} />
+            <TraitLine
+              label="Company"
+              value={given.get("company") ?? (game.feedback?.company === "match" ? game.feedback.companyValue : null) ?? game.hints.company}
+              reveal={purchasable("company")}
+            />
             <TraitLine
               label="Region"
-              value={given.get("region") ?? (game.feedback?.region === "match" ? game.feedback.regionValue : null)}
+              value={given.get("region") ?? (game.feedback?.region === "match" ? game.feedback.regionValue : null) ?? game.hints.region}
               flag
+              reveal={purchasable("region")}
             />
-            <TraitLine label="Family" value={given.get("family") ?? (game.feedback?.familySame ? game.feedback.familyValue : null)} />
+            <TraitLine
+              label="Family"
+              value={given.get("family") ?? (game.feedback?.familySame ? game.feedback.familyValue : null) ?? game.hints.family}
+              reveal={purchasable("family")}
+            />
             {hintsOpen ? (
               <TraitLine
                 label="Year"
                 value={hintShown("year") ? (game.hints.year ?? given.get("year") ?? null) : null}
-                reveal={
-                  hintShown("year")
-                    ? null
-                    : {
-                        label: given.has("year") ? "Reveal" : `Reveal (−${game.hintCost} pts)`,
-                        busy: hintBusy !== null,
-                        onOpen: () => (given.has("year") ? revealGiven("year") : void buy("year")),
-                      }
-                }
+                reveal={hintShown("year") ? null : yearSizeReveal("year")}
               />
             ) : null}
             {hintsOpen ? (
               <TraitLine
                 label="Size"
                 value={hintShown("size") ? (game.hints.size ?? given.get("size") ?? null) : null}
-                reveal={
-                  hintShown("size")
-                    ? null
-                    : {
-                        label: given.has("size") ? "Reveal" : `Reveal (−${game.hintCost} pts)`,
-                        busy: hintBusy !== null,
-                        onOpen: () => (given.has("size") ? revealGiven("size") : void buy("size")),
-                      }
-                }
+                reveal={hintShown("size") ? null : yearSizeReveal("size")}
               />
             ) : null}
           </section>
