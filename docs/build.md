@@ -32,7 +32,7 @@ There is no `rules/page.tsx`. There is no `me/page.tsx` in the first build.
 
 `lib/game.ts` is the only place that decides a match, a hint, a filter, or a score. Routes load rows and call it. Components render the public object and do not reimplement the rules.
 
-`lib/config.ts` exports the object stored on `games.rules`, plus `hourlyCap: 10` and `tipUrl`. Category flags (`leaderboard`, `hints_allowed`, `enabled`) are seeded into `categories`. A round copies `hintsAllowed` off the category row and the numbers off config, then freezes traits, so an admin edit does not rewrite a game in progress.
+`lib/config.ts` exports the object stored on `games.rules`, plus `hourlyCap: 20` and `tipUrl`. Category flags (`leaderboard`, `hints_allowed`, `enabled`) are seeded into `categories`. A round copies `hintsAllowed` off the category row and the numbers off config, then freezes traits, so an admin edit does not rewrite a game in progress.
 
 ```ts
 {
@@ -46,7 +46,7 @@ There is no `rules/page.tsx`. There is no `me/page.tsx` in the first build.
   hintCost: 100,
   wrongGuessCost: 50,
   noHintMultiplier: 1.5,
-  hourlyCap: 10,
+  hourlyCap: 20,
   tipUrl: ""
 }
 ```

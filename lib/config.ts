@@ -9,7 +9,7 @@ export const config = {
   hintCost: 100,
   wrongGuessCost: 50,
   noHintMultiplier: 1.5,
-  hourlyCap: 10,
+  hourlyCap: 20,
   tipUrl: "",
 } as const;
 
