@@ -7,6 +7,7 @@ export function Avatar({ seed, size = 40, src = null }: { seed: string; size?: n
   const cells: { x: number; y: number }[] = [];
   const origin = 7;
   const step = 5.2;
+  const cellSize = 4.2;
   for (let row = 0; row < 5; row += 1) {
     for (let col = 0; col < 3; col += 1) {
       if (bits[row * 3 + col + 1] % 3 === 0) continue;
@@ -18,12 +19,20 @@ export function Avatar({ seed, size = 40, src = null }: { seed: string; size?: n
   if (cells.length < 4) {
     cells.push({ x: origin + 2 * step, y: origin + 2 * step });
   }
+  const left = Math.min(...cells.map((cell) => cell.x));
+  const right = Math.max(...cells.map((cell) => cell.x)) + cellSize;
+  const top = Math.min(...cells.map((cell) => cell.y));
+  const bottom = Math.max(...cells.map((cell) => cell.y)) + cellSize;
+  const shiftX = 20 - (left + right) / 2;
+  const shiftY = 20 - (top + bottom) / 2;
   return (
     <svg className="avatar" width={size} height={size} viewBox="0 0 40 40" aria-hidden="true">
       <circle cx="20" cy="20" r="20" fill="#ebebeb" />
-      {cells.map((cell, index) => (
-        <rect key={index} x={cell.x} y={cell.y} width="4.2" height="4.2" rx="1.2" fill={paint} />
-      ))}
+      <g transform={`translate(${shiftX} ${shiftY})`}>
+        {cells.map((cell, index) => (
+          <rect key={index} x={cell.x} y={cell.y} width={cellSize} height={cellSize} rx="1.2" fill={paint} />
+        ))}
+      </g>
     </svg>
   );
 }
