@@ -14,7 +14,7 @@ export default async function ModelsPage({
 }) {
   const params = await searchParams;
   const notice = rosterNotice(params.notice);
-  const { rows, companies } = await loadRoster();
+  const { rows, companies, families } = await loadRoster();
 
   return (
     <div className="stack">
@@ -33,7 +33,7 @@ export default async function ModelsPage({
         <div className="roster-form">
           <ModelFields />
         </div>
-        <p className="muted">A new model stays off until you turn it on. The family follows the company.</p>
+        <p className="muted">A new model stays off until you turn it on. Type the family. A new name is added to the list.</p>
         <div>
           <button className="button" type="submit">
             Add model
@@ -44,6 +44,8 @@ export default async function ModelsPage({
         <table className="roster">
           <thead>
             <tr>
+              <th>Name</th>
+              <th>Family</th>
               <th>Company</th>
               <th>Region</th>
               <th>Year</th>
@@ -56,6 +58,8 @@ export default async function ModelsPage({
           <tbody>
             {rows.map((row) => (
               <tr key={row.id} className={row.enabled ? undefined : "is-off"}>
+                <td>{row.name}</td>
+                <td>{row.familyName}</td>
                 <td>
                   <span className="roster-company">
                     <CompanyLogo src={row.logoUrl} />
@@ -71,7 +75,7 @@ export default async function ModelsPage({
                   <form action={setModelEnabled}>
                     <input type="hidden" name="id" value={row.id} />
                     <input type="hidden" name="enabled" value={row.enabled ? "0" : "1"} />
-                    <button className="button-quiet" type="submit">
+                    <button className={row.enabled ? "button-off" : "button-on"} type="submit">
                       {row.enabled ? "Turn off" : "Turn on"}
                     </button>
                   </form>
@@ -84,6 +88,7 @@ export default async function ModelsPage({
                           openrouterId={row.openrouterId}
                           name={row.name}
                           company={row.companyName}
+                          family={row.familyName}
                           region={row.region}
                           year={row.year}
                           size={row.size}
@@ -108,6 +113,11 @@ export default async function ModelsPage({
           <option key={company.id} value={company.name} />
         ))}
       </datalist>
+      <datalist id="roster-families">
+        {families.map((family) => (
+          <option key={family.id} value={family.name} />
+        ))}
+      </datalist>
     </div>
   );
 }
@@ -116,6 +126,7 @@ function ModelFields({
   openrouterId = "",
   name = "",
   company = "",
+  family = "",
   region = "us",
   year = "",
   size = "small",
@@ -123,6 +134,7 @@ function ModelFields({
   openrouterId?: string;
   name?: string;
   company?: string;
+  family?: string;
   region?: string;
   year?: string;
   size?: string;
@@ -140,6 +152,10 @@ function ModelFields({
       <label>
         Company
         <input name="company" defaultValue={company} list="roster-companies" required />
+      </label>
+      <label>
+        Family
+        <input name="family" defaultValue={family} list="roster-families" required />
       </label>
       <label>
         Region

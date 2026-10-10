@@ -3,6 +3,7 @@ import { Roboto } from "next/font/google";
 import Script from "next/script";
 import { AccountMenu } from "@/components/account-menu";
 import { SiteFooter } from "@/components/site-footer";
+import { sessionIsOwner } from "@/lib/admin-access";
 import { currentProfile } from "@/lib/session";
 import "./globals.css";
 
@@ -17,7 +18,7 @@ export const metadata: Metadata = {
 const themeScript = `(function(){try{var s=localStorage.getItem("theme");var t=s==="light"||s==="dark"?s:(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");document.documentElement.dataset.theme=t;}catch(e){}})();`;
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const { user, username, avatarUrl } = await currentProfile();
+  const [{ user, username, avatarUrl }, owner] = await Promise.all([currentProfile(), sessionIsOwner()]);
   return (
     <html lang="en" className={font.variable} suppressHydrationWarning>
       <body suppressHydrationWarning>
@@ -45,7 +46,13 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                 </svg>
                 Leaderboard
               </a>
-              <AccountMenu userId={user?.id ?? null} username={username} avatarUrl={avatarUrl} />
+              <AccountMenu userId={user?.id ?? null} username={username} avatarUrl={avatarUrl}>
+                {owner ? (
+                  <a href="/admin" role="menuitem">
+                    Admin
+                  </a>
+                ) : null}
+              </AccountMenu>
             </nav>
           </header>
           <main className="page">{children}</main>

@@ -10,7 +10,7 @@ The site is English. A second language waits until there is a translation to shi
 
 ## Theme
 
-Light and dark are both first-class. The first visit follows the phone or the computer (`prefers-color-scheme`). A control in the account menu switches them and stores the choice in the browser, so it survives a refresh and applies on the landing page before anyone is signed in. It is not a column on the profile. The account button sits at the top right. Signed out, it is a person icon and the menu has **Sign in**. Signed in, the icon is a pattern generated from the account id until they upload a picture, and the menu shows the username and **Profile**.
+Light and dark are both first-class. The first visit follows the phone or the computer (`prefers-color-scheme`). A control in the account menu switches them and stores the choice in the browser, so it survives a refresh and applies on the landing page before anyone is signed in. It is not a column on the profile. The account button sits at the top right. Signed out, it is a person icon and the menu has **Sign in**. Signed in, the icon is a pattern generated from the account id until they upload a picture, and the menu shows the username, **Profile**, and **Delete account**. When the server matches the owner session, that same menu also shows **Admin**. The item is rendered on the server for that session. It is not a flag in client JavaScript.
 
 Same layout in both themes. Text, feedback, and the guess list stay readable. A match and a miss stay distinguishable without relying on color alone.
 
@@ -300,12 +300,18 @@ Private. The account menu shows **Profile** once the player has a username. No s
 - Stats: games played, solved, missed, given up, solve rate, best score, average score, average messages on a solved game.
 - Games: 10 per page, **Previous** and **Next**. Clicking a row opens its summary in place, directly under that row, and clicking it again closes it. One row is open at a time. The summary shows the company logo and model name, date, status, score, messages used, and whether company and region were found. No transcript. A logo that fails to load is hidden. An open round hides the model and logo and links to **Continue**.
 
+## Delete account (`/account/delete`)
+
+Any signed-in player can open this page from **Delete account** in the account menu. No session goes to `/login?next=/account/delete`. The page says the sign-in is removed and games already played stay under the username.
+
+The player checks **I want to delete my sign-in.** and submits **Delete account**. The server uses the session id. A user id in the form is ignored. The picture in the `avatars` bucket is removed when it can be, then the auth user is deleted and the session ends on `/`. An unchecked box stays on the page with **Confirm that you want to delete your sign-in.** A failed delete stays on the page with **Could not delete this account.** Rounds are not deleted. Run [`0013_keep_games_on_account_delete.sql`](../supabase/migrations/0013_keep_games_on_account_delete.sql) before a player who already has games can delete their sign-in.
+
 ## Private pages
 
-`/admin` and `/admin/models` are not linked from the header, the footer, the account menu, or any public page. The server reads the signed-in Supabase user and compares that email to the owner address in a server-only module. Anyone else, including a signed-out visitor and a player who edits their profile, gets the same not-found page as a missing URL. There is no role column and no client flag.
+`/admin` and `/admin/models` are linked from the account menu only when the server matches the signed-in Supabase user to the owner address in a server-only module. The footer, the landing page, and every other session have no admin link. Anyone else, including a signed-out visitor and a player who edits their profile, gets the same not-found page as a missing URL. There is no role column and no client flag.
 
-`/admin` shows five counts: models in the roster, active models, players, games today (UTC), and total games. Players are distinct accounts that have started a game. Those counts are read with the server key after the check. They are not a public API.
+`/admin` shows five counts: models in the roster, active models, players, games today (UTC), and total games. Players are distinct accounts that have started a game. Those counts are read with the server key after the check. They are not a public API. Under the counts, each roster model shows its OpenRouter list price for prompt and completion, per million tokens. The page reads the public model list and does not send the API key. A model missing from that list, or a price that is not a number, shows **No price**. If the list cannot be loaded, the page says **OpenRouter prices could not be loaded.** and does not invent a number.
 
-`/admin/models` lists every model with company, region, year, size, OpenRouter id, and whether it is active. Turn one on or off without deleting it. Add one by typing an OpenRouter id, a display name, a company, a region, a year, and a size. Edit those fields on a row. A new model starts off. Past games keep the traits they froze. Company logos come from the `logos` bucket. Logo upload, categories, and scoring settings are not on these pages.
+`/admin/models` lists every model with display name, family, company, region, year, size, OpenRouter id, and whether it is active. **Turn on** is green. **Turn off** is red. Turning a model off leaves it out of new rounds. Add one by typing an OpenRouter id, a display name, a company, a family, a region, a year, and a size. Edit those fields on a row, including the family. A new family name is saved when it is not already in the list. A new model starts off. Past games keep the traits they froze. Company logos come from the `logos` bucket. Logo upload, categories, and scoring settings are not on these pages.
 
 The later cockpit (spend, categories, families, confusion, transcripts) is still specified in [Admin](admin.md).

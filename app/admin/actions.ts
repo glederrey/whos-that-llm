@@ -14,6 +14,7 @@ function fields(formData: FormData) {
     openrouterId: text(formData, "openrouterId"),
     name: text(formData, "name"),
     company: text(formData, "company"),
+    family: text(formData, "family"),
     region: text(formData, "region"),
     year: text(formData, "year"),
     size: text(formData, "size"),

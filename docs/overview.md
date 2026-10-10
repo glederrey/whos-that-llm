@@ -58,7 +58,7 @@ Ko-fi does not price a page in francs, so euros avoids a second conversion on a 
 
 Supabase sends confirmation and password-reset mail. Both links return to the main page. That quota is enough to start. Custom SMTP is the fix if those emails start failing.
 
-Admin is not a role you hand out. `/admin` and `/admin/models` render only when the server matches the signed-in Supabase email to the owner address. Everyone else gets the same 404 as a missing page. The site renders no link to those pages.
+Admin is not a role you hand out. `/admin` and `/admin/models` render only when the server matches the signed-in Supabase email to the owner address. Everyone else gets the same 404 as a missing page. The account menu shows **Admin** only for that session. Other sessions have no link.
 
 ## Auth
 
@@ -69,6 +69,8 @@ Both methods stay on, and both write into `auth.users`. Link identities that sha
 Email confirmation stays on. Confirmation and password-reset links return to `/`. The main page completes the session from that return. The first session with no username goes to `/welcome`.
 
 A username is 3–20 characters after trimming. Capitals and punctuation are allowed. It does not have to be unique. An empty name is rejected. `profiles.id` is the internal id that links the auth user (and therefore the email) to the username. A rename updates `profiles.username` and every `games.username` for that user id, so the leaderboard and past games show the new name. The old name is not kept.
+
+A signed-in player can delete their own sign-in. The action uses the session id and ignores any other id. Games stay under the username already stored on those rows. The profile and the picture go away with the auth user.
 
 ## Credits
 

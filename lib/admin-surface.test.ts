@@ -39,14 +39,50 @@ test("client modules do not import the owner check", () => {
     assert.equal(text.includes("admin-owner"), false, path.relative(root, file));
     assert.equal(text.includes("admin-roster"), false, path.relative(root, file));
     assert.equal(text.includes("showAdmin"), false, path.relative(root, file));
+    assert.equal(text.includes("isAdmin"), false, path.relative(root, file));
+    assert.equal(text.includes("account-delete"), false, path.relative(root, file));
+    assert.equal(text.includes("openrouter-prices"), false, path.relative(root, file));
   }
 });
 
-test("public chrome does not link to the private pages", () => {
-  for (const relative of ["app/layout.tsx", "components/account-menu.tsx", "components/site-footer.tsx", "app/page.tsx"]) {
+test("the admin link is rendered on the server for that session", () => {
+  const menu = fs.readFileSync(path.join(root, "components/account-menu.tsx"), "utf8");
+  assert.equal(menu.includes('href="/admin"'), false);
+  assert.equal(menu.includes("showAdmin"), false);
+  assert.equal(menu.includes("isAdmin"), false);
+  const layout = fs.readFileSync(path.join(root, "app/layout.tsx"), "utf8");
+  assert.match(layout, /sessionIsOwner/);
+  assert.match(layout, /href="\/admin"/);
+  assert.equal(layout.includes("showAdmin"), false);
+  for (const relative of ["components/site-footer.tsx", "app/page.tsx"]) {
     const text = fs.readFileSync(path.join(root, relative), "utf8");
     assert.equal(text.includes('href="/admin"'), false, relative);
   }
+});
+
+test("public prices do not use the API key", () => {
+  const text = fs.readFileSync(path.join(root, "lib/openrouter-prices.ts"), "utf8");
+  assert.match(text, /https:\/\/openrouter\.ai\/api\/v1\/models/);
+  assert.doesNotMatch(text, /OPENROUTER_API_KEY/);
+  assert.doesNotMatch(text, /authorization/i);
+  assert.doesNotMatch(text, /api\/v1\/key/);
+});
+
+test("account deletion uses only the signed-in user", () => {
+  const lib = fs.readFileSync(path.join(root, "lib/account-delete.ts"), "utf8");
+  assert.match(lib, /import "server-only"/);
+  assert.match(lib, /deleteUser\(user\.id, false\)/);
+  assert.doesNotMatch(lib, /formData/);
+  const action = fs.readFileSync(path.join(root, "app/account/delete/actions.ts"), "utf8");
+  assert.match(action, /deleteSignedInAccount\(confirmed\)/);
+  assert.match(action, /formData\.get\("confirm"\)/);
+  assert.doesNotMatch(action, /formData\.get\(\s*["'](?:id|user|userId|user_id|email)/);
+});
+
+test("deleting a sign-in keeps the rounds", () => {
+  const sql = fs.readFileSync(path.join(root, "supabase/migrations/0013_keep_games_on_account_delete.sql"), "utf8");
+  assert.match(sql, /drop constraint if exists games_user_id_fkey/);
+  assert.doesNotMatch(sql, /delete from public\.games/i);
 });
 
 test("client roles cannot write the roster", () => {

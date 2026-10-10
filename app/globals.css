@@ -231,7 +231,7 @@ p { margin: 0; }
 }
 
 /* Buttons */
-.icon-button, .button, .button-quiet, .button-danger {
+.icon-button, .button, .button-quiet, .button-danger, .button-on, .button-off {
   border-radius: var(--radius-sm);
   border: 1px solid transparent;
   background: var(--teal);
@@ -265,6 +265,10 @@ html[data-theme="dark"] .button-quiet.give-up:hover { color: var(--miss); }
 .button-danger:hover { background: var(--miss-wash); color: var(--miss-press); }
 html[data-theme="dark"] .button-danger { color: var(--miss); border-color: var(--miss); }
 html[data-theme="dark"] .button-danger:hover { color: var(--miss); }
+.button-on { background: #1c7c43; color: white; border-color: #1c7c43; }
+.button-on:hover { background: #166537; color: white; }
+.button-off { background: var(--miss); color: white; border-color: var(--miss); }
+.button-off:hover { background: var(--miss-press); color: white; }
 .button-quiet.is-disabled { opacity: 0.45; pointer-events: none; }
 .reveal { padding: 4px 10px; font-size: 13px; }
 
@@ -893,7 +897,8 @@ html[data-theme="dark"] .md a { color: var(--teal); }
 }
 .section-nav a:hover { border-color: var(--teal); color: var(--text); }
 .roster-card { padding: 0; overflow-x: auto; }
-.roster { width: 100%; min-width: 880px; border-collapse: collapse; }
+.roster { width: 100%; min-width: 1120px; border-collapse: collapse; }
+.roster.compact { min-width: 640px; }
 .roster th {
   text-align: left;
   padding: 12px 14px;

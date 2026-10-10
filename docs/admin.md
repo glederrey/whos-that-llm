@@ -4,13 +4,17 @@ This build has two pages, `/admin` and `/admin/models`. The rest of this documen
 
 The server reads the signed-in Supabase user and compares that email, case-insensitive, to the owner address in a server-only module. `ADMIN_EMAIL` is not the switch. A profile edit cannot grant access. There is no role column and no client flag.
 
-- Match: the two pages render. The site does not link to them. The owner opens the URL.
-- Anything else, including no session: `notFound()`. The response looks like any other missing URL. There is no "forbidden" page, no login wall, and no admin link in the HTML.
+- Match: the two pages render. The account menu includes **Admin** for that session only. The item is rendered on the server. It is not a flag in client JavaScript.
+- Anything else, including no session: `notFound()`. The response looks like any other missing URL. There is no "forbidden" page, no login wall, and no admin link in that HTML.
 - The address is not sent to the browser.
 
 Google and email/password both work when the session email is the owner address. A second person does not get access by editing `app_metadata` or their username.
 
 Roster changes are server actions. Each one repeats the check, then writes with the server key. anon and authenticated cannot insert, update, or delete `models`, `companies`, or `families`. The counts on `/admin` are not a public function.
+
+`/admin` also lists each roster model's public OpenRouter prompt and completion price, per million tokens, matched on the OpenRouter id. The request is `GET https://openrouter.ai/api/v1/models` with no API key. A missing model shows **No price**. A failed request says the prices could not be loaded.
+
+`/admin/models` shows the display name and the family beside company, region, year, size, OpenRouter id, and active. Add and edit include the family. **Turn on** is green. **Turn off** is red.
 
 The game still pauses for everyone when OpenRouter returns 402 or an explicit credit error. The pause switch on this page is later. Until then, clear `app_settings.paused` in the database after topping up credits on OpenRouter. The site does not take a payment for credits.
 

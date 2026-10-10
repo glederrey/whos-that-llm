@@ -144,7 +144,7 @@ One row per round.
 | Column | Type | Notes |
 |---|---|---|
 | `id` | uuid, pk | default `gen_random_uuid()` |
-| `user_id` | uuid, fk `profiles` | on delete restrict. Deleting the auth user will not delete their rounds |
+| `user_id` | uuid | Historical account id. Not a foreign key. Deleting the auth user removes the profile and leaves the rounds. `username` on the row is what the leaderboard still shows |
 | `username` | text | Copied at insert, then rewritten when that user renames. Leaderboard name for that round |
 | `category` | text, fk `categories` | |
 | `pool_key` | text, null | `anthropic`, `opus`, `us`, `cn`, or `eu`. Null for `all`, `daily`, and `custom` |
@@ -171,6 +171,8 @@ Indexes:
 - unique `(user_id)` where `status = 'active'`
 - unique `(user_id, daily_key)` where `daily_key is not null`
 - `(category, status, finished_at)` for the leaderboard
+
+`0013_keep_games_on_account_delete.sql` drops `games_user_id_fkey`. The column stays. Until that file is run, deleting an auth user who already has games fails and the rounds stay. After it is run, the rounds still stay and the profile can cascade away. The leaderboard reads `games.username` and left-joins `profiles` for the picture, so a deleted account keeps its name and loses the picture.
 
 `rules` shape:
 

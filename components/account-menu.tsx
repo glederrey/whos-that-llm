@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { Avatar } from "./avatar";
 import { ThemeToggle } from "./theme-toggle";
@@ -10,10 +10,12 @@ export function AccountMenu({
   userId,
   username,
   avatarUrl,
+  children,
 }: {
   userId: string | null;
   username: string | null;
   avatarUrl: string | null;
+  children?: ReactNode;
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -65,11 +67,15 @@ export function AccountMenu({
           </div>
           {userId ? (
             <>
+              {children}
               {username ? (
                 <a href="/profile" role="menuitem">
                   Profile
                 </a>
               ) : null}
+              <a href="/account/delete" role="menuitem">
+                Delete account
+              </a>
               <div className="menu-rule" />
               <button type="button" className="menu-item" onClick={() => void signOut()}>
                 Sign out

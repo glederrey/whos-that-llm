@@ -5,7 +5,11 @@ import { emailsMatch } from "./admin-model";
 import { ownerAddress } from "./admin-owner";
 import { currentUser } from "./session";
 
-export async function requireOwner() {
+export async function sessionIsOwner() {
   const user = await currentUser();
-  if (!emailsMatch(user?.email, ownerAddress)) notFound();
+  return emailsMatch(user?.email, ownerAddress);
+}
+
+export async function requireOwner() {
+  if (!(await sessionIsOwner())) notFound();
 }
