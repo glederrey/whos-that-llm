@@ -2,6 +2,7 @@ import { createOpenRouter } from "@openrouter/ai-sdk-provider";
 import { APICallError, streamText, type ModelMessage } from "ai";
 import { systemPrompt } from "./prompt";
 import { isCreditError } from "./game";
+import { readServerEnv } from "./server-env";
 import { takeWords } from "./words";
 
 export type CallUsage = {
@@ -43,7 +44,7 @@ export async function streamHiddenReply(input: {
   messages: ModelMessage[];
   onWord: (word: string) => void;
 }): Promise<StreamedReply> {
-  const apiKey = process.env.OPENROUTER_API_KEY;
+  const apiKey = readServerEnv("OPENROUTER_API_KEY");
   if (!apiKey) return { ok: false, paused: false, message: "Missing OpenRouter key." };
 
   const openrouter = createOpenRouter({ apiKey });

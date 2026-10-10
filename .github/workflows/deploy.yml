@@ -2,7 +2,12 @@ name: Deploy
 
 # Production deploy runs only when a GitHub Release is published.
 # App env stays on the Vercel project, not in this workflow:
-# NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY, SUPABASE_SECRET_KEY, OPENROUTER_API_KEY.
+# NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY, SUPABASE_SECRET_KEY,
+# OPENROUTER_API_KEY, OPENROUTER_MANAGEMENT_KEY.
+# OPENROUTER_MANAGEMENT_KEY stays a Production Secret. vercel pull writes the
+# placeholder [SENSITIVE] for secrets, and the following step deletes those
+# lines so the build does not load them. The deployment still receives the
+# project secret at runtime.
 
 on:
   release:
@@ -35,6 +40,9 @@ jobs:
 
       - name: Pull Vercel project settings
         run: vercel pull --yes --environment=production
+
+      - name: Drop redacted secret placeholders
+        run: node scripts/strip-sensitive-placeholders.mjs
 
       - name: Build
         run: vercel build --prod --standalone

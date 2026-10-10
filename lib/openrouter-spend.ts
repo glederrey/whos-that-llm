@@ -8,6 +8,7 @@ import {
   type ActivityPeriod,
   type KeyUsage,
 } from "./openrouter-usage";
+import { readServerEnv } from "./server-env";
 
 const base = "https://openrouter.ai/api/v1";
 
@@ -25,7 +26,7 @@ export async function loadOpenRouterSpend(now: Date = new Date()): Promise<OpenR
 }
 
 async function loadTotals(): Promise<Section<KeyUsage>> {
-  const key = process.env.OPENROUTER_API_KEY;
+  const key = readServerEnv("OPENROUTER_API_KEY");
   if (!key) return { ok: false, error: "OPENROUTER_API_KEY is not set on the server." };
   const result = await get(`${base}/key`, key);
   if (!result.ok) return result;
@@ -34,8 +35,8 @@ async function loadTotals(): Promise<Section<KeyUsage>> {
 }
 
 async function loadActivity(now: Date): Promise<Section<{ week: ActivityPeriod; month: ActivityPeriod }>> {
-  const key = process.env.OPENROUTER_MANAGEMENT_KEY || process.env.OPENROUTER_API_KEY;
-  if (!key) return { ok: false, error: "OPENROUTER_API_KEY is not set on the server." };
+  const key = readServerEnv("OPENROUTER_MANAGEMENT_KEY") ?? readServerEnv("OPENROUTER_API_KEY");
+  if (!key) return { ok: false, error: "OPENROUTER_MANAGEMENT_KEY is not set on the server." };
   const result = await get(`${base}/activity`, key);
   if (!result.ok) {
     const forbidden = /^OpenRouter 40[13]/.test(result.error);
@@ -52,9 +53,13 @@ async function loadActivity(now: Date): Promise<Section<{ week: ActivityPeriod; 
 }
 
 async function get(url: string, key: string): Promise<Section<unknown>> {
+  const token = key.trim();
+  if (!token || token === "[SENSITIVE]") {
+    return { ok: false, error: "OpenRouter key is not set on the server." };
+  }
   try {
     const response = await fetch(url, {
-      headers: { accept: "application/json", authorization: `Bearer ${key}` },
+      headers: { accept: "application/json", authorization: `Bearer ${token}` },
       cache: "no-store",
       signal: AbortSignal.timeout(10_000),
     });
