@@ -66,7 +66,7 @@ export function RoundBoard({ initial }: { initial: PublicGame }) {
       (key === "company" && game.feedback?.company === "match") ||
       (key === "region" && game.feedback?.region === "match") ||
       (key === "family" && game.feedback?.familySame);
-    if (!hintsOpen || visible || game.status !== "active" || game.messageNumber === 0) return null;
+    if (!hintsOpen || visible || game.status !== "active") return null;
     return { label: `Reveal (−${game.hintCosts[key]} pts)`, busy: hintBusy !== null, onOpen: () => void buy(key) };
   }
 

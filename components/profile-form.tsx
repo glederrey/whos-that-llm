@@ -66,17 +66,15 @@ export function ProfileForm({
 
   return (
     <form className="card profile-form" onSubmit={submit}>
-      <div className="profile-picture">
-        <Avatar seed={userId} src={avatarUrl} size={72} />
-      </div>
-      <div className="stack">
-        <label>
-          Username
-          <input value={name} onChange={(event) => setName(event.target.value)} autoComplete="nickname" />
-        </label>
-        <p className="muted">Capitals and punctuation are allowed. The name does not have to be unique. An empty name is rejected.</p>
-        <label>
-          Picture
+      <div className="profile-photo-row">
+        <div className="profile-picture">
+          <Avatar seed={userId} src={avatarUrl} size={72} />
+        </div>
+        <label className="profile-photo">
+          <span className="profile-photo-name">
+            Picture
+            <span className="muted">Optional</span>
+          </span>
           <input
             key={fileKey}
             type="file"
@@ -89,7 +87,12 @@ export function ProfileForm({
             }}
           />
         </label>
-        <p className="muted">Optional. Until you upload one, the generated mark stays.</p>
+      </div>
+      <label className="profile-name">
+        Username
+        <input value={name} onChange={(event) => setName(event.target.value)} autoComplete="nickname" />
+      </label>
+      <div className="profile-save">
         <button type="submit" className="button" disabled={busy}>
           Save
         </button>

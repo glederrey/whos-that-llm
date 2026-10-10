@@ -146,9 +146,9 @@ If this was the last message and the model was not named, set `status = 'miss'` 
 
 ### `POST /api/games/:id/hints`
 
-Body: `{ key: "year" | "size" }`.
+Body: `{ key: "company" | "family" | "region" | "year" | "size" }`.
 
-Lock the game row. Reject when `no_hint`, when `rules.hintsAllowed` is false, when the round is not `active`, when `message_count` is 0, when the key is already in `hints`, when the key is not one of `company`, `family`, `region`, `year`, or `size`, when that trait is given, and when a guess already matched that company, region, or family. Append the key. The next `candidates` list drops models whose frozen value for that trait disagrees. Return `PublicGame`. The price (company 600, family 600, region 400, year 100, size 100) is not subtracted until the round ends.
+Lock the game row. Reject when `no_hint`, when `rules.hintsAllowed` is false, when the round is not `active`, when the key is already in `hints`, when the key is not one of `company`, `family`, `region`, `year`, or `size`, when that trait is given, and when a guess already matched that company, region, or family. Append the key. The next `candidates` list drops models whose frozen value for that trait disagrees. Return `PublicGame`. The price (company 600, family 600, region 400, year 100, size 100) is not subtracted until the round ends.
 
 ### `POST /api/games/:id/give-up`
 
