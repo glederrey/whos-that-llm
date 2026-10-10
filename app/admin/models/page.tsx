@@ -34,18 +34,20 @@ export default async function ModelsPage({
           {notice}
         </p>
       ) : null}
-      <form action={addModel} className="card stack">
-        <h2>Add a model</h2>
-        <div className="roster-form">
-          <ModelFields />
-        </div>
-        <p className="muted">A new model stays off until you turn it on. Type the family. A new name is added to the list.</p>
-        <div>
-          <button className="button" type="submit">
-            Add model
-          </button>
-        </div>
-      </form>
+      <details className="card roster-add">
+        <summary>Add a model</summary>
+        <form action={addModel} className="stack">
+          <div className="roster-form">
+            <ModelFields />
+          </div>
+          <p className="muted">A new model stays off until you turn it on. Type the family. A new name is added to the list.</p>
+          <div>
+            <button className="button" type="submit">
+              Add model
+            </button>
+          </div>
+        </form>
+      </details>
       <form action="/admin/models" method="get" className="roster-search">
         <input type="search" name="q" defaultValue={query} placeholder="Search by name, family, or company" aria-label="Search models" />
         <button className="button" type="submit">
