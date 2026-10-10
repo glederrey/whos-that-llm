@@ -1,8 +1,10 @@
+import Link from "next/link";
 import { CompanyLogo } from "@/components/company-logo";
 import { SectionNav } from "@/components/section-nav";
 import { addModel, saveModel, setModelEnabled } from "@/app/admin/actions";
 import { rosterNotice } from "@/lib/admin-model";
-import { loadRoster } from "@/lib/admin-roster";
+import { loadRoster, type RosterRow } from "@/lib/admin-roster";
+import { pageOf, searchRoster } from "@/lib/roster-list";
 import { regionLabel, sizeLabel } from "@/lib/game";
 
 export const dynamic = "force-dynamic";
@@ -10,11 +12,15 @@ export const dynamic = "force-dynamic";
 export default async function ModelsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ notice?: string }>;
+  searchParams: Promise<{ notice?: string; q?: string; active?: string; inactive?: string }>;
 }) {
   const params = await searchParams;
   const notice = rosterNotice(params.notice);
   const { rows, companies, families } = await loadRoster();
+  const query = (params.q ?? "").slice(0, 100);
+  const found = searchRoster(rows, query);
+  const active = pageOf(found.filter((row) => row.enabled), params.active);
+  const inactive = pageOf(found.filter((row) => !row.enabled), params.inactive);
 
   return (
     <div className="stack">
@@ -40,74 +46,19 @@ export default async function ModelsPage({
           </button>
         </div>
       </form>
-      <div className="card roster-card">
-        <table className="roster">
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Family</th>
-              <th>Company</th>
-              <th>Region</th>
-              <th>Year</th>
-              <th>Size</th>
-              <th>OpenRouter id</th>
-              <th>Active</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((row) => (
-              <tr key={row.id} className={row.enabled ? undefined : "is-off"}>
-                <td>{row.name}</td>
-                <td>{row.familyName}</td>
-                <td>
-                  <span className="roster-company">
-                    <CompanyLogo src={row.logoUrl} />
-                    <span>{row.companyName}</span>
-                  </span>
-                </td>
-                <td>{regionLabel(row.region)}</td>
-                <td>{row.year || "—"}</td>
-                <td>{sizeLabel(row.size)}</td>
-                <td>{row.openrouterId}</td>
-                <td>{row.enabled ? "On" : "Off"}</td>
-                <td className="roster-actions">
-                  <form action={setModelEnabled}>
-                    <input type="hidden" name="id" value={row.id} />
-                    <input type="hidden" name="enabled" value={row.enabled ? "0" : "1"} />
-                    <button className={row.enabled ? "button-off" : "button-on"} type="submit">
-                      {row.enabled ? "Turn off" : "Turn on"}
-                    </button>
-                  </form>
-                  <details>
-                    <summary>Edit</summary>
-                    <form action={saveModel} className="stack">
-                      <input type="hidden" name="id" value={row.id} />
-                      <div className="roster-form">
-                        <ModelFields
-                          openrouterId={row.openrouterId}
-                          name={row.name}
-                          company={row.companyName}
-                          family={row.familyName}
-                          region={row.region}
-                          year={row.year}
-                          size={row.size}
-                        />
-                      </div>
-                      <p className="muted">Region belongs to the company. New games use it.</p>
-                      <div>
-                        <button className="button" type="submit">
-                          Save
-                        </button>
-                      </div>
-                    </form>
-                  </details>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      <form action="/admin/models" method="get" className="roster-search">
+        <input type="search" name="q" defaultValue={query} placeholder="Search by name, family, or company" aria-label="Search models" />
+        <button className="button" type="submit">
+          Search
+        </button>
+        {query ? (
+          <Link className="button-quiet" href="/admin/models">
+            Clear
+          </Link>
+        ) : null}
+      </form>
+      <RosterSection title="Active models" empty="No active models." list={active} query={query} pageKey="active" otherPage={inactive.page} />
+      <RosterSection title="Inactive models" empty="No inactive models." list={inactive} query={query} pageKey="inactive" otherPage={active.page} />
       <datalist id="roster-companies">
         {companies.map((company) => (
           <option key={company.id} value={company.name} />
@@ -119,6 +70,147 @@ export default async function ModelsPage({
         ))}
       </datalist>
     </div>
+  );
+}
+
+type RosterPage = { rows: RosterRow[]; page: number; pageCount: number };
+
+function modelsHref(query: string, activePage: number, inactivePage: number) {
+  const params = new URLSearchParams();
+  if (query) params.set("q", query);
+  if (activePage > 1) params.set("active", String(activePage));
+  if (inactivePage > 1) params.set("inactive", String(inactivePage));
+  const text = params.toString();
+  return text ? `/admin/models?${text}` : "/admin/models";
+}
+
+function RosterSection({
+  title,
+  empty,
+  list,
+  query,
+  pageKey,
+  otherPage,
+}: {
+  title: string;
+  empty: string;
+  list: RosterPage;
+  query: string;
+  pageKey: "active" | "inactive";
+  otherPage: number;
+}) {
+  const hrefFor = (page: number) =>
+    pageKey === "active" ? modelsHref(query, page, otherPage) : modelsHref(query, otherPage, page);
+  return (
+    <section className="stack">
+      <h2>{title}</h2>
+      {list.rows.length === 0 ? (
+        <div className="card empty">{query ? "No models match that search." : empty}</div>
+      ) : (
+        <>
+          <div className="card roster-card">
+            <table className="roster models">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Family</th>
+                  <th>Company</th>
+                  <th>Region</th>
+                  <th>Year</th>
+                  <th>Size</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                {list.rows.map((row) => (
+                  <ModelRow key={row.id} row={row} />
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <div className="row pager">
+            <div className="row">
+              {list.page > 1 ? (
+                <Link className="button-quiet" href={hrefFor(list.page - 1)} scroll={false}>
+                  Previous
+                </Link>
+              ) : (
+                <span className="button-quiet is-disabled">Previous</span>
+              )}
+              <span className="muted">
+                Page {list.page} of {list.pageCount}
+              </span>
+              {list.page < list.pageCount ? (
+                <Link className="button-quiet" href={hrefFor(list.page + 1)} scroll={false}>
+                  Next
+                </Link>
+              ) : (
+                <span className="button-quiet is-disabled">Next</span>
+              )}
+            </div>
+          </div>
+        </>
+      )}
+    </section>
+  );
+}
+
+function ModelRow({ row }: { row: RosterRow }) {
+  const panel = `edit-${row.id}`;
+  return (
+    <tr className={row.enabled ? undefined : "is-off"}>
+      <td>{row.name}</td>
+      <td>{row.familyName}</td>
+      <td>
+        <span className="roster-company">
+          <CompanyLogo src={row.logoUrl} />
+          <span>{row.companyName}</span>
+        </span>
+      </td>
+      <td>{regionLabel(row.region)}</td>
+      <td>{row.year || "—"}</td>
+      <td>{sizeLabel(row.size)}</td>
+      <td>
+        <div className="roster-buttons">
+          <form action={setModelEnabled}>
+            <input type="hidden" name="id" value={row.id} />
+            <input type="hidden" name="enabled" value={row.enabled ? "0" : "1"} />
+            <button className={row.enabled ? "button-off" : "button-on"} type="submit">
+              {row.enabled ? "Turn off" : "Turn on"}
+            </button>
+          </form>
+          <button className="button-quiet" type="button" popoverTarget={panel}>
+            Edit
+          </button>
+        </div>
+        <div id={panel} popover="auto" className="roster-edit card">
+          <form action={saveModel} className="stack">
+            <h2>Edit {row.name}</h2>
+            <input type="hidden" name="id" value={row.id} />
+            <div className="roster-form">
+              <ModelFields
+                openrouterId={row.openrouterId}
+                name={row.name}
+                company={row.companyName}
+                family={row.familyName}
+                region={row.region}
+                year={row.year}
+                size={row.size}
+              />
+            </div>
+            <p className="muted">Region belongs to the company. New games use it.</p>
+            <div className="row">
+              <button className="button" type="submit">
+                Save
+              </button>
+              <button className="button-quiet" type="button" popoverTarget={panel} popoverTargetAction="hide">
+                Cancel
+              </button>
+            </div>
+          </form>
+        </div>
+      </td>
+    </tr>
   );
 }
 
