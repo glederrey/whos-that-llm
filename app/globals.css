@@ -164,7 +164,6 @@ img.avatar { object-fit: cover; object-position: center; border-radius: 999px; }
   text-decoration: none;
 }
 .menu a:hover, .menu-item:hover { background: var(--teal-wash); color: var(--text); }
-.menu-row { display: flex; align-items: center; justify-content: space-between; padding: 4px 10px; }
 html[data-theme="light"] .for-dark { display: none; }
 html[data-theme="dark"] .for-light { display: none; }
 
@@ -255,8 +254,8 @@ p { margin: 0; }
 .button-quiet:hover { background: var(--teal-wash); border-color: var(--teal); }
 a.button, a.button-quiet { display: inline-block; text-decoration: none; }
 .button-lg { padding: 13px 26px; font-size: 17px; }
-.icon-button.theme-toggle, .theme-toggle { width: 40px; height: 40px; padding: 0; display: inline-flex; align-items: center; justify-content: center; }
-.theme-toggle svg { width: 20px; height: 20px; }
+.menu .theme-toggle { display: flex; align-items: center; justify-content: space-between; gap: 12px; cursor: pointer; }
+.theme-toggle svg { width: 18px; height: 18px; flex: none; color: var(--mute); }
 .give-up { color: var(--miss-press); padding: 6px 10px; }
 .button-quiet.give-up { background: transparent; color: var(--miss-press); border-color: transparent; padding: 6px 10px; }
 .button-quiet.give-up:hover { background: var(--miss-wash); color: var(--miss-press); border-color: transparent; }
@@ -990,6 +989,39 @@ html[data-theme="dark"] .history-status[data-state="given_up"] { color: var(--mi
   .history-row { grid-template-columns: 1fr; }
   .roster-form { grid-template-columns: 1fr; }
   .bubble { max-width: 94%; }
+}
+
+@media (max-width: 560px) {
+  .header, .page, .footer-inner { width: calc(100% - 24px); }
+  .header { padding-top: 14px; gap: 8px; min-height: 64px; }
+  .brand { font-size: 17px; gap: 10px; white-space: nowrap; min-width: 0; }
+  .header-nav { gap: 2px; flex: none; }
+  .header-nav > a { width: 40px; height: 40px; padding: 0; justify-content: center; }
+  .header-nav > a .nav-label { display: none; }
+  .header-nav .account { margin-left: 6px; }
+  .menu { min-width: min(260px, calc(100vw - 24px)); }
+  .menu a, .menu-item { padding: 12px 10px; }
+  h1 { font-size: 32px; }
+  .goal { font-size: 28px; }
+  .card { padding: 16px; }
+  .board th, .board td { padding: 12px 12px; }
+  .board .rank { width: 56px; }
+  .button-lg { width: 100%; text-align: center; }
+  .round-bar { padding: 10px 12px; }
+  .footer-inner { padding: 16px 0 24px; }
+  .round > header { position: sticky; top: 0; z-index: 10; margin: 0 -12px; padding: 8px 12px; background: var(--canvas); }
+  .round-bar { flex-wrap: nowrap; }
+  .round-title { min-width: 0; }
+  .composer textarea { min-height: 56px; resize: none; }
+  .composer .meta .button { padding: 10px 22px; }
+  .trait { flex-wrap: wrap; gap: 8px 12px; }
+  .trait-side { flex-wrap: wrap; justify-content: flex-end; }
+  .reveal { padding: 8px 12px; min-height: 40px; }
+  .button-quiet.give-up { padding: 8px 12px; min-height: 40px; }
+  .candidate { padding: 10px 8px; }
+  .score { font-size: 44px; }
+  .model-lockup { align-items: flex-start; }
+  .dialog { width: calc(100vw - 32px); }
 }
 
 @media (prefers-reduced-motion: reduce) {

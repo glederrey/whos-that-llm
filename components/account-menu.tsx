@@ -61,10 +61,7 @@ export function AccountMenu({
               Sign in
             </a>
           )}
-          <div className="menu-row">
-            <span>Theme</span>
-            <ThemeToggle />
-          </div>
+          <ThemeToggle />
           {userId ? (
             <>
               {children}
