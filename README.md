@@ -6,7 +6,7 @@ The first build is **All models**. The other categories are in the spec and come
 
 The spec is in [`docs/`](docs/README.md). That spec is not a public page on the site.
 
-The first playable build is All models, with three small models enabled: Claude Haiku 5.5, GPT-5.6 Luna, and DeepSeek V4 Flash. Other categories, the profile, and admin come later.
+The first playable build is All models, with six small models enabled: Claude Haiku 4.5, Claude Haiku 5.5, GPT-5.6 Luna, GPT-5.6 Luna Pro, GPT-6 Luna, and DeepSeek V4 Flash. Opus, Sonnet, the larger GPTs, DeepSeek Pro, and Mistral stay off. Other categories, the profile, and admin come later.
 
 ## Run it locally
 

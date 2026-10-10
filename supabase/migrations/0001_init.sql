@@ -620,7 +620,7 @@ on conflict (id) do nothing;
 insert into public.families (id, name, enabled) values
   ('opus', 'Opus', true),
   ('sonnet', 'Sonnet', true),
-  ('haiku', 'Haiku', false),
+  ('haiku', 'Haiku', true),
   ('gpt', 'GPT', true),
   ('deepseek', 'DeepSeek', true),
   ('mistral', 'Mistral', true)
@@ -634,8 +634,11 @@ insert into public.models (
   ('claude-opus-5-5', 'anthropic/claude-opus-5.5', 'Claude Opus 5.5', 'anthropic', 'opus', 'large', false, true, '{"reasoning":{"effort":"low"}}', true, '2026-09-22', false, 4, 20),
   ('claude-sonnet-5', 'anthropic/claude-sonnet-5', 'Claude Sonnet 5', 'anthropic', 'sonnet', 'medium', false, true, '{"reasoning":{"effort":"low"}}', false, '2026-06-30', false, 2, 10),
   ('claude-sonnet-5-5', 'anthropic/claude-sonnet-5.5', 'Claude Sonnet 5.5', 'anthropic', 'sonnet', 'medium', false, true, '{"reasoning":{"effort":"low"}}', true, '2026-09-28', false, 2, 10),
+  ('claude-haiku-4-5', 'anthropic/claude-haiku-4.5', 'Claude Haiku 4.5', 'anthropic', 'haiku', 'small', false, true, '{"reasoning":{"effort":"low"}}', false, '2025-10-15', true, 1, 5),
   ('claude-haiku-5-5', 'anthropic/claude-haiku-5.5', 'Claude Haiku 5.5', 'anthropic', 'haiku', 'small', false, true, '{"reasoning":{"effort":"low"}}', false, '2026-10-07', true, 0.1, 0.5),
   ('gpt-5-6-luna', 'openai/gpt-5.6-luna', 'GPT-5.6 Luna', 'openai', 'gpt', 'small', false, true, '{"reasoning":{"effort":"low"}}', false, '2026-07-09', true, 0.2, 1.2),
+  ('gpt-5-6-luna-pro', 'openai/gpt-5.6-luna-pro', 'GPT-5.6 Luna Pro', 'openai', 'gpt', 'small', false, true, '{"reasoning":{"effort":"low"}}', false, '2026-07-09', true, 0.2, 1.2),
+  ('gpt-6-luna', 'openai/gpt-6-luna', 'GPT-6 Luna', 'openai', 'gpt', 'small', false, true, '{"reasoning":{"effort":"low"}}', false, '2026-09-22', true, 0.1, 0.5),
   ('gpt-5-6-sol', 'openai/gpt-5.6-sol', 'GPT-5.6 Sol', 'openai', 'gpt', 'medium', false, true, '{"reasoning":{"effort":"low"}}', true, '2026-07-09', false, 2, 10),
   ('gpt-5-6-terra', 'openai/gpt-5.6-terra', 'GPT-5.6 Terra', 'openai', 'gpt', 'large', false, true, '{"reasoning":{"effort":"low"}}', false, '2026-07-09', false, 2, 12),
   ('deepseek-v4-flash', 'deepseek/deepseek-v4-flash', 'DeepSeek V4 Flash', 'deepseek', 'deepseek', 'small', true, true, '{"reasoning":{"effort":"low"}}', false, '2026-04-24', true, 0.0099, 1.28),

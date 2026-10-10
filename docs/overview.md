@@ -8,7 +8,7 @@ The name on the site is **Who's that LLM**.
 
 **All models** is the game to build first. One site. A player signs up or logs in before they can play. They get ten messages, a word-by-word reply, an optional guess, year and size hints, no-hint mode, and a result page.
 
-The playable roster is three small models: Claude Haiku 5.5, GPT-5.6 Luna, and DeepSeek V4 Flash. Every other seeded model stays off. Adding more is an admin job, and admin comes later.
+The playable roster is six small models: Claude Haiku 4.5, Claude Haiku 5.5, GPT-5.6 Luna, GPT-5.6 Luna Pro, GPT-6 Luna, and DeepSeek V4 Flash. Every other seeded model stays off. OpenRouter lists no other small Anthropic model, so Haiku 4.5 is the only extra Anthropic row. Adding more is an admin job, and admin comes later.
 
 Daily, company, family, region, and custom are specified in [Rules](rules.md) and come later. The home page lists them, and only All models can be started. Size is a hint, not a category. The profile, the home weekly top 5, daily result stats, and the admin screens come later too. The pause flag exists from the first build, because a credit error pauses everyone.
 
@@ -101,7 +101,7 @@ Ten replies are 5,000 output tokens, plus the growing transcript on the way in. 
 
 | Tier | Examples | About one full round |
 |---|---|---|
-| Small | Haiku 5.5, a small GPT, DeepSeek Flash | under 1 cent |
+| Small | Haiku 5.5, the Lunas, DeepSeek Flash | under 1 cent. Haiku 4.5 is a few cents |
 | Medium | Sonnet 5.5, GPT-5.6 Sol | about 5 cents |
 | Large | Opus 5.5 | about 10 cents, more when the model spends heavily before the visible reply |
 | Leave out | Fable | several times an Opus round |
