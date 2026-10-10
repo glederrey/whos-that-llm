@@ -1,6 +1,6 @@
 import type { GameStatus } from "./game";
 import { avatarPublicUrl, profileStats, publicImageCacheControl, readImage, traitFound, type ProfileStats } from "./profile";
-import { serviceOrThrow } from "./rounds";
+import { presentLogo, serviceOrThrow } from "./rounds";
 import { publicEnv } from "./supabase/env";
 
 export type HistoryRow = {
@@ -10,9 +10,8 @@ export type HistoryRow = {
   score: number | null;
   messageCount: number;
   modelName: string | null;
-};
-
-export type GameSummary = HistoryRow & {
+  companyName: string | null;
+  logoPath: string | null;
   companyFound: boolean;
   regionFound: boolean;
 };
@@ -36,7 +35,14 @@ export async function loadProfileStats(userId: string): Promise<ProfileStats> {
   );
 }
 
-export async function loadHistory(userId: string, page: number, selectedId: string | null) {
+type ModelRef = {
+  name: string;
+  company_id: string;
+  logo_path: string | null;
+  companies: { name: string; logo_path: string } | { name: string; logo_path: string }[] | null;
+};
+
+export async function loadHistory(userId: string, page: number) {
   const client = serviceOrThrow();
   const { count, error: countError } = await client
     .from("games")
@@ -49,52 +55,56 @@ export async function loadHistory(userId: string, page: number, selectedId: stri
   const from = (safePage - 1) * pageSize;
   const { data, error } = await client
     .from("games")
-    .select("id, status, score, message_count, started_at, models(name)")
+    .select(
+      "id, status, score, message_count, started_at, traits, models(name, company_id, logo_path, companies(name, logo_path))",
+    )
     .eq("user_id", userId)
     .order("started_at", { ascending: false })
     .range(from, from + pageSize - 1);
   if (error) throw new Error("Could not read profile history.");
-  const rows: HistoryRow[] = (data ?? []).map((row) => ({
-    id: row.id as string,
-    startedAt: row.started_at as string,
-    status: row.status as GameStatus,
-    score: row.score as number | null,
-    messageCount: Number(row.message_count ?? 0),
-    modelName: row.status === "active" ? null : modelName(row.models),
-  }));
-  const summary = selectedId ? await loadSummary(userId, selectedId) : null;
-  return { rows, total, page: safePage, summary };
-}
 
-async function loadSummary(userId: string, gameId: string): Promise<GameSummary | null> {
-  const client = serviceOrThrow();
-  const { data, error } = await client
-    .from("games")
-    .select("id, status, score, message_count, started_at, traits, models(name)")
-    .eq("user_id", userId)
-    .eq("id", gameId)
-    .maybeSingle();
-  if (error || !data) return null;
-  const { data: guesses } = await client
-    .from("guesses")
-    .select("company_correct, region_correct")
-    .eq("game_id", gameId);
-  const companyCorrect = (guesses ?? []).some((guess) => Boolean(guess.company_correct));
-  const regionCorrect = (guesses ?? []).some((guess) => Boolean(guess.region_correct));
-  const given = Array.isArray((data.traits as { given?: unknown } | null)?.given)
-    ? ((data.traits as { given: string[] }).given)
-    : [];
-  const status = data.status as GameStatus;
-  return {
-    id: data.id as string,
-    startedAt: data.started_at as string,
-    status,
-    score: data.score as number | null,
-    messageCount: Number(data.message_count ?? 0),
-    modelName: status === "active" ? null : modelName(data.models),
-    companyFound: traitFound({ status, given, companyCorrect, regionCorrect, trait: "company" }),
-    regionFound: traitFound({ status, given, companyCorrect, regionCorrect, trait: "region" }),
-  };
+  const ids = (data ?? []).map((row) => row.id as string);
+  const flags = new Map<string, { company: boolean; region: boolean }>();
+  if (ids.length > 0) {
+    const { data: guesses, error: guessError } = await client
+      .from("guesses")
+      .select("game_id, company_correct, region_correct")
+      .in("game_id", ids);
+    if (guessError) throw new Error("Could not read profile history.");
+    for (const guess of guesses ?? []) {
+      const key = guess.game_id as string;
+      const current = flags.get(key) ?? { company: false, region: false };
+      flags.set(key, {
+        company: current.company || Boolean(guess.company_correct),
+        region: current.region || Boolean(guess.region_correct),
+      });
+    }
+  }
+
+  const rows: HistoryRow[] = (data ?? []).map((row) => {
+    const status = row.status as GameStatus;
+    const given = Array.isArray((row.traits as { given?: unknown } | null)?.given)
+      ? (row.traits as { given: string[] }).given
+      : [];
+    const seen = flags.get(row.id as string) ?? { company: false, region: false };
+    const model = first(row.models as ModelRef | ModelRef[] | null);
+    const company = model ? first(model.companies) : null;
+    const finished = status !== "active";
+    return {
+      id: row.id as string,
+      startedAt: row.started_at as string,
+      status,
+      score: row.score as number | null,
+      messageCount: Number(row.message_count ?? 0),
+      modelName: finished ? (model?.name ?? "Unknown model") : null,
+      companyName: finished ? (company?.name ?? null) : null,
+      logoPath:
+        finished && model ? presentLogo(model.logo_path || company?.logo_path || "", model.company_id) : null,
+      companyFound: traitFound({ status, given, companyCorrect: seen.company, regionCorrect: seen.region, trait: "company" }),
+      regionFound: traitFound({ status, given, companyCorrect: seen.company, regionCorrect: seen.region, trait: "region" }),
+    };
+  });
+  return { rows, total, page: safePage };
 }
 
 export async function saveAvatar(userId: string, bytes: Uint8Array): Promise<{ error: "avatar" } | { path: string }> {
@@ -124,8 +134,7 @@ export function currentAvatarUrl(path: string | null): string | null {
   return avatarPublicUrl(env.url, path);
 }
 
-function modelName(models: { name: string } | { name: string }[] | null): string {
-  if (!models) return "Unknown model";
-  if (Array.isArray(models)) return models[0]?.name ?? "Unknown model";
-  return models.name;
+function first<T>(value: T | T[] | null): T | null {
+  if (Array.isArray(value)) return (value[0] as T | undefined) ?? null;
+  return value;
 }

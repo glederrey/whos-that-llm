@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { HistoryList } from "@/components/history-list";
 import { ProfileForm } from "@/components/profile-form";
 import type { GameStatus } from "@/lib/game";
 import { loadHistory, loadProfileStats, profilePageSize } from "@/lib/profile-data";
@@ -7,12 +8,8 @@ import { currentProfile } from "@/lib/session";
 
 export const dynamic = "force-dynamic";
 
-function profileHref(page: number, gameId?: string) {
-  const params = new URLSearchParams();
-  if (page > 1) params.set("page", String(page));
-  if (gameId) params.set("game", gameId);
-  const query = params.toString();
-  return query ? `/profile?${query}` : "/profile";
+function profileHref(page: number) {
+  return page > 1 ? `/profile?page=${page}` : "/profile";
 }
 
 function formatWhen(iso: string) {
@@ -44,7 +41,7 @@ function statusLabel(status: GameStatus) {
 export default async function ProfilePage({
   searchParams,
 }: {
-  searchParams: Promise<{ page?: string; game?: string }>;
+  searchParams: Promise<{ page?: string }>;
 }) {
   const params = await searchParams;
   const { user, username, avatarUrl } = await currentProfile();
@@ -53,7 +50,7 @@ export default async function ProfilePage({
 
   const stats = await loadProfileStats(user.id);
   const requested = Number(params.page);
-  const history = await loadHistory(user.id, Number.isFinite(requested) ? requested : 1, params.game ?? null);
+  const history = await loadHistory(user.id, Number.isFinite(requested) ? requested : 1);
   const shownPage = history.page;
   const realPageCount = Math.max(1, Math.ceil(history.total / profilePageSize()));
 
@@ -87,17 +84,22 @@ export default async function ProfilePage({
         <div className="card empty">No games yet.</div>
       ) : (
         <>
-          <ul className="history">
-            {history.rows.map((row) => (
-              <li key={row.id}>
-                <a href={profileHref(shownPage, row.id)} aria-current={history.summary?.id === row.id ? "true" : undefined}>
-                  <span>{formatWhen(row.startedAt)}</span>
-                  <span>{statusLabel(row.status)}</span>
-                  <span>{row.score === null ? "—" : row.score.toLocaleString("en-US")}</span>
-                </a>
-              </li>
-            ))}
-          </ul>
+          <HistoryList
+            key={shownPage}
+            items={history.rows.map((row) => ({
+              id: row.id,
+              when: formatWhen(row.startedAt),
+              status: statusLabel(row.status),
+              state: row.status,
+              score: row.score === null ? "—" : row.score.toLocaleString("en-US"),
+              messages: row.messageCount,
+              modelName: row.modelName,
+              companyName: row.companyName,
+              logoPath: row.logoPath,
+              companyFound: row.companyFound,
+              regionFound: row.regionFound,
+            }))}
+          />
           <div className="row pager">
             <div className="row">
               {shownPage > 1 ? (
@@ -121,32 +123,6 @@ export default async function ProfilePage({
           </div>
         </>
       )}
-      {history.summary ? (
-        <section className="card">
-          <h2>This game</h2>
-          <dl className="summary-list">
-            <dt>Date</dt>
-            <dd>{formatWhen(history.summary.startedAt)}</dd>
-            <dt>Model</dt>
-            <dd>{history.summary.modelName ?? "Hidden until the round ends."}</dd>
-            <dt>Status</dt>
-            <dd>{statusLabel(history.summary.status)}</dd>
-            <dt>Score</dt>
-            <dd>{history.summary.score === null ? "—" : history.summary.score.toLocaleString("en-US")}</dd>
-            <dt>Messages used</dt>
-            <dd>{history.summary.messageCount}</dd>
-            <dt>Company</dt>
-            <dd>{history.summary.companyFound ? "Found" : "Not found"}</dd>
-            <dt>Region</dt>
-            <dd>{history.summary.regionFound ? "Found" : "Not found"}</dd>
-          </dl>
-          {history.summary.status === "active" ? (
-            <p>
-              <a href={`/play/${history.summary.id}`}>Continue</a>
-            </p>
-          ) : null}
-        </section>
-      ) : null}
     </div>
   );
 }

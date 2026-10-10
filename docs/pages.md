@@ -299,7 +299,7 @@ Private. The account menu shows **Profile** once the player has a username. No s
 - Username field, same rules as welcome. **Save** updates the profile and every game row for that user id. The leaderboard follows. An empty name is rejected.
 - **Picture.** Optional upload, JPEG, PNG, or WebP, at most 1 MB. A larger file or any other type shows **Use a JPEG, PNG, or WebP under 1 MB.** It replaces the generated mark in the header. People who skipped it on welcome add it here.
 - Stats: games played, solved, missed, given up, solve rate, best score, average score, average messages on a solved game.
-- Games: 10 per page, **Previous** and **Next**. Opening a row shows a summary on this page: date, model, status, score, messages used, and whether company and region were found. No transcript. An open round hides the model name and links to **Continue**.
+- Games: 10 per page, **Previous** and **Next**. Clicking a row opens its summary in place, directly under that row, and clicking it again closes it. One row is open at a time. The summary shows the company logo and model name, date, status, score, messages used, and whether company and region were found. No transcript. A logo that fails to load is hidden. An open round hides the model and logo and links to **Continue**.
 
 ## Admin
 

@@ -109,7 +109,7 @@ function first<T>(value: T | T[] | null): T {
   return value as T;
 }
 
-function presentLogo(path: string, companyId: string): string {
+export function presentLogo(path: string, companyId: string): string {
   const stored = logoPathForPlay(path, companyId);
   const base = publicEnv()?.url;
   if (!base) return stored;
