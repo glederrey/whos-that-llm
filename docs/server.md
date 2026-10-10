@@ -101,7 +101,7 @@ In one transaction:
 
 0. If `app_settings.paused`, return `503` `paused`.
 1. Reject if `profiles.username` is null (`422`, `username`). Reject if this user has a row with `status = 'active'` (`409`, `active_game`).
-2. Reject if they have 10 rows with `started_at` in the last hour (`429`, `hourly_cap`, body includes `nextAt`).
+2. Reject if they have 20 rows with `started_at` in the last hour (`429`, `hourly_cap`, body includes `nextAt`).
 3. For `daily`, reject a second `daily_key` of today (`409`, `daily_done`).
 4. Load the category and reject it unless `categories.enabled` (`404`). Build the pool. `all` and `daily` use every enabled model. `company` uses `poolKey` as a company id. `family` uses `poolKey` as a family id. `region` uses `poolKey` as `us`, `cn`, or `eu`. `custom` is not built yet. Reject a pool with fewer than 2 enabled models, except daily, which still rejects an empty roster. The error is `422` `pool_too_small`. `poolKey` is required for company, family, and region, and rejected for the others.
 5. Draw a uniform model from that pool. Daily copies the model id, the `pool_model_ids`, and the trait snapshot already stored for today's `daily_key` when any player has started it. Otherwise draw once and that id, that roster, and those traits are what later rows copy. Two people starting the daily in the same instant must not draw two models: take a transaction-level lock on a single advisory key for the UTC date, then read-or-insert.
