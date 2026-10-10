@@ -357,7 +357,7 @@ html[data-theme="dark"] .error { color: var(--miss); }
 /* Auth */
 .auth {
   width: min(420px, 100%);
-  margin: 24px auto;
+  margin: 44px auto 24px;
   background: var(--card);
   border: 1px solid var(--line);
   border-radius: 18px;
