@@ -499,7 +499,7 @@ html[data-theme="dark"] .hour-status strong { color: var(--teal); }
 .board .num, .board th.num { text-align: right; font-variant-numeric: tabular-nums; }
 .board td.name { font-weight: 500; }
 .board .player { display: inline-flex; align-items: center; gap: 10px; }
-.board .player .avatar { flex: none; }
+.board .player .avatar { flex: none; width: 28px; height: 28px; }
 .board .player .you-tag { margin-left: 0; }
 .board-card { padding: 0; overflow-x: auto; }
 .board tr.mine td { background: var(--teal-wash); font-weight: 700; }
