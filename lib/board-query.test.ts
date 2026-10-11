@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { boardChoice, boardHref, boardMiddles, boardModes, type BoardMode } from "./board-query";
+import { boardChoice, boardHref, boardMiddle, boardModes, type BoardMode } from "./board-query";
 
 const modes: BoardMode[] = [
   { id: "daily", name: "Daily", open: false },
@@ -48,37 +48,18 @@ test("region and custom stay off the leaderboard bar", () => {
   );
 });
 
-test("the middle control follows the open mode", () => {
-  assert.deepEqual(boardMiddles("all", modes), [
-    { kind: "difficulty" },
-    { kind: "class", disabled: true },
-    { kind: "company", disabled: true },
-  ]);
-  assert.deepEqual(boardMiddles("daily", modes), [
-    { kind: "class", disabled: true },
-    { kind: "company", disabled: true },
-  ]);
+test("the middle slot is the selected mode's control", () => {
+  assert.deepEqual(boardMiddle("all", modes), { kind: "difficulty" });
+  assert.equal(boardMiddle("daily", modes), null);
+  assert.deepEqual(boardMiddle("class", modes), { kind: "class", disabled: true });
+  assert.deepEqual(boardMiddle("company", modes), { kind: "company", disabled: true });
 
   const dailyOpen = modes.map((mode) => (mode.id === "daily" ? { ...mode, open: true } : mode));
-  assert.deepEqual(boardMiddles("daily", dailyOpen), [
-    { kind: "difficulty" },
-    { kind: "class", disabled: true },
-    { kind: "company", disabled: true },
-  ]);
+  assert.deepEqual(boardMiddle("daily", dailyOpen), { kind: "difficulty" });
+  assert.deepEqual(boardMiddle("all", dailyOpen), { kind: "difficulty" });
 
   const classOpen = modes.map((mode) => (mode.id === "class" ? { ...mode, open: true } : mode));
-  assert.deepEqual(boardMiddles("class", classOpen), [
-    { kind: "class", disabled: false },
-    { kind: "company", disabled: true },
-  ]);
-  assert.deepEqual(boardMiddles("all", classOpen), [
-    { kind: "difficulty" },
-    { kind: "company", disabled: true },
-  ]);
-
-  const bothOpen = modes.map((mode) =>
-    mode.id === "class" || mode.id === "company" ? { ...mode, open: true } : mode,
-  );
-  assert.deepEqual(boardMiddles("company", bothOpen), [{ kind: "company", disabled: false }]);
-  assert.deepEqual(boardMiddles("all", bothOpen), [{ kind: "difficulty" }]);
+  assert.deepEqual(boardMiddle("class", classOpen), { kind: "class", disabled: false });
+  assert.deepEqual(boardMiddle("all", classOpen), { kind: "difficulty" });
+  assert.deepEqual(boardMiddle("company", classOpen), { kind: "company", disabled: true });
 });

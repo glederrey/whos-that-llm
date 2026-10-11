@@ -236,7 +236,7 @@ function ModelRow({
             <input type="hidden" name="id" value={row.id} />
             <input type="hidden" name="enabled" value={row.enabled ? "0" : "1"} />
             <button className={row.enabled ? "button-off" : "button-on"} type="submit">
-              {row.enabled ? "Turn off" : "Turn on"}
+              {row.enabled ? "Off" : "On"}
             </button>
           </form>
           <button className="button-quiet" type="button" popoverTarget={panel}>

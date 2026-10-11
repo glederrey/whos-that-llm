@@ -1,5 +1,5 @@
 import { anyDifficulty, difficulties, difficultyLabel, type BoardDifficulty } from "@/lib/difficulty";
-import { boardHref, boardMiddles, type BoardChoice, type BoardMode, type BoardPeriod } from "@/lib/board-query";
+import { boardHref, boardMiddle, type BoardChoice, type BoardMode, type BoardPeriod } from "@/lib/board-query";
 
 export function BoardControls({
   base,
@@ -19,7 +19,7 @@ export function BoardControls({
   difficulty: BoardDifficulty;
 }) {
   const choice: BoardChoice = { category, period, difficulty };
-  const middles = boardMiddles(category, modes);
+  const middle = boardMiddle(category, modes);
   return (
     <div className="board-controls">
       <div className="segmented board-controls-modes" role="group" aria-label="Mode">
@@ -36,61 +36,48 @@ export function BoardControls({
         )}
       </div>
       <div className="board-controls-middle">
-        {middles.map((middle) => {
-          if (middle.kind === "difficulty") {
-            return (
-              <div key="difficulty" className="segmented" role="group" aria-label="Difficulty">
-                <a aria-pressed={difficulty === anyDifficulty} href={boardHref(base, { ...choice, difficulty: anyDifficulty })}>
-                  Any difficulty
-                </a>
-                {difficulties.map((tab) => (
-                  <a
-                    key={tab}
-                    className={`difficulty-${tab}`}
-                    aria-pressed={tab === difficulty}
-                    href={boardHref(base, { ...choice, difficulty: tab })}
-                  >
-                    {difficultyLabel[tab]}
-                  </a>
-                ))}
-              </div>
-            );
-          }
-          if (middle.kind === "class") {
-            return (
-              <select
-              key="class"
-              aria-label="Class"
-              disabled={middle.disabled}
-              defaultValue=""
-              title={middle.disabled ? "That mode is not open yet." : undefined}
-            >
-                <option value="">Class</option>
-                {classes.map((item) => (
-                  <option key={item.id} value={item.id}>
-                    {item.name}
-                  </option>
-                ))}
-              </select>
-            );
-          }
-          return (
-            <select
-              key="company"
-              aria-label="Company"
-              disabled={middle.disabled}
-              defaultValue=""
-              title={middle.disabled ? "That mode is not open yet." : undefined}
-            >
-              <option value="">Company</option>
-              {companies.map((item) => (
-                <option key={item.id} value={item.id}>
-                  {item.name}
-                </option>
-              ))}
-            </select>
-          );
-        })}
+        {middle?.kind === "difficulty" ? (
+          <div className="segmented" role="group" aria-label="Difficulty">
+            <a aria-pressed={difficulty === anyDifficulty} href={boardHref(base, { ...choice, difficulty: anyDifficulty })}>
+              Any difficulty
+            </a>
+            {difficulties.map((tab) => (
+              <a
+                key={tab}
+                className={`difficulty-${tab}`}
+                aria-pressed={tab === difficulty}
+                href={boardHref(base, { ...choice, difficulty: tab })}
+              >
+                {difficultyLabel[tab]}
+              </a>
+            ))}
+          </div>
+        ) : null}
+        {middle?.kind === "class" ? (
+          <select aria-label="Class" disabled={middle.disabled} defaultValue="" title={middle.disabled ? "That mode is not open yet." : undefined}>
+            <option value="">Class</option>
+            {classes.map((item) => (
+              <option key={item.id} value={item.id}>
+                {item.name}
+              </option>
+            ))}
+          </select>
+        ) : null}
+        {middle?.kind === "company" ? (
+          <select
+            aria-label="Company"
+            disabled={middle.disabled}
+            defaultValue=""
+            title={middle.disabled ? "That mode is not open yet." : undefined}
+          >
+            <option value="">Company</option>
+            {companies.map((item) => (
+              <option key={item.id} value={item.id}>
+                {item.name}
+              </option>
+            ))}
+          </select>
+        ) : null}
       </div>
       <div className="segmented board-controls-period" role="group" aria-label="Period">
         <a aria-pressed={period === "week"} href={boardHref(base, { ...choice, period: "week" })}>

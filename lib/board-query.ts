@@ -46,22 +46,13 @@ export function boardModes(
     .map((category) => ({ id: category.id, name: category.name, open: category.enabled }));
 }
 
-/**
- * One middle control for the selected mode.
- * Daily's difficulty stays hidden while Daily is closed.
- * Class and Company dropdowns stay on the bar, disabled, while those modes are closed.
- */
-export function boardMiddles(category: string, modes: BoardMode[]): BoardMiddle[] {
-  const middles: BoardMiddle[] = [];
+/** The one middle control for the selected mode. Other modes' controls stay off the bar. */
+export function boardMiddle(category: string, modes: BoardMode[]): BoardMiddle | null {
   const selected = modes.find((mode) => mode.id === category);
-  if (difficultyModeIds.has(category) && selected?.open) middles.push({ kind: "difficulty" });
-  for (const id of ["class", "company"] as const) {
-    const mode = modes.find((item) => item.id === id);
-    if (!mode) continue;
-    if (!mode.open) middles.push({ kind: id, disabled: true });
-    else if (category === id) middles.push({ kind: id, disabled: false });
-  }
-  return middles;
+  if (!selected) return null;
+  if (difficultyModeIds.has(category)) return selected.open ? { kind: "difficulty" } : null;
+  if (category === "class" || category === "company") return { kind: category, disabled: !selected.open };
+  return null;
 }
 
 export function boardHref(base: "/" | "/leaderboard", choice: BoardChoice, page = 1): string {
