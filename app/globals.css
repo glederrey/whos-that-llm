@@ -1101,7 +1101,7 @@ html[data-theme="dark"] .md a { color: var(--teal); }
 .roster.models th,
 .roster.models td { padding: 10px 8px; }
 .roster.models th:last-child,
-.roster.models td:last-child { white-space: nowrap; }
+.roster.models td:last-child { white-space: nowrap; padding-right: 20px; }
 .roster.models .button-on,
 .roster.models .button-off,
 .roster.models .button-quiet { padding: 6px 10px; }
