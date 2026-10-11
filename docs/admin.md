@@ -1,24 +1,34 @@
 # Admin
 
-This build has two pages, `/admin` and `/admin/models`. The rest of this document is the later cockpit.
+This build has six pages: `/admin`, `/admin/costs`, `/admin/games`, `/admin/modes`, `/admin/models`, and `/admin/classes`. The rest of this document is the later cockpit.
 
 The server reads the signed-in Supabase user and allows admin only when `app_metadata.admin === true`. Players cannot write `app_metadata`. A profile edit cannot grant access. There is no role column and no client flag. A missing flag matches nobody.
 
-- Match: the two pages render. The account menu includes **Admin** for that session only. The item is rendered on the server. It is not a flag in client JavaScript.
+- Match: those pages render. The account menu includes **Admin** for that session only. The item is rendered on the server. It is not a flag in client JavaScript.
 - Anything else, including no session: `notFound()`. The response looks like any other missing URL. There is no "forbidden" page, no login wall, and no admin link in that HTML.
 - The flag is not sent to the browser.
 
 Google and email/password both work when that session has the flag. A second person does not get access by editing their username.
 
-Roster changes are server actions. Each one repeats the check, then writes with the server key. anon and authenticated cannot insert, update, or delete `models`, `companies`, or `families`. The counts on `/admin` are not a public function.
+Roster changes are server actions. Each one repeats the check, then writes with the server key. anon and authenticated cannot insert, update, or delete `models`, `companies`, `classes`, or `model_classes`. The counts on `/admin` are not a public function.
 
-`/admin` is the stats page. It shows three things, in this order:
+A subnav sits on every one of those pages: **Stats, Costs, Games, Modes, Models, Classes.**
+
+`/admin` is the headline. It shows five counts: models in the roster, active models, players, games today (UTC), and total games. Players are accounts that have started a game. It does not load OpenRouter, and it does not list game results or modes.
+
+`/admin/costs` is the money page.
 
 - **OpenRouter spend**, read from OpenRouter on every load with `OPENROUTER_API_KEY` (a runtime variable, never baked at build time). `GET /api/v1/key` gives what that key has paid: all time, this UTC week, this UTC month, today. `GET /api/v1/activity` gives requests, tokens, and spend per model for the last 7 and last 30 completed UTC days. OpenRouter only serves activity to a management key and covers the whole account, so set `OPENROUTER_MANAGEMENT_KEY` if the game key is not one. Each call fails on its own: the page says so in that section and still renders the rest.
-- **Games**, from our tables: solve rate, give-ups, correct guesses, messages, tokens, and cost per game, cost per solved game, failed calls, and games started per UTC day for 14 days. Tokens and cost are the `usage` rows saved from each OpenRouter reply.
-- **Which models are hardest to find**: per hidden model, games, solve rate, messages when solved, requests, tokens, cost, and cost per game, hardest first.
+- **Our ledger**: cost per game, cost per solved game, ledger spend, and failed calls. Tokens and cost are the `usage` rows saved from each OpenRouter reply. This is not the OpenRouter bill above it.
+- **Spend by hidden model**: requests, tokens, cost, and cost per game, highest cost first.
 
-`/admin/models` shows the display name and the family beside company, region, year, size, OpenRouter id, and active. Add and edit include the family. **Turn on** is green. **Turn off** is red.
+`/admin/games` is play, without money columns: solve rate, give-ups, correct guesses, messages, tokens, games started per UTC day for 14 days, and which models are hardest to find (games, solve rate, messages when solved).
+
+`/admin/modes` is one row per game category, including a category with zero games, plus any extra category id already stored on a game. Each row has games, open, finished, solved, solve rate, and give-ups. A class leaderboard is not a row on this page. The class game mode is not built.
+
+`/admin/models` shows the display name, company, region, year, size, then the classes, then active. Class membership is a set of checkboxes from the classes that already exist, and a model can have more than one. **Turn on** is green. **Turn off** is red.
+
+`/admin/classes` creates and edits a class: name, description, and an optional company. There is no logo field. The class game mode is not on this page.
 
 The game still pauses for everyone when OpenRouter returns 402 or an explicit credit error. The pause switch on this page is later. Until then, clear `app_settings.paused` in the database after topping up credits on OpenRouter. The site does not take a payment for credits.
 
@@ -26,14 +36,13 @@ When the rest of this cockpit exists, it is still not a role, and it is still no
 
 ## Pages
 
-One home page for the picture, and the rest for the work. A subnav sits on every admin page: **Home, Models, Categories, Families, Stats, Rounds.** It is part of the admin layout, so it never appears on the public site.
+One home page for the picture, and the rest for the work. A subnav sits on every admin page: **Home, Models, Categories, Stats, Rounds.** It is part of the admin layout, so it never appears on the public site.
 
 | Page | What it is for |
 |---|---|
 | `/admin` | The picture. Spend, volume, and the pause switch |
 | `/admin/models` | Add a model, or set `enabled` |
-| `/admin/categories` | Show or hide categories, and turn a family leaderboard on later |
-| `/admin/families` | The family list |
+| `/admin/categories` | Show or hide categories |
 | `/admin/stats` | Confusion, hints, solve rates |
 | `/admin/rounds` | Transcripts, one round at a time |
 | `/admin/rounds/[gameId]` | One transcript |
@@ -64,15 +73,15 @@ Each block links to the page that can change the thing. Spend by model links to 
 
 Add, edit, and turn off. The column is `models.enabled`.
 
-**Add.** A form: our id (slug), OpenRouter id, display name, company, family, size, open weights, reasoning, release date, `provider_settings`, list prices, latest flag. `enabled` starts false. Saving an enabled reasoning model with empty settings, or an enabled model with no release date, is rejected. Companies and families can be created from here if the dropdown does not have them yet.
+**Add.** A form: our id (slug), OpenRouter id, display name, company, classes, size, open weights, reasoning, release date, `provider_settings`, list prices. There is no latest flag. `enabled` starts false. Saving an enabled reasoning model with empty settings, or an enabled model with no release date, is rejected. Companies can be created from here if the dropdown does not have them yet. Classes are chosen from `/admin/classes`. They are not typed in as a new name on this form.
 
-Open weights and reasoning are stored on the model as admin facts. Play does not use them. Size and release year are hints in All models, Region, and Daily. They are not points.
+Open weights and reasoning are stored on the model as admin facts. Play does not use them. Size and release year are hints in All models and Daily. They are not points. Region does not offer hints.
 
 **Logo.** Upload the company logo to the public `logos` bucket as `{company_id}.png` (PNG, SVG, or WebP, at most 1 MB). The row stores `logos/{company_id}.png` on `companies.logo_path`, or a model override on `models.logo_path`. If the upload is unavailable, paste an `https` URL instead. A model logo overrides the company logo.
 
 **Turn off.** The normal way to remove a model. `enabled = false`. It leaves every draw. The row stays. Rounds already played still show the name from `games.traits`. A round already open keeps the model it drew and the traits it froze, including one you just edited, so a player in the middle of ten messages is not rewritten. New rounds use the edited row.
 
-**Turn on.** Runs the checks above, then the model is eligible wherever its company, family, region, or latest flag puts it.
+**Turn on.** Runs the checks above, then the model is eligible wherever its company, region, or classes put it.
 
 **Delete the row.** Only when no game points at it. Otherwise the button reads **Turn it off instead** and does nothing. Deleting a model that has been played would break the foreign key. History still reads `games.traits` for the values.
 
@@ -82,9 +91,9 @@ The table shows list price beside average `cost_usd` and average `reasoning_toke
 
 ## Categories (`/admin/categories`)
 
-The built-ins are seeded: All models, Company, Family, Region, Latest, Daily, Origin. Size is not a row. All models starts enabled. The others start disabled.
+The built-ins are seeded: Daily, All models, Class, Company, Region, Custom. Latest, Origin, and Family are not rows. Size is not a row. All models starts enabled. The others start disabled. Class is that disabled card, before Company.
 
-You can rename the card, edit the sentence, change `sort_order`, and set `enabled`. You can set `leaderboard` and `hints_allowed`. The seed already matches [Rules](rules.md): leaderboards for All models and Daily, hints off for Company, Family, Latest, and Origin. Turning a main family's leaderboard on is a later choice, not the seed. You cannot delete a built-in.
+You can rename the card, edit the sentence, change `sort_order`, and set `enabled`. You can set `leaderboard` and `hints_allowed`. The seed already matches [Rules](rules.md): leaderboards for All models and Daily, hints only for Daily, All models, and Custom. Company, region, latest, and every other category have hints off. Custom has no leaderboard. A class leaderboard is one board per class, and it is not built. You cannot delete a built-in.
 
 Turning Daily off hides the card. Old daily rounds stay on the leaderboard as long as that category has `leaderboard` and has counted games. A round already started keeps the `rules.hintsAllowed` it copied.
 
@@ -94,21 +103,18 @@ The player sees the name and the sentence. On a pool picker they also see the co
 
 Reorder with `sort_order`. The lobby follows that order and leaves out categories with `enabled = false`.
 
-## Families (`/admin/families`)
+## Classes (`/admin/classes`)
 
-Families are a trait of a model (Opus, Sonnet), not a point trait. The Family card is a later category. This page edits the trait list.
+Create and edit. The fields are name, description, and an optional company. The id is a slug taken from the name when the row is created, and a rename does not change it. Leave the company blank for a class that is not one lab, such as GPT vs Claude. There is no logo column.
 
-- Create: slug and display name. Slug is `^[a-z0-9-]{2,32}$`. It does not change later.
-- Rename the display name. New games pick up the new name. Frozen rounds keep the name in `games.traits`.
-- `enabled = false` hides that family inside the Family picker. Models keep the id.
-- Delete only when no model references it.
+The model page attaches existing classes. It does not create them. A model can be in Opus and in Latest Anthropic at the same time.
 
-Family pays nothing. Feedback can still say **Same family.** A company pool for a lab with real families, such as Anthropic, uses that split. An OpenAI pool that shares one family is name-the-model only.
+This page does not start a round, and it does not show a leaderboard. When the class mode is built, each class has its own leaderboard, and that mode has no hints.
 
 ## Stats (`/admin/stats`)
 
 - Rounds started, solved, missed, given up. Today and all time.
-- Among misses: how many found company, region, and family at least once. Family is a count, not points.
+- Among misses: how many found company and region at least once.
 - Hints: how often year and size are bought, and how often a round that bought one still solved.
 - Messages used on solved rounds, 1 through 5.
 - Solve rate by category and by model.

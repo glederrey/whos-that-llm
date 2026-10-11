@@ -59,13 +59,12 @@ export function RoundBoard({ initial }: { initial: PublicGame }) {
     return Boolean(game.hints[key]) || openedHints.includes(key);
   }
 
-  function purchasable(key: "company" | "region" | "family") {
+  function purchasable(key: "company" | "region") {
     const visible =
       given.has(key) ||
       Boolean(game.hints[key]) ||
       (key === "company" && game.feedback?.company === "match") ||
-      (key === "region" && game.feedback?.region === "match") ||
-      (key === "family" && game.feedback?.familySame);
+      (key === "region" && game.feedback?.region === "match");
     if (!hintsOpen || visible || game.status !== "active") return null;
     return { label: `Reveal (−${game.hintCosts[key]} pts)`, busy: hintBusy !== null, onOpen: () => void buy(key) };
   }
@@ -331,11 +330,6 @@ export function RoundBoard({ initial }: { initial: PublicGame }) {
               value={given.get("region") ?? (game.feedback?.region === "match" ? game.feedback.regionValue : null) ?? game.hints.region}
               flag
               reveal={purchasable("region")}
-            />
-            <TraitLine
-              label="Family"
-              value={given.get("family") ?? (game.feedback?.familySame ? game.feedback.familyValue : null) ?? game.hints.family}
-              reveal={purchasable("family")}
             />
             {hintsOpen ? (
               <TraitLine

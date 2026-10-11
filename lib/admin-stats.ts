@@ -4,9 +4,11 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { requireOwner } from "./admin-access";
 import {
   computeGameMetrics,
+  modeRows,
   type GameFact,
   type GameMetrics,
   type GuessFact,
+  type ModeRow,
   type UsageFact,
 } from "./admin-metrics";
 import { serviceOrThrow } from "./rounds";
@@ -47,6 +49,20 @@ export async function loadGameMetrics(): Promise<GameMetrics> {
     modelCorrect: Boolean(row.model_correct),
   }));
   return computeGameMetrics(gameFacts, usageFacts, guessFacts);
+}
+
+export async function loadModeStats(): Promise<ModeRow[]> {
+  await requireOwner();
+  const client = serviceOrThrow();
+  const [games, categories] = await Promise.all([
+    readAll(client, "games", "id, status, category"),
+    client.from("categories").select("id, name").order("sort_order"),
+  ]);
+  if (categories.error) throw new Error("Could not read stats.");
+  return modeRows(
+    games.map((row) => ({ category: String(row.category ?? ""), status: String(row.status ?? "") })),
+    (categories.data ?? []).map((row) => ({ id: row.id as string, name: row.name as string })),
+  );
 }
 
 async function readAll(client: SupabaseClient, table: string, columns: string): Promise<Record<string, unknown>[]> {

@@ -3,7 +3,7 @@ import { CompanyLogo } from "@/components/company-logo";
 import { SectionNav } from "@/components/section-nav";
 import { addModel, saveModel, setModelEnabled } from "@/app/admin/actions";
 import { rosterNotice } from "@/lib/admin-model";
-import { loadRoster, type RosterRow } from "@/lib/admin-roster";
+import { loadRoster, type ClassRow, type RosterRow } from "@/lib/admin-roster";
 import { pageOf, searchRoster } from "@/lib/roster-list";
 import { regionLabel, sizeLabel } from "@/lib/game";
 
@@ -16,7 +16,7 @@ export default async function ModelsPage({
 }) {
   const params = await searchParams;
   const notice = rosterNotice(params.notice);
-  const { rows, companies, families } = await loadRoster();
+  const { rows, companies, classes } = await loadRoster();
   const query = (params.q ?? "").slice(0, 100);
   const found = searchRoster(rows, query);
   const active = pageOf(found.filter((row) => row.enabled), params.active);
@@ -38,9 +38,9 @@ export default async function ModelsPage({
         <summary>Add a model</summary>
         <form action={addModel} className="stack">
           <div className="roster-form">
-            <ModelFields />
+            <ModelFields classes={classes} />
           </div>
-          <p className="muted">A new model stays off until you turn it on. Type the family. A new name is added to the list.</p>
+          <p className="muted">A new model stays off until you turn it on. A new company name is added to the list.</p>
           <div>
             <button className="button" type="submit">
               Add model
@@ -49,7 +49,7 @@ export default async function ModelsPage({
         </form>
       </details>
       <form action="/admin/models" method="get" className="roster-search">
-        <input type="search" name="q" defaultValue={query} placeholder="Search by name, family, or company" aria-label="Search models" />
+          <input type="search" name="q" defaultValue={query} placeholder="Search by name, company, or class" aria-label="Search models" />
         <button className="button" type="submit">
           Search
         </button>
@@ -59,16 +59,11 @@ export default async function ModelsPage({
           </Link>
         ) : null}
       </form>
-      <RosterSection title="Active models" empty="No active models." list={active} query={query} pageKey="active" otherPage={inactive.page} />
-      <RosterSection title="Inactive models" empty="No inactive models." list={inactive} query={query} pageKey="inactive" otherPage={active.page} />
+      <RosterSection title="Active models" empty="No active models." list={active} query={query} pageKey="active" otherPage={inactive.page} classes={classes} />
+      <RosterSection title="Inactive models" empty="No inactive models." list={inactive} query={query} pageKey="inactive" otherPage={active.page} classes={classes} />
       <datalist id="roster-companies">
         {companies.map((company) => (
           <option key={company.id} value={company.name} />
-        ))}
-      </datalist>
-      <datalist id="roster-families">
-        {families.map((family) => (
-          <option key={family.id} value={family.name} />
         ))}
       </datalist>
     </div>
@@ -93,6 +88,7 @@ function RosterSection({
   query,
   pageKey,
   otherPage,
+  classes,
 }: {
   title: string;
   empty: string;
@@ -100,6 +96,7 @@ function RosterSection({
   query: string;
   pageKey: "active" | "inactive";
   otherPage: number;
+  classes: ClassRow[];
 }) {
   const hrefFor = (page: number) =>
     pageKey === "active" ? modelsHref(query, page, otherPage) : modelsHref(query, otherPage, page);
@@ -115,17 +112,17 @@ function RosterSection({
               <thead>
                 <tr>
                   <th>Name</th>
-                  <th>Family</th>
                   <th>Company</th>
                   <th>Region</th>
                   <th>Year</th>
                   <th>Size</th>
+                  <th>Classes</th>
                   <th></th>
                 </tr>
               </thead>
               <tbody>
                 {list.rows.map((row) => (
-                  <ModelRow key={row.id} row={row} />
+                  <ModelRow key={row.id} row={row} classes={classes} />
                 ))}
               </tbody>
             </table>
@@ -157,12 +154,11 @@ function RosterSection({
   );
 }
 
-function ModelRow({ row }: { row: RosterRow }) {
+function ModelRow({ row, classes }: { row: RosterRow; classes: ClassRow[] }) {
   const panel = `edit-${row.id}`;
   return (
     <tr className={row.enabled ? undefined : "is-off"}>
       <td>{row.name}</td>
-      <td>{row.familyName}</td>
       <td>
         <span className="roster-company">
           <CompanyLogo src={row.logoUrl} />
@@ -172,6 +168,7 @@ function ModelRow({ row }: { row: RosterRow }) {
       <td>{regionLabel(row.region)}</td>
       <td>{row.year || "—"}</td>
       <td>{sizeLabel(row.size)}</td>
+      <td>{row.classNames || "—"}</td>
       <td>
         <div className="roster-buttons">
           <form action={setModelEnabled}>
@@ -194,10 +191,11 @@ function ModelRow({ row }: { row: RosterRow }) {
                 openrouterId={row.openrouterId}
                 name={row.name}
                 company={row.companyName}
-                family={row.familyName}
                 region={row.region}
                 year={row.year}
                 size={row.size}
+                classes={classes}
+                classIds={row.classIds}
               />
             </div>
             <p className="muted">Region belongs to the company. New games use it.</p>
@@ -220,18 +218,20 @@ function ModelFields({
   openrouterId = "",
   name = "",
   company = "",
-  family = "",
   region = "us",
   year = "",
   size = "small",
+  classes = [],
+  classIds = [],
 }: {
   openrouterId?: string;
   name?: string;
   company?: string;
-  family?: string;
   region?: string;
   year?: string;
   size?: string;
+  classes?: ClassRow[];
+  classIds?: string[];
 }) {
   return (
     <>
@@ -246,10 +246,6 @@ function ModelFields({
       <label>
         Company
         <input name="company" defaultValue={company} list="roster-companies" required />
-      </label>
-      <label>
-        Family
-        <input name="family" defaultValue={family} list="roster-families" required />
       </label>
       <label>
         Region
@@ -271,6 +267,21 @@ function ModelFields({
           <option value="large">Large</option>
         </select>
       </label>
+      <fieldset className="class-picks">
+        <legend>Classes</legend>
+        {classes.length === 0 ? (
+          <p className="muted">
+            No classes yet. <a href="/admin/classes">Create one</a> before attaching it here.
+          </p>
+        ) : (
+          classes.map((item) => (
+            <label key={item.id}>
+              <input type="checkbox" name="classId" value={item.id} defaultChecked={classIds.includes(item.id)} />
+              {item.name}
+            </label>
+          ))
+        )}
+      </fieldset>
     </>
   );
 }

@@ -1,13 +1,14 @@
 import type { Region, Size } from "./game";
 
-export type RosterNotice = "invalid" | "duplicate" | "taken" | "year" | "reasoning" | "save";
+export type RosterNotice = "invalid" | "duplicate" | "taken" | "year" | "reasoning" | "classes" | "save";
 
 const notices: Record<RosterNotice, string> = {
-  invalid: "Check the OpenRouter id, name, company, family, region, year, and size.",
+  invalid: "Check the OpenRouter id, name, company, region, year, and size.",
   duplicate: "That OpenRouter id is already on a model.",
   taken: "That model is already in the roster.",
   year: "Add a year before turning this model on.",
   reasoning: "This model needs provider settings before it can be turned on.",
+  classes: "Pick classes from the list.",
   save: "Could not save that model.",
 };
 
@@ -90,7 +91,6 @@ export type ModelFields = {
   openrouterId: string;
   name: string;
   company: string;
-  family: string;
   region: Region;
   year: number;
   size: Size;
@@ -100,7 +100,6 @@ export function parseModelFields(raw: {
   openrouterId?: string;
   name?: string;
   company?: string;
-  family?: string;
   region?: string;
   year?: string;
   size?: string;
@@ -108,15 +107,14 @@ export function parseModelFields(raw: {
   const openrouterId = raw.openrouterId?.trim() ?? "";
   const name = raw.name?.trim() ?? "";
   const company = raw.company?.trim() ?? "";
-  const family = raw.family?.trim() ?? "";
   if (!validOpenRouterId(openrouterId)) return null;
   if (name.length < 1 || name.length > 80) return null;
-  if (!companyIdFromName(company) || !companyIdFromName(family)) return null;
+  if (!companyIdFromName(company)) return null;
   const region = parseRegion(raw.region ?? "");
   const year = parseYear(raw.year ?? "");
   const size = parseSize(raw.size ?? "");
   if (!region || year === null || !size) return null;
-  return { openrouterId, name, company, family, region, year, size };
+  return { openrouterId, name, company, region, year, size };
 }
 
 export function rosterNotice(code: string | undefined): string | null {

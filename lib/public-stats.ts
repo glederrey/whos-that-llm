@@ -14,6 +14,7 @@ export type PublicGameFact = GameFact & {
   category: string;
   size: Size | null;
   region: Region | null;
+  classIds: string[];
 };
 
 export type PublicGuessFact = GuessFact & {
@@ -29,6 +30,10 @@ export type PublicUsageFact = {
 };
 
 export type NamedCategory = { id: string; name: string };
+
+export type NamedClass = { id: string; name: string };
+
+export type ClassStat = TraitRow & { name: string };
 
 export type Outcome = {
   games: number;
@@ -90,6 +95,7 @@ export type PublicStats = {
   confusion: ConfusionPair[];
   sizes: TraitRow[];
   regions: TraitRow[];
+  classes: ClassStat[];
   categories: CategoryReport[];
 };
 
@@ -206,6 +212,32 @@ function traitRows(
   });
 }
 
+function classRows(
+  games: PublicGameFact[],
+  usage: PublicUsageFact[],
+  guesses: PublicGuessFact[],
+  classes: NamedClass[],
+): ClassStat[] {
+  return [...classes]
+    .sort((a, b) => a.name.localeCompare(b.name) || a.id.localeCompare(b.id))
+    .map((item) => {
+      const subset = games.filter((game) => game.classIds.includes(item.id));
+      const outcome = outcomeFrom(subset, usage, guesses);
+      const solved = subset.filter((game) => game.status === "solved").length;
+      const solvedMessages = subset.reduce((sum, game) => (game.status === "solved" ? sum + game.messageCount : sum), 0);
+      return {
+        key: item.id,
+        name: item.name,
+        games: subset.length,
+        finished: outcome.finished,
+        solveRate: outcome.solveRate,
+        avgMessagesWhenSolved: solved > 0 ? solvedMessages / solved : null,
+        tokensPerGame: outcome.tokensPerGame,
+        regionFoundRate: outcome.regionFoundRate,
+      };
+    });
+}
+
 function categoryReport(
   category: NamedCategory,
   games: PublicGameFact[],
@@ -235,12 +267,14 @@ export function computePublicStats(
   usage: PublicUsageFact[],
   guesses: PublicGuessFact[],
   categories: NamedCategory[],
+  classes: NamedClass[] = [],
   now: Date = new Date(),
 ): PublicStats {
   const finished = games.filter((game) => isFinished(game.status));
-  const known = new Set(categories.map((category) => category.id));
-  const extra = [...new Set(finished.map((game) => game.category).filter((id) => !known.has(id)))].sort();
-  const listed = [...categories, ...extra.map((id) => ({ id, name: id }))];
+  const playable = categories.filter((category) => category.id !== "family");
+  const known = new Set(playable.map((category) => category.id));
+  const extra = [...new Set(finished.map((game) => game.category).filter((id) => id !== "family" && !known.has(id)))].sort();
+  const listed = [...playable, ...extra.map((id) => ({ id, name: id }))];
   const finishedIds = new Set(finished.map((game) => game.id));
   const overall = computeGameMetrics(
     games,
@@ -270,6 +304,7 @@ export function computePublicStats(
     confusion: confusionPairs(finished, guesses),
     sizes: traitRows(finished, usage, guesses, "size", sizes),
     regions: traitRows(finished, usage, guesses, "region", regions),
+    classes: classRows(finished, usage, guesses, classes),
     categories: listed.map((category) => categoryReport(category, games, usage, guesses)),
   };
 }

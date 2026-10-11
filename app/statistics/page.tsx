@@ -2,7 +2,7 @@ import { RegionFlag } from "@/components/region-flag";
 import { compact, decimal, percent, type DayCount } from "@/lib/admin-metrics";
 import { regionLabel, sizeLabel, type Region, type Size } from "@/lib/game";
 import { loadPublicStats } from "@/lib/public-stats-data";
-import type { CategoryReport, ConfusionPair, ModelOutcome, Outcome, TraitRow } from "@/lib/public-stats";
+import type { CategoryReport, ClassStat, ConfusionPair, ModelOutcome, Outcome, TraitRow } from "@/lib/public-stats";
 
 export const dynamic = "force-dynamic";
 
@@ -42,6 +42,17 @@ export default async function StatisticsPage() {
       <h2>Region</h2>
       <p className="muted">By the region of the hidden model. Region found is a finished game where a guess got the region.</p>
       <TraitTable kind="region" rows={stats.regions} />
+
+      <h2>Class</h2>
+      <p className="muted">
+        By the classes of the hidden model. A round counts in each class that model belongs to. A model with no class is
+        left out.
+      </p>
+      {stats.classes.length === 0 ? (
+        <div className="card empty">No classes yet.</div>
+      ) : (
+        <ClassTable rows={stats.classes} />
+      )}
 
       <h2>Categories</h2>
       <p className="muted">Each category, including ones with no finished games yet.</p>
@@ -206,6 +217,35 @@ function ConfusionTable({ rows, nameFor }: { rows: ConfusionPair[]; nameFor: (id
               </tr>
             ))
           )}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function ClassTable({ rows }: { rows: ClassStat[] }) {
+  return (
+    <div className="card roster-card">
+      <table className="roster compact">
+        <thead>
+          <tr>
+            <th>Class</th>
+            <th>Games</th>
+            <th>Solve rate</th>
+            <th>Messages when solved</th>
+            <th>Tokens per game</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row) => (
+            <tr key={row.key}>
+              <td>{row.name}</td>
+              <td>{row.finished === 0 ? "0" : row.games.toLocaleString("en-US")}</td>
+              <td>{row.finished === 0 ? "n/a" : percent(row.solveRate)}</td>
+              <td>{decimal(row.avgMessagesWhenSolved)}</td>
+              <td>{compact(row.tokensPerGame)}</td>
+            </tr>
+          ))}
         </tbody>
       </table>
     </div>

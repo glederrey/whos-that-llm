@@ -18,7 +18,7 @@ export default async function ResultPage({ params }: { params: Promise<{ gameId:
   const categories = await listCategories();
   const onBoard = Boolean(categories.find((category) => category.id === game.category)?.leaderboard);
   const again =
-    game.category === "company" || game.category === "family" || game.category === "region"
+    game.category === "company" || game.category === "region"
       ? `/play/new?category=${game.category}`
       : "/play";
 
@@ -37,7 +37,7 @@ export default async function ResultPage({ params }: { params: Promise<{ gameId:
         <div>
           <h1>{game.model.name}</h1>
           <div className="model-facts">
-            {[game.model.companyName, game.model.region, game.model.family, game.model.year, game.model.size].map((fact, index) => (
+            {[game.model.companyName, game.model.region, game.model.year, game.model.size].map((fact, index) => (
               <span key={index} className="pill">
                 {fact}
               </span>

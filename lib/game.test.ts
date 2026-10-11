@@ -3,6 +3,7 @@ import test from "node:test";
 import { currentRules, rulesForCategory } from "./config";
 import {
   buildTraits,
+  categoryAllowsHints,
   eliminatedCompanyIds,
   filterCandidates,
   hintOffered,
@@ -20,12 +21,11 @@ import {
 const rules = rulesForCategory(true);
 
 function model(
-  partial: Partial<FrozenModel> & Pick<FrozenModel, "name" | "companyId" | "familyId"> & { id?: string },
+  partial: Partial<FrozenModel> & Pick<FrozenModel, "name" | "companyId"> & { id?: string },
 ): FrozenModel & { id: string } {
   return {
     id: partial.id ?? partial.name.toLowerCase().replace(/\s+/g, "-"),
     companyName: partial.companyId,
-    familyName: partial.familyId,
     region: "us",
     size: "small",
     year: 2026,
@@ -56,7 +56,7 @@ test("the scoring numbers are the agreed ones", () => {
   assert.equal(rules.tokenScale, 10000);
   assert.equal(rules.tokenCap, 10);
   assert.equal(rules.noHintMultiplier, 2);
-  assert.deepEqual(rules.hintCosts, { year: 100, size: 100, region: 400, company: 600, family: 600 });
+  assert.deepEqual(rules.hintCosts, { year: 100, size: 100, region: 400, company: 600 });
 });
 
 test("a round started under the old numbers is scored with the current ones", () => {
@@ -117,15 +117,15 @@ test("penalties come off the base before the token factor", () => {
 });
 
 test("every hint has its own price", () => {
-  const prices: Record<HintKey, number> = { year: 100, size: 100, region: 400, company: 600, family: 600 };
+  const prices: Record<HintKey, number> = { year: 100, size: 100, region: 400, company: 600 };
   for (const [key, price] of Object.entries(prices) as [HintKey, number][]) {
     const result = scoreRound({ rules, ...none, namedModel: true, tokens: 1000, hints: [key] });
     assert.equal(result.score, (2000 - price) * 10, key);
     assert.equal(result.breakdown.find((line) => line.label.endsWith("hint"))?.points, -price, key);
   }
-  const all = scoreRound({ rules, ...none, namedModel: true, tokens: 1000, hints: ["company", "family", "region", "year", "size"] });
-  assert.equal(all.score, 2000);
-  assert.match(all.explanation.join("\n"), /Company −600\. Family −600\. Region −400\. Year −100\. Size −100/);
+  const all = scoreRound({ rules, ...none, namedModel: true, tokens: 1000, hints: ["company", "region", "year", "size"] });
+  assert.equal(all.score, 8000);
+  assert.match(all.explanation.join("\n"), /Company −600\. Region −400\. Year −100\. Size −100/);
 });
 
 test("the no-hint multiplier applies only to a round with no hint", () => {
@@ -236,11 +236,11 @@ test("the total never goes below 0", () => {
   assert.equal(small.breakdown.some((line) => line.label === "Floor at 0"), false);
 });
 
-test("a revealed company, family, or region is known and narrows the list", () => {
+test("a revealed company or region is known and narrows the list", () => {
   const models = [
-    model({ id: "haiku", name: "Haiku", companyId: "anthropic", companyName: "Anthropic", familyId: "haiku", region: "us" }),
-    model({ id: "luna", name: "Luna", companyId: "openai", companyName: "OpenAI", familyId: "gpt", region: "us" }),
-    model({ id: "flash", name: "Flash", companyId: "deepseek", companyName: "DeepSeek", familyId: "deepseek", region: "cn" }),
+    model({ id: "haiku", name: "Haiku", companyId: "anthropic", companyName: "Anthropic", region: "us" }),
+    model({ id: "luna", name: "Luna", companyId: "openai", companyName: "OpenAI", region: "us" }),
+    model({ id: "flash", name: "Flash", companyId: "deepseek", companyName: "DeepSeek", region: "cn" }),
   ];
   const traits = buildTraits(models);
   const hidden = traits.models.flash;
@@ -249,14 +249,12 @@ test("a revealed company, family, or region is known and narrows the list", () =
   assert.deepEqual(filterCandidates(traits, byRegion).map((row) => row.id), ["flash"]);
   const byCompany = knownValues({ traits, hidden, guesses: [], hints: ["company"], noHint: false });
   assert.equal(byCompany.companyId, "deepseek");
-  const byFamily = knownValues({ traits, hidden, guesses: [], hints: ["family"], noHint: false });
-  assert.equal(byFamily.familyId, "deepseek");
 });
 
 test("a hint is not offered for a trait the round already showed", () => {
   const models = [
-    model({ id: "haiku", name: "Haiku", companyId: "anthropic", companyName: "Anthropic", familyId: "haiku", region: "us" }),
-    model({ id: "sonnet", name: "Sonnet", companyId: "anthropic", companyName: "Anthropic", familyId: "sonnet", region: "us", year: 2025 }),
+    model({ id: "haiku", name: "Haiku", companyId: "anthropic", companyName: "Anthropic", region: "us" }),
+    model({ id: "sonnet", name: "Sonnet", companyId: "anthropic", companyName: "Anthropic", region: "us", year: 2025 }),
   ];
   const traits = buildTraits(models);
   assert.deepEqual(traits.given.sort(), ["company", "region", "size"]);
@@ -267,40 +265,35 @@ test("a hint is not offered for a trait the round already showed", () => {
   assert.equal(ask("company"), false);
   assert.equal(ask("region"), false);
   assert.equal(ask("size"), false);
-  assert.equal(ask("family"), true);
   assert.equal(ask("year"), true);
-  assert.equal(ask("family", { hints: ["family"] }), false);
+  assert.equal(ask("year", { hints: ["year"] }), false);
   assert.equal(ask("year", { noHint: true }), false);
-  const matched = [{ modelCorrect: false, companyCorrect: false, familyCorrect: true, regionCorrect: true }];
-  assert.equal(ask("family", { guesses: matched }), false);
-  assert.equal(ask("family", { guesses: matched, noHint: true }), false);
 });
 
 test("a match shown by a guess is not offered as a hint", () => {
   const models = [
-    model({ id: "haiku", name: "Haiku", companyId: "anthropic", companyName: "Anthropic", familyId: "haiku", region: "us" }),
-    model({ id: "luna", name: "Luna", companyId: "openai", companyName: "OpenAI", familyId: "gpt", region: "cn" }),
+    model({ id: "haiku", name: "Haiku", companyId: "anthropic", companyName: "Anthropic", region: "us" }),
+    model({ id: "luna", name: "Luna", companyId: "openai", companyName: "OpenAI", region: "cn" }),
   ];
   const traits = buildTraits(models);
   const hidden = traits.models.haiku;
   assert.ok(hidden);
-  const guesses = [{ modelCorrect: false, companyCorrect: true, familyCorrect: false, regionCorrect: false }];
+  const guesses = [{ modelCorrect: false, companyCorrect: true, regionCorrect: false }];
   const offer = (key: HintKey) => hintOffered({ key, traits, hidden, guesses, hints: [], noHint: false });
   assert.equal(offer("company"), false);
   assert.equal(offer("region"), true);
-  assert.equal(offer("family"), true);
 });
 
 test("no-hint mode does not narrow the list on a match", () => {
   const models = [
-    model({ id: "haiku", name: "Haiku", companyId: "anthropic", companyName: "Anthropic", familyId: "haiku", region: "us" }),
-    model({ id: "luna", name: "Luna", companyId: "openai", companyName: "OpenAI", familyId: "gpt", region: "us" }),
-    model({ id: "flash", name: "Flash", companyId: "deepseek", companyName: "DeepSeek", familyId: "deepseek", region: "cn" }),
+    model({ id: "haiku", name: "Haiku", companyId: "anthropic", companyName: "Anthropic", region: "us" }),
+    model({ id: "luna", name: "Luna", companyId: "openai", companyName: "OpenAI", region: "us" }),
+    model({ id: "flash", name: "Flash", companyId: "deepseek", companyName: "DeepSeek", region: "cn" }),
   ];
   const traits = buildTraits(models);
   const hidden = traits.models.haiku;
   assert.ok(hidden);
-  const guesses = [{ modelCorrect: false, companyCorrect: true, familyCorrect: false, regionCorrect: true }];
+  const guesses = [{ modelCorrect: false, companyCorrect: true, regionCorrect: true }];
   const open = knownValues({ traits, hidden, guesses, hints: [], noHint: false });
   const blind = knownValues({ traits, hidden, guesses, hints: [], noHint: true });
   assert.deepEqual(filterCandidates(traits, open).map((row) => row.id), ["haiku"]);
@@ -315,12 +308,12 @@ test("no-hint mode does not narrow the list on a match", () => {
 
 test("a wrong company leaves the guess search only in hint mode", () => {
   const models = [
-    model({ id: "haiku", name: "Haiku", companyId: "anthropic", companyName: "Anthropic", familyId: "haiku" }),
-    model({ id: "sonnet", name: "Sonnet", companyId: "anthropic", companyName: "Anthropic", familyId: "sonnet" }),
-    model({ id: "opus", name: "Opus", companyId: "anthropic", companyName: "Anthropic", familyId: "opus" }),
-    model({ id: "luna", name: "Luna", companyId: "openai", companyName: "OpenAI", familyId: "gpt" }),
-    model({ id: "gpt", name: "GPT", companyId: "openai", companyName: "OpenAI", familyId: "gpt" }),
-    model({ id: "flash", name: "Flash", companyId: "deepseek", companyName: "DeepSeek", familyId: "deepseek", region: "cn" }),
+    model({ id: "haiku", name: "Haiku", companyId: "anthropic", companyName: "Anthropic" }),
+    model({ id: "sonnet", name: "Sonnet", companyId: "anthropic", companyName: "Anthropic" }),
+    model({ id: "opus", name: "Opus", companyId: "anthropic", companyName: "Anthropic" }),
+    model({ id: "luna", name: "Luna", companyId: "openai", companyName: "OpenAI" }),
+    model({ id: "gpt", name: "GPT", companyId: "openai", companyName: "OpenAI" }),
+    model({ id: "flash", name: "Flash", companyId: "deepseek", companyName: "DeepSeek", region: "cn" }),
   ];
   const traits = buildTraits(models);
   const hidden = traits.models.haiku;
@@ -350,7 +343,6 @@ test("a wrong company leaves the guess search only in hint mode", () => {
     modelId,
     modelCorrect: false,
     companyCorrect,
-    familyCorrect: false,
     regionCorrect: false,
   });
 
@@ -364,9 +356,9 @@ test("a wrong company leaves the guess search only in hint mode", () => {
 
 test("a wrong guess keeps the model and names the traits it missed", () => {
   const models = [
-    model({ id: "haiku", name: "Haiku", companyId: "anthropic", companyName: "Anthropic", familyId: "haiku", region: "us" }),
-    model({ id: "luna", name: "Luna", companyId: "openai", companyName: "OpenAI", familyId: "gpt", region: "us" }),
-    model({ id: "flash", name: "Flash", companyId: "deepseek", companyName: "DeepSeek", familyId: "deepseek", region: "cn" }),
+    model({ id: "haiku", name: "Haiku", companyId: "anthropic", companyName: "Anthropic", region: "us" }),
+    model({ id: "luna", name: "Luna", companyId: "openai", companyName: "OpenAI", region: "us" }),
+    model({ id: "flash", name: "Flash", companyId: "deepseek", companyName: "DeepSeek", region: "cn" }),
   ];
   const traits = buildTraits(models);
   const guesses = [
@@ -375,7 +367,6 @@ test("a wrong guess keeps the model and names the traits it missed", () => {
       modelId: "flash",
       modelCorrect: false,
       companyCorrect: false,
-      familyCorrect: false,
       regionCorrect: false,
     },
     {
@@ -383,7 +374,6 @@ test("a wrong guess keeps the model and names the traits it missed", () => {
       modelId: "luna",
       modelCorrect: false,
       companyCorrect: false,
-      familyCorrect: false,
       regionCorrect: true,
     },
     {
@@ -391,7 +381,6 @@ test("a wrong guess keeps the model and names the traits it missed", () => {
       modelId: "haiku",
       modelCorrect: true,
       companyCorrect: true,
-      familyCorrect: true,
       regionCorrect: true,
     },
   ];
@@ -400,7 +389,49 @@ test("a wrong guess keeps the model and names the traits it missed", () => {
     named.map((guess) => guess.id),
     ["luna", "flash"],
   );
-  assert.deepEqual(named[0]?.wrong, ["company", "family"]);
-  assert.deepEqual(named[1]?.wrong, ["company", "region", "family"]);
+  assert.deepEqual(named[0]?.wrong, ["company"]);
+  assert.deepEqual(named[1]?.wrong, ["company", "region"]);
   assert.deepEqual(missedGuesses(traits, guesses, true)[0]?.wrong, []);
+});
+
+test("hints are only possible on daily, all models, and custom", () => {
+  assert.equal(categoryAllowsHints("daily"), true);
+  assert.equal(categoryAllowsHints("all"), true);
+  assert.equal(categoryAllowsHints("custom"), true);
+  for (const category of ["class", "region", "company", "latest"]) {
+    assert.equal(categoryAllowsHints(category), false, category);
+  }
+});
+
+test("a finished round lists company, region, year, and size", () => {
+  const models = [
+    model({ id: "haiku", name: "Haiku", companyId: "anthropic", companyName: "Anthropic" }),
+    model({ id: "luna", name: "Luna", companyId: "openai", companyName: "OpenAI" }),
+  ];
+  const traits = buildTraits(models);
+  const game = toPublicGame({
+    id: "game",
+    category: "all",
+    poolKey: null,
+    noHint: false,
+    status: "solved",
+    messageCount: 1,
+    awaitingGuess: false,
+    rules,
+    traits,
+    modelId: "haiku",
+    hints: [],
+    guesses: [],
+    guessedModelIds: [],
+    transcript: [],
+    score: 1,
+    breakdown: [],
+    explanation: [],
+  });
+  assert.deepEqual(
+    game.model && [game.model.companyName, game.model.region, game.model.year, game.model.size],
+    ["Anthropic", "USA", 2026, "Small"],
+  );
+  assert.equal(game.model && "family" in game.model, false);
+  assert.equal("family" in game.hints, false);
 });
