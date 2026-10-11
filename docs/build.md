@@ -48,7 +48,7 @@ There is no `rules/page.tsx`. There is no `me/page.tsx` in the first build.
   wrongGuessCost: 100,
   noHintMultiplier: 1.5,
   hourlyCap: 20,
-  tipUrl: ""
+  tipUrl: "https://ko-fi.com/glederrey"
 }
 ```
 
