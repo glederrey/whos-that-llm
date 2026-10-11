@@ -206,7 +206,7 @@ html[data-theme="dark"] a.back:hover { color: var(--text); }
 .kofi { margin: 0; max-width: 46ch; }
 a.kofi { display: inline-flex; align-items: center; gap: 6px; text-decoration: none; white-space: nowrap; }
 a.kofi span { text-decoration: underline; text-underline-offset: 3px; }
-.kofi-mark { width: 18px; height: 18px; flex: none; color: #ff6433; }
+.kofi-mark { width: 18px; height: 18px; flex: none; }
 .credit { display: inline-flex; align-items: center; flex-wrap: wrap; gap: 6px; margin: 0; }
 .credit a { display: inline-flex; align-items: center; gap: 6px; }
 .cursor-mark { width: 16px; height: 16px; }
