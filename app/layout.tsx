@@ -79,6 +79,32 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                 </svg>
                 <span className="nav-label">Leaderboard</span>
               </a>
+              <a href="/statistics" aria-label="Statistics">
+                <svg className="nav-icon" viewBox="0 0 24 24" aria-hidden="true">
+                  <path
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.8"
+                    strokeLinecap="round"
+                    d="M5 19V10M12 19V5M19 19v-7"
+                  />
+                </svg>
+                <span className="nav-label">Statistics</span>
+              </a>
+              <a href="/why" aria-label="Why this game?">
+                <svg className="nav-icon" viewBox="0 0 24 24" aria-hidden="true">
+                  <circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" strokeWidth="1.8" />
+                  <path
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.8"
+                    strokeLinecap="round"
+                    d="M9.5 9.2a2.5 2.5 0 1 1 3.1 2.4c-.7.4-1.1.9-1.1 1.7V14"
+                  />
+                  <circle cx="12" cy="16.6" r="0.8" fill="currentColor" stroke="none" />
+                </svg>
+                <span className="nav-label">Why this game?</span>
+              </a>
               <AccountMenu userId={user?.id ?? null} username={username} avatarUrl={avatarUrl}>
                 {owner ? (
                   <a href="/admin" role="menuitem">

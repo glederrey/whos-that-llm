@@ -72,7 +72,7 @@ A tip does not raise the hourly cap, change a score, or put a name on the leader
 
 Purpose: present the game. Public. Playing requires a session, and that happens on `/play`. The leaderboard does not.
 
-The header keeps the name and a logo the same height as that text, plus **Scoring** (links to `/scoring`), **Leaderboard** and the account menu.
+The header keeps the name and a logo the same height as that text, plus **Scoring** (links to `/scoring`), **Leaderboard**, **Statistics** (links to `/statistics`), **Why this game?** (links to `/why`), and the account menu.
 
 Two columns. On a narrow screen they stack.
 
@@ -293,6 +293,36 @@ Twenty rows per page. **Previous** and **Next** move the page. **Your place** ap
 Empty: **No finished games on this board yet.**
 
 The landing top 5 is this board for All models, all time, five rows: rank, name, score, with the same picture beside the name.
+
+## Why this game? (`/why`)
+
+Public. No session. Linked from the header.
+
+First person. The words:
+
+- **Who's that LLM?** is bold, then **started with something a friend said:**
+- The line is large, in the teal, with quotation marks: **“Over time I think I could tell an Opus 4.5 from a 4.7 and a 4.8. Like a wine...”**
+- **I laughed, and then I couldn't stop thinking about it. Can people actually tell models apart from just a few messages? Or do we only think we can?**
+- **I'm a data scientist, so my first instinct was to collect data. That's really what this game is for. Sure, it's fun to play, but every round also tells me something: which models get confused with each other, whether big models are easy to spot next to small ones, whether a model's origin shows through, and plenty of things I haven't thought of yet.**
+- **I plan to share this data openly for research later on. Until then, the statistics page shows what the data says so far.** **statistics** links to `/statistics`.
+- Heading: **What I store.** **I keep your username and your game data: the messages, token counts, your guesses, which model you were talking to, and the other details of each round. That's it. I don't collect any other personal information. Sign in is handled by Supabase. Your email is stored there only so you can log in, and I never use it for anything else. I never see your password.**
+- **You can delete your account at any time from your profile. Your username comes off the leaderboard. Finished games stay in the statistics without your username.** **profile** links to `/profile`.
+- Heading: **Who am I.** **I'm Gael, a data scientist based in Fribourg, Switzerland, with a PhD from EPFL.** His master thesis was about beer reviews. He built the game on his own time and pays for the API calls. A tip is optional. **Ko-fi** links to `tipUrl`. **LinkedIn** links to `https://www.linkedin.com/in/gael-lederrey`. **GitHub** links to `https://github.com/glederrey`.
+
+## Statistics (`/statistics`)
+
+Public. No session. Linked from the header. Same shape as the admin stats page, without prices, spend, or OpenRouter billing. The heading is **Statistics**, then **Games**. There is no intro under the heading.
+
+Rates use finished games. A round still open is in the totals and stays out of any list that would name its model. A game with no account still counts. A category with no finished games says **No finished games in this category yet.** It does not show a made-up rate. Categories come from the `categories` table, so a later category appears here with that empty state until it has a finished round.
+
+- Solve rate, give-ups, correct guesses, messages per game, tokens per game, region found
+- Games started per UTC day, last 14 days
+- Which models are hardest to find: games, solve rate, messages when solved, tokens
+- Wrong names: hidden model, the model named instead, and how often
+- Size and region of the hidden model
+- One block per category
+
+Tokens are prompt plus completion. Nothing on this page is a price.
 
 ## Profile (`/profile`)
 
