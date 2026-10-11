@@ -26,7 +26,7 @@ A subnav sits on every one of those pages: **Stats, Costs, Games, Modes, Models,
 
 `/admin/modes` is one row per game category, including a category with zero games, plus any extra category id already stored on a game. Each row has games, open, finished, solved, solve rate, and give-ups. A class leaderboard is not a row on this page. The class game mode is not built.
 
-`/admin/models` shows the display name, company, region, year, size, input price, output price, then the classes, then active. Input and output are dollars per 1 million tokens. Class membership is a set of checkboxes from the classes that already exist, and a model can have more than one. **Turn on** is green. **Turn off** is red.
+`/admin/models` shows the display name, company, region, year, size, input price, output price, then the classes, then active. Input and output are dollars per 1 million tokens. Clicking one of those headers sorts both tables by that column. Clicking the same header again reverses the order. The turn-on and edit controls are not a sort column. Class membership is a set of checkboxes from the classes that already exist, and a model can have more than one. **Turn on** is green. **Turn off** is red.
 
 `/admin/classes` creates and edits a class: name, description, and an optional company. There is no logo field. The class game mode is not on this page.
 

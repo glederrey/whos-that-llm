@@ -1,6 +1,70 @@
+import { regionLabel, type Region, type Size } from "./game";
+
 export const rosterPageSize = 10;
 
+export const rosterSortColumns = ["name", "company", "region", "year", "size", "input", "output", "classes"] as const;
+
+export type RosterSortColumn = (typeof rosterSortColumns)[number];
+
+export type RosterSort = { column: RosterSortColumn; dir: "asc" | "desc" };
+
 type Searchable = { name: string; companyName: string; classNames: string };
+
+type Sortable = Searchable & {
+  id: string;
+  region: Region;
+  year: string;
+  size: Size;
+  inputUsdPerMtok: number | null;
+  outputUsdPerMtok: number | null;
+};
+
+const sizeRank: Record<Size, number> = { nano: 0, small: 1, medium: 2, large: 3, xxl: 4 };
+
+export function rosterSortOf(sort: unknown, dir: unknown): RosterSort {
+  if (typeof sort !== "string" || !rosterSortColumns.includes(sort as RosterSortColumn)) return { column: "name", dir: "asc" };
+  return { column: sort as RosterSortColumn, dir: dir === "desc" ? "desc" : "asc" };
+}
+
+export function sortRoster<T extends Sortable>(rows: T[], sort: RosterSort): T[] {
+  const sorted = rows.slice().sort((a, b) => compareRows(a, b, sort.column) || compareText(a.name, b.name) || a.id.localeCompare(b.id));
+  return sort.dir === "desc" ? sorted.reverse() : sorted;
+}
+
+function compareRows(a: Sortable, b: Sortable, column: RosterSortColumn): number {
+  if (column === "name") return compareText(a.name, b.name);
+  if (column === "company") return compareText(a.companyName, b.companyName);
+  if (column === "region") return compareText(regionLabel(a.region), regionLabel(b.region));
+  if (column === "year") return compareMissingLast(yearNumber(a.year), yearNumber(b.year));
+  if (column === "size") return sizeRank[a.size] - sizeRank[b.size];
+  if (column === "input") return compareMissingLast(a.inputUsdPerMtok, b.inputUsdPerMtok);
+  if (column === "output") return compareMissingLast(a.outputUsdPerMtok, b.outputUsdPerMtok);
+  return compareTextMissingLast(a.classNames, b.classNames);
+}
+
+function compareText(a: string, b: string): number {
+  return a.localeCompare(b, "en", { sensitivity: "base" });
+}
+
+function compareTextMissingLast(a: string, b: string): number {
+  const left = a.trim();
+  const right = b.trim();
+  if (!left && !right) return 0;
+  if (!left) return 1;
+  if (!right) return -1;
+  return compareText(left, right);
+}
+
+function compareMissingLast(a: number | null, b: number | null): number {
+  if (a === null && b === null) return 0;
+  if (a === null) return 1;
+  if (b === null) return -1;
+  return a - b;
+}
+
+function yearNumber(year: string): number | null {
+  return /^\d{4}$/.test(year) ? Number(year) : null;
+}
 
 export function searchRoster<T extends Searchable>(rows: T[], query: string): T[] {
   const needle = query.trim().toLowerCase();

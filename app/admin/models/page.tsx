@@ -4,7 +4,7 @@ import { SectionNav } from "@/components/section-nav";
 import { addModel, saveModel, setModelEnabled } from "@/app/admin/actions";
 import { rosterNotice } from "@/lib/admin-model";
 import { loadRoster, type ClassRow, type RosterRow } from "@/lib/admin-roster";
-import { pageOf, searchRoster } from "@/lib/roster-list";
+import { pageOf, rosterSortOf, searchRoster, sortRoster, type RosterSort, type RosterSortColumn } from "@/lib/roster-list";
 import { regionLabel, sizeLabel } from "@/lib/game";
 import { formatListPrice } from "@/lib/list-price";
 
@@ -13,13 +13,14 @@ export const dynamic = "force-dynamic";
 export default async function ModelsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ notice?: string; q?: string; active?: string; inactive?: string }>;
+  searchParams: Promise<{ notice?: string; q?: string; active?: string; inactive?: string; sort?: string; dir?: string }>;
 }) {
   const params = await searchParams;
   const notice = rosterNotice(params.notice);
   const { rows, companies, classes } = await loadRoster();
   const query = (params.q ?? "").slice(0, 100);
-  const found = searchRoster(rows, query);
+  const sort = rosterSortOf(params.sort, params.dir);
+  const found = sortRoster(searchRoster(rows, query), sort);
   const active = pageOf(found.filter((row) => row.enabled), params.active);
   const inactive = pageOf(found.filter((row) => !row.enabled), params.inactive);
 
@@ -51,18 +52,24 @@ export default async function ModelsPage({
         </form>
       </details>
       <form action="/admin/models" method="get" className="roster-search">
+          {sort.column === "name" && sort.dir === "asc" ? null : (
+            <>
+              <input type="hidden" name="sort" value={sort.column} />
+              <input type="hidden" name="dir" value={sort.dir} />
+            </>
+          )}
           <input type="search" name="q" defaultValue={query} placeholder="Search by name, company, or class" aria-label="Search models" />
         <button className="button" type="submit">
           Search
         </button>
         {query ? (
-          <Link className="button-quiet" href="/admin/models">
+          <Link className="button-quiet" href={modelsHref({ query: "", activePage: 1, inactivePage: 1, sort })}>
             Clear
           </Link>
         ) : null}
       </form>
-      <RosterSection title="Active models" empty="No active models." list={active} query={query} pageKey="active" otherPage={inactive.page} classes={classes} />
-      <RosterSection title="Inactive models" empty="No inactive models." list={inactive} query={query} pageKey="inactive" otherPage={active.page} classes={classes} />
+      <RosterSection title="Active models" empty="No active models." list={active} query={query} pageKey="active" otherPage={inactive.page} sort={sort} classes={classes} />
+      <RosterSection title="Inactive models" empty="No inactive models." list={inactive} query={query} pageKey="inactive" otherPage={active.page} sort={sort} classes={classes} />
       <datalist id="roster-companies">
         {companies.map((company) => (
           <option key={company.id} value={company.name} />
@@ -74,11 +81,26 @@ export default async function ModelsPage({
 
 type RosterPage = { rows: RosterRow[]; page: number; pageCount: number };
 
-function modelsHref(query: string, activePage: number, inactivePage: number) {
+const sortLabels: Record<RosterSortColumn, string> = {
+  name: "Name",
+  company: "Company",
+  region: "Region",
+  year: "Year",
+  size: "Size",
+  input: "Input",
+  output: "Output",
+  classes: "Classes",
+};
+
+function modelsHref(state: { query: string; activePage: number; inactivePage: number; sort: RosterSort }) {
   const params = new URLSearchParams();
-  if (query) params.set("q", query);
-  if (activePage > 1) params.set("active", String(activePage));
-  if (inactivePage > 1) params.set("inactive", String(inactivePage));
+  if (state.query) params.set("q", state.query);
+  if (state.sort.column !== "name" || state.sort.dir !== "asc") {
+    params.set("sort", state.sort.column);
+    params.set("dir", state.sort.dir);
+  }
+  if (state.activePage > 1) params.set("active", String(state.activePage));
+  if (state.inactivePage > 1) params.set("inactive", String(state.inactivePage));
   const text = params.toString();
   return text ? `/admin/models?${text}` : "/admin/models";
 }
@@ -90,6 +112,7 @@ function RosterSection({
   query,
   pageKey,
   otherPage,
+  sort,
   classes,
 }: {
   title: string;
@@ -98,10 +121,23 @@ function RosterSection({
   query: string;
   pageKey: "active" | "inactive";
   otherPage: number;
+  sort: RosterSort;
   classes: ClassRow[];
 }) {
   const hrefFor = (page: number) =>
-    pageKey === "active" ? modelsHref(query, page, otherPage) : modelsHref(query, otherPage, page);
+    modelsHref({
+      query,
+      sort,
+      activePage: pageKey === "active" ? page : otherPage,
+      inactivePage: pageKey === "inactive" ? page : otherPage,
+    });
+  const sortHref = (column: RosterSortColumn) =>
+    modelsHref({
+      query,
+      activePage: 1,
+      inactivePage: 1,
+      sort: { column, dir: sort.column === column && sort.dir === "asc" ? "desc" : "asc" },
+    });
   return (
     <section className="stack">
       <h2>{title}</h2>
@@ -113,14 +149,17 @@ function RosterSection({
             <table className="roster models">
               <thead>
                 <tr>
-                  <th>Name</th>
-                  <th>Company</th>
-                  <th>Region</th>
-                  <th>Year</th>
-                  <th>Size</th>
-                  <th>Input</th>
-                  <th>Output</th>
-                  <th>Classes</th>
+                  {(Object.keys(sortLabels) as RosterSortColumn[]).map((column) => {
+                    const active = sort.column === column;
+                    return (
+                      <th key={column} aria-sort={active ? (sort.dir === "asc" ? "ascending" : "descending") : "none"}>
+                        <Link href={sortHref(column)} scroll={false}>
+                          {sortLabels[column]}
+                          {active ? (sort.dir === "asc" ? " ↑" : " ↓") : ""}
+                        </Link>
+                      </th>
+                    );
+                  })}
                   <th></th>
                 </tr>
               </thead>
