@@ -181,7 +181,7 @@ export function HomeBoard({
                     {continueGame ? "Continue" : "Play"}
                   </button>
                 ) : (
-                  <span className="pill">Not open yet</span>
+                  <span className="pill">Coming soon</span>
                 )}
               </div>
               {category.id === "all" && open && !continueGame ? (
