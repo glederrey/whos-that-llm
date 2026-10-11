@@ -86,7 +86,7 @@ function betterRound(
   return next.finishedAt < current.finishedAt;
 }
 
-export function countedRounds(games: { id: string }[]): number {
+export function countedRounds(games: readonly unknown[]): number {
   return games.length;
 }
 
