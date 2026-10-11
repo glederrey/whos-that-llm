@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import type { Difficulty } from "./difficulty";
-import { modelsReturnPath, pageOf, rosterSortOf, searchRoster, sortRoster, type RosterSort } from "./roster-list";
+import { modelsReturnPath, nextRosterSort, pageOf, rosterSortOf, searchRoster, sortRoster, type RosterSort } from "./roster-list";
 import type { Region, Size } from "./game";
 
 function row(partial: {
@@ -65,14 +65,24 @@ test("a column sorts every data field, and the same column reverses", () => {
   assert.deepEqual(names({ column: "input", dir: "desc" }), ["alpha", "Beta", "Gamma"]);
   assert.deepEqual(names({ column: "output", dir: "asc" }), ["Beta", "alpha", "Gamma"]);
   assert.deepEqual(names({ column: "classes", dir: "asc" }), ["Beta", "Gamma", "alpha"]);
-  assert.deepEqual(rosterSortOf(undefined, "desc"), { column: "name", dir: "asc" });
+  assert.equal(rosterSortOf(undefined, "desc"), null);
   assert.deepEqual(rosterSortOf("year", "desc"), { column: "year", dir: "desc" });
-  assert.deepEqual(rosterSortOf("buttons", "desc"), { column: "name", dir: "asc" });
+  assert.equal(rosterSortOf("buttons", "desc"), null);
+  assert.deepEqual(sortRoster(rows, null).map((item) => item.name), ["Beta", "alpha", "Gamma"]);
+});
+
+test("a column cycles through ascending, descending, and the default order", () => {
+  assert.deepEqual(nextRosterSort(null, "year"), { column: "year", dir: "asc" });
+  assert.deepEqual(nextRosterSort({ column: "year", dir: "asc" }, "year"), { column: "year", dir: "desc" });
+  assert.equal(nextRosterSort({ column: "year", dir: "desc" }, "year"), null);
+  assert.deepEqual(nextRosterSort({ column: "year", dir: "desc" }, "company"), { column: "company", dir: "asc" });
+  assert.deepEqual(nextRosterSort({ column: "name", dir: "asc" }, "difficulty"), { column: "difficulty", dir: "asc" });
 });
 
 test("saving a model returns to the same search", () => {
   assert.equal(modelsReturnPath({ q: "claude", sort: "year", dir: "desc", active: "2" }), "/admin/models?q=claude&sort=year&dir=desc&active=2");
-  assert.equal(modelsReturnPath({ q: "  ", sort: "name", dir: "asc" }), "/admin/models");
+  assert.equal(modelsReturnPath({ q: "  ", sort: "name", dir: "asc" }), "/admin/models?sort=name&dir=asc");
+  assert.equal(modelsReturnPath({}), "/admin/models");
   assert.equal(modelsReturnPath({ notice: "save", q: "gpt" }), "/admin/models?notice=save&q=gpt");
   assert.equal(modelsReturnPath({ q: "gpt", active: "1", inactive: "0" }), "/admin/models?q=gpt");
 });
