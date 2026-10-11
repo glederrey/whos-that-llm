@@ -704,8 +704,13 @@ html[data-theme="dark"] {
   .board-controls .segmented {
     width: 100%;
     max-width: 100%;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     box-sizing: border-box;
+  }
+  .board-controls .segmented > a,
+  .board-controls .segmented > span {
+    flex: 1 1 auto;
+    text-align: center;
   }
   .board-controls select { width: 100%; max-width: 100%; }
 }
@@ -1196,6 +1201,16 @@ html[data-theme="dark"] .md a { color: var(--teal); }
   .quote { font-size: 22px; }
   .goal { font-size: 28px; }
   .card { padding: 16px; }
+  .card.board-card { padding: 0; }
+  .pager > .row {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    width: 100%;
+    flex-wrap: nowrap;
+  }
+  .pager > .row > :first-child { justify-self: start; }
+  .pager > .row > :last-child { justify-self: end; }
   .board th, .board td { padding: 12px 12px; }
   .board .rank { width: 56px; }
   .button-lg { width: 100%; text-align: center; }

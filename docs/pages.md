@@ -276,7 +276,7 @@ The middle is one slot, and it follows the selected mode. All models, and Daily 
 
 Any difficulty is a score from whichever difficulty was played. That board shows a difficulty chip on the row, in that difficulty's color. The other four do not. A round played with no hints has a **No hints** chip on every one of the five. The opening board is All models, Any difficulty, this week.
 
-**This week** and **All time** stay on the right when the three groups fit on one row. On a narrow screen they stack, full width, in this order: game modes, the middle control, then This week and All time. Weeks start Monday 00:00 UTC. The tab label says **This week (UTC)**.
+**This week** and **All time** stay on the right when the three groups fit on one row. On a narrow screen they stack, full width, in this order: game modes, the middle control, then This week and All time. Each group's buttons share that row, so the leftover space is split evenly and the row is full. Weeks start Monday 00:00 UTC. The tab label says **This week (UTC)**.
 
 A counted round is `solved` or `miss`. Give-up does not appear. Rank is the best score, highest first. Ties break by fewer messages on that round, then by earlier finish. A score of 0 stays on the board.
 
@@ -290,7 +290,9 @@ Two players may share a username. They are separate rows, because the account id
 
 Row colors, on the leaderboard page and on the landing top 5. Rank 1 is gold, rank 2 is silver, rank 3 is bronze. The signed-in player's row is teal. If the signed-in player is rank 1, 2, or 3, the row keeps its gold, silver, or bronze. It is not replaced by teal. That row is marked with a teal ring and a **You** tag instead, so both facts show. On any other rank, the signed-in row is teal with the same ring and tag.
 
-Twenty rows per page. **Previous** and **Next** move the page. **Your place** appears when the signed-in player has a row and it is not on the current page. It opens the page that contains them.
+Twenty rows per page. **Previous** and **Next** move the page. On a phone those two buttons and the page count span the width of the board, with Previous on the left and Next on the right. **Your place** appears when the signed-in player has a row and it is not on the current page. It opens the page that contains them.
+
+The table is flush on a phone, the same as on a computer. The rows go to the edges of the card. There is no extra padding around them.
 
 Empty: **No finished games on this board yet.**
 
