@@ -1,8 +1,9 @@
+import { difficultyNumber, type Difficulty } from "./difficulty";
 import { regionLabel, type Region, type Size } from "./game";
 
 export const rosterPageSize = 10;
 
-export const rosterSortColumns = ["name", "company", "region", "year", "size", "input", "output", "classes"] as const;
+export const rosterSortColumns = ["name", "company", "region", "year", "size", "difficulty", "input", "output", "classes"] as const;
 
 export type RosterSortColumn = (typeof rosterSortColumns)[number];
 
@@ -15,6 +16,7 @@ type Sortable = Searchable & {
   region: Region;
   year: string;
   size: Size;
+  difficulty: Difficulty | null;
   inputUsdPerMtok: number | null;
   outputUsdPerMtok: number | null;
 };
@@ -37,6 +39,9 @@ function compareRows(a: Sortable, b: Sortable, column: RosterSortColumn): number
   if (column === "region") return compareText(regionLabel(a.region), regionLabel(b.region));
   if (column === "year") return compareMissingLast(yearNumber(a.year), yearNumber(b.year));
   if (column === "size") return sizeRank[a.size] - sizeRank[b.size];
+  if (column === "difficulty") {
+    return compareMissingLast(a.difficulty ? difficultyNumber[a.difficulty] : null, b.difficulty ? difficultyNumber[b.difficulty] : null);
+  }
   if (column === "input") return compareMissingLast(a.inputUsdPerMtok, b.inputUsdPerMtok);
   if (column === "output") return compareMissingLast(a.outputUsdPerMtok, b.outputUsdPerMtok);
   return compareTextMissingLast(a.classNames, b.classNames);

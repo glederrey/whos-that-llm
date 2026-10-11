@@ -83,8 +83,8 @@ export default async function HomePage({
       </dl>
       <section className="stack">
         <div className="section-head">
-          <h2>Top 5 · All models</h2>
-          <a href="/leaderboard?category=all&period=all">Full leaderboard</a>
+          <h2>Top 5 · Impossible</h2>
+          <a href="/leaderboard?category=all&difficulty=impossible&period=all">Full leaderboard</a>
         </div>
         {snapshot.top.length === 0 ? (
           <div className="card empty">No finished games yet. Be the first on the board.</div>

@@ -20,6 +20,7 @@ const example = scoreRound({
   noHint: false,
   hints: ["size"],
   wrongGuesses: 1,
+  difficulty: "medium",
 });
 
 export default function ScoringPage() {
@@ -36,7 +37,7 @@ export default function ScoringPage() {
       <h1>How scoring works</h1>
       <p className="lede">
         A round starts from a base. Penalties come off it. That subtotal is multiplied by the token factor, then by the no-hint multiplier when
-        it applies.
+        it applies, then by the difficulty.
       </p>
       <div className="card">
         <ol className="rule-list">
@@ -72,7 +73,17 @@ export default function ScoringPage() {
             </span>
           </li>
           <li>
-            <strong>5. Rounding</strong>
+            <strong>5. Difficulty</strong>
+            <span>
+              The difficulty you played multiplies the score after the other factors. Easy is {config.difficultyMultipliers.easy}×. Medium is{" "}
+              {config.difficultyMultipliers.medium}×. Hard is {config.difficultyMultipliers.hard}×. Impossible is{" "}
+              {config.difficultyMultipliers.impossible}×. Easy is the famous models. Medium adds the familiar variants. Hard adds the
+              near-duplicates. Impossible is the whole roster. No-hint mode still stacks on top, so an impossible round with no hints is{" "}
+              {config.difficultyMultipliers.impossible}× and then {config.noHintMultiplier}×.
+            </span>
+          </li>
+          <li>
+            <strong>6. Rounding</strong>
             <span>The result rounds to the nearest whole number, halves up. It never goes below 0.</span>
           </li>
         </ol>
@@ -85,13 +96,15 @@ export default function ScoringPage() {
       <h2>One round</h2>
       <p>
         The replies used {n(exampleTokens)} tokens, counting input and output. You bought the size hint and named one wrong model before the
-        right one. You were not in no-hint mode, because you bought a hint.
+        right one. You were not in no-hint mode, because you bought a hint. The round was medium, so the difficulty multiplier is{" "}
+        {config.difficultyMultipliers.medium}×.
       </p>
       <pre className="formula">{`base      = ${n(config.modelBase)}                         (named the model)
 penalties = ${n(hintCosts.size)} + ${n(config.wrongGuessCost)} = ${n(hintCosts.size + config.wrongGuessCost)}               (size hint, one wrong guess)
 subtotal  = ${n(exampleSubtotal)}
 factor    = min(${config.tokenCap}, ${n(config.tokenScale)} / ${n(exampleTokens)}) ≈ ${formatFactor(exampleFactor)}
-score     = round(${n(exampleSubtotal)} × ${n(config.tokenScale)} / ${n(exampleTokens)})
+difficulty = ×${config.difficultyMultipliers.medium}                        (medium)
+score     = round(${n(exampleSubtotal)} × ${n(config.tokenScale)} / ${n(exampleTokens)} × ${config.difficultyMultipliers.medium})
           = ${n(example.score)}`}</pre>
       <p className="muted">Your own result page lists the lines for that round.</p>
     </div>

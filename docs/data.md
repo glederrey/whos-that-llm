@@ -83,6 +83,7 @@ anon and authenticated cannot read or write these two tables. The server key doe
 | `name` | text | Claude Sonnet 5.5 |
 | `company_id` | text, fk | |
 | `size` | text | `nano`, `small`, `medium`, `large`, `xxl`. A hint. Not a point trait and not a category |
+| `difficulty` | smallint | `1` easy, `2` medium, `3` hard, `4` impossible. Set by admin. OpenRouter does not fill it. The screens show the name. A game at X draws enabled models whose difficulty is `<= X` |
 | `open_weights` | boolean | Admin fact. Play does not read it |
 | `reasoning` | boolean | Admin fact. Play does not read it |
 | `provider_settings` | jsonb | default `{}`. Passed through on the call. Not a player-facing trait |
@@ -159,6 +160,7 @@ One row per round.
 | `username` | text, null | Copied at insert, then rewritten when that user renames. Cleared when the account is deleted. Leaderboard name for that round |
 | `category` | text, fk `categories` | |
 | `pool_key` | text, null | `anthropic`, `opus`, `us`, `cn`, or `eu`. Null for `all`, `daily`, and `custom` |
+| `difficulty` | smallint, null | `1` easy, `2` medium, `3` hard, `4` impossible. The difficulty the round was played at. Null for a round that has no difficulty, including Custom and rounds from before difficulties |
 | `pool_model_ids` | text[] | The models that were legal when the round started |
 | `model_id` | text, fk `models` | |
 | `traits` | jsonb | Frozen at insert. Scoring, filtering, feedback, and the result page read this, not the live catalog |
@@ -331,6 +333,8 @@ order by score desc, message_count asc, finished_at asc, username;
 ```
 
 `given_up` is excluded. A score of 0 remains. Grouping is by `user_id`, so shared usernames do not merge. The name on the row is `games.username` from that best round. A rename rewrites it.
+
+All models passes `p_difficulty`. Null is Any difficulty: every finished round whose difficulty is set, whichever of 1–4 it was. `1`, `2`, `3`, or `4` keeps rounds played at that difficulty. Daily passes null and is not filtered by difficulty. The row returns that round's `difficulty` and `no_hint`. Rounds with a null difficulty stay off the five All models boards.
 
 Right company, never named the model. "Found" means any guess in that round hit it.
 

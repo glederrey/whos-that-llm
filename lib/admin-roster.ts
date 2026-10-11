@@ -12,6 +12,7 @@ import {
   releasedOnForYear,
   type RosterNotice,
 } from "./admin-model";
+import { difficultyFromStored, difficultyNumber, type Difficulty } from "./difficulty";
 import type { Region, Size } from "./game";
 import { readListPrice } from "./list-price";
 import { companyLogoPath } from "./logos";
@@ -26,6 +27,7 @@ export type RosterRow = {
   region: Region;
   year: string;
   size: Size;
+  difficulty: Difficulty | null;
   inputUsdPerMtok: number | null;
   outputUsdPerMtok: number | null;
   enabled: boolean;
@@ -72,7 +74,7 @@ export async function loadRoster(): Promise<{ rows: RosterRow[]; companies: Comp
   const [{ data, error }, companies, classes] = await Promise.all([
     client
       .from("models")
-      .select("id, openrouter_id, name, size, released_on, enabled, input_usd_per_mtok, output_usd_per_mtok, logo_path, company_id, companies(name, region, logo_path), model_classes(class_id)")
+      .select("id, openrouter_id, name, size, difficulty, released_on, enabled, input_usd_per_mtok, output_usd_per_mtok, logo_path, company_id, companies(name, region, logo_path), model_classes(class_id)")
       .order("enabled", { ascending: false })
       .order("name"),
     loadCompanies(client),
@@ -92,6 +94,7 @@ export async function loadRoster(): Promise<{ rows: RosterRow[]; companies: Comp
       region: company?.region ?? "us",
       year: String(row.released_on ?? "").slice(0, 4),
       size: row.size as Size,
+      difficulty: difficultyFromStored(row.difficulty),
       inputUsdPerMtok: readListPrice(row.input_usd_per_mtok),
       outputUsdPerMtok: readListPrice(row.output_usd_per_mtok),
       enabled: Boolean(row.enabled),
@@ -111,6 +114,7 @@ export async function createRosterModel(raw: {
   year?: string;
   releasedOn?: string;
   size?: string;
+  difficulty?: string;
   inputPrice?: string;
   outputPrice?: string;
   classIds?: string[];
@@ -136,6 +140,7 @@ export async function createRosterModel(raw: {
     name: fields.name,
     company_id: company.id,
     size: fields.size,
+    difficulty: difficultyNumber[fields.difficulty],
     open_weights: false,
     reasoning: false,
     provider_settings: {},
@@ -159,6 +164,7 @@ export async function updateRosterModel(raw: {
   year?: string;
   releasedOn?: string;
   size?: string;
+  difficulty?: string;
   inputPrice?: string;
   outputPrice?: string;
   classIds?: string[];
@@ -181,6 +187,7 @@ export async function updateRosterModel(raw: {
     name: fields.name,
     company_id: company.id,
     size: fields.size,
+    difficulty: difficultyNumber[fields.difficulty],
     released_on: fields.releasedOn ?? releasedOnForYear(current.data.released_on as string | null, fields.year),
     input_usd_per_mtok: fields.inputUsdPerMtok,
     output_usd_per_mtok: fields.outputUsdPerMtok,

@@ -98,7 +98,7 @@ export default async function ResultPage({ params }: { params: Promise<{ gameId:
           Play again
         </a>
         {onBoard && (game.status === "solved" || game.status === "miss") ? (
-          <a className="button-quiet" href={`/leaderboard?category=${game.category}&period=week`}>
+          <a className="button-quiet" href={`/leaderboard?category=${game.category}${game.difficulty ? `&difficulty=${game.difficulty}` : ""}&period=week`}>
             Leaderboard
           </a>
         ) : null}

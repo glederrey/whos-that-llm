@@ -79,7 +79,7 @@ Two columns. On a narrow screen they stack.
 - Left: the logo, large.
 - Right: **Find the model.** Then: a hidden model answers you. You have ten messages. Name it when you want. Find it, and the round is yours. Miss the name, and the company and the region can still count.
 - Under the buttons: three counts. **Models in play** is the enabled roster. **Games today (UTC)** counts games whose `started_at` is on the current UTC day. **Players** is the number of distinct accounts that have started a game.
-- Under the counts: **Top 5 · All models**, all-time, columns rank, name, score. The name has that player's profile picture beside it. **Full leaderboard** opens `/leaderboard?category=all&period=all`.
+- Under the counts: **Top 5 · Impossible**, all-time, columns rank, name, score. The name has that player's profile picture beside it. A no-hints round has a **No hints** chip. **Full leaderboard** opens `/leaderboard?category=all&difficulty=impossible&period=all`.
 - Signed out: **Sign up** goes to `/login?tab=create&next=/play`. **Sign in** goes to `/login?next=/play`.
 - Signed in: **Play** goes to `/play`.
 - Under the buttons: **The leaderboard is open to everyone. An account is only for playing.** Scoring is the header link.
@@ -122,10 +122,10 @@ Requires a session. No session goes to `/login?next=/play`. No username goes to 
 
 - Daily block, later, and only when Daily is enabled: **Today's model is live.** Button **Play today's**. The name is absent. Disabled, with **The game is paused.**, when the game is paused. No session goes to `/login` and then into today's round. An open daily round shows **Continue**. A day already started, including a give-up, shows **You already played today's model.** and does not start another.
 - Weekly top 5, later: rank, name, and score from the All models board for the current week, limited to 5. If the week has no counted round: **No finished games this week.**
-- **Play** sits on the right of the category row. On a narrow screen it spans the row. All models starts the round. The other rows keep **Coming soon** on the right until they are built.
-- An open round turns that **Play** into **Continue**.
-- **Play** is disabled when the hour is full, the game is paused, or the All models pool has fewer than 2 models (**Not enough models.**).
-- Under the All models row, a full-width option, off by default: **Play without hints.** Beside it: **No hints. No match feedback. Score × 2.** It stays editable until Play.
+- Each mode row opens. Inside, **Choose difficulty** lists Easy, Medium, Hard, and Impossible, each in its own color, with the turned-on model count and one short line. Only All models can start a round. The other modes use the same open row and stay **Coming soon**. Custom has no difficulty: **The player chooses that pool.**
+- An open All models round shows **Continue** beside the row.
+- A difficulty is disabled when the hour is full, the game is paused, a round is already open, or that pool has fewer than 2 turned-on models.
+- Inside the open All models row, off by default: **Play without hints.** Beside it: **No hints. No match feedback. Score × 2.** It stays editable until a difficulty is chosen.
 
 Company and Region go to `/play/new?category=…` once they are built. Custom is a later choice of models. Hints can be on for that choice, and it has no leaderboard. Class is a card with **Coming soon.** The class game mode is not built. There is no Family card, no Latest card, and no Origin card.
 
@@ -271,6 +271,8 @@ Daily stats, later, on a daily result, once at least one daily round has finishe
 **Back** returns home. It is a text button with a chevron, larger than a footnote link.
 
 Tabs are the categories with a leaderboard that are enabled. That is All models, and Daily when it is open. Company, Region, and Custom are not tabs. A class leaderboard is one board per class, and it is not built.
+
+Under All models, five boards: **Any difficulty**, **Easy**, **Medium**, **Hard**, and **Impossible**. Any difficulty is a score from whichever difficulty was played. That board shows a difficulty chip on the row, in that difficulty's color. The other four do not. A round played with no hints has a **No hints** chip on every one of the five. The opening board is Any difficulty.
 
 A second switch: **This week** and **All time**. Weeks start Monday 00:00 UTC. The tab label says **This week (UTC)**.
 

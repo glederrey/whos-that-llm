@@ -476,6 +476,68 @@ html[data-theme="dark"] .hour-status strong { color: var(--teal); }
 .category-main { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 16px; }
 .category-main strong { font-size: 17px; }
 .category-block.closed .category-main strong { color: var(--mute); }
+.category-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  text-align: left;
+}
+.category-toggle svg { width: 18px; height: 18px; flex: none; color: var(--mute); transition: transform 0.15s ease; }
+.category-toggle[aria-expanded="true"] svg { transform: rotate(180deg); }
+.difficulty-panel { display: grid; gap: 8px; padding: 12px 0 4px; }
+.difficulty-heading {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--mute);
+}
+.difficulty-list { display: grid; gap: 8px; }
+.difficulty-easy { --diff: #1c7c43; }
+.difficulty-medium { --diff: #00bbc9; }
+.difficulty-hard { --diff: #9a6700; }
+.difficulty-impossible { --diff: #c41b15; }
+.difficulty-choice {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 2px 12px;
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--diff);
+  border-radius: var(--radius-sm);
+  background: var(--soft);
+  color: inherit;
+  text-align: left;
+}
+.difficulty-choice strong { color: var(--diff); }
+.difficulty-choice .muted { grid-column: 1 / -1; }
+.difficulty-choice:disabled { opacity: 0.55; cursor: not-allowed; }
+.difficulty-choice.is-soon { cursor: default; }
+.segmented a.difficulty-easy { color: #1c7c43; }
+.segmented a.difficulty-medium { color: #00bbc9; }
+.segmented a.difficulty-hard { color: #9a6700; }
+.segmented a.difficulty-impossible { color: #c41b15; }
+.segmented a.difficulty-easy[aria-pressed="true"] { background: #1c7c43; color: #fff; }
+.segmented a.difficulty-medium[aria-pressed="true"] { background: #00bbc9; color: #062e2e; }
+.segmented a.difficulty-hard[aria-pressed="true"] { background: #9a6700; color: #fff; }
+.segmented a.difficulty-impossible[aria-pressed="true"] { background: #c41b15; color: #fff; }
+html[data-theme="dark"] .segmented a.difficulty-easy { color: #1c7c43; }
+html[data-theme="dark"] .segmented a.difficulty-medium { color: #00bbc9; }
+html[data-theme="dark"] .segmented a.difficulty-hard { color: #9a6700; }
+html[data-theme="dark"] .segmented a.difficulty-impossible { color: #c41b15; }
+html[data-theme="dark"] .segmented a.difficulty-easy[aria-pressed="true"],
+html[data-theme="dark"] .segmented a.difficulty-hard[aria-pressed="true"],
+html[data-theme="dark"] .segmented a.difficulty-impossible[aria-pressed="true"] { color: #fff; }
+html[data-theme="dark"] .segmented a.difficulty-medium[aria-pressed="true"] { background: #00bbc9; color: #062e2e; }
 .category-check {
   margin: 12px 0 0;
   align-items: center;
@@ -504,7 +566,22 @@ html[data-theme="dark"] .hour-status strong { color: var(--teal); }
 .board .rank { width: 76px; }
 .board .num, .board th.num { text-align: right; font-variant-numeric: tabular-nums; }
 .board td.name { font-weight: 500; }
-.board .player { display: flex; align-items: center; gap: 10px; min-height: 28px; line-height: 1.2; }
+.board .player { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 10px; min-height: 28px; line-height: 1.2; }
+.board-chip {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 1px 8px;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.5;
+  white-space: nowrap;
+}
+.board-chip.difficulty-easy { background: #1c7c43; color: #fff; }
+.board-chip.difficulty-medium { background: #00bbc9; color: #062e2e; }
+.board-chip.difficulty-hard { background: #9a6700; color: #fff; }
+.board-chip.difficulty-impossible { background: #c41b15; color: #fff; }
+.board-chip.no-hints { background: var(--soft); color: var(--text); border: 1px solid var(--line); }
 .board .player .avatar { flex: none; width: 28px; height: 28px; }
 .board .player .you-tag { margin-left: 0; vertical-align: baseline; line-height: 1.5; }
 .board .rank .rank-chip { display: flex; width: fit-content; }

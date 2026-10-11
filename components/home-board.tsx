@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { config } from "@/lib/config";
+import { difficulties, difficultyBlurb, difficultyLabel, type Difficulty } from "@/lib/difficulty";
 
 export type HomeCategory = {
   id: string;
@@ -75,6 +76,7 @@ export function HomeBoard({
   cap,
   activeGameId,
   poolSize,
+  difficultyCounts,
   nextAt,
   categories,
 }: {
@@ -83,10 +85,12 @@ export function HomeBoard({
   cap: number;
   activeGameId: string | null;
   poolSize: number;
+  difficultyCounts: Record<Difficulty, number>;
   nextAt: string | null;
   categories: HomeCategory[];
 }) {
   const router = useRouter();
+  const [openId, setOpenId] = useState<string | null>(null);
   const [noHint, setNoHint] = useState(false);
   const [notice, setNotice] = useState("");
   const [busy, setBusy] = useState(false);
@@ -104,7 +108,7 @@ export function HomeBoard({
     return left === 0 ? `Next one at ${when}` : `Adding a new game to the pool at ${when}`;
   }
 
-  async function start(category: string) {
+  async function start(category: string, difficulty: Difficulty) {
     if (activeGameId && category === "all") {
       router.push(`/play/${activeGameId}`);
       return;
@@ -114,7 +118,7 @@ export function HomeBoard({
     const response = await fetch("/api/games", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ category, noHint }),
+      body: JSON.stringify({ category, noHint, difficulty }),
     });
     const body = (await response.json().catch(() => ({}))) as { gameId?: string; error?: string; nextAt?: string };
     setBusy(false);
@@ -147,6 +151,10 @@ export function HomeBoard({
       setNotice("That mode is not open yet.");
       return;
     }
+    if (body.error === "difficulty") {
+      setNotice("Choose a difficulty.");
+      return;
+    }
     setNotice("Not enough models.");
   }
 
@@ -166,40 +174,93 @@ export function HomeBoard({
       </p>
       <div className="card category-list">
         {cards.map((category) => {
-          const open = category.enabled;
-          const small = category.id === "all" && poolSize < 2;
+          const playable = category.id === "all" && category.enabled;
           const continueGame = Boolean(activeGameId) && category.id === "all";
-          const disabled = !open || paused || busy || small || (full && !continueGame) || (Boolean(activeGameId) && !continueGame);
+          const opened = openId === category.id;
+          const custom = category.id === "custom";
           return (
-            <div key={category.id} className={open ? "category-block" : "category-block closed"}>
+            <div key={category.id} className={category.enabled ? "category-block" : "category-block closed"}>
               <div className="category-main">
-                <span>
-                  <strong>{category.name}</strong>
-                  <br />
-                  <span className="muted">{category.blurb}</span>
-                  {small ? (
-                    <>
-                      <br />
-                      <span className="muted">Not enough models.</span>
-                    </>
-                  ) : null}
-                </span>
-                {open ? (
-                  <button type="button" className="button" disabled={!continueGame && disabled} onClick={() => void start(category.id)}>
-                    {continueGame ? "Continue" : "Play"}
+                <button
+                  type="button"
+                  className="category-toggle"
+                  aria-expanded={opened}
+                  onClick={() => setOpenId(opened ? null : category.id)}
+                >
+                  <span>
+                    <strong>{category.name}</strong>
+                    <br />
+                    <span className="muted">{category.blurb}</span>
+                    {playable && poolSize < 2 ? (
+                      <>
+                        <br />
+                        <span className="muted">Not enough models.</span>
+                      </>
+                    ) : null}
+                  </span>
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="m6 9 6 6 6-6" />
+                  </svg>
+                </button>
+                {continueGame ? (
+                  <button type="button" className="button" onClick={() => router.push(`/play/${activeGameId}`)}>
+                    Continue
                   </button>
-                ) : (
+                ) : category.enabled ? null : (
                   <span className="pill">Coming soon</span>
                 )}
               </div>
-              {category.id === "all" && open && !continueGame ? (
-                <label className="check category-check">
-                  <input type="checkbox" checked={noHint} onChange={(event) => setNoHint(event.target.checked)} />
-                  <span>
-                    <strong>Play without hints.</strong>
-                    <span className="muted"> No hints. No match feedback. Score × {config.noHintMultiplier}.</span>
-                  </span>
-                </label>
+              {opened ? (
+                <div className="difficulty-panel">
+                  {custom ? (
+                    <p className="muted">The player chooses that pool.</p>
+                  ) : (
+                    <>
+                      <p className="difficulty-heading">Choose difficulty</p>
+                      <div className="difficulty-list">
+                        {difficulties.map((difficulty) => {
+                          const count = difficultyCounts[difficulty];
+                          const small = count < 2;
+                          const blocked = !playable || paused || busy || small || full || Boolean(activeGameId);
+                          const choice = (
+                            <>
+                              <strong>{difficultyLabel[difficulty]}</strong>
+                              <span>{count === 1 ? "1 model" : `${count} models`}</span>
+                              <span className="muted">
+                                {difficultyBlurb[difficulty]}
+                                {playable && small ? ". Not enough models." : ""}
+                              </span>
+                            </>
+                          );
+                          return playable ? (
+                            <button
+                              key={difficulty}
+                              type="button"
+                              className={`difficulty-choice difficulty-${difficulty}`}
+                              disabled={blocked}
+                              onClick={() => void start(category.id, difficulty)}
+                            >
+                              {choice}
+                            </button>
+                          ) : (
+                            <div key={difficulty} className={`difficulty-choice difficulty-${difficulty} is-soon`}>
+                              {choice}
+                            </div>
+                          );
+                        })}
+                      </div>
+                      {playable && !continueGame ? (
+                        <label className="check category-check">
+                          <input type="checkbox" checked={noHint} onChange={(event) => setNoHint(event.target.checked)} />
+                          <span>
+                            <strong>Play without hints.</strong>
+                            <span className="muted"> No hints. No match feedback. Score × {config.noHintMultiplier}.</span>
+                          </span>
+                        </label>
+                      ) : null}
+                    </>
+                  )}
+                </div>
               ) : null}
             </div>
           );

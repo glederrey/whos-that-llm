@@ -1,4 +1,5 @@
 import type { Rules } from "./config";
+import { difficultyLabel, type Difficulty } from "./difficulty";
 
 export type Region = "us" | "cn" | "eu";
 export type Size = "nano" | "small" | "medium" | "large" | "xxl";
@@ -85,6 +86,7 @@ export type PublicGame = {
     year: number;
     size: string;
   };
+  difficulty?: Difficulty | null;
   score?: number;
   breakdown?: ScoreLine[];
   explanation?: string[];
@@ -286,6 +288,8 @@ export type ScoreInput = {
   noHint: boolean;
   hints: HintKey[];
   wrongGuesses?: number;
+  /** Absent on a round that started before difficulties. Those rounds are not multiplied. */
+  difficulty?: Difficulty | null;
 };
 
 const hintNames: Record<HintKey, string> = {
@@ -316,6 +320,7 @@ export function scoreRound(input: ScoreInput): { score: number; breakdown: Score
   const boughtHints = playableHints(input.hints);
   const noHintMode = input.noHint && boughtHints.length === 0;
   const noHintFactor = noHintMode ? rules.noHintMultiplier : 1;
+  const difficultyFactor = input.difficulty ? rules.difficultyMultipliers[input.difficulty] : 1;
 
   let base = 0;
   const breakdown: ScoreLine[] = [];
@@ -347,7 +352,7 @@ export function scoreRound(input: ScoreInput): { score: number; breakdown: Score
   }
 
   const subtotal = base - penalties;
-  const total = roundHalfUp(subtotal * factor * noHintFactor);
+  const total = roundHalfUp(subtotal * factor * noHintFactor * difficultyFactor);
   breakdown.push({
     label: `Tokens · ${formatInt(input.tokens)} tokens`,
     points: null,
@@ -356,10 +361,17 @@ export function scoreRound(input: ScoreInput): { score: number; breakdown: Score
   if (noHintMode) {
     breakdown.push({ label: "No-hint", points: null, multiplier: `×${formatFactor(noHintFactor)}` });
   }
+  if (input.difficulty) {
+    breakdown.push({
+      label: `Difficulty · ${difficultyLabel[input.difficulty]}`,
+      points: null,
+      multiplier: `×${formatFactor(difficultyFactor)}`,
+    });
+  }
   const score = Math.max(0, total);
   if (total < 0) breakdown.push({ label: "Floor at 0", points: score - total });
 
-  return { score, breakdown, explanation: explainScore(input, base, penalties, total, noHintMode) };
+  return { score, breakdown, explanation: explainScore(input, base, penalties, total, noHintMode, difficultyFactor) };
 }
 
 function explainScore(
@@ -368,6 +380,7 @@ function explainScore(
   penalties: number,
   total: number,
   noHintMode: boolean,
+  difficultyFactor: number,
 ): string[] {
   const { rules } = input;
   const wrongGuesses = input.wrongGuesses ?? 0;
@@ -375,7 +388,7 @@ function explainScore(
   const regionKnown = input.regionGiven || bought.includes("region");
   const companyKnown = input.companyGiven || bought.includes("company");
   const lines = [
-    `Your score starts from the base and subtracts penalties. That subtotal is multiplied by ${formatInt(rules.tokenScale)} divided by the tokens used, capped at ${formatFactor(rules.tokenCap)}, then by ${formatFactor(rules.noHintMultiplier)}× if you played with no hints. It is rounded and never goes below 0.`,
+    `Your score starts from the base and subtracts penalties. That subtotal is multiplied by ${formatInt(rules.tokenScale)} divided by the tokens used, capped at ${formatFactor(rules.tokenCap)}, then by ${formatFactor(rules.noHintMultiplier)}× if you played with no hints, then by the difficulty. It is rounded and never goes below 0.`,
   ];
   if (input.namedModel) {
     lines.push(`Base: ${formatInt(rules.modelBase)} for naming the model.`);
@@ -406,6 +419,7 @@ function explainScore(
 
   lines.push(tokenExplanation(input.tokens, rules));
   if (noHintMode) lines.push(`No-hint: ×${formatFactor(rules.noHintMultiplier)}.`);
+  if (input.difficulty) lines.push(`Difficulty: ${difficultyLabel[input.difficulty]} ×${formatFactor(difficultyFactor)}.`);
   if (total < 0) lines.push("The total came to less than 0, so it is shown as 0.");
   return lines;
 }
@@ -421,9 +435,9 @@ function tokenExplanation(tokens: number, rules: Rules): string {
   return `Tokens: ${formatInt(tokens)}. Token factor ×${shown} (${ratio}).`;
 }
 
-export function poolLabel(category: string, poolKey: string | null, traits: Traits): string {
+export function poolLabel(category: string, poolKey: string | null, traits: Traits, difficulty?: Difficulty | null): string {
   const first = Object.values(traits.models)[0];
-  if (category === "all") return "All models";
+  if (category === "all") return difficulty ? `All models · ${difficultyLabel[difficulty]}` : "All models";
   if (category === "daily") return "Daily";
   if (category === "origin") return "Origin";
   if (category === "latest") return "Latest";
@@ -463,6 +477,7 @@ export function toPublicGame(input: {
   id: string;
   category: string;
   poolKey: string | null;
+  difficulty?: Difficulty | null;
   noHint: boolean;
   status: GameStatus;
   messageCount: number;
@@ -497,7 +512,8 @@ export function toPublicGame(input: {
   const game: PublicGame = {
     id: input.id,
     category: input.category,
-    poolLabel: poolLabel(input.category, input.poolKey, input.traits),
+    poolLabel: poolLabel(input.category, input.poolKey, input.traits, input.difficulty),
+    difficulty: input.difficulty ?? null,
     noHint: input.noHint,
     hintsAllowed: input.rules.hintsAllowed,
     hintCosts: input.rules.hintCosts,

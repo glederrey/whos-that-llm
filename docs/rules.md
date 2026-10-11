@@ -130,8 +130,9 @@ The steps, in this order:
 2. Subtract the penalties.
 3. Multiply by the token factor.
 4. In no-hint mode, multiply by 2.
-5. Round with the half-up helper.
-6. Floor at 0.
+5. Multiply by the difficulty: Easy ×0.5, Medium ×1, Hard ×1.5, Impossible ×2. A round with no difficulty multiplies by 1.
+6. Round with the half-up helper.
+7. Floor at 0.
 
 The base is **2000** if the player named the model, on any reply. That replaces region and company. There is no message-count multiplier. If they never named it, the base is the region (100) and company (300) points they actually matched. A trait that was given, or that the player revealed with a hint, contributes 0. Year and size are not part of the base. There is no 2× on that path unless the round was played in no-hint mode.
 
@@ -144,19 +145,20 @@ No-hint mode is the harder mode. The 2× applies only when the round was played 
 `tokens` is input tokens plus output tokens on successful calls only. Failed calls are left out. `reasoning_tokens` and `cache_read_tokens` are not added. Some providers already count reasoning inside `output_tokens`. A round with no stored reply has no score.
 
 ```
-tokenFactor   = min(10, 10000 / tokens)   // 0 tokens is 10
-noHintFactor  = 2 when the round is no-hint and no hint was bought, otherwise 1
+tokenFactor      = min(10, 10000 / tokens)   // 0 tokens is 10
+noHintFactor     = 2 when the round is no-hint and no hint was bought, otherwise 1
+difficultyFactor = 0.5, 1, 1.5, or 2 for the difficulty the round was played at, otherwise 1
 
 base      = 2000 if the model was named
             otherwise region points + company points
 penalties = (100 * wrong guesses) + (sum of the hint prices bought)
 
-score = max(0, round((base − penalties) * tokenFactor * noHintFactor))
+score = max(0, round((base − penalties) * tokenFactor * noHintFactor * difficultyFactor))
 ```
 
 `round` goes to the nearest integer. A half rounds up. A total below 0 after rounding is shown as 0.
 
-The numbers in that formula are the ones in `lib/config.ts`: `modelBase` (2000), `regionPoints` (100), `companyPoints` (300), `tokenScale` (10000), `tokenCap` (10), `hintCosts`, `wrongGuessCost` (100), `noHintMultiplier` (2), and `messageLimit` (10, how many replies a round allows). A round scores with the current numbers when it ends, so a round that started under the old formula is scored with the new one. It keeps the `messageLimit` it froze.
+The numbers in that formula are the ones in `lib/config.ts`: `modelBase` (2000), `regionPoints` (100), `companyPoints` (300), `tokenScale` (10000), `tokenCap` (10), `hintCosts`, `wrongGuessCost` (100), `noHintMultiplier` (2), `difficultyMultipliers` (Easy 0.5, Medium 1, Hard 1.5, Impossible 2), and `messageLimit` (10, how many replies a round allows). A round scores with the current numbers when it ends, so a round that started under the old formula is scored with the new one. It keeps the `messageLimit` it froze.
 
 A short reply raises the score, because `10000 / tokens` gets large. The factor stops at 10. Past 10,000 tokens it falls below 1.
 
@@ -204,11 +206,11 @@ A round with a company hint (600) and two wrong guesses (200) on no base comes t
 
 ### Breakdown lines
 
-The result page lists the parts in this order, then the total. Base and penalty lines are point changes. The token line and the no-hint line are multipliers: they show the × factor, not points added or removed. The total is one round of `subtotal × tokenFactor × noHintFactor`, floored at 0.
+The result page lists the parts in this order, then the total. Base and penalty lines are point changes. The token line, the no-hint line, and the difficulty line are multipliers: they show the × factor, not points added or removed. The total is one round of `subtotal × tokenFactor × noHintFactor × difficultyFactor`, floored at 0.
 
 ```
 subtotal = base − penalties
-score    = max(0, round(subtotal * tokenFactor * noHintFactor))
+score    = max(0, round(subtotal * tokenFactor * noHintFactor * difficultyFactor))
 ```
 
 | Line | When | Value |
@@ -221,6 +223,7 @@ score    = max(0, round(subtotal * tokenFactor * noHintFactor))
 | `Wrong guesses · N` | At least one wrong model name. One line for the count | −100 each |
 | `Tokens · N tokens` | Always. The value is the factor, such as `×10` or `×3.712`. 0 tokens is `×10` | `×` factor, not a point delta |
 | `No-hint` | Only when the round is no-hint and no hint was bought | `×2` |
+| `Difficulty · Easy` | The round was played at a difficulty. The label names that difficulty | `×0.5`, `×1`, `×1.5`, or `×2` |
 | `Floor at 0` | The rounded total is below 0 | the amount that brings it to 0 |
 
 Hint lines follow the order they were bought. The wrong-guess line follows them.
@@ -415,7 +418,7 @@ The call is the same in every category: 10 messages, 500 characters, 1,000 outpu
 | Category | Pool | Hints | Leaderboard | When |
 |---|---|---|---|---|
 | `daily` | One model, the same for every player that UTC day | Yes | Yes | Later |
-| `all` | Every enabled model | Yes | Yes | First build |
+| `all` | Enabled models at or below the chosen difficulty | Yes | Yes | First build |
 | `company` | One company, at least 2 enabled models | No | No | Later |
 | `region` | `us`, `cn`, or `eu`, at least 2 enabled models | No | No | Later |
 | `custom` | A choice of models, picked before the round | Yes | No | Later |
@@ -457,7 +460,7 @@ Later. The player picks the models before the round. Disabled until that picker 
 
 ### Leaderboards
 
-Two boards today: **Daily**, and general **All models**. When the class mode is built, each class has its own leaderboard. That display is not built. Custom has no leaderboard. A round counts when its status is `solved` or `miss` and the category has a leaderboard. `given_up` does not count.
+All models has five boards: Any difficulty, Easy, Medium, Hard, and Impossible. Any difficulty is a score from whichever difficulty was played, so the four multipliers sit next to each other. That board puts a difficulty chip on the row. The other four do not, because the board is already that difficulty. A round played with no hints has a No hints chip on every board. A round scores on the difficulty it was played at. Daily is the other board, when that mode is open. When the class mode is built, each class has its own leaderboard. That display is not built. Custom has no difficulty and no leaderboard. A round counts when its status is `solved` or `miss` and the category has a leaderboard. `given_up` does not count. Rounds from before difficulties have no difficulty and stay off these five boards.
 
 Rank is the player's best score in the period, highest first. Scores are never negative, so a round can score 0. Ties break by fewer messages on that round, then by earlier finish. Weeks start Monday 00:00 UTC.
 

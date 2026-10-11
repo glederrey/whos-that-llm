@@ -61,6 +61,7 @@ test("model fields reject a bad region or year", () => {
       region: "USA",
       year: "2026",
       size: "small",
+      difficulty: "easy",
     })?.region,
     "us",
   );
@@ -72,11 +73,24 @@ test("model fields reject a bad region or year", () => {
       region: "USA",
       year: "2026",
       size: "small",
+      difficulty: "medium",
     })?.company,
     "OpenAI",
   );
   assert.equal(parseModelFields({ openrouterId: "openai/gpt-5.6-luna", name: "GPT", company: "OpenAI", region: "moon", year: "2026", size: "small" }), null);
   assert.equal(parseModelFields({ openrouterId: "openai/gpt-5.6-luna", name: "GPT", company: "O", region: "us", year: "2026", size: "small" }), null);
+  assert.equal(
+    parseModelFields({
+      openrouterId: "openai/gpt-5.6-luna",
+      name: "GPT",
+      company: "OpenAI",
+      region: "us",
+      year: "2026",
+      size: "small",
+      difficulty: "famous",
+    }),
+    null,
+  );
 });
 
 test("a release date and typed prices are kept", () => {
@@ -94,11 +108,13 @@ test("a release date and typed prices are kept", () => {
     region: "us",
     releasedOn: "2025-08-05",
     size: "large",
+    difficulty: "hard",
     inputPrice: "15",
     outputPrice: "75",
   });
   assert.equal(fields?.releasedOn, "2025-08-05");
   assert.equal(fields?.year, 2025);
+  assert.equal(fields?.difficulty, "hard");
   assert.equal(fields?.inputUsdPerMtok, 15);
   assert.equal(fields?.outputUsdPerMtok, 75);
   assert.equal(

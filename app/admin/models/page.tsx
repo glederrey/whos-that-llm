@@ -8,6 +8,7 @@ import { saveModel, setModelEnabled } from "@/app/admin/actions";
 import { rosterNotice } from "@/lib/admin-model";
 import { loadRoster, type ClassRow, type RosterRow } from "@/lib/admin-roster";
 import { modelsReturnPath, pageOf, rosterSortOf, searchRoster, sortRoster, type RosterSort, type RosterSortColumn } from "@/lib/roster-list";
+import { difficultyLabel } from "@/lib/difficulty";
 import { regionLabel, sizeLabel } from "@/lib/game";
 import { formatListPrice, formatPriceInput } from "@/lib/list-price";
 
@@ -80,6 +81,7 @@ const sortLabels: Record<RosterSortColumn, string> = {
   region: "Region",
   year: "Year",
   size: "Size",
+  difficulty: "Difficulty",
   input: "Input",
   output: "Output",
   classes: "Classes",
@@ -223,6 +225,7 @@ function ModelRow({
       <td>{regionLabel(row.region)}</td>
       <td>{row.year || "—"}</td>
       <td>{sizeLabel(row.size)}</td>
+      <td>{row.difficulty ? difficultyLabel[row.difficulty] : "—"}</td>
       <td>{formatListPrice(row.inputUsdPerMtok)}</td>
       <td>{formatListPrice(row.outputUsdPerMtok)}</td>
       <td>{row.classNames || "—"}</td>
@@ -253,6 +256,7 @@ function ModelRow({
                 region={row.region}
                 year={row.year}
                 size={row.size}
+                difficulty={row.difficulty ?? ""}
                 inputPrice={formatPriceInput(row.inputUsdPerMtok)}
                 outputPrice={formatPriceInput(row.outputUsdPerMtok)}
                 classes={classes}

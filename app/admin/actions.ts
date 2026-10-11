@@ -19,6 +19,7 @@ function fields(formData: FormData) {
     year: text(formData, "year"),
     releasedOn: text(formData, "releasedOn"),
     size: text(formData, "size"),
+    difficulty: text(formData, "difficulty"),
     inputPrice: text(formData, "inputPrice"),
     outputPrice: text(formData, "outputPrice"),
     classIds: formData.getAll("classId").flatMap((value) => (typeof value === "string" ? [value] : [])),
