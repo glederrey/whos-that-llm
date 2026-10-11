@@ -64,7 +64,7 @@ type PublicGame = {
 
 `feedback` is null for the whole round when `noHint` is true, and on Origin. `given` is still sent. `candidates` is the filtered list: logo, company, and name only. The server removes models that contradict a known trait, and models already guessed, before it sends the list. The client does not receive family, region, year, size, weights, or reasoning, and it does not filter.
 
-Known traits are given values, bought hints, and matched company, region, and family. In no-hint mode, matches are stored on the guess row and do not become known, so they do not narrow `candidates`.
+Known traits are given values, bought hints, and matched company, region, and family. When hints are on, a company miss also removes every model from that company. A company hit leaves that company's other models. In no-hint mode, matches are stored on the guess row and do not become known, and a company miss removes nothing, so they do not narrow `candidates`.
 
 Do not tell the client which traits the highlighted row would hit. That preview would be the answer.
 

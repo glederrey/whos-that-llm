@@ -3,6 +3,7 @@ import { config, currentRules, rulesForCategory, type Rules } from "./config";
 import {
   buildTraits,
   compareModel,
+  eliminatedCompanyIds,
   filterCandidates,
   hintOffered,
   knownValues,
@@ -322,14 +323,15 @@ export async function submitGuess(gameId: string, userId: string, modelId: strin
     .from("guesses")
     .select("guessed_model_id, model_correct, company_correct, family_correct, region_correct")
     .eq("game_id", gameId);
-  const previous: GuessFlags[] = (guesses ?? []).map((guess) => ({
+  const previous = (guesses ?? []).map((guess) => ({
+    modelId: guess.guessed_model_id,
     modelCorrect: Boolean(guess.model_correct),
     companyCorrect: Boolean(guess.company_correct),
     familyCorrect: Boolean(guess.family_correct),
     regionCorrect: Boolean(guess.region_correct),
   }));
-  const guessedModelIds = (guesses ?? [])
-    .map((guess) => guess.guessed_model_id)
+  const guessedModelIds = previous
+    .map((guess) => guess.modelId)
     .filter((id): id is string => typeof id === "string" && id.length > 0);
   const hidden = game.traits.models[game.model_id];
   const guessed = game.traits.models[modelId];
@@ -342,7 +344,14 @@ export async function submitGuess(gameId: string, userId: string, modelId: strin
     hints: game.hints ?? [],
     noHint: game.no_hint,
   });
-  const allowed = new Set(filterCandidates(game.traits, known, guessedModelIds).map((row) => row.id));
+  const allowed = new Set(
+    filterCandidates(
+      game.traits,
+      known,
+      guessedModelIds,
+      eliminatedCompanyIds(game.traits, previous, game.no_hint),
+    ).map((row) => row.id),
+  );
   if (!allowed.has(modelId)) return fail(409, "conflict");
 
   const flags = compareModel(game.model_id, modelId, hidden, guessed);

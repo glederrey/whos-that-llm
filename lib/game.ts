@@ -212,15 +212,33 @@ export function missedGuesses(traits: Traits, guesses: RecordedGuess[], noHint: 
     });
 }
 
+export function eliminatedCompanyIds(
+  traits: Traits,
+  guesses: Array<{ modelId: string | null; companyCorrect: boolean }>,
+  noHint: boolean,
+): string[] {
+  if (noHint) return [];
+  const companies = new Set<string>();
+  for (const guess of guesses) {
+    if (guess.companyCorrect || !guess.modelId) continue;
+    const companyId = traits.models[guess.modelId]?.companyId;
+    if (companyId) companies.add(companyId);
+  }
+  return [...companies];
+}
+
 export function filterCandidates(
   traits: Traits,
   known: Known,
   excludeIds: string[] = [],
+  excludeCompanyIds: string[] = [],
 ): PublicCandidate[] {
   const excluded = new Set(excludeIds);
+  const excludedCompanies = new Set(excludeCompanyIds);
   return Object.entries(traits.models)
     .filter(([id, model]) => {
       if (excluded.has(id)) return false;
+      if (excludedCompanies.has(model.companyId)) return false;
       if (known.companyId && model.companyId !== known.companyId) return false;
       if (known.familyId && model.familyId !== known.familyId) return false;
       if (known.region && model.region !== known.region) return false;
@@ -501,7 +519,12 @@ export function toPublicGame(input: {
       year: input.hints.includes("year") ? displayValue(hidden, "year") : null,
       size: input.hints.includes("size") ? displayValue(hidden, "size") : null,
     },
-    candidates: filterCandidates(input.traits, known, input.guessedModelIds),
+    candidates: filterCandidates(
+      input.traits,
+      known,
+      input.guessedModelIds,
+      eliminatedCompanyIds(input.traits, input.guesses, input.noHint),
+    ),
     pastGuesses: missedGuesses(input.traits, input.guesses, input.noHint),
     transcript: input.transcript,
   };

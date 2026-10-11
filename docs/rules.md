@@ -107,7 +107,9 @@ Consequences:
 
 A value becomes known when it is given, bought as a hint, or matched by a guess. Region, company, and family matches count. Every trait also counts once it is bought as a hint.
 
-In no-hint mode, matches are not shown and do not narrow the list. Narrowing would tell the player what they hit. The score still counts those matches. Given values can still be shown, because every model in the pool shares them.
+When hints are on, a guess that misses the company removes every model from that company. A guess that hits the company and misses the model leaves the other models from that company.
+
+In no-hint mode, matches are not shown and do not narrow the list. A company miss does not remove that company either. Narrowing would tell the player what they hit. The score still counts those matches. Given values can still be shown, because every model in the pool shares them.
 
 The server filters the guess list as known values change. The client shows logo, company, and name only. It does not receive family, region, year, size, or any other trait, and it does not filter the list itself.
 
@@ -271,7 +273,9 @@ Consequences:
 
 A value becomes known when it is given, bought as a hint, or matched by a guess. Region, company, and family matches count. Every trait also counts once it is bought as a hint.
 
-In no-hint mode, matches are not shown and do not narrow the list. Narrowing would tell the player what they hit. The score still counts those matches. Given values can still be shown, because every model in the pool shares them.
+When hints are on, a guess that misses the company removes every model from that company. A guess that hits the company and misses the model leaves the other models from that company.
+
+In no-hint mode, matches are not shown and do not narrow the list. A company miss does not remove that company either. Narrowing would tell the player what they hit. The score still counts those matches. Given values can still be shown, because every model in the pool shares them.
 
 The server filters the guess list as known values change. The client shows logo, company, and name only. It does not receive family, region, year, size, or any other trait, and it does not filter the list itself.
 
