@@ -425,7 +425,7 @@ Beside that list, the result page shows the short player-facing explanation from
 
 ## Categories
 
-The call is the same in every category: 10 messages, 500 characters, 500 output tokens, one system prompt. A category changes the pool, which traits are given, whether year and size can be bought, and whether the round can appear on a leaderboard. The score formula does not change. Which cards exist is the `categories` table.
+The call is the same in every category: 10 messages, 500 characters, 1,000 output tokens, one system prompt. A category changes the pool, which traits are given, whether year and size can be bought, and whether the round can appear on a leaderboard. The score formula does not change. Which cards exist is the `categories` table.
 
 | Category | Pool | Hints | Leaderboard | When |
 |---|---|---|---|---|

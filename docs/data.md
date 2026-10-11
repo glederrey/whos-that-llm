@@ -14,9 +14,9 @@ There is no separate "who played when" table. `games.started_at` and `games.user
 
 Each round is one row in `games`. That row's `id` is the session id. The player's message and the model's reply are rows in `messages`, tied to that id by `game_id`. One turn is two rows with the same `turn`: `role = user` is what they sent, `role = assistant` is what the model answered.
 
-A user message is at most 500 characters. A reply is at most 500 tokens, about 2 KB. A full round is about 15 KB. Ten thousand rounds are about 150 MB.
+A user message is at most 500 characters. A reply is at most 1,000 tokens, about 4 KB. A full round is about 30 KB. Ten thousand rounds are about 300 MB.
 
-The text is kept while the account exists. Later analysis reads `messages` joined to `games` on `game_id`. The admin round page also reads it, because a 500-token reply has room to say its own name. Score, guesses, and the leaderboard do not read `messages`, so a point does not depend on the text. Deleting an account removes that player's games, messages, guesses, and usage. Other players' rounds stay.
+The text is kept while the account exists. Later analysis reads `messages` joined to `games` on `game_id`. The admin round page also reads it, because a 1,000-token reply has room to say its own name. Score, guesses, and the leaderboard do not read `messages`, so a point does not depend on the text. Deleting an account removes that player's games, messages, guesses, and usage. Other players' rounds stay.
 
 A failed call writes `usage` and does not write `messages`, because there is no stored reply. The system prompt is not a row.
 
@@ -180,7 +180,7 @@ Indexes:
 {
   "messageLimit": 10,
   "maxUserChars": 500,
-  "maxOutputTokens": 500,
+  "maxOutputTokens": 1000,
   "modelBase": 2000,
   "regionPoints": 100,
   "companyPoints": 300,
