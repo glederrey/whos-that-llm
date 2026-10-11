@@ -502,13 +502,13 @@ html[data-theme="dark"] .hour-status strong { color: var(--teal); }
 }
 .difficulty-list { display: grid; gap: 8px; }
 .difficulty-easy { --diff: #1c7c43; }
-.difficulty-medium { --diff: #00bbc9; }
-.difficulty-hard { --diff: #9a6700; }
-.difficulty-impossible { --diff: #c41b15; }
+.difficulty-medium { --diff: #d4a017; }
+.difficulty-hard { --diff: #c41b15; }
+.difficulty-impossible { --diff: #a78bfa; }
 .difficulty-choice {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 2px 12px;
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
   width: 100%;
   padding: 10px 12px;
   border: 1px solid var(--line);
@@ -518,8 +518,9 @@ html[data-theme="dark"] .hour-status strong { color: var(--teal); }
   color: inherit;
   text-align: left;
 }
+.difficulty-name { display: flex; align-items: baseline; gap: 8px; min-width: 0; }
+.difficulty-count { margin-left: auto; white-space: nowrap; }
 .difficulty-choice strong { color: var(--diff); }
-.difficulty-choice .muted { grid-column: 1 / -1; }
 .difficulty-choice:disabled { opacity: 0.55; cursor: not-allowed; }
 .difficulty-choice.is-soon { cursor: default; }
 .segmented a.difficulty-easy { color: #1c7c43; }

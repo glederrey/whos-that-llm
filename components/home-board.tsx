@@ -176,32 +176,39 @@ export function HomeBoard({
         {cards.map((category) => {
           const playable = category.id === "all" && category.enabled;
           const continueGame = Boolean(activeGameId) && category.id === "all";
-          const opened = openId === category.id;
+          const opened = category.enabled && openId === category.id;
           const custom = category.id === "custom";
+          const label = (
+            <span>
+              <strong>{category.name}</strong>
+              <br />
+              <span className="muted">{category.blurb}</span>
+              {playable && poolSize < 2 ? (
+                <>
+                  <br />
+                  <span className="muted">Not enough models.</span>
+                </>
+              ) : null}
+            </span>
+          );
           return (
             <div key={category.id} className={category.enabled ? "category-block" : "category-block closed"}>
               <div className="category-main">
-                <button
-                  type="button"
-                  className="category-toggle"
-                  aria-expanded={opened}
-                  onClick={() => setOpenId(opened ? null : category.id)}
-                >
-                  <span>
-                    <strong>{category.name}</strong>
-                    <br />
-                    <span className="muted">{category.blurb}</span>
-                    {playable && poolSize < 2 ? (
-                      <>
-                        <br />
-                        <span className="muted">Not enough models.</span>
-                      </>
-                    ) : null}
-                  </span>
-                  <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <path fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="m6 9 6 6 6-6" />
-                  </svg>
-                </button>
+                {category.enabled ? (
+                  <button
+                    type="button"
+                    className="category-toggle"
+                    aria-expanded={opened}
+                    onClick={() => setOpenId(opened ? null : category.id)}
+                  >
+                    {label}
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                      <path fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="m6 9 6 6 6-6" />
+                    </svg>
+                  </button>
+                ) : (
+                  <div className="category-toggle">{label}</div>
+                )}
                 {continueGame ? (
                   <button type="button" className="button" onClick={() => router.push(`/play/${activeGameId}`)}>
                     Continue
@@ -224,12 +231,14 @@ export function HomeBoard({
                           const blocked = !playable || paused || busy || small || full || Boolean(activeGameId);
                           const choice = (
                             <>
-                              <strong>{difficultyLabel[difficulty]}</strong>
-                              <span>{count === 1 ? "1 model" : `${count} models`}</span>
-                              <span className="muted">
-                                {difficultyBlurb[difficulty]}
-                                {playable && small ? ". Not enough models." : ""}
+                              <span className="difficulty-name">
+                                <strong>{difficultyLabel[difficulty]}</strong>
+                                <span className="muted">
+                                  {difficultyBlurb[difficulty]}
+                                  {playable && small ? ". Not enough models." : ""}
+                                </span>
                               </span>
+                              <span className="difficulty-count">{count === 1 ? "1 model" : `${count} models`}</span>
                             </>
                           );
                           return playable ? (

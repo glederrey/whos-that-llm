@@ -17,7 +17,7 @@ export const difficultyLabel: Record<Difficulty, string> = {
   impossible: "Impossible",
 };
 
-/** The one line under each choice on the play page. */
+/** The short line beside each difficulty name on the play page. */
 export const difficultyBlurb: Record<Difficulty, string> = {
   easy: "famous models",
   medium: "familiar variants",
