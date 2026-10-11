@@ -127,7 +127,7 @@ Requires a session. No session goes to `/login?next=/play`. No username goes to 
 - **Play** sits on the right of the category row. On a narrow screen it spans the row. All models starts the round. The other rows keep **Coming soon** on the right until they are built.
 - An open round turns that **Play** into **Continue**.
 - **Play** is disabled when the hour is full, the game is paused, or the All models pool has fewer than 2 models (**Not enough models.**).
-- Under the All models row, a full-width option, off by default: **Play without hints.** Beside it: **No hints. No match feedback. Score × 1.5.** It stays editable until Play.
+- Under the All models row, a full-width option, off by default: **Play without hints.** Beside it: **No hints. No match feedback. Score × 2.** It stays editable until Play.
 
 Company, Family, and Region go to `/play/new?category=…` once they are built. Custom is a later choice of models. There is no Latest card and no Origin card.
 
@@ -153,7 +153,7 @@ Region rows are labeled **USA**, **China**, and **Europe**. Latest has no picker
 
 Empty state: **Nothing to play in this category yet.** Link back to the lobby.
 
-The no-hint checkbox is on this page too. Company and Family have nothing to hint, so the subline is **No match feedback. Score × 1.5.** Region keeps **No hints. No match feedback. Score × 1.5.**
+The no-hint checkbox is on this page too. Company and Family have nothing to hint, so the subline is **No match feedback. Score × 2.** Region keeps **No hints. No match feedback. Score × 2.**
 
 Start calls `POST /api/games` and routes to `/play/[gameId]`. Failures:
 
@@ -246,7 +246,7 @@ The breakdown is the lines from [Rules](rules.md), in that order, then **Total**
 
 Next to the breakdown, heading **How this score works**, these lines and no others. Fill them with this round's numbers.
 
-> Your score starts from the base and subtracts penalties. That is multiplied by the token factor, then by 1.5 if you played with no hints. It is rounded and never goes below 0.
+> Your score starts from the base and subtracts penalties. That is multiplied by the token factor, then by 2× if you played with no hints. It is rounded and never goes below 0.
 
 - Base: **2,000** for naming the model.
 - Or, when the model was not named: **Base: 400** — region 100, company 300. Drop a trait that did not match, was given, or was revealed, so a region-only base reads **Base: 100** for the region, a company-only base reads **Base: 300** for the company, and nothing matched reads **Base: 0**.
@@ -254,7 +254,7 @@ Next to the breakdown, heading **How this score works**, these lines and no othe
 - **Wrong guesses: 1 × −100.** When none were made: **Wrong guesses: none.**
 - **Before the multiplier: 2,000 − 200 = 1,800.**
 - **Tokens: 500.** Token factor **1,000/500.** Under 100 tokens: **Tokens: 40, counted as 100.** Token factor **1,000/100.**
-- When no-hint mode was on and no hint was bought: **No-hint: ×1.5.**
+- When no-hint mode was on and no hint was bought: **No-hint: ×2.**
 - When the total came to less than 0: **The total came to less than 0, so it is shown as 0.**
 
 **How scoring works** links to `/scoring`, including when the round has no score. The public page states the formula once, with one worked example. This result block stays this round's own lines.
