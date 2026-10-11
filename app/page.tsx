@@ -47,10 +47,7 @@ export default async function HomePage({
               </>
             )}
           </div>
-          <p className="muted hero-note">
-            The leaderboard is open to everyone. An account is only for playing.{" "}
-            <a href="/scoring">How scoring works</a>
-          </p>
+          <p className="muted hero-note">The leaderboard is open to everyone. An account is only for playing.</p>
         </div>
       </section>
       <ol className="steps">

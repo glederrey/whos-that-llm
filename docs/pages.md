@@ -81,10 +81,9 @@ Two columns. On a narrow screen they stack.
 - Under the three steps: **Not knowing a recent model name is normal even for a new model, because a training cutoff lags the release, so that is not a reliable clue about age.**
 - Under the buttons: three counts. **Models in play** is the enabled roster. **Games today (UTC)** counts games whose `started_at` is on the current UTC day. **Players** is the number of distinct accounts that have started a game.
 - Under the counts: **Top 5 · All models**, all-time, columns rank, name, score. The name has that player's profile picture beside it. **Full leaderboard** opens `/leaderboard?category=all&period=all`.
-- **How scoring works** links to `/scoring`.
 - Signed out: **Sign up** goes to `/login?tab=create&next=/play`. **Sign in** goes to `/login?next=/play`.
 - Signed in: **Play** goes to `/play`.
-- Under the buttons: **The leaderboard is open to everyone. An account is only for playing.** The scoring link sits in that line.
+- Under the buttons: **The leaderboard is open to everyone. An account is only for playing.** Scoring is the header link.
 
 A confirmation or password-reset link returns here. If the URL carries a session and the profile has no username, send the player to `/welcome`.
 
@@ -109,7 +108,7 @@ One narrow card. The heading is **Sign in** or **Create account**. A text link u
 Requires a session. No session goes to `/login?next=/play`. No username goes to `/welcome?next=/play`.
 
 - Heading: **Game categories**
-- Line: **One LLM, 10 messages. Guess which one it is, and earn a place on the leaderboard.** **How scoring works** links to `/scoring`.
+- Line: **One LLM, 10 messages. Guess which one it is, and earn a place on the leaderboard.** Scoring is the header link.
 - A status bar: **7 games left**, then **Adding a new game to the pool at 14:22** when a round has already started in the rolling hour. The time is the oldest `started_at` in that window plus one hour, in the viewer's local zone. At the cap: **None left** and **Next one at 14:22.** Right-aligned on the same row: **Twenty games an hour. One more, and the developer goes broke.** On a narrow screen the count, the time, and that sentence stack on the left. The number is `hourlyCap`, written as a word up to twenty. When the game is paused, the bar says **The game is paused.**
 - Category rows. Daily first, then All models, Company, Family, Region, Custom. A category that is not enabled yet has **Coming soon.** and no button. The sentences are the `categories.blurb` column:
 
