@@ -16,7 +16,7 @@ Each round is one row in `games`. That row's `id` is the session id. The player'
 
 A user message is at most 500 characters. A reply is at most 1,000 tokens, about 4 KB. A full round is about 30 KB. Ten thousand rounds are about 300 MB.
 
-The text is kept while the account exists. Later analysis reads `messages` joined to `games` on `game_id`. The admin round page also reads it, because a 1,000-token reply has room to say its own name. Score, guesses, and the leaderboard do not read `messages`, so a point does not depend on the text. Deleting an account removes that player's games, messages, guesses, and usage. Other players' rounds stay.
+The text is kept. Later analysis reads `messages` joined to `games` on `game_id`. The admin round page also reads it, because a 1,000-token reply has room to say its own name. Score, guesses, and the leaderboard do not read `messages`, so a point does not depend on the text. Deleting an account clears that player's name from their games and leaves the rounds, messages, and guesses in place. Other players' rounds stay.
 
 A failed call writes `usage` and does not write `messages`, because there is no stored reply. The system prompt is not a row.
 
@@ -144,8 +144,8 @@ One row per round.
 | Column | Type | Notes |
 |---|---|---|
 | `id` | uuid, pk | default `gen_random_uuid()` |
-| `user_id` | uuid, fk `profiles` | on delete cascade, after `0014_delete_games_with_account.sql`. Deleting the account removes these rounds, so the leaderboard name goes with them |
-| `username` | text | Copied at insert, then rewritten when that user renames. Leaderboard name for that round |
+| `user_id` | uuid, null, fk `profiles` | on delete set null, after `0017_anonymize_games_on_account_delete.sql`. Deleting the account clears this and `username`. The round stays. A null `user_id` is off the leaderboard |
+| `username` | text, null | Copied at insert, then rewritten when that user renames. Cleared when the account is deleted. Leaderboard name for that round |
 | `category` | text, fk `categories` | |
 | `pool_key` | text, null | `anthropic`, `opus`, `us`, `cn`, or `eu`. Null for `all`, `daily`, and `custom` |
 | `pool_model_ids` | text[] | The models that were legal when the round started |
@@ -172,7 +172,7 @@ Indexes:
 - unique `(user_id, daily_key)` where `daily_key is not null`
 - `(category, status, finished_at)` for the leaderboard
 
-`0014_delete_games_with_account.sql` puts `games_user_id_fkey` back as `on delete cascade`. `0013_keep_games_on_account_delete.sql` had dropped that key. Messages and guesses cascade from `games`. A `usage` row points at `games` the same way, and `usage.user_id` has no foreign key, so the server deletes `usage` for the session user before it deletes the games. The leaderboard reads `games`, so a deleted account has no row left. anon and authenticated still cannot delete these tables. The server action uses the service key after it has read the session.
+`0014_delete_games_with_account.sql` put `games_user_id_fkey` back as `on delete cascade`. `0017_anonymize_games_on_account_delete.sql` replaces that with `on delete set null` and makes `games.user_id`, `games.username`, and `usage.user_id` nullable. The server clears `user_id` and `username` on that player's games, and clears `usage.user_id`, before it deletes the auth user. Messages and guesses stay, because they cascade from `games` only when a game row is deleted. `public.leaderboard()` skips games whose `user_id` or `username` is null, so a deleted player is not a blank row and is not pooled with other deleted players. Game, solve, token, and guess counts still include those rounds. Profile history reads `games.user_id`, so it does not. anon and authenticated still cannot delete these tables. The server action uses the service key after it has read the session.
 
 `rules` shape:
 
@@ -262,7 +262,7 @@ One row per OpenRouter call, including failures.
 |---|---|---|
 | `id` | uuid, pk | |
 | `game_id` | uuid, null | |
-| `user_id` | uuid | |
+| `user_id` | uuid, null | Cleared when the account is deleted. The row stays on `game_id` |
 | `model_id` | text | |
 | `openrouter_generation_id` | text, null | |
 | `input_tokens` | int | default 0 |

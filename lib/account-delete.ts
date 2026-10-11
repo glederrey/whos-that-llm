@@ -1,6 +1,7 @@
 import "server-only";
 
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { clearedGameLink, clearedUsageLink } from "./anonymize-account";
 import { serviceOrThrow } from "./rounds";
 import { currentUser } from "./session";
 import { createSessionClient } from "./supabase/server";
@@ -15,7 +16,7 @@ export async function deleteSignedInAccount(confirmed: boolean): Promise<"confir
   } catch {
     return "save";
   }
-  if (!(await removeOwnedRows(client, user.id))) return "save";
+  if (!(await anonymizeOwnedRows(client, user.id))) return "save";
   if (!(await removeAvatars(client, user.id))) return "save";
   const { error } = await client.auth.admin.deleteUser(user.id, false);
   if (error) return "save";
@@ -24,11 +25,11 @@ export async function deleteSignedInAccount(confirmed: boolean): Promise<"confir
   return null;
 }
 
-async function removeOwnedRows(client: SupabaseClient, userId: string): Promise<boolean> {
-  const usage = await client.from("usage").delete().eq("user_id", userId);
-  if (usage.error) return false;
-  const games = await client.from("games").delete().eq("user_id", userId);
+async function anonymizeOwnedRows(client: SupabaseClient, userId: string): Promise<boolean> {
+  const games = await client.from("games").update(clearedGameLink()).eq("user_id", userId);
   if (games.error) return false;
+  const usage = await client.from("usage").update(clearedUsageLink()).eq("user_id", userId);
+  if (usage.error) return false;
   return true;
 }
 
