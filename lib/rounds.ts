@@ -4,6 +4,7 @@ import {
   buildTraits,
   compareModel,
   eliminatedCompanyIds,
+  eliminatedRegions,
   filterCandidates,
   categoryAllowsHints,
   hintOffered,
@@ -229,7 +230,7 @@ export async function readPublicGame(gameId: string, userId: string): Promise<Pu
     client.from("messages").select("turn, role, content").eq("game_id", gameId).order("turn").order("role"),
     client
       .from("guesses")
-      .select("turn, guessed_model_id, model_correct, company_correct, region_correct")
+      .select("turn, guessed_model_id, guessed_region, model_correct, company_correct, region_correct")
       .eq("game_id", gameId)
       .order("turn"),
   ]);
@@ -335,10 +336,11 @@ export async function submitGuess(gameId: string, userId: string, modelId: strin
 
   const { data: guesses } = await client
     .from("guesses")
-    .select("guessed_model_id, model_correct, company_correct, region_correct")
+    .select("guessed_model_id, guessed_region, model_correct, company_correct, region_correct")
     .eq("game_id", gameId);
   const previous = (guesses ?? []).map((guess) => ({
     modelId: guess.guessed_model_id,
+    region: guess.guessed_region,
     modelCorrect: Boolean(guess.model_correct),
     companyCorrect: Boolean(guess.company_correct),
     regionCorrect: Boolean(guess.region_correct),
@@ -363,6 +365,7 @@ export async function submitGuess(gameId: string, userId: string, modelId: strin
       known,
       guessedModelIds,
       eliminatedCompanyIds(game.traits, previous, game.no_hint),
+      eliminatedRegions(game.traits, previous, game.no_hint),
     ).map((row) => row.id),
   );
   if (!allowed.has(modelId)) return fail(409, "conflict");
@@ -614,6 +617,7 @@ function recordedGuesses(
   rows: {
     turn?: number;
     guessed_model_id: string | null;
+    guessed_region?: string | null;
     model_correct: boolean;
     company_correct: boolean;
     region_correct: boolean;
@@ -622,6 +626,7 @@ function recordedGuesses(
   return rows.map((guess) => ({
     turn: guess.turn ?? 0,
     modelId: guess.guessed_model_id,
+    region: guess.guessed_region ?? null,
     modelCorrect: Boolean(guess.model_correct),
     companyCorrect: Boolean(guess.company_correct),
     regionCorrect: Boolean(guess.region_correct),
