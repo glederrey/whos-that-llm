@@ -78,6 +78,7 @@ Two columns. On a narrow screen they stack.
 
 - Left: the logo, large.
 - Right: **Find the model.** Then: a hidden model answers you. You have ten messages. Name it when you want. Find it, and the round is yours. Miss the name, and the company and the region can still count.
+- Under the three steps: **Not knowing a recent model name is normal even for a new model, because a training cutoff lags the release, so that is not a reliable clue about age.**
 - Under the buttons: three counts. **Models in play** is the enabled roster. **Games today (UTC)** counts games whose `started_at` is on the current UTC day. **Players** is the number of distinct accounts that have started a game.
 - Under the counts: **Top 5 · All models**, all-time, columns rank, name, score. The name has that player's profile picture beside it. **Full leaderboard** opens `/leaderboard?category=all&period=all`.
 - **How scoring works** links to `/scoring`.
