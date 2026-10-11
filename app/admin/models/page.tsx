@@ -1,12 +1,15 @@
 import Link from "next/link";
+import { AddModelForm } from "@/components/add-model-form";
 import { CompanyLogo } from "@/components/company-logo";
+import { ModelFields } from "@/components/model-fields";
+import { RosterReturnFields } from "@/components/roster-return-fields";
 import { SectionNav } from "@/components/section-nav";
-import { addModel, saveModel, setModelEnabled } from "@/app/admin/actions";
+import { saveModel, setModelEnabled } from "@/app/admin/actions";
 import { rosterNotice } from "@/lib/admin-model";
 import { loadRoster, type ClassRow, type RosterRow } from "@/lib/admin-roster";
-import { pageOf, rosterSortOf, searchRoster, sortRoster, type RosterSort, type RosterSortColumn } from "@/lib/roster-list";
+import { modelsReturnPath, pageOf, rosterSortOf, searchRoster, sortRoster, type RosterSort, type RosterSortColumn } from "@/lib/roster-list";
 import { regionLabel, sizeLabel } from "@/lib/game";
-import { formatListPrice } from "@/lib/list-price";
+import { formatListPrice, formatPriceInput } from "@/lib/list-price";
 
 export const dynamic = "force-dynamic";
 
@@ -39,17 +42,7 @@ export default async function ModelsPage({
       ) : null}
       <details className="card roster-add">
         <summary>Add a model</summary>
-        <form action={addModel} className="stack">
-          <div className="roster-form">
-            <ModelFields classes={classes} />
-          </div>
-          <p className="muted">A new model stays off until you turn it on. A new company name is added to the list.</p>
-          <div>
-            <button className="button" type="submit">
-              Add model
-            </button>
-          </div>
-        </form>
+        <AddModelForm classes={classes} query={query} sort={sort} activePage={active.page} inactivePage={inactive.page} />
       </details>
       <form action="/admin/models" method="get" className="roster-search">
           {sort.column === "name" && sort.dir === "asc" ? null : (
@@ -64,7 +57,7 @@ export default async function ModelsPage({
         </button>
         {query ? (
           <Link className="button-quiet" href={modelsHref({ query: "", activePage: 1, inactivePage: 1, sort })}>
-            Clear
+            Reset
           </Link>
         ) : null}
       </form>
@@ -93,16 +86,13 @@ const sortLabels: Record<RosterSortColumn, string> = {
 };
 
 function modelsHref(state: { query: string; activePage: number; inactivePage: number; sort: RosterSort }) {
-  const params = new URLSearchParams();
-  if (state.query) params.set("q", state.query);
-  if (state.sort.column !== "name" || state.sort.dir !== "asc") {
-    params.set("sort", state.sort.column);
-    params.set("dir", state.sort.dir);
-  }
-  if (state.activePage > 1) params.set("active", String(state.activePage));
-  if (state.inactivePage > 1) params.set("inactive", String(state.inactivePage));
-  const text = params.toString();
-  return text ? `/admin/models?${text}` : "/admin/models";
+  return modelsReturnPath({
+    q: state.query,
+    sort: state.sort.column,
+    dir: state.sort.dir,
+    active: state.activePage > 1 ? String(state.activePage) : "",
+    inactive: state.inactivePage > 1 ? String(state.inactivePage) : "",
+  });
 }
 
 function RosterSection({
@@ -165,7 +155,15 @@ function RosterSection({
               </thead>
               <tbody>
                 {list.rows.map((row) => (
-                  <ModelRow key={row.id} row={row} classes={classes} />
+                  <ModelRow
+                    key={row.id}
+                    row={row}
+                    classes={classes}
+                    query={query}
+                    sort={sort}
+                    activePage={pageKey === "active" ? list.page : otherPage}
+                    inactivePage={pageKey === "inactive" ? list.page : otherPage}
+                  />
                 ))}
               </tbody>
             </table>
@@ -197,7 +195,21 @@ function RosterSection({
   );
 }
 
-function ModelRow({ row, classes }: { row: RosterRow; classes: ClassRow[] }) {
+function ModelRow({
+  row,
+  classes,
+  query,
+  sort,
+  activePage,
+  inactivePage,
+}: {
+  row: RosterRow;
+  classes: ClassRow[];
+  query: string;
+  sort: RosterSort;
+  activePage: number;
+  inactivePage: number;
+}) {
   const panel = `edit-${row.id}`;
   return (
     <tr className={row.enabled ? undefined : "is-off"}>
@@ -217,6 +229,7 @@ function ModelRow({ row, classes }: { row: RosterRow; classes: ClassRow[] }) {
       <td>
         <div className="roster-buttons">
           <form action={setModelEnabled}>
+            <RosterReturnFields query={query} sort={sort} activePage={activePage} inactivePage={inactivePage} />
             <input type="hidden" name="id" value={row.id} />
             <input type="hidden" name="enabled" value={row.enabled ? "0" : "1"} />
             <button className={row.enabled ? "button-off" : "button-on"} type="submit">
@@ -230,6 +243,7 @@ function ModelRow({ row, classes }: { row: RosterRow; classes: ClassRow[] }) {
         <div id={panel} popover="auto" className="roster-edit card">
           <form action={saveModel} className="stack">
             <h2>Edit {row.name}</h2>
+            <RosterReturnFields query={query} sort={sort} activePage={activePage} inactivePage={inactivePage} />
             <input type="hidden" name="id" value={row.id} />
             <div className="roster-form">
               <ModelFields
@@ -239,11 +253,13 @@ function ModelRow({ row, classes }: { row: RosterRow; classes: ClassRow[] }) {
                 region={row.region}
                 year={row.year}
                 size={row.size}
+                inputPrice={formatPriceInput(row.inputUsdPerMtok)}
+                outputPrice={formatPriceInput(row.outputUsdPerMtok)}
                 classes={classes}
                 classIds={row.classIds}
               />
             </div>
-            <p className="muted">Region belongs to the company. New games use it.</p>
+            <p className="muted">Prices are dollars per 1 million tokens. Region belongs to the company. New games use it.</p>
             <div className="row">
               <button className="button" type="submit">
                 Save
@@ -256,79 +272,5 @@ function ModelRow({ row, classes }: { row: RosterRow; classes: ClassRow[] }) {
         </div>
       </td>
     </tr>
-  );
-}
-
-function ModelFields({
-  openrouterId = "",
-  name = "",
-  company = "",
-  region = "us",
-  year = "",
-  size = "small",
-  classes = [],
-  classIds = [],
-}: {
-  openrouterId?: string;
-  name?: string;
-  company?: string;
-  region?: string;
-  year?: string;
-  size?: string;
-  classes?: ClassRow[];
-  classIds?: string[];
-}) {
-  return (
-    <>
-      <label>
-        OpenRouter id
-        <input name="openrouterId" defaultValue={openrouterId} placeholder="openai/gpt-5.6-luna" required />
-      </label>
-      <label>
-        Display name
-        <input name="name" defaultValue={name} required />
-      </label>
-      <label>
-        Company
-        <input name="company" defaultValue={company} list="roster-companies" required />
-      </label>
-      <label>
-        Region
-        <select name="region" defaultValue={region} required>
-          <option value="us">USA</option>
-          <option value="cn">China</option>
-          <option value="eu">Europe</option>
-        </select>
-      </label>
-      <label>
-        Year
-        <input name="year" defaultValue={year} inputMode="numeric" required />
-      </label>
-      <label>
-        Size
-        <select name="size" defaultValue={size} required>
-          <option value="nano">Nano</option>
-          <option value="small">Small</option>
-          <option value="medium">Medium</option>
-          <option value="large">Large</option>
-          <option value="xxl">XXL</option>
-        </select>
-      </label>
-      <fieldset className="class-picks">
-        <legend>Classes</legend>
-        {classes.length === 0 ? (
-          <p className="muted">
-            No classes yet. <a href="/admin/classes">Create one</a> before attaching it here.
-          </p>
-        ) : (
-          classes.map((item) => (
-            <label key={item.id}>
-              <input type="checkbox" name="classId" value={item.id} defaultChecked={classIds.includes(item.id)} />
-              {item.name}
-            </label>
-          ))
-        )}
-      </fieldset>
-    </>
   );
 }

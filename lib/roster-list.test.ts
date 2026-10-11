@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { pageOf, rosterSortOf, searchRoster, sortRoster, type RosterSort } from "./roster-list";
+import { modelsReturnPath, pageOf, rosterSortOf, searchRoster, sortRoster, type RosterSort } from "./roster-list";
 import type { Region, Size } from "./game";
 
 function row(partial: {
@@ -63,6 +63,13 @@ test("a column sorts every data field, and the same column reverses", () => {
   assert.deepEqual(rosterSortOf(undefined, "desc"), { column: "name", dir: "asc" });
   assert.deepEqual(rosterSortOf("year", "desc"), { column: "year", dir: "desc" });
   assert.deepEqual(rosterSortOf("buttons", "desc"), { column: "name", dir: "asc" });
+});
+
+test("saving a model returns to the same search", () => {
+  assert.equal(modelsReturnPath({ q: "claude", sort: "year", dir: "desc", active: "2" }), "/admin/models?q=claude&sort=year&dir=desc&active=2");
+  assert.equal(modelsReturnPath({ q: "  ", sort: "name", dir: "asc" }), "/admin/models");
+  assert.equal(modelsReturnPath({ notice: "save", q: "gpt" }), "/admin/models?notice=save&q=gpt");
+  assert.equal(modelsReturnPath({ q: "gpt", active: "1", inactive: "0" }), "/admin/models?q=gpt");
 });
 
 test("pages hold ten rows and clamp the requested page", () => {

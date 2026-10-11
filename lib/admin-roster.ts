@@ -109,7 +109,10 @@ export async function createRosterModel(raw: {
   company?: string;
   region?: string;
   year?: string;
+  releasedOn?: string;
   size?: string;
+  inputPrice?: string;
+  outputPrice?: string;
   classIds?: string[];
 }): Promise<RosterNotice | null> {
   await requireOwner();
@@ -136,7 +139,9 @@ export async function createRosterModel(raw: {
     open_weights: false,
     reasoning: false,
     provider_settings: {},
-    released_on: releasedOnForYear(null, fields.year),
+    released_on: fields.releasedOn ?? releasedOnForYear(null, fields.year),
+    input_usd_per_mtok: fields.inputUsdPerMtok,
+    output_usd_per_mtok: fields.outputUsdPerMtok,
     enabled: false,
     logo_path: null,
     updated_at: new Date().toISOString(),
@@ -152,7 +157,10 @@ export async function updateRosterModel(raw: {
   company?: string;
   region?: string;
   year?: string;
+  releasedOn?: string;
   size?: string;
+  inputPrice?: string;
+  outputPrice?: string;
   classIds?: string[];
 }): Promise<RosterNotice | null> {
   await requireOwner();
@@ -173,7 +181,9 @@ export async function updateRosterModel(raw: {
     name: fields.name,
     company_id: company.id,
     size: fields.size,
-    released_on: releasedOnForYear(current.data.released_on as string | null, fields.year),
+    released_on: fields.releasedOn ?? releasedOnForYear(current.data.released_on as string | null, fields.year),
+    input_usd_per_mtok: fields.inputUsdPerMtok,
+    output_usd_per_mtok: fields.outputUsdPerMtok,
     updated_at: new Date().toISOString(),
   };
   const { error } = await client.from("models").update(patch).eq("id", id);

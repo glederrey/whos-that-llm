@@ -74,6 +74,31 @@ export function searchRoster<T extends Searchable>(rows: T[], query: string): T[
   );
 }
 
+export function modelsReturnPath(raw: {
+  notice?: string;
+  q?: string;
+  sort?: string;
+  dir?: string;
+  active?: string;
+  inactive?: string;
+}): string {
+  const params = new URLSearchParams();
+  if (raw.notice) params.set("notice", raw.notice);
+  const query = (raw.q ?? "").trim().slice(0, 100);
+  if (query) params.set("q", query);
+  const sort = rosterSortOf(raw.sort, raw.dir);
+  if (sort.column !== "name" || sort.dir !== "asc") {
+    params.set("sort", sort.column);
+    params.set("dir", sort.dir);
+  }
+  for (const key of ["active", "inactive"] as const) {
+    const number = Number(raw[key]);
+    if (Number.isFinite(number) && number > 1) params.set(key, String(Math.trunc(number)));
+  }
+  const text = params.toString();
+  return text ? `/admin/models?${text}` : "/admin/models";
+}
+
 export function pageOf<T>(rows: T[], requested: unknown, size = rosterPageSize): { rows: T[]; page: number; pageCount: number } {
   const pageCount = Math.max(1, Math.ceil(rows.length / size));
   const number = Number(requested);

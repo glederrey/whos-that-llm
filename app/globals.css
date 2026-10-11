@@ -964,7 +964,10 @@ html[data-theme="dark"] .md a { color: var(--teal); }
 .roster td { text-align: left; padding: 12px 14px; border-top: 1px solid var(--line); vertical-align: top; }
 .roster tr.is-off td { color: var(--mute); }
 .roster-company { display: inline-flex; align-items: center; gap: 10px; }
+.roster.models .roster-company { display: flex; align-items: center; line-height: inherit; }
 .roster-company img { width: 28px; height: 28px; border-radius: 6px; border: 1px solid var(--line-strong); flex: none; }
+.roster-lookup { display: flex; gap: 8px; align-items: flex-end; flex-wrap: wrap; }
+.roster-lookup label { flex: 1 1 260px; }
 .roster-actions { display: grid; gap: 8px; justify-items: start; }
 .roster-actions form { margin: 0; }
 .roster-actions summary {

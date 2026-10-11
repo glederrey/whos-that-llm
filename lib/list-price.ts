@@ -13,6 +13,11 @@ export function readListPrice(value: unknown): number | null {
   return Number.isFinite(parsed) ? parsed : null;
 }
 
+export function formatPriceInput(value: number | null): string {
+  if (value === null) return "";
+  return String(value);
+}
+
 export function formatListPrice(value: number | null): string {
   if (value === null) return "—";
   if (value === 0) return "$0";

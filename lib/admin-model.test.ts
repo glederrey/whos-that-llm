@@ -6,7 +6,9 @@ import {
   hasAdminFlag,
   modelIdFromOpenRouter,
   parseModelFields,
+  parsePriceInput,
   parseRegion,
+  parseReleasedOn,
   parseYear,
   releasedOnForYear,
   rosterNotice,
@@ -75,6 +77,43 @@ test("model fields reject a bad region or year", () => {
   );
   assert.equal(parseModelFields({ openrouterId: "openai/gpt-5.6-luna", name: "GPT", company: "OpenAI", region: "moon", year: "2026", size: "small" }), null);
   assert.equal(parseModelFields({ openrouterId: "openai/gpt-5.6-luna", name: "GPT", company: "O", region: "us", year: "2026", size: "small" }), null);
+});
+
+test("a release date and typed prices are kept", () => {
+  assert.equal(parseReleasedOn("2025-08-05"), "2025-08-05");
+  assert.equal(parseReleasedOn("2025-02-29"), null);
+  assert.equal(parseReleasedOn("1999-01-01"), null);
+  assert.equal(parsePriceInput(""), null);
+  assert.equal(parsePriceInput("  $0.02 "), 0.02);
+  assert.equal(parsePriceInput("15.4"), 15.4);
+  assert.equal(parsePriceInput("free"), undefined);
+  const fields = parseModelFields({
+    openrouterId: "anthropic/claude-opus-4.1",
+    name: "Claude Opus 4.1",
+    company: "Anthropic",
+    region: "us",
+    releasedOn: "2025-08-05",
+    size: "large",
+    inputPrice: "15",
+    outputPrice: "75",
+  });
+  assert.equal(fields?.releasedOn, "2025-08-05");
+  assert.equal(fields?.year, 2025);
+  assert.equal(fields?.inputUsdPerMtok, 15);
+  assert.equal(fields?.outputUsdPerMtok, 75);
+  assert.equal(
+    parseModelFields({
+      openrouterId: "anthropic/claude-opus-4.1",
+      name: "Claude Opus 4.1",
+      company: "Anthropic",
+      region: "us",
+      releasedOn: "2025-08-05",
+      size: "large",
+      inputPrice: "soon",
+      outputPrice: "75",
+    }),
+    null,
+  );
 });
 
 test("unknown notices stay blank", () => {
