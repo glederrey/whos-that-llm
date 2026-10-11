@@ -11,7 +11,7 @@ export type HomeCategory = {
   enabled: boolean;
 };
 
-const order = ["daily", "all", "company", "region", "custom"];
+const order = ["daily", "all", "class", "company", "region", "custom"];
 const hidden = new Set(["latest", "origin", "family"]);
 
 const numberWords = [
@@ -45,6 +45,14 @@ export function capSentence(cap: number): string {
 
 export function lineup(categories: HomeCategory[]): HomeCategory[] {
   const byId = new Map(categories.filter((category) => !hidden.has(category.id)).map((category) => [category.id, category]));
+  if (!byId.has("class")) {
+    byId.set("class", {
+      id: "class",
+      name: "Class",
+      blurb: "One class of models. Opus, or GPT vs Claude.",
+      enabled: false,
+    });
+  }
   if (!byId.has("custom")) {
     byId.set("custom", {
       id: "custom",

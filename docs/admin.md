@@ -91,7 +91,7 @@ The table shows list price beside average `cost_usd` and average `reasoning_toke
 
 ## Categories (`/admin/categories`)
 
-The built-ins are seeded: Daily, All models, Company, Region, Custom. Latest, Origin, and Family are not rows. Size is not a row. All models starts enabled. The others start disabled. Class is not a category row.
+The built-ins are seeded: Daily, All models, Class, Company, Region, Custom. Latest, Origin, and Family are not rows. Size is not a row. All models starts enabled. The others start disabled. Class is that disabled card, before Company.
 
 You can rename the card, edit the sentence, change `sort_order`, and set `enabled`. You can set `leaderboard` and `hints_allowed`. The seed already matches [Rules](rules.md): leaderboards for All models and Daily, hints only for Daily, All models, and Custom. Company, region, latest, and every other category have hints off. Custom has no leaderboard. A class leaderboard is one board per class, and it is not built. You cannot delete a built-in.
 

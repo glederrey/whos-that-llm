@@ -175,6 +175,11 @@ test("the public stats page does not read prices, billing, or account rows", () 
   assert.match(why, /Over time I think I could tell an Opus 4.5 from a 4.7 and a 4.8\. Like a wine\.\.\./);
   assert.match(page, /No finished games in this category yet/);
   assert.match(page, /<h2>Class<\/h2>/);
+  assert.match(loader, /readAll\(client, "model_classes", "model_id, class_id", \["model_id", "class_id"\]\)/);
+  const board = fs.readFileSync(path.join(root, "components/home-board.tsx"), "utf8");
+  assert.match(board, /\["daily", "all", "class", "company", "region", "custom"\]/);
+  assert.match(board, /One class of models\. Opus, or GPT vs Claude\./);
+  assert.match(board, /id: "class"[\s\S]*enabled: false/);
   assert.doesNotMatch(page, /<h2>Family<\/h2>/);
   assert.doesNotMatch(page, /How the rounds have gone/);
   assert.equal(page.includes("requireOwner"), false);

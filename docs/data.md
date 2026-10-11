@@ -115,7 +115,7 @@ The lobby and the leaderboard read this table. The built-in rows are seeded and 
 
 | Column | Type | Notes |
 |---|---|---|
-| `id` | text, pk | `daily`, `all`, `company`, `region`, `custom`. Never changes. `games.category` stores it |
+| `id` | text, pk | `daily`, `all`, `class`, `company`, `region`, `custom`. Never changes. `games.category` stores it |
 | `name` | text | Card title |
 | `blurb` | text | The one sentence on the main page and on the card |
 | `enabled` | boolean | False hides the lobby card. The main page still shows the blurb, with **Coming soon.** Past rounds stay |

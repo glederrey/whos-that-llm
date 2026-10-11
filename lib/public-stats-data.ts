@@ -22,7 +22,7 @@ export async function loadPublicStats(): Promise<PublicStatsPayload> {
     readAll(client, "categories", "id, name, sort_order"),
     readAll(client, "models", "id, name"),
     readAll(client, "classes", "id, name"),
-    readAll(client, "model_classes", "model_id, class_id"),
+    readAll(client, "model_classes", "model_id, class_id", ["model_id", "class_id"]),
   ]);
   const names: Record<string, string> = {};
   for (const row of models) names[row.id as string] = row.name as string;
@@ -99,10 +99,17 @@ function hiddenTrait(traits: unknown, modelId: string): { size: Size | null; reg
   };
 }
 
-async function readAll(client: SupabaseClient, table: string, columns: string): Promise<Record<string, unknown>[]> {
+async function readAll(
+  client: SupabaseClient,
+  table: string,
+  columns: string,
+  orderBy: readonly string[] = ["id"],
+): Promise<Record<string, unknown>[]> {
   const rows: Record<string, unknown>[] = [];
   for (let from = 0; from < rowCap; from += pageSize) {
-    const { data, error } = await client.from(table).select(columns).order("id").range(from, from + pageSize - 1);
+    let query = client.from(table).select(columns);
+    for (const column of orderBy) query = query.order(column);
+    const { data, error } = await query.range(from, from + pageSize - 1);
     if (error) throw new Error("Could not read stats.");
     const page = (data ?? []) as unknown as Record<string, unknown>[];
     rows.push(...page);
