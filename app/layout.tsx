@@ -6,11 +6,13 @@ import { SiteFooter } from "@/components/site-footer";
 import { ThemeInit } from "@/components/theme-init";
 import { sessionIsOwner } from "@/lib/admin-access";
 import { currentProfile } from "@/lib/session";
+import { siteOrigin } from "@/lib/site";
 import "./globals.css";
 
 const font = Roboto({ subsets: ["latin"], weight: ["400", "500", "700"], variable: "--font" });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(siteOrigin),
   title: "Who's that LLM?",
   description: "Ten messages to find the hidden model.",
   icons: {
