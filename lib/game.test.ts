@@ -3,13 +3,16 @@ import test from "node:test";
 import { currentRules, rulesForCategory } from "./config";
 import {
   buildTraits,
+  eliminatedCompanyIds,
   filterCandidates,
   hintOffered,
   knownValues,
   missedGuesses,
   scoreRound,
+  toPublicGame,
   type FrozenModel,
   type HintKey,
+  type RecordedGuess,
 } from "./game";
 
 const rules = rulesForCategory(true);
@@ -262,6 +265,55 @@ test("no-hint mode does not narrow the list on a match", () => {
     filterCandidates(traits, blind, ["luna"]).map((row) => row.id),
     ["haiku", "flash"],
   );
+});
+
+test("a wrong company leaves the guess search only in hint mode", () => {
+  const models = [
+    model({ id: "haiku", name: "Haiku", companyId: "anthropic", companyName: "Anthropic", familyId: "haiku" }),
+    model({ id: "sonnet", name: "Sonnet", companyId: "anthropic", companyName: "Anthropic", familyId: "sonnet" }),
+    model({ id: "opus", name: "Opus", companyId: "anthropic", companyName: "Anthropic", familyId: "opus" }),
+    model({ id: "luna", name: "Luna", companyId: "openai", companyName: "OpenAI", familyId: "gpt" }),
+    model({ id: "gpt", name: "GPT", companyId: "openai", companyName: "OpenAI", familyId: "gpt" }),
+    model({ id: "flash", name: "Flash", companyId: "deepseek", companyName: "DeepSeek", familyId: "deepseek", region: "cn" }),
+  ];
+  const traits = buildTraits(models);
+  const hidden = traits.models.haiku;
+  assert.ok(hidden);
+  const listed = (guesses: RecordedGuess[], noHint: boolean) =>
+    toPublicGame({
+      id: "game",
+      category: "all",
+      poolKey: null,
+      noHint,
+      status: "active",
+      messageCount: 1,
+      awaitingGuess: true,
+      rules,
+      traits,
+      modelId: "haiku",
+      hints: [],
+      guesses,
+      guessedModelIds: guesses.flatMap((guess) => (guess.modelId ? [guess.modelId] : [])),
+      transcript: [],
+      score: null,
+      breakdown: null,
+      explanation: null,
+    }).candidates.map((row) => row.id);
+  const guess = (modelId: string, companyCorrect: boolean): RecordedGuess => ({
+    turn: 1,
+    modelId,
+    modelCorrect: false,
+    companyCorrect,
+    familyCorrect: false,
+    regionCorrect: false,
+  });
+
+  assert.deepEqual(listed([guess("luna", false)], false), ["haiku", "opus", "sonnet", "flash"]);
+  assert.deepEqual(eliminatedCompanyIds(traits, [guess("luna", false)], false), ["openai"]);
+  assert.deepEqual(listed([guess("sonnet", true)], false), ["haiku", "opus"]);
+  assert.deepEqual(eliminatedCompanyIds(traits, [guess("sonnet", true)], false), []);
+  assert.deepEqual(listed([guess("luna", false)], true), ["haiku", "opus", "sonnet", "flash", "gpt"]);
+  assert.deepEqual(eliminatedCompanyIds(traits, [guess("luna", false)], true), []);
 });
 
 test("a wrong guess keeps the model and names the traits it missed", () => {
