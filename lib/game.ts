@@ -1,7 +1,7 @@
 import type { Rules } from "./config";
 
 export type Region = "us" | "cn" | "eu";
-export type Size = "small" | "medium" | "large";
+export type Size = "nano" | "small" | "medium" | "large" | "xxl";
 export type TraitKey = "company" | "region" | "year" | "size";
 export type HintKey = "company" | "region" | "year" | "size";
 export type GameStatus = "active" | "solved" | "miss" | "given_up";
@@ -99,9 +99,11 @@ export function regionLabel(region: Region): string {
 }
 
 export function sizeLabel(size: Size): string {
+  if (size === "nano") return "Nano";
   if (size === "small") return "Small";
   if (size === "medium") return "Medium";
-  return "Large";
+  if (size === "large") return "Large";
+  return "XXL";
 }
 
 export function roundHalfUp(value: number): number {

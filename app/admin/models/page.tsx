@@ -262,9 +262,11 @@ function ModelFields({
       <label>
         Size
         <select name="size" defaultValue={size} required>
+          <option value="nano">Nano</option>
           <option value="small">Small</option>
           <option value="medium">Medium</option>
           <option value="large">Large</option>
+          <option value="xxl">XXL</option>
         </select>
       </label>
       <fieldset className="class-picks">

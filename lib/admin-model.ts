@@ -51,7 +51,7 @@ export function parseRegion(value: string): Region | null {
 
 export function parseSize(value: string): Size | null {
   const text = value.trim().toLowerCase();
-  if (text === "small" || text === "medium" || text === "large") return text;
+  if (text === "nano" || text === "small" || text === "medium" || text === "large" || text === "xxl") return text;
   return null;
 }
 

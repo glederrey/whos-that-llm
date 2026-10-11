@@ -82,7 +82,7 @@ anon and authenticated cannot read or write these two tables. The server key doe
 | `openrouter_id` | text, unique | `anthropic/claude-sonnet-5.5` |
 | `name` | text | Claude Sonnet 5.5 |
 | `company_id` | text, fk | |
-| `size` | text | `small`, `medium`, `large`. A hint. Not a point trait and not a category |
+| `size` | text | `nano`, `small`, `medium`, `large`, `xxl`. A hint. Not a point trait and not a category |
 | `open_weights` | boolean | Admin fact. Play does not read it |
 | `reasoning` | boolean | Admin fact. Play does not read it |
 | `provider_settings` | jsonb | default `{}`. Passed through on the call. Not a player-facing trait |
@@ -95,7 +95,7 @@ anon and authenticated cannot read or write these two tables. The server key doe
 
 Checks:
 
-- `size` is `small`, `medium`, or `large`.
+- `size` is `nano`, `small`, `medium`, `large`, or `xxl`.
 - `enabled` implies `released_on` is not null.
 - `enabled` and `reasoning` together imply `provider_settings` is not `{}`. That check is there so a thinking model cannot be turned on with no effort setting. It does not put reasoning into the game.
 
