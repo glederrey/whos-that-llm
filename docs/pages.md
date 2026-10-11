@@ -63,7 +63,7 @@ Admin is usable on a phone and comfortable on a computer. Playing a round is the
 On every page, including the round and admin.
 
 - A line separates the footer from the page.
-- **Support me on Ko-fi**, with the Ko-fi cup, opens `tipUrl` in `lib/config.ts` in a new tab. An empty string keeps the sentence as a placeholder: **The models invoice the developer. A Ko-fi will sit here when you feel like covering a round.**
+- **The API bill is winning.**, with the Ko-fi cup, opens `tipUrl` in `lib/config.ts` in a new tab. An empty string keeps the sentence as a placeholder: **The models invoice the developer. A Ko-fi will sit here when you feel like covering a round.**
 - **Created by Gael Lederrey with Cursor**, with the Cursor logo. **Gael Lederrey** links to `https://github.com/glederrey`. **Cursor** and the logo link to `https://cursor.com`.
 
 A tip does not raise the hourly cap, change a score, or put a name on the leaderboard.
