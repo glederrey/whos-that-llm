@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Roboto } from "next/font/google";
+import localFont from "next/font/local";
 import { Analytics } from "@vercel/analytics/next";
 import { AccountMenu } from "@/components/account-menu";
 import { SiteFooter } from "@/components/site-footer";
@@ -9,7 +9,17 @@ import { currentProfile } from "@/lib/session";
 import { siteOrigin } from "@/lib/site";
 import "./globals.css";
 
-const font = Roboto({ subsets: ["latin"], weight: ["400", "500", "700"], variable: "--font" });
+// Same latin Roboto file next/font/google downloaded, with the same 400/500/700
+// faces. Vendored so the standalone release build never resolves Google Fonts.
+const font = localFont({
+  src: [
+    { path: "./fonts/roboto-latin.woff2", weight: "400", style: "normal" },
+    { path: "./fonts/roboto-latin.woff2", weight: "500", style: "normal" },
+    { path: "./fonts/roboto-latin.woff2", weight: "700", style: "normal" },
+  ],
+  display: "swap",
+  variable: "--font",
+});
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteOrigin),
