@@ -149,8 +149,7 @@ export function HomeBoard({
     <div className="stack">
       <h1 className="goal">Game categories</h1>
       <p className="lede">
-        One LLM, 10 messages. Guess which one it is, and earn a place on the leaderboard.{" "}
-        <a href="/scoring">How scoring works</a>
+        One LLM, 10 messages. Guess which one it is, and earn a place on the leaderboard.
       </p>
       <p className="hour-status">
         <strong>{paused ? "The game is paused." : leftLabel}</strong>
