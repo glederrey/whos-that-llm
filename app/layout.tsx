@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Roboto } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
 import { AccountMenu } from "@/components/account-menu";
 import { SiteFooter } from "@/components/site-footer";
 import { ThemeInit } from "@/components/theme-init";
@@ -78,6 +79,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <main className="page">{children}</main>
           <SiteFooter />
         </div>
+        <Analytics />
       </body>
     </html>
   );
