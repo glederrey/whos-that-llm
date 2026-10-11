@@ -306,7 +306,7 @@ First person. The words:
 - **I'm a data scientist, so my first instinct was to collect data. That's really what this game is for. Sure, it's fun to play, but every round also tells me something: which models get confused with each other, whether big models are easy to spot next to small ones, whether a model's origin shows through, and plenty of things I haven't thought of yet.**
 - **I plan to share this data openly for research later on. Until then, the statistics page shows what the data says so far.** **statistics** links to `/statistics`.
 - Heading: **What I store.** **I keep your username and your game data: the messages, token counts, your guesses, which model you were talking to, and the other details of each round. That's it. I don't collect any other personal information. Sign in is handled by Supabase. Your email is stored there only so you can log in, and I never use it for anything else. I never see your password.**
-- **You can delete your account at any time from your profile. Your name comes off the leaderboard. Finished games stay in the statistics without your name.** **profile** links to `/profile`.
+- **You can delete your account at any time from your profile. Your username comes off the leaderboard. Finished games stay in the statistics without your username.** **profile** links to `/profile`.
 - Heading: **Who am I.** **I'm Gael, a data scientist based in Fribourg, Switzerland, with a PhD from EPFL.** His master thesis was about beer reviews. He built the game on his own time and pays for the API calls. A tip is optional. **Ko-fi** links to `tipUrl`. **LinkedIn** links to `https://www.linkedin.com/in/gael-lederrey`. **GitHub** links to `https://github.com/glederrey`.
 
 ## Statistics (`/statistics`)
