@@ -123,7 +123,7 @@ Requires a session. No session goes to `/login?next=/play`. No username goes to 
 
 - Daily block, later, and only when Daily is enabled: **Today's model is live.** Button **Play today's**. The name is absent. Disabled, with **The game is paused.**, when the game is paused. No session goes to `/login` and then into today's round. An open daily round shows **Continue**. A day already started, including a give-up, shows **You already played today's model.** and does not start another.
 - Weekly top 5, later: rank, name, and score from the All models board for the current week, limited to 5. If the week has no counted round: **No finished games this week.**
-- **Play** sits on the category row. All models starts the round. The other rows stay **Coming soon** until they are built.
+- **Play** sits on the right of the category row. On a narrow screen it spans the row. All models starts the round. The other rows keep **Coming soon** on the right until they are built.
 - An open round turns that **Play** into **Continue**.
 - **Play** is disabled when the hour is full, the game is paused, or the All models pool has fewer than 2 models (**Not enough models.**).
 - Under the All models row, a full-width option, off by default: **Play without hints.** Beside it: **No hints. No match feedback. Score × 1.5.** It stays editable until Play.
