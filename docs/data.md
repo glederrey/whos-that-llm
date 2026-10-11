@@ -334,7 +334,7 @@ order by score desc, message_count asc, finished_at asc, username;
 
 `given_up` is excluded. A score of 0 remains. Grouping is by `user_id`, so shared usernames do not merge. The name on the row is `games.username` from that best round. A rename rewrites it.
 
-All models passes `p_difficulty`. Null is Any difficulty: every finished round whose difficulty is set, whichever of 1–4 it was. `1`, `2`, `3`, or `4` keeps rounds played at that difficulty. Daily passes null and is not filtered by difficulty. The row returns that round's `difficulty` and `no_hint`. Rounds with a null difficulty stay off the five All models boards.
+Every mode passes `p_difficulty`. Null is Any difficulty: every finished round in that mode whose difficulty is set, whichever of 1–4 it was. `1`, `2`, `3`, or `4` keeps rounds played at that difficulty. The row returns that round's `difficulty` and `no_hint`. Rounds with a null difficulty stay off the boards.
 
 Right company, never named the model. "Found" means any guess in that round hit it.
 

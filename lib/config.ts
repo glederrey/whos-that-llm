@@ -13,7 +13,7 @@ export const config = {
   hintCosts: { year: 100, size: 100, region: 400, company: 600 },
   wrongGuessCost: 100,
   noHintMultiplier: 2,
-  difficultyMultipliers: { easy: 0.5, medium: 1, hard: 1.5, impossible: 2 } satisfies Record<Difficulty, number>,
+  difficultyMultipliers: { easy: 0.5, medium: 1, hard: 2, impossible: 3 } satisfies Record<Difficulty, number>,
   hourlyCap: 20,
   tipUrl: "https://ko-fi.com/glederrey",
 } as const;

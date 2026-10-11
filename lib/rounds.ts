@@ -601,12 +601,9 @@ async function markLegacyMine(
   );
 }
 
-export async function landingSnapshot(viewerId?: string | null) {
+export async function landingSnapshot() {
   const client = serviceOrThrow();
-  const stats = await readPublicStats(client);
-  const board = await leaderboard("all", "all", viewerId, "impossible");
-  const top = "rows" in board ? board.rows.slice(0, 5) : [];
-  return { ...stats, top };
+  return readPublicStats(client);
 }
 
 async function readPublicStats(client: SupabaseClient) {

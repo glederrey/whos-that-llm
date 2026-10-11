@@ -208,8 +208,7 @@ as $$
       and g.finished_at is not null
       and g.finished_at >= leaderboard.since
       and (
-        leaderboard.category <> 'all'
-        or (leaderboard.p_difficulty is null and g.difficulty is not null)
+        (leaderboard.p_difficulty is null and g.difficulty is not null)
         or g.difficulty = leaderboard.p_difficulty
       )
     order by g.user_id, g.score desc, g.message_count asc, g.finished_at asc

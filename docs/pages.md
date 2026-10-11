@@ -79,7 +79,7 @@ Two columns. On a narrow screen they stack.
 - Left: the logo, large.
 - Right: **Find the model.** Then: a hidden model answers you. You have ten messages. Name it when you want. Find it, and the round is yours. Miss the name, and the company and the region can still count.
 - Under the buttons: three counts. **Models in play** is the enabled roster. **Games today (UTC)** counts games whose `started_at` is on the current UTC day. **Players** is the number of distinct accounts that have started a game.
-- Under the counts: **Top 5 · Impossible**, all-time, columns rank, name, score. The name has that player's profile picture beside it. A no-hints round has a **No hints** chip. **Full leaderboard** opens `/leaderboard?category=all&difficulty=impossible&period=all`.
+- Under the counts: **Top 5**, with the same mode, difficulty, and period controls as the full leaderboard. It shows that board's rows, stopped at 5. **Full leaderboard** opens `/leaderboard` with the same choice. Changing a control on either page is the same choice on the other.
 - Signed out: **Sign up** goes to `/login?tab=create&next=/play`. **Sign in** goes to `/login?next=/play`.
 - Signed in: **Play** goes to `/play`.
 - Under the buttons: **The leaderboard is open to everyone. An account is only for playing.** Scoring is the header link.
@@ -270,9 +270,9 @@ Daily stats, later, on a daily result, once at least one daily round has finishe
 
 **Back** returns home. It is a text button with a chevron, larger than a footnote link.
 
-Tabs are the categories with a leaderboard that are enabled. That is All models, and Daily when it is open. Company, Region, and Custom are not tabs. A class leaderboard is one board per class, and it is not built.
+The mode row is every game mode, in the play-page order: Daily, All models, Class, Company, Region, Custom.
 
-Under All models, five boards: **Any difficulty**, **Easy**, **Medium**, **Hard**, and **Impossible**. Any difficulty is a score from whichever difficulty was played. That board shows a difficulty chip on the row, in that difficulty's color. The other four do not. A round played with no hints has a **No hints** chip on every one of the five. The opening board is Any difficulty.
+Under the selected mode, five boards: **Any difficulty**, **Easy**, **Medium**, **Hard**, and **Impossible**. Any difficulty is a score from whichever difficulty was played. That board shows a difficulty chip on the row, in that difficulty's color. The other four do not. A round played with no hints has a **No hints** chip on every one of the five. The opening board is All models, Any difficulty, this week.
 
 A second switch: **This week** and **All time**. Weeks start Monday 00:00 UTC. The tab label says **This week (UTC)**.
 

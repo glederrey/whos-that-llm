@@ -523,21 +523,21 @@ html[data-theme="dark"] .hour-status strong { color: var(--teal); }
 .difficulty-choice:disabled { opacity: 0.55; cursor: not-allowed; }
 .difficulty-choice.is-soon { cursor: default; }
 .segmented a.difficulty-easy { color: #1c7c43; }
-.segmented a.difficulty-medium { color: #00bbc9; }
-.segmented a.difficulty-hard { color: #9a6700; }
-.segmented a.difficulty-impossible { color: #c41b15; }
+.segmented a.difficulty-medium { color: #d4a017; }
+.segmented a.difficulty-hard { color: #c41b15; }
+.segmented a.difficulty-impossible { color: #a78bfa; }
 .segmented a.difficulty-easy[aria-pressed="true"] { background: #1c7c43; color: #fff; }
-.segmented a.difficulty-medium[aria-pressed="true"] { background: #00bbc9; color: #062e2e; }
-.segmented a.difficulty-hard[aria-pressed="true"] { background: #9a6700; color: #fff; }
-.segmented a.difficulty-impossible[aria-pressed="true"] { background: #c41b15; color: #fff; }
+.segmented a.difficulty-medium[aria-pressed="true"] { background: #d4a017; color: #141414; }
+.segmented a.difficulty-hard[aria-pressed="true"] { background: #c41b15; color: #fff; }
+.segmented a.difficulty-impossible[aria-pressed="true"] { background: #a78bfa; color: #141414; }
 html[data-theme="dark"] .segmented a.difficulty-easy { color: #1c7c43; }
-html[data-theme="dark"] .segmented a.difficulty-medium { color: #00bbc9; }
-html[data-theme="dark"] .segmented a.difficulty-hard { color: #9a6700; }
-html[data-theme="dark"] .segmented a.difficulty-impossible { color: #c41b15; }
+html[data-theme="dark"] .segmented a.difficulty-medium { color: #d4a017; }
+html[data-theme="dark"] .segmented a.difficulty-hard { color: #c41b15; }
+html[data-theme="dark"] .segmented a.difficulty-impossible { color: #a78bfa; }
 html[data-theme="dark"] .segmented a.difficulty-easy[aria-pressed="true"],
-html[data-theme="dark"] .segmented a.difficulty-hard[aria-pressed="true"],
-html[data-theme="dark"] .segmented a.difficulty-impossible[aria-pressed="true"] { color: #fff; }
-html[data-theme="dark"] .segmented a.difficulty-medium[aria-pressed="true"] { background: #00bbc9; color: #062e2e; }
+html[data-theme="dark"] .segmented a.difficulty-hard[aria-pressed="true"] { color: #fff; }
+html[data-theme="dark"] .segmented a.difficulty-medium[aria-pressed="true"] { background: #d4a017; color: #141414; }
+html[data-theme="dark"] .segmented a.difficulty-impossible[aria-pressed="true"] { background: #a78bfa; color: #141414; }
 .category-check {
   margin: 12px 0 0;
   align-items: center;
@@ -578,9 +578,9 @@ html[data-theme="dark"] .segmented a.difficulty-medium[aria-pressed="true"] { ba
   white-space: nowrap;
 }
 .board-chip.difficulty-easy { background: #1c7c43; color: #fff; }
-.board-chip.difficulty-medium { background: #00bbc9; color: #062e2e; }
-.board-chip.difficulty-hard { background: #9a6700; color: #fff; }
-.board-chip.difficulty-impossible { background: #c41b15; color: #fff; }
+.board-chip.difficulty-medium { background: #d4a017; color: #141414; }
+.board-chip.difficulty-hard { background: #c41b15; color: #fff; }
+.board-chip.difficulty-impossible { background: #a78bfa; color: #141414; }
 .board-chip.no-hints { background: var(--soft); color: var(--text); border: 1px solid var(--line); }
 .board .player .avatar { flex: none; width: 28px; height: 28px; }
 .board .player .you-tag { margin-left: 0; vertical-align: baseline; line-height: 1.5; }
@@ -643,6 +643,8 @@ html[data-theme="dark"] {
 }
 .tabs { display: flex; gap: 8px; flex-wrap: wrap; }
 .filters { display: flex; gap: 12px 20px; flex-wrap: wrap; align-items: center; justify-content: space-between; }
+.board-controls { display: grid; gap: 10px; justify-items: start; }
+.board-controls .segmented { flex-wrap: wrap; }
 .pager { align-items: center; justify-content: space-between; }
 .pager .row { gap: 8px; }
 .pager .muted { font-size: 14px; }

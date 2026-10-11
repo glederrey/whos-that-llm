@@ -130,7 +130,7 @@ The steps, in this order:
 2. Subtract the penalties.
 3. Multiply by the token factor.
 4. In no-hint mode, multiply by 2.
-5. Multiply by the difficulty: Easy ×0.5, Medium ×1, Hard ×1.5, Impossible ×2. A round with no difficulty multiplies by 1.
+5. Multiply by the difficulty: Easy ×0.5, Medium ×1, Hard ×2, Impossible ×3. A round with no difficulty multiplies by 1.
 6. Round with the half-up helper.
 7. Floor at 0.
 
@@ -147,7 +147,7 @@ No-hint mode is the harder mode. The 2× applies only when the round was played 
 ```
 tokenFactor      = min(10, 10000 / tokens)   // 0 tokens is 10
 noHintFactor     = 2 when the round is no-hint and no hint was bought, otherwise 1
-difficultyFactor = 0.5, 1, 1.5, or 2 for the difficulty the round was played at, otherwise 1
+difficultyFactor = 0.5, 1, 2, or 3 for the difficulty the round was played at, otherwise 1
 
 base      = 2000 if the model was named
             otherwise region points + company points
@@ -158,7 +158,7 @@ score = max(0, round((base − penalties) * tokenFactor * noHintFactor * difficu
 
 `round` goes to the nearest integer. A half rounds up. A total below 0 after rounding is shown as 0.
 
-The numbers in that formula are the ones in `lib/config.ts`: `modelBase` (2000), `regionPoints` (100), `companyPoints` (300), `tokenScale` (10000), `tokenCap` (10), `hintCosts`, `wrongGuessCost` (100), `noHintMultiplier` (2), `difficultyMultipliers` (Easy 0.5, Medium 1, Hard 1.5, Impossible 2), and `messageLimit` (10, how many replies a round allows). A round scores with the current numbers when it ends, so a round that started under the old formula is scored with the new one. It keeps the `messageLimit` it froze.
+The numbers in that formula are the ones in `lib/config.ts`: `modelBase` (2000), `regionPoints` (100), `companyPoints` (300), `tokenScale` (10000), `tokenCap` (10), `hintCosts`, `wrongGuessCost` (100), `noHintMultiplier` (2), `difficultyMultipliers` (Easy 0.5, Medium 1, Hard 2, Impossible 3), and `messageLimit` (10, how many replies a round allows). A round scores with the current numbers when it ends, so a round that started under the old formula is scored with the new one. It keeps the `messageLimit` it froze.
 
 A short reply raises the score, because `10000 / tokens` gets large. The factor stops at 10. Past 10,000 tokens it falls below 1.
 
@@ -223,7 +223,7 @@ score    = max(0, round(subtotal * tokenFactor * noHintFactor * difficultyFactor
 | `Wrong guesses · N` | At least one wrong model name. One line for the count | −100 each |
 | `Tokens · N tokens` | Always. The value is the factor, such as `×10` or `×3.712`. 0 tokens is `×10` | `×` factor, not a point delta |
 | `No-hint` | Only when the round is no-hint and no hint was bought | `×2` |
-| `Difficulty · Easy` | The round was played at a difficulty. The label names that difficulty | `×0.5`, `×1`, `×1.5`, or `×2` |
+| `Difficulty · Easy` | The round was played at a difficulty. The label names that difficulty | `×0.5`, `×1`, `×2`, or `×3` |
 | `Floor at 0` | The rounded total is below 0 | the amount that brings it to 0 |
 
 Hint lines follow the order they were bought. The wrong-guess line follows them.
