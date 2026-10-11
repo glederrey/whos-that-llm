@@ -1,5 +1,5 @@
 import { apiError, apiJson } from "@/lib/http";
-import { boardChoice } from "@/lib/board-query";
+import { boardChoice, boardModes } from "@/lib/board-query";
 import { leaderboard, listCategories } from "@/lib/rounds";
 import { currentUser } from "@/lib/session";
 
@@ -12,7 +12,7 @@ export async function GET(request: Request) {
       period: url.searchParams.get("period") ?? undefined,
       difficulty: url.searchParams.get("difficulty") ?? undefined,
     },
-    categories.map((category) => category.id),
+    boardModes(categories),
   );
   const user = await currentUser();
   const result = await leaderboard(choice.category, choice.period, user?.id, choice.difficulty);

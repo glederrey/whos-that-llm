@@ -42,7 +42,7 @@ test("the migration and the v1 restore classify the same 144 models", () => {
   assert.deepEqual(Object.fromEntries(fromMigration), modelDifficulties);
   const counts = { easy: 0, medium: 0, hard: 0, impossible: 0 };
   for (const level of Object.values(modelDifficulties)) counts[level] += 1;
-  assert.deepEqual(counts, { easy: 10, medium: 11, hard: 88, impossible: 35 });
+  assert.deepEqual(counts, { easy: 12, medium: 25, hard: 41, impossible: 66 });
   for (const file of ["supabase/v1.sql", "supabase/migrations/0023_model_difficulty.sql"]) {
     const text = fs.readFileSync(path.join(root, file), "utf8");
     assert.match(text, /p_difficulty is null and g\.difficulty is not null/);

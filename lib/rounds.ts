@@ -165,6 +165,20 @@ export async function listCategories() {
   return data ?? [];
 }
 
+export async function listBoardOptions() {
+  const client = serviceOrThrow();
+  const [classes, companies] = await Promise.all([
+    client.from("classes").select("id, name").order("name"),
+    client.from("companies").select("id, name").order("name"),
+  ]);
+  if (classes.error) throw new Error(classes.error.message);
+  if (companies.error) throw new Error(companies.error.message);
+  return {
+    classes: (classes.data ?? []).map((row) => ({ id: row.id as string, name: row.name as string })),
+    companies: (companies.data ?? []).map((row) => ({ id: row.id as string, name: row.name as string })),
+  };
+}
+
 export async function lobbyState(userId: string) {
   const client = serviceOrThrow();
   const since = new Date(Date.now() - 60 * 60 * 1000).toISOString();

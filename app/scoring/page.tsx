@@ -104,7 +104,7 @@ penalties = ${n(hintCosts.size)} + ${n(config.wrongGuessCost)} = ${n(hintCosts.s
 subtotal  = ${n(exampleSubtotal)}
 factor    = min(${config.tokenCap}, ${n(config.tokenScale)} / ${n(exampleTokens)}) ≈ ${formatFactor(exampleFactor)}
 difficulty = ×${config.difficultyMultipliers.medium}                        (medium)
-score     = round(${n(exampleSubtotal)} × ${n(config.tokenScale)} / ${n(exampleTokens)} × ${config.difficultyMultipliers.medium})
+score     = round(${n(exampleSubtotal)} × ${formatFactor(exampleFactor)} × ${config.difficultyMultipliers.medium})
           = ${n(example.score)}`}</pre>
       <p className="muted">Your own result page lists the lines for that round.</p>
     </div>

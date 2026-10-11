@@ -125,7 +125,7 @@ The lobby and the leaderboard read this table. The built-in rows are seeded and 
 | `sort_order` | int | Main page and lobby order |
 | `created_at` | timestamptz | |
 
-Seed `enabled` true only for `all`. The others are seeded false until they are built. Seed `leaderboard` true for `all` and `daily` even while `daily` is disabled, so the column matches the rule. A disabled category with no finished rounds still has no tab.
+Seed `enabled` true only for `all`. The others are seeded false until they are built. Seed `leaderboard` true for `all` and `daily` even while `daily` is disabled, so the column matches the rule. The leaderboard bar still shows Daily, Class, and Company while they are disabled. They are grayed out and cannot be selected. Region and Custom are not on that bar.
 
 Every scored round uses the formula in [Rules](rules.md). The category row does not store a multiplier.
 

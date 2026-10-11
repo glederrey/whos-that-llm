@@ -79,7 +79,7 @@ Two columns. On a narrow screen they stack.
 - Left: the logo, large.
 - Right: **Find the model.** Then: a hidden model answers you. You have ten messages. Name it when you want. Find it, and the round is yours. Miss the name, and the company and the region can still count.
 - Under the buttons: three counts. **Models in play** is the enabled roster. **Games today (UTC)** counts games whose `started_at` is on the current UTC day. **Players** is the number of distinct accounts that have started a game.
-- Under the counts: **Top 5**, with the same mode, difficulty, and period controls as the full leaderboard. It shows that board's rows, stopped at 5. **Full leaderboard** opens `/leaderboard` with the same choice. Changing a control on either page is the same choice on the other.
+- Under the counts: **Top 5**, with the same bar as the full leaderboard. It shows that board's rows, stopped at 5. **Full leaderboard** opens `/leaderboard` with the same choice. Changing a control on either page is the same choice on the other.
 - Signed out: **Sign up** goes to `/login?tab=create&next=/play`. **Sign in** goes to `/login?next=/play`.
 - Signed in: **Play** goes to `/play`.
 - Under the buttons: **The leaderboard is open to everyone. An account is only for playing.** Scoring is the header link.
@@ -270,11 +270,13 @@ Daily stats, later, on a daily result, once at least one daily round has finishe
 
 **Back** returns home. It is a text button with a chevron, larger than a footnote link.
 
-The mode row is every game mode, in the play-page order: Daily, All models, Class, Company, Region, Custom.
+One bar. Game modes sit on the left, in play-page order: Daily, All models, Class, Company. Region and Custom are not on it. All models is the open mode. Daily, Class, and Company stay visible and grayed out, and they cannot be selected while those game modes are closed. A closed mode in the URL falls back to All models.
 
-Under the selected mode, five boards: **Any difficulty**, **Easy**, **Medium**, **Hard**, and **Impossible**. Any difficulty is a score from whichever difficulty was played. That board shows a difficulty chip on the row, in that difficulty's color. The other four do not. A round played with no hints has a **No hints** chip on every one of the five. The opening board is All models, Any difficulty, this week.
+The middle control depends on the mode. All models uses the difficulty tabs: **Any difficulty**, **Easy**, **Medium**, **Hard**, and **Impossible**. Daily uses those same tabs once Daily is open, and they stay hidden while Daily is grayed out. Class uses a dropdown of every class. Company uses a dropdown of every company. Both dropdowns stay on the bar and stay disabled while those modes are grayed out. Difficulty tabs are only for Daily and All models.
 
-A second switch: **This week** and **All time**. Weeks start Monday 00:00 UTC. The tab label says **This week (UTC)**.
+Any difficulty is a score from whichever difficulty was played. That board shows a difficulty chip on the row, in that difficulty's color. The other four do not. A round played with no hints has a **No hints** chip on every one of the five. The opening board is All models, Any difficulty, this week.
+
+**This week** and **All time** stay on the right. Weeks start Monday 00:00 UTC. The tab label says **This week (UTC)**.
 
 A counted round is `solved` or `miss`. Give-up does not appear. Rank is the best score, highest first. Ties break by fewer messages on that round, then by earlier finish. A score of 0 stays on the board.
 
@@ -292,7 +294,7 @@ Twenty rows per page. **Previous** and **Next** move the page. **Your place** ap
 
 Empty: **No finished games on this board yet.**
 
-The landing top 5 is this board for All models, all time, five rows: rank, name, score, with the same picture beside the name.
+The landing top 5 uses this same bar and the same rows, stopped at 5. Columns: rank, name, score, with the same picture beside the name.
 
 ## Why this game? (`/why`)
 

@@ -2,8 +2,8 @@ import Link from "next/link";
 import { BoardControls } from "@/components/board-controls";
 import { BoardTable } from "@/components/board-table";
 import { anyDifficulty } from "@/lib/difficulty";
-import { boardChoice, boardHref } from "@/lib/board-query";
-import { leaderboard, listCategories } from "@/lib/rounds";
+import { boardChoice, boardHref, boardModes } from "@/lib/board-query";
+import { leaderboard, listBoardOptions, listCategories } from "@/lib/rounds";
 import { currentProfile } from "@/lib/session";
 
 export const dynamic = "force-dynamic";
@@ -17,8 +17,9 @@ export default async function LeaderboardPage({
 }) {
   const params = await searchParams;
   const { user } = await currentProfile();
-  const categories = await listCategories();
-  const choice = boardChoice(params, categories.map((category) => category.id));
+  const [categories, options] = await Promise.all([listCategories(), listBoardOptions()]);
+  const modes = boardModes(categories);
+  const choice = boardChoice(params, modes);
   const result = await leaderboard(choice.category, choice.period, user?.id, choice.difficulty);
   const rows = "rows" in result ? result.rows : [];
   const pageCount = Math.max(1, Math.ceil(rows.length / pageSize));
@@ -37,7 +38,7 @@ export default async function LeaderboardPage({
         Back
       </a>
       <h1>Leaderboard</h1>
-      <BoardControls base="/leaderboard" modes={categories} {...choice} />
+      <BoardControls base="/leaderboard" modes={modes} classes={options.classes} companies={options.companies} {...choice} />
       {rows.length === 0 ? (
         <div className="card empty">No finished games on this board yet.</div>
       ) : (

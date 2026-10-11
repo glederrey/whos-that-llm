@@ -452,7 +452,7 @@ The first daily start of a UTC day draws one model from the enabled roster and f
 
 ### Class
 
-Not built. No picker, no round, and no leaderboard page yet. The tables and the admin are in place so a class can be created and attached to models. When the mode is built, each class has its own leaderboard. Hints stay off.
+Not built. No picker and no round yet. The tables and the admin are in place so a class can be created and attached to models. The leaderboard bar shows Class, grayed out, with a disabled dropdown of every class. When the mode is built, each class has its own leaderboard. Hints stay off.
 
 ### Custom
 
@@ -460,7 +460,7 @@ Later. The player picks the models before the round. Disabled until that picker 
 
 ### Leaderboards
 
-All models has five boards: Any difficulty, Easy, Medium, Hard, and Impossible. Any difficulty is a score from whichever difficulty was played, so the four multipliers sit next to each other. That board puts a difficulty chip on the row. The other four do not, because the board is already that difficulty. A round played with no hints has a No hints chip on every board. A round scores on the difficulty it was played at. Daily is the other board, when that mode is open. When the class mode is built, each class has its own leaderboard. That display is not built. Custom has no difficulty and no leaderboard. A round counts when its status is `solved` or `miss` and the category has a leaderboard. `given_up` does not count. Rounds from before difficulties have no difficulty and stay off these five boards.
+The leaderboard is one bar: modes on the left, one middle control, and This week or All time on the right. The modes are Daily, All models, Class, and Company. Region and Custom are not on it. All models is open. Its middle control is five boards: Any difficulty, Easy, Medium, Hard, and Impossible. Any difficulty is a score from whichever difficulty was played, so the four multipliers sit next to each other. That board puts a difficulty chip on the row. The other four do not, because the board is already that difficulty. A round played with no hints has a No hints chip on every board. A round scores on the difficulty it was played at. Daily uses those same difficulty tabs once that mode is open, and the tabs stay hidden while Daily is grayed out. Class and Company stay visible and cannot be selected yet. Their middle controls, a dropdown of every class and a dropdown of every company, stay on the bar and stay disabled. Custom has no difficulty and no leaderboard. A round counts when its status is `solved` or `miss` and the category has a leaderboard. `given_up` does not count. Rounds from before difficulties have no difficulty and stay off these five boards.
 
 Rank is the player's best score in the period, highest first. Scores are never negative, so a round can score 0. Ties break by fewer messages on that round, then by earlier finish. Weeks start Monday 00:00 UTC.
 

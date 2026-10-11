@@ -643,8 +643,38 @@ html[data-theme="dark"] {
 }
 .tabs { display: flex; gap: 8px; flex-wrap: wrap; }
 .filters { display: flex; gap: 12px 20px; flex-wrap: wrap; align-items: center; justify-content: space-between; }
-.board-controls { display: grid; gap: 10px; justify-items: start; }
+.board-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 16px;
+}
+.board-controls-modes { margin-right: auto; }
+.board-controls-period { margin-left: auto; }
+.board-controls-middle {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex: 1 1 auto;
+}
 .board-controls .segmented { flex-wrap: wrap; }
+.board-controls .segmented span[aria-disabled="true"] {
+  color: var(--mute);
+  opacity: 0.45;
+  padding: 7px 14px;
+  font-weight: 500;
+  font-size: 14px;
+  cursor: not-allowed;
+}
+.board-controls select {
+  width: auto;
+  min-width: 9rem;
+  padding: 7px 12px;
+  border-radius: 12px;
+}
+.board-controls select:disabled { opacity: 0.45; cursor: not-allowed; }
 .pager { align-items: center; justify-content: space-between; }
 .pager .row { gap: 8px; }
 .pager .muted { font-size: 14px; }
