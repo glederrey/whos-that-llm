@@ -1,3 +1,5 @@
+import { config } from "@/lib/config";
+
 export default function WhyPage() {
   return (
     <div className="stack">
@@ -17,20 +19,50 @@ export default function WhyPage() {
         messages? Or do we only think we can?
       </p>
       <p>
-        I&apos;m a data scientist, so my first instinct was to go and collect data. That&apos;s really what this game is
-        for. Sure, it&apos;s fun to play, but every round also tells me something: which models get confused with each
-        other, whether big models are easy to spot next to small ones, whether a model&apos;s origin shows through, and
-        plenty of things I haven&apos;t thought of yet.
+        I&apos;m a data scientist, so my first instinct was to collect data. That&apos;s really what this game is for.
+        Sure, it&apos;s fun to play, but every round also tells me something: which models get confused with each other,
+        whether big models are easy to spot next to small ones, whether a model&apos;s origin shows through, and plenty of
+        things I haven&apos;t thought of yet.
       </p>
       <p>
         I plan to share this data openly for research later on. Until then, the <a href="/statistics">statistics</a> page
-        shows what we&apos;ve learned so far.
+        shows what the data says so far.
       </p>
       <h2>What I store</h2>
       <p>
         I keep your username and your game data: the messages, token counts, your guesses, which model you were talking
         to, and the other details of each round. That&apos;s it. I don&apos;t collect any other personal information. Sign
-        in is handled by Supabase, so I never see or store your email or your password.
+        in is handled by Supabase. Your email is stored there only so you can log in, and I never use it for anything
+        else. I never see your password.
+      </p>
+      <p>
+        You can delete your account and all your data at any time from your <a href="/profile">profile</a>.
+      </p>
+      <h2>Who am I</h2>
+      <p>
+        I&apos;m Gael, a data scientist based in Fribourg, Switzerland, with a PhD from EPFL. Funny enough, my master
+        thesis was about beer reviews: do people rate a beer for what it is, or because of what the community already
+        said about it? So the wine comparison that started this game hit close to home. It&apos;s the same kind of
+        question: can we really taste the difference, or do we just think we can?
+      </p>
+      <p>
+        I built this game on my own time, and I pay for the API calls myself. If you enjoy it and want to help keep it
+        running, you can leave me a small tip on{" "}
+        <a href={config.tipUrl} target="_blank" rel="noreferrer">
+          Ko-fi
+        </a>
+        . It&apos;s completely optional, but it means a lot.
+      </p>
+      <p>
+        You can find me on{" "}
+        <a href="https://www.linkedin.com/in/gael-lederrey" target="_blank" rel="noreferrer">
+          LinkedIn
+        </a>{" "}
+        and{" "}
+        <a href="https://github.com/glederrey" target="_blank" rel="noreferrer">
+          GitHub
+        </a>{" "}
+        if you want to chat about the game, the data, or anything else.
       </p>
     </div>
   );
