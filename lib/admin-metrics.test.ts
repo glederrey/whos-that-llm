@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { computeGameMetrics, percent, usd, type GameFact, type UsageFact } from "./admin-metrics";
+import { computeGameMetrics, modeRows, percent, usd, type GameFact, type UsageFact } from "./admin-metrics";
 
 const now = new Date("2026-10-10T12:00:00Z");
 
@@ -67,6 +67,32 @@ test("an empty database gives n/a, not NaN", () => {
   assert.equal(metrics.costPerSolvedGame, null);
   assert.equal(percent(metrics.solveRate), "n/a");
   assert.equal(metrics.models.length, 0);
+});
+
+test("mode rows keep every category, including ones with no games", () => {
+  const rows = modeRows(
+    [
+      { category: "all", status: "solved" },
+      { category: "all", status: "given_up" },
+      { category: "all", status: "active" },
+      { category: "custom", status: "miss" },
+      { category: "retired", status: "solved" },
+    ],
+    [
+      { id: "daily", name: "Daily" },
+      { id: "all", name: "All models" },
+      { id: "custom", name: "Custom" },
+    ],
+  );
+  assert.deepEqual(
+    rows.map((row) => [row.id, row.games, row.solved, row.givenUp, row.open, row.solveRate]),
+    [
+      ["daily", 0, 0, 0, 0, null],
+      ["all", 3, 1, 1, 1, 0.5],
+      ["custom", 1, 0, 0, 0, 0],
+      ["retired", 1, 1, 0, 0, 1],
+    ],
+  );
 });
 
 test("money prints with enough digits for cents of a cent", () => {

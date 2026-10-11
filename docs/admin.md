@@ -1,10 +1,10 @@
 # Admin
 
-This build has three pages, `/admin`, `/admin/models`, and `/admin/classes`. The rest of this document is the later cockpit.
+This build has six pages: `/admin`, `/admin/costs`, `/admin/games`, `/admin/modes`, `/admin/models`, and `/admin/classes`. The rest of this document is the later cockpit.
 
 The server reads the signed-in Supabase user and allows admin only when `app_metadata.admin === true`. Players cannot write `app_metadata`. A profile edit cannot grant access. There is no role column and no client flag. A missing flag matches nobody.
 
-- Match: the two pages render. The account menu includes **Admin** for that session only. The item is rendered on the server. It is not a flag in client JavaScript.
+- Match: those pages render. The account menu includes **Admin** for that session only. The item is rendered on the server. It is not a flag in client JavaScript.
 - Anything else, including no session: `notFound()`. The response looks like any other missing URL. There is no "forbidden" page, no login wall, and no admin link in that HTML.
 - The flag is not sent to the browser.
 
@@ -12,11 +12,19 @@ Google and email/password both work when that session has the flag. A second per
 
 Roster changes are server actions. Each one repeats the check, then writes with the server key. anon and authenticated cannot insert, update, or delete `models`, `companies`, `families`, `classes`, or `model_classes`. The counts on `/admin` are not a public function.
 
-`/admin` is the stats page. It shows three things, in this order:
+A subnav sits on every one of those pages: **Stats, Costs, Games, Modes, Models, Classes.**
+
+`/admin` is the headline. It shows five counts: models in the roster, active models, players, games today (UTC), and total games. Players are accounts that have started a game. It does not load OpenRouter, and it does not list game results or modes.
+
+`/admin/costs` is the money page.
 
 - **OpenRouter spend**, read from OpenRouter on every load with `OPENROUTER_API_KEY` (a runtime variable, never baked at build time). `GET /api/v1/key` gives what that key has paid: all time, this UTC week, this UTC month, today. `GET /api/v1/activity` gives requests, tokens, and spend per model for the last 7 and last 30 completed UTC days. OpenRouter only serves activity to a management key and covers the whole account, so set `OPENROUTER_MANAGEMENT_KEY` if the game key is not one. Each call fails on its own: the page says so in that section and still renders the rest.
-- **Games**, from our tables: solve rate, give-ups, correct guesses, messages, tokens, and cost per game, cost per solved game, failed calls, and games started per UTC day for 14 days. Tokens and cost are the `usage` rows saved from each OpenRouter reply.
-- **Which models are hardest to find**: per hidden model, games, solve rate, messages when solved, requests, tokens, cost, and cost per game, hardest first.
+- **Our ledger**: cost per game, cost per solved game, ledger spend, and failed calls. Tokens and cost are the `usage` rows saved from each OpenRouter reply. This is not the OpenRouter bill above it.
+- **Spend by hidden model**: requests, tokens, cost, and cost per game, highest cost first.
+
+`/admin/games` is play, without money columns: solve rate, give-ups, correct guesses, messages, tokens, games started per UTC day for 14 days, and which models are hardest to find (games, solve rate, messages when solved).
+
+`/admin/modes` is one row per game category, including a category with zero games, plus any extra category id already stored on a game. Each row has games, open, finished, solved, solve rate, and give-ups. A class leaderboard is not a row on this page. The class game mode is not built.
 
 `/admin/models` shows the display name, the family, and the classes beside company, region, year, size, and active. Add and edit include the family. Class membership is a set of checkboxes from the classes that already exist, and a model can have more than one. **Turn on** is green. **Turn off** is red.
 

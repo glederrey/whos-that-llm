@@ -79,11 +79,18 @@ test("OpenRouter spend is read at request time on the server", () => {
   assert.match(text, /\/key`/);
   assert.match(text, /\/activity`/);
   assert.doesNotMatch(text, /sk-or-/);
-  const page = fs.readFileSync(path.join(root, "app/admin/page.tsx"), "utf8");
-  assert.match(page, /export const dynamic = "force-dynamic"/);
-  assert.match(page, /await requireOwner\(\)/);
-  assert.doesNotMatch(page, /OPENROUTER_API_KEY/);
-  assert.doesNotMatch(page, /OPENROUTER_MANAGEMENT_KEY/);
+  for (const relative of ["app/admin/page.tsx", "app/admin/costs/page.tsx", "app/admin/games/page.tsx", "app/admin/modes/page.tsx"]) {
+    const page = fs.readFileSync(path.join(root, relative), "utf8");
+    assert.match(page, /export const dynamic = "force-dynamic"/, relative);
+    assert.match(page, /await requireOwner\(\)/, relative);
+    assert.doesNotMatch(page, /OPENROUTER_API_KEY/, relative);
+    assert.doesNotMatch(page, /OPENROUTER_MANAGEMENT_KEY/, relative);
+  }
+  const costs = fs.readFileSync(path.join(root, "app/admin/costs/page.tsx"), "utf8");
+  assert.match(costs, /loadOpenRouterSpend/);
+  const home = fs.readFileSync(path.join(root, "app/admin/page.tsx"), "utf8");
+  assert.doesNotMatch(home, /loadOpenRouterSpend/);
+  assert.doesNotMatch(home, /loadGameMetrics/);
 });
 
 test("account deletion uses only the signed-in user", () => {
