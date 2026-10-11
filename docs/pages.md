@@ -72,7 +72,7 @@ A tip does not raise the hourly cap, change a score, or put a name on the leader
 
 Purpose: present the game. Public. Playing requires a session, and that happens on `/play`. The leaderboard does not.
 
-The header keeps the name and a logo the same height as that text, plus **Scoring** (links to `/scoring`), **Leaderboard** and the account menu.
+The header keeps the name and a logo the same height as that text, plus **Scoring** (links to `/scoring`), **Leaderboard**, **Statistics** (links to `/statistics`), **Why this game?** (links to `/why`), and the account menu.
 
 Two columns. On a narrow screen they stack.
 
@@ -293,6 +293,31 @@ Twenty rows per page. **Previous** and **Next** move the page. **Your place** ap
 Empty: **No finished games on this board yet.**
 
 The landing top 5 is this board for All models, all time, five rows: rank, name, score, with the same picture beside the name.
+
+## Why this game? (`/why`)
+
+Public. No session. Linked from the header.
+
+- Heading: **Why this game?**
+- The friend's line, as said: **Over time I think I could tell an Opus 4.5 from a 4.7 and a 4.8. Like a wine...**
+- Gael wanted to see if people can tell models apart from a few messages.
+- He is a data scientist. Rounds gather which models get confused with which, including size and region. The aim is to share that later for research. **Statistics** links to `/statistics`.
+- **What is stored.** The site stores the username and the game data: messages, token counts, guesses, the model, and the rest of the round. It does not use other personal information. Sign-in goes through Supabase for security.
+
+## Statistics (`/statistics`)
+
+Public. No session. Linked from the header. Same shape as the admin stats page, without prices, spend, or OpenRouter billing.
+
+Rates use finished games. A round still open is in the totals and stays out of any list that would name its model. A category with no finished games says **No finished games in this category yet.** It does not show a made-up rate. Categories come from the `categories` table, so a later category appears here with that empty state until it has a finished round.
+
+- Solve rate, give-ups, correct guesses, messages per game, tokens per game, region found
+- Games started per UTC day, last 14 days
+- Which models are hardest to find: games, solve rate, messages when solved, tokens
+- Wrong names: hidden model, the model named instead, and how often
+- Size and region of the hidden model
+- One block per category
+
+Tokens are prompt plus completion. Nothing on this page is a price.
 
 ## Profile (`/profile`)
 
