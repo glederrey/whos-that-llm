@@ -51,7 +51,7 @@ No VPS, no extra email service, no second database.
 | **Google Cloud** | One project on the existing Google account. No billing. OAuth client (Web). Authorized redirect: `https://<project-ref>.supabase.co/auth/v1/callback`. Paste the id and secret into the Supabase Google provider. | Before the Google button works |
 | **OpenRouter** | Account, about $10 of credit, one API key, a monthly cap around $20. The key stays in env vars. Gael tops up credits himself. | Before the first real model call |
 | **Vercel** | Sign up with GitHub. Hobby. Paste the env vars from [Build](build.md). | When the app is deployed. Local play does not need it |
-| **Ko-fi** | One page for tips. Stay on the free setting, so a one-time tip pays no Ko-fi fee. Connect Stripe. Set the page currency to euros. Paste the page URL into `tipUrl`. | Before the footer shows **Tip** |
+| **Ko-fi** | One page for tips. Stay on the free setting, so a one-time tip pays no Ko-fi fee. Connect Stripe. Set the page currency to euros. Paste the page URL into `tipUrl`. | Before the footer shows **Support me on Ko-fi** |
 | **Domain registrar** | Buy the name and add the two DNS records. | After someone besides us is playing |
 
 Ko-fi does not price a page in francs, so euros avoids a second conversion on a European card. Stripe pays out to the Swiss account. A tip is not an account on this site, and it buys nothing in the game. The API bill stays on the OpenRouter cap until tips actually cover it.

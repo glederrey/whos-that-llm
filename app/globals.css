@@ -204,6 +204,8 @@ html[data-theme="dark"] a.back:hover { color: var(--text); }
   flex-wrap: wrap;
 }
 .kofi { margin: 0; max-width: 46ch; }
+a.kofi { display: inline-flex; align-items: center; gap: 6px; }
+.kofi-mark { width: 16px; height: 16px; flex: none; }
 .credit { display: inline-flex; align-items: center; flex-wrap: wrap; gap: 6px; margin: 0; }
 .credit a { display: inline-flex; align-items: center; gap: 6px; }
 .cursor-mark { width: 16px; height: 16px; }

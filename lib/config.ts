@@ -13,7 +13,7 @@ export const config = {
   wrongGuessCost: 100,
   noHintMultiplier: 1.5,
   hourlyCap: 20,
-  tipUrl: "",
+  tipUrl: "https://ko-fi.com/glederrey",
 } as const;
 
 export type Rules = {
