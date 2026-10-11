@@ -300,8 +300,8 @@ Public. No session. Linked from the header.
 
 First person. The words:
 
-- **A friend once told me:**
-- **Over time I think I could tell an Opus 4.5 from a 4.7 and a 4.8. Like a wine...**
+- **Who's that LLM?** is bold, then **started with something a friend said:**
+- The line is large, in the teal, with quotation marks: **“Over time I think I could tell an Opus 4.5 from a 4.7 and a 4.8. Like a wine...”**
 - **I laughed, and then I couldn't stop thinking about it. Can people actually tell models apart from just a few messages? Or do we only think we can?**
 - **I'm a data scientist, so my first instinct was to collect data. That's really what this game is for. Sure, it's fun to play, but every round also tells me something: which models get confused with each other, whether big models are easy to spot next to small ones, whether a model's origin shows through, and plenty of things I haven't thought of yet.**
 - **I plan to share this data openly for research later on. Until then, the statistics page shows what the data says so far.** **statistics** links to `/statistics`.

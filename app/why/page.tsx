@@ -10,9 +10,11 @@ export default function WhyPage() {
         Back
       </a>
       <h1>Why this game?</h1>
-      <p>A friend once told me:</p>
+      <p>
+        <strong>Who&apos;s that LLM?</strong> started with something a friend said:
+      </p>
       <blockquote className="quote">
-        <p>Over time I think I could tell an Opus 4.5 from a 4.7 and a 4.8. Like a wine...</p>
+        <p>“Over time I think I could tell an Opus 4.5 from a 4.7 and a 4.8. Like a wine...”</p>
       </blockquote>
       <p>
         I laughed, and then I couldn&apos;t stop thinking about it. Can people actually tell models apart from just a few
