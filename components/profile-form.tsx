@@ -88,7 +88,6 @@ export function ProfileForm({
           >
             {pictureButton}
           </button>
-          {file ? <span className="profile-file-name muted">{file.name}</span> : null}
           <input
             id={pictureId}
             key={fileKey}
@@ -115,9 +114,14 @@ export function ProfileForm({
         <button type="submit" className="button" disabled={busy}>
           Save
         </button>
-        {note ? <p className="muted">{note}</p> : null}
-        {error ? <p className="error">{error}</p> : null}
       </div>
+      {file || note || error ? (
+        <div className="profile-status">
+          {file ? <span className="profile-file-name muted">{file.name}</span> : null}
+          {note ? <p className="muted">{note}</p> : null}
+          {error ? <p className="error">{error}</p> : null}
+        </div>
+      ) : null}
     </form>
   );
 }
