@@ -1,11 +1,30 @@
-import { config } from "@/lib/config";
+import { config, rulesForCategory } from "@/lib/config";
+import { formatFactor, scoreRound, tokenFactor } from "@/lib/game";
 
 export const dynamic = "force-dynamic";
 
 const n = (value: number) => value.toLocaleString("en-US");
 
+const exampleTokens = 2694;
+const exampleRules = rulesForCategory(true);
+const exampleSubtotal = config.modelBase - config.hintCosts.size - config.wrongGuessCost;
+const exampleFactor = tokenFactor(exampleTokens, exampleRules);
+const example = scoreRound({
+  rules: exampleRules,
+  namedModel: true,
+  regionMatched: false,
+  companyMatched: false,
+  regionGiven: false,
+  companyGiven: false,
+  tokens: exampleTokens,
+  noHint: false,
+  hints: ["size"],
+  wrongGuesses: 1,
+});
+
 export default function ScoringPage() {
   const { hintCosts } = config;
+  const capAt = config.tokenScale / config.tokenCap;
   return (
     <div className="stack">
       <a className="back" href="/">
@@ -16,7 +35,8 @@ export default function ScoringPage() {
       </a>
       <h1>How scoring works</h1>
       <p className="lede">
-        A round starts from a base. Penalties come off it, then the tokens the replies used stretch or shrink what is left.
+        A round starts from a base. Penalties come off it. That subtotal is multiplied by the token factor, then by the no-hint multiplier when
+        it applies.
       </p>
       <div className="card">
         <ol className="rule-list">
@@ -33,15 +53,15 @@ export default function ScoringPage() {
             <span>
               Each wrong guess costs {n(config.wrongGuessCost)}. A hint costs what its trait is worth: year {n(hintCosts.year)}, size{" "}
               {n(hintCosts.size)}, region {n(hintCosts.region)}, company {n(hintCosts.company)}, family {n(hintCosts.family)}. The right name
-              is never a wrong guess. Earlier wrong names still count. Penalties are subtracted from the base, before the token factor.
+              is never a wrong guess. Earlier wrong names still count. Penalties are subtracted from the base. What is left is the subtotal.
             </span>
           </li>
           <li>
             <strong>3. Tokens</strong>
             <span>
-              Multiply by {n(config.tokenScale)} divided by the tokens the replies used. Fewer tokens score higher. Anything under{" "}
-              {n(config.tokenFloor)} tokens, including 0, counts as {n(config.tokenFloor)}, so the factor tops out at{" "}
-              {n(config.tokenScale / config.tokenFloor)}.
+              Multiply the subtotal by {n(config.tokenScale)} divided by the tokens the replies used, and cap that factor at ×{config.tokenCap}.
+              Input and output tokens both count. {n(config.tokenScale)} tokens is ×1. {n(capAt)} tokens or fewer, including 0, is ×{config.tokenCap}.
+              Going past {n(config.tokenScale)} tokens shrinks the score below ×1, so {n(config.tokenScale * 2)} tokens is ×0.5.
             </span>
           </li>
           <li>
@@ -64,14 +84,15 @@ export default function ScoringPage() {
       </p>
       <h2>One round</h2>
       <p>
-        Two replies used 500 tokens. The first name was wrong. You bought the year. The second name was the model. You were not in no-hint
-        mode, because you bought a hint.
+        The replies used {n(exampleTokens)} tokens, counting input and output. You bought the size hint and named one wrong model before the
+        right one. You were not in no-hint mode, because you bought a hint.
       </p>
-      <pre className="formula">{`base      = 2,000                    (named the model)
-penalties = 100 + 100 = 200          (year hint, one wrong guess)
-tokens    = 1,000 / 500 = 2
-score     = round((2,000 − 200) × 2)
-          = 3,600`}</pre>
+      <pre className="formula">{`base      = ${n(config.modelBase)}                         (named the model)
+penalties = ${n(hintCosts.size)} + ${n(config.wrongGuessCost)} = ${n(hintCosts.size + config.wrongGuessCost)}               (size hint, one wrong guess)
+subtotal  = ${n(exampleSubtotal)}
+factor    = min(${config.tokenCap}, ${n(config.tokenScale)} / ${n(exampleTokens)}) ≈ ${formatFactor(exampleFactor)}
+score     = round(${n(exampleSubtotal)} × ${n(config.tokenScale)} / ${n(exampleTokens)})
+          = ${n(example.score)}`}</pre>
       <p className="muted">Your own result page lists the lines for that round.</p>
     </div>
   );

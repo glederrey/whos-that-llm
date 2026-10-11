@@ -1,6 +1,6 @@
 # Who's that LLM?
 
-A guessing game in the spirit of Who's that Pokémon. A hidden language model answers in a chat. The player has ten messages. They can name a model after a reply, send another message, or give up. Naming the model is worth a base of 2000. If they never name it, the base is 100 for the right region and 300 for the right company. A wrong name costs 100, and company, family, region, year, and size are hints that cost 600, 600, 400, 100, and 100. Penalties come off the base, then the token factor (1000 divided by the tokens used, with under 100 counted as 100) applies, then 2× for a no-hint round. The score is rounded and never below 0.
+A guessing game in the spirit of Who's that Pokémon. A hidden language model answers in a chat. The player has ten messages. They can name a model after a reply, send another message, or give up. Naming the model is worth a base of 2000. If they never name it, the base is 100 for the right region and 300 for the right company. A wrong name costs 100, and company, family, region, year, and size are hints that cost 600, 600, 400, 100, and 100. Penalties come off the base, then the token factor (10,000 divided by the tokens used, capped at 10) applies, then 2× for a no-hint round. The score is rounded and never below 0.
 
 The first build is **All models**. The other categories are in the spec and come later.
 

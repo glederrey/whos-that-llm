@@ -57,7 +57,7 @@ type PublicGame = {
     size: string;
   };
   score?: number;            // present when the round has a score, never negative
-  breakdown?: { label: string; points: number }[];
+  breakdown?: { label: string; points: number | null; multiplier?: string }[];
   explanation?: string[];    // the short public lines
 };
 ```

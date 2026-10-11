@@ -58,7 +58,7 @@ export default async function ResultPage({ params }: { params: Promise<{ gameId:
                 {game.breakdown.map((line) => (
                   <tr key={line.label}>
                     <td>{line.label}</td>
-                    <td>{line.points.toLocaleString("en-US")}</td>
+                    <td>{line.multiplier ?? (line.points ?? 0).toLocaleString("en-US")}</td>
                   </tr>
                 ))}
                 <tr>

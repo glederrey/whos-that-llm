@@ -184,8 +184,8 @@ Indexes:
   "modelBase": 2000,
   "regionPoints": 100,
   "companyPoints": 300,
-  "tokenScale": 1000,
-  "tokenFloor": 100,
+  "tokenScale": 10000,
+  "tokenCap": 10,
   "hintCosts": { "year": 100, "size": 100, "region": 400, "company": 600, "family": 600 },
   "wrongGuessCost": 100,
   "noHintMultiplier": 2,
@@ -218,7 +218,7 @@ Indexes:
 
 One entry per id in `pool_model_ids`, including the hidden model. `given` lists traits whose value is the same on every entry. Weights and reasoning are absent on purpose.
 
-`score_breakdown` is an array of `{ "label": "Named the model", "points": 2000 }`, in the order [Rules](rules.md) specifies. `score_explanation` is the public lines, in the order [Pages](pages.md) specifies.
+`score_breakdown` is an array of lines in the order [Rules](rules.md) specifies. A points line is `{ "label": "Named the model", "points": 2000 }`. A multiplier line is `{ "label": "Tokens · 2,694 tokens", "points": null, "multiplier": "×3.712" }`. `score_explanation` is the public lines, in the order [Pages](pages.md) specifies.
 
 ### `messages`
 

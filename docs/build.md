@@ -42,8 +42,8 @@ There is no `rules/page.tsx`. There is no `me/page.tsx` in the first build.
   modelBase: 2000,
   regionPoints: 100,
   companyPoints: 300,
-  tokenScale: 1000,
-  tokenFloor: 100,
+  tokenScale: 10000,
+  tokenCap: 10,
   hintCosts: { year: 100, size: 100, region: 400, company: 600, family: 600 },
   wrongGuessCost: 100,
   noHintMultiplier: 2,
@@ -52,7 +52,7 @@ There is no `rules/page.tsx`. There is no `me/page.tsx` in the first build.
 }
 ```
 
-`tokenScale` is the 1000 in `1000 / tokens`. `tokenFloor` is the token count below which the factor stops rising, so it tops out at 10. `modelBase` is the 2000 for naming the model. Do not add another cap in code. `tipUrl` is the Ko-fi page. Empty hides the footer link. The Cursor credit is not config. It is the footer specified in [Pages](pages.md).
+`tokenScale` is the 10,000 in `min(tokenCap, tokenScale / tokens)`. `tokenCap` is 10, so 1,000 tokens or fewer, including 0, is ×10, and 10,000 tokens is ×1. Past that the factor is below 1. `modelBase` is the 2000 for naming the model. Do not add another cap in code. `tipUrl` is the Ko-fi page. Empty hides the footer link. The Cursor credit is not config. It is the footer specified in [Pages](pages.md).
 
 ## Env
 
@@ -123,4 +123,4 @@ The first build is a playable All models round. Gael plays it locally, then the 
 9. Later: admin. Spend, stats, families, roster, logos in Supabase Storage with a URL fallback, pause switch, recent rounds.
 10. Publish a GitHub Release. That deploys the release tag to the `*.vercel.app` URL. A domain comes after someone besides us is playing.
 
-Step 4 is allowed to set models `enabled = false`. It is not allowed to add a mechanic that is not in [Rules](rules.md). Do not add a cap on the token factor. If a credit error pauses the game before the admin page exists, clear `app_settings.paused` after topping up on OpenRouter.
+Step 4 is allowed to set models `enabled = false`. It is not allowed to add a mechanic that is not in [Rules](rules.md). The token factor's only cap is `tokenCap`. If a credit error pauses the game before the admin page exists, clear `app_settings.paused` after topping up on OpenRouter.

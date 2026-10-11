@@ -7,8 +7,8 @@ export const config = {
   modelBase: 2000,
   regionPoints: 100,
   companyPoints: 300,
-  tokenScale: 1000,
-  tokenFloor: 100,
+  tokenScale: 10000,
+  tokenCap: 10,
   hintCosts: { year: 100, size: 100, region: 400, company: 600, family: 600 },
   wrongGuessCost: 100,
   noHintMultiplier: 2,
@@ -24,7 +24,7 @@ export type Rules = {
   regionPoints: number;
   companyPoints: number;
   tokenScale: number;
-  tokenFloor: number;
+  tokenCap: number;
   hintCosts: Record<HintKey, number>;
   wrongGuessCost: number;
   noHintMultiplier: number;
@@ -40,7 +40,7 @@ export function rulesForCategory(hintsAllowed: boolean): Rules {
     regionPoints: config.regionPoints,
     companyPoints: config.companyPoints,
     tokenScale: config.tokenScale,
-    tokenFloor: config.tokenFloor,
+    tokenCap: config.tokenCap,
     hintCosts: { ...config.hintCosts },
     wrongGuessCost: config.wrongGuessCost,
     noHintMultiplier: config.noHintMultiplier,
