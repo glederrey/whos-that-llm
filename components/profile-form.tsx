@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useId, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { avatarError, avatarFileError } from "@/lib/profile";
 import { Avatar } from "./avatar";
@@ -15,6 +15,9 @@ export function ProfileForm({
   userId: string;
 }) {
   const router = useRouter();
+  const fileRef = useRef<HTMLInputElement>(null);
+  const pictureButtonRef = useRef<HTMLButtonElement>(null);
+  const pictureId = useId();
   const [name, setName] = useState(username);
   const [file, setFile] = useState<File | null>(null);
   const [fileKey, setFileKey] = useState(0);
@@ -64,29 +67,45 @@ export function ProfileForm({
     router.refresh();
   }
 
+  const pictureButton = file || avatarUrl ? "Change picture" : "Choose picture";
+
   return (
     <form className="card profile-form" onSubmit={submit}>
       <div className="profile-photo-row">
         <div className="profile-picture">
           <Avatar seed={userId} src={avatarUrl} size={72} />
         </div>
-        <label className="profile-photo">
-          <span className="profile-photo-name">
+        <div className="profile-photo">
+          <label htmlFor={pictureId} className="profile-photo-name">
             Picture
             <span className="muted">Optional</span>
-          </span>
+          </label>
+          <button
+            ref={pictureButtonRef}
+            type="button"
+            className="button-quiet profile-file"
+            onClick={() => fileRef.current?.click()}
+          >
+            {pictureButton}
+          </button>
+          {file ? <span className="profile-file-name muted">{file.name}</span> : null}
           <input
+            id={pictureId}
             key={fileKey}
+            ref={fileRef}
+            className="profile-file-input"
             type="file"
             accept="image/jpeg,image/png,image/webp"
+            tabIndex={-1}
             onChange={(event) => {
               const next = event.target.files?.[0] ?? null;
               setFile(next);
               setNote("");
               setError(next ? (avatarFileError(next) ?? "") : "");
+              pictureButtonRef.current?.focus();
             }}
           />
-        </label>
+        </div>
       </div>
       <label className="profile-name">
         Username
