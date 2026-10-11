@@ -467,7 +467,7 @@ html[data-theme="dark"] .hour-status strong { color: var(--teal); }
 .card.category-list { padding: 4px 20px; }
 .category-block { padding: 16px 0; border-top: 1px solid var(--line); }
 .card.category-list > .category-block:first-child { border-top: 0; }
-.category-main { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; }
+.category-main { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 16px; }
 .category-main strong { font-size: 17px; }
 .category-block.closed .category-main strong { color: var(--mute); }
 .category-check {
@@ -1008,6 +1008,10 @@ html[data-theme="dark"] .md a { color: var(--teal); }
   .board th, .board td { padding: 12px 12px; }
   .board .rank { width: 56px; }
   .button-lg { width: 100%; text-align: center; }
+  .hour-status { flex-direction: column; align-items: flex-start; gap: 4px; }
+  .hour-status .hour-note { margin-left: 0; text-align: left; }
+  .category-main:has(> .button) { grid-template-columns: minmax(0, 1fr); }
+  .category-main > .button { width: 100%; text-align: center; }
   .round-bar { padding: 10px 12px; }
   .footer-inner { padding: 16px 0 24px; }
   .round > header { position: sticky; top: 0; z-index: 10; margin: 0 -12px; padding: 8px 12px; background: var(--canvas); }
