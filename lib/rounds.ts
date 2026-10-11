@@ -5,7 +5,9 @@ import {
   compareModel,
   eliminatedCompanyIds,
   filterCandidates,
+  categoryAllowsHints,
   hintOffered,
+  playableHints,
   knownValues,
   scoreRound,
   toPublicGame,
@@ -194,7 +196,7 @@ export async function startAllModels(userId: string, noHint: boolean): Promise<{
     p_model_id: drawn.id,
     p_pool_model_ids: catalog.map((model) => model.id),
     p_traits: traits,
-    p_rules: rulesForCategory(Boolean(category.hints_allowed)),
+    p_rules: rulesForCategory(Boolean(category.hints_allowed) && categoryAllowsHints(category.id)),
   });
   const failure = fromRpc(result);
   if (failure) return failure;
@@ -205,7 +207,7 @@ async function loadGame(client: SupabaseClient, gameId: string, userId: string):
   const { data, error } = await client.from("games").select("*").eq("id", gameId).eq("user_id", userId).maybeSingle();
   if (error) throw new Error(error.message);
   const game = (data as GameRow | null) ?? null;
-  return game ? { ...game, rules: currentRules(game.rules) } : null;
+  return game ? { ...game, rules: currentRules(game.rules), hints: playableHints(game.hints) } : null;
 }
 
 export async function readPublicGame(gameId: string, userId: string): Promise<PublicGame | null> {
@@ -390,10 +392,8 @@ export async function submitGuess(gameId: string, userId: string, modelId: strin
   );
 }
 
-const hintKeys: HintKey[] = ["company", "family", "region", "year", "size"];
-
 export async function buyHint(gameId: string, userId: string, key: string): Promise<ApiFailure | null> {
-  const hint = hintKeys.find((candidate) => candidate === key);
+  const hint = playableHints([key])[0];
   if (!hint) return fail(422, "hint");
   const client = serviceOrThrow();
   const game = await loadGame(client, gameId, userId);

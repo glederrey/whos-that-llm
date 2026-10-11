@@ -52,7 +52,7 @@ export default function ScoringPage() {
             <strong>2. Penalties</strong>
             <span>
               Each wrong guess costs {n(config.wrongGuessCost)}. A hint costs what its trait is worth: year {n(hintCosts.year)}, size{" "}
-              {n(hintCosts.size)}, region {n(hintCosts.region)}, company {n(hintCosts.company)}, family {n(hintCosts.family)}. The right name
+              {n(hintCosts.size)}, region {n(hintCosts.region)}, company {n(hintCosts.company)}. The right name
               is never a wrong guess. Earlier wrong names still count. Penalties are subtracted from the base. What is left is the subtotal.
             </span>
           </li>
@@ -79,7 +79,7 @@ export default function ScoringPage() {
       </div>
       <h2>Hints</h2>
       <p>
-        Company, family, region, year, and size can each be revealed once, after the first reply. A revealed trait is known from then on, and
+        Company, region, year, and size can each be revealed once, after the first reply. A revealed trait is known from then on, and
         the guess list drops models that do not match it. A trait the round already showed you has no hint.
       </p>
       <h2>One round</h2>

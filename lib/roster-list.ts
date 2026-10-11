@@ -1,12 +1,12 @@
 export const rosterPageSize = 10;
 
-type Searchable = { name: string; familyName: string; companyName: string };
+type Searchable = { name: string; familyName: string; companyName: string; classNames: string };
 
 export function searchRoster<T extends Searchable>(rows: T[], query: string): T[] {
   const needle = query.trim().toLowerCase();
   if (!needle) return rows;
   return rows.filter((row) =>
-    [row.name, row.familyName, row.companyName].some((value) => value.toLowerCase().includes(needle)),
+    [row.name, row.familyName, row.companyName, row.classNames].some((value) => value.toLowerCase().includes(needle)),
   );
 }
 

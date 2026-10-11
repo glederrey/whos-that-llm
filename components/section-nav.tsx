@@ -3,6 +3,7 @@ export function SectionNav() {
     <nav className="section-nav">
       <a href="/admin">Stats</a>
       <a href="/admin/models">Models</a>
+      <a href="/admin/classes">Classes</a>
     </nav>
   );
 }

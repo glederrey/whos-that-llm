@@ -37,7 +37,7 @@ export default async function ResultPage({ params }: { params: Promise<{ gameId:
         <div>
           <h1>{game.model.name}</h1>
           <div className="model-facts">
-            {[game.model.companyName, game.model.region, game.model.family, game.model.year, game.model.size].map((fact, index) => (
+            {[game.model.companyName, game.model.region, game.model.year, game.model.size].map((fact, index) => (
               <span key={index} className="pill">
                 {fact}
               </span>

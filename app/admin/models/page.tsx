@@ -3,7 +3,7 @@ import { CompanyLogo } from "@/components/company-logo";
 import { SectionNav } from "@/components/section-nav";
 import { addModel, saveModel, setModelEnabled } from "@/app/admin/actions";
 import { rosterNotice } from "@/lib/admin-model";
-import { loadRoster, type RosterRow } from "@/lib/admin-roster";
+import { loadRoster, type ClassRow, type RosterRow } from "@/lib/admin-roster";
 import { pageOf, searchRoster } from "@/lib/roster-list";
 import { regionLabel, sizeLabel } from "@/lib/game";
 
@@ -16,7 +16,7 @@ export default async function ModelsPage({
 }) {
   const params = await searchParams;
   const notice = rosterNotice(params.notice);
-  const { rows, companies, families } = await loadRoster();
+  const { rows, companies, families, classes } = await loadRoster();
   const query = (params.q ?? "").slice(0, 100);
   const found = searchRoster(rows, query);
   const active = pageOf(found.filter((row) => row.enabled), params.active);
@@ -38,7 +38,7 @@ export default async function ModelsPage({
         <summary>Add a model</summary>
         <form action={addModel} className="stack">
           <div className="roster-form">
-            <ModelFields />
+            <ModelFields classes={classes} />
           </div>
           <p className="muted">A new model stays off until you turn it on. Type the family. A new name is added to the list.</p>
           <div>
@@ -49,7 +49,7 @@ export default async function ModelsPage({
         </form>
       </details>
       <form action="/admin/models" method="get" className="roster-search">
-        <input type="search" name="q" defaultValue={query} placeholder="Search by name, family, or company" aria-label="Search models" />
+          <input type="search" name="q" defaultValue={query} placeholder="Search by name, family, company, or class" aria-label="Search models" />
         <button className="button" type="submit">
           Search
         </button>
@@ -59,8 +59,8 @@ export default async function ModelsPage({
           </Link>
         ) : null}
       </form>
-      <RosterSection title="Active models" empty="No active models." list={active} query={query} pageKey="active" otherPage={inactive.page} />
-      <RosterSection title="Inactive models" empty="No inactive models." list={inactive} query={query} pageKey="inactive" otherPage={active.page} />
+      <RosterSection title="Active models" empty="No active models." list={active} query={query} pageKey="active" otherPage={inactive.page} classes={classes} />
+      <RosterSection title="Inactive models" empty="No inactive models." list={inactive} query={query} pageKey="inactive" otherPage={active.page} classes={classes} />
       <datalist id="roster-companies">
         {companies.map((company) => (
           <option key={company.id} value={company.name} />
@@ -93,6 +93,7 @@ function RosterSection({
   query,
   pageKey,
   otherPage,
+  classes,
 }: {
   title: string;
   empty: string;
@@ -100,6 +101,7 @@ function RosterSection({
   query: string;
   pageKey: "active" | "inactive";
   otherPage: number;
+  classes: ClassRow[];
 }) {
   const hrefFor = (page: number) =>
     pageKey === "active" ? modelsHref(query, page, otherPage) : modelsHref(query, otherPage, page);
@@ -116,6 +118,7 @@ function RosterSection({
                 <tr>
                   <th>Name</th>
                   <th>Family</th>
+                  <th>Classes</th>
                   <th>Company</th>
                   <th>Region</th>
                   <th>Year</th>
@@ -125,7 +128,7 @@ function RosterSection({
               </thead>
               <tbody>
                 {list.rows.map((row) => (
-                  <ModelRow key={row.id} row={row} />
+                  <ModelRow key={row.id} row={row} classes={classes} />
                 ))}
               </tbody>
             </table>
@@ -157,12 +160,13 @@ function RosterSection({
   );
 }
 
-function ModelRow({ row }: { row: RosterRow }) {
+function ModelRow({ row, classes }: { row: RosterRow; classes: ClassRow[] }) {
   const panel = `edit-${row.id}`;
   return (
     <tr className={row.enabled ? undefined : "is-off"}>
       <td>{row.name}</td>
       <td>{row.familyName}</td>
+      <td>{row.classNames || "—"}</td>
       <td>
         <span className="roster-company">
           <CompanyLogo src={row.logoUrl} />
@@ -198,6 +202,8 @@ function ModelRow({ row }: { row: RosterRow }) {
                 region={row.region}
                 year={row.year}
                 size={row.size}
+                classes={classes}
+                classIds={row.classIds}
               />
             </div>
             <p className="muted">Region belongs to the company. New games use it.</p>
@@ -224,6 +230,8 @@ function ModelFields({
   region = "us",
   year = "",
   size = "small",
+  classes = [],
+  classIds = [],
 }: {
   openrouterId?: string;
   name?: string;
@@ -232,6 +240,8 @@ function ModelFields({
   region?: string;
   year?: string;
   size?: string;
+  classes?: ClassRow[];
+  classIds?: string[];
 }) {
   return (
     <>
@@ -271,6 +281,21 @@ function ModelFields({
           <option value="large">Large</option>
         </select>
       </label>
+      <fieldset className="class-picks">
+        <legend>Classes</legend>
+        {classes.length === 0 ? (
+          <p className="muted">
+            No classes yet. <a href="/admin/classes">Create one</a> before attaching it here.
+          </p>
+        ) : (
+          classes.map((item) => (
+            <label key={item.id}>
+              <input type="checkbox" name="classId" value={item.id} defaultChecked={classIds.includes(item.id)} />
+              {item.name}
+            </label>
+          ))
+        )}
+      </fieldset>
     </>
   );
 }

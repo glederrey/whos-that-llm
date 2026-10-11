@@ -129,7 +129,7 @@ Requires a session. No session goes to `/login?next=/play`. No username goes to 
 - **Play** is disabled when the hour is full, the game is paused, or the All models pool has fewer than 2 models (**Not enough models.**).
 - Under the All models row, a full-width option, off by default: **Play without hints.** Beside it: **No hints. No match feedback. Score × 2.** It stays editable until Play.
 
-Company, Family, and Region go to `/play/new?category=…` once they are built. Custom is a later choice of models. There is no Latest card and no Origin card.
+Company, Family, and Region go to `/play/new?category=…` once they are built. Custom is a later choice of models. Hints can be on for that choice, and it has no leaderboard. Class is not a card yet. There is no Latest card and no Origin card.
 
 ## Username (`/welcome`)
 
@@ -149,11 +149,11 @@ Later, for Company, Family, and Region. Heading is the category name. The list i
 
 Each row: pool name, model count, button **Start**. The row does not list model names. A count under 4 adds **Small set.**
 
-Region rows are labeled **USA**, **China**, and **Europe**. Latest has no picker. Its one pool is the newest enabled model in each family, and the card starts the round. Fewer than two of those models and the card says **Not enough models.**
+Region rows are labeled **USA**, **China**, and **Europe**. Region has no hints. Latest is not a card. A latest group is a class, and that mode is not built. Class has no picker yet. Fewer than two models and a later card says **Not enough models.**
 
 Empty state: **Nothing to play in this category yet.** Link back to the lobby.
 
-The no-hint checkbox is on this page too. Company and Family have nothing to hint, so the subline is **No match feedback. Score × 2.** Region keeps **No hints. No match feedback. Score × 2.**
+Hints are possible only on Daily, All models, and Custom. Company, family, region, class, and latest have no hints. The no-hint checkbox is on All models. Custom, when it is built, can turn hints on and has no leaderboard.
 
 Start calls `POST /api/games` and routes to `/play/[gameId]`. Failures:
 
@@ -198,7 +198,7 @@ Appears when `awaitingGuess` is true. Heading: **Guess for message 2.**
 
 Search field, placeholder **Search models**. The rows stay closed until the field is focused, then open as a dropdown: logo, company, and name. Nothing else. A chosen model replaces the placeholder in that field. Submit is enabled when a row is selected. Under the heading: **You can guess, or send another message.** On the tenth reply: **Last message. Name the model, or give up.** A wrong guess slides into **Previous guesses** and stays there. That model leaves the search list. When hints are on, a wrong company also removes every other model from that company. A right company leaves its other models in the search. No-hint mode still only removes the model that was named. A model already guessed is not offered again. Sending the next message leaves that turn without a guess.
 
-Each previous guess shows the logo, the company, and the name, then the traits it missed: **Wrong company**, **Wrong region**, **Wrong family**. A trait the pool already shares is left off that line. A trait it got right is left off too, because the board unveils that row. If none of those three missed, the line is **Wrong model**. No-hint mode keeps the model and says **Wrong model**, with no trait words.
+Each previous guess shows the logo, the company, and the name, then the traits it missed: **Wrong company**, **Wrong region**. A trait the pool already shares is left off that line. A trait it got right is left off too, because the board unveils that row. If neither of those missed, the line is **Wrong model**. Family is not named. No-hint mode keeps the model and says **Wrong model**, with no trait words.
 
 The list is the one the server already filtered. A guess the server rejects: **That model is not in the list.**
 
@@ -206,7 +206,7 @@ The list is the one the server already filtered. A guess the server rejects: **T
 
 Hidden for the whole round when no-hint mode is on. Origin renders none of it.
 
-The board sits on the right. Every row looks the same: the trait, then **Not found yet**, or the unveiled value. Company, region, family, year, and size are on the board as soon as the round opens. A miss does not change a row to **Wrong**. The miss is named on the previous-guess card. A hit unveils that row: **Anthropic**, **USA** with the USA, China, or Europe flag, or **Opus**. A trait the pool already shares is unveiled from the start, except year and size.
+The board sits on the right. Every row looks the same: the trait, then **Not found yet**, or the unveiled value. Company, region, year, and size are on the board as soon as the round opens. Family is not a row. A miss does not change a row to **Wrong**. The miss is named on the previous-guess card. A hit unveils that row: **Anthropic**, or **USA** with the USA, China, or Europe flag. A trait the pool already shares is unveiled from the start, except year and size.
 
 Year and size read **Not found yet** until the click, with **Reveal** when the pool shares that trait, or **Reveal (−100 pts)** when the models differ. The click reveals the year or the size. The button does not come back.
 
@@ -217,9 +217,9 @@ Point numbers for a match stay off this board. They are on the result page. Nami
 On the same board, from the moment the round opens, when this category allows hints and no-hint mode is off. No-hint rounds do not show these buttons.
 
 - **Reveal**, or **Reveal (−100 pts)** when the years or the sizes differ
-- **Reveal (−600 pts)** on company and on family, and **Reveal (−400 pts)** on region, when that trait is not already unveiled. A trait the pool shares stays unveiled with no button.
+- **Reveal (−600 pts)** on company, and **Reveal (−400 pts)** on region, when that trait is not already unveiled. A trait the pool shares stays unveiled with no button. Family has no reveal.
 
-One click. The button disables until the response returns. A revealed year shows the calendar year, such as **2026**. A revealed size shows **Small**, **Medium**, or **Large**. A revealed company, family, or region shows that value. The button does not come back.
+One click. The button disables until the response returns. A revealed year shows the calendar year, such as **2026**. A revealed size shows **Small**, **Medium**, or **Large**. A revealed company or region shows that value. The button does not come back.
 
 ### Failures on the round
 
@@ -233,7 +233,7 @@ One click. The button disables until the response returns. A revealed year shows
 
 A page, not a popup. Only for `solved`, `miss`, and `given_up`. An active round redirects to the round page. Refresh is safe.
 
-- Logo, model name, company, region, family, year, and size. Origin names the model here. The round never did.
+- Logo, model name, company, region, year, and size. Family is not on this card. Origin names the model here. The round never did.
 - Status line: **Solved on message 2.** or **Miss.** or **Given up. This round is not on the leaderboard.**
 - The score, then the breakdown, then the short explanation. A give-up before any reply has no score and no breakdown. The status line is enough.
 - The transcript
@@ -346,6 +346,6 @@ The copy says this removes the profile and picture, and the name on the leaderbo
 
 `/admin` shows five counts: models in the roster, active models, players, games today (UTC), and total games. Players are distinct accounts that have started a game. Those counts are read with the server key after the check. They are not a public API. Under the counts, each roster model shows its OpenRouter list price for prompt and completion, per million tokens. The page reads the public model list and does not send the API key. A model missing from that list, or a price that is not a number, shows **No price**. If the list cannot be loaded, the page says **OpenRouter prices could not be loaded.** and does not invent a number.
 
-`/admin/models` has a closed **Add a model** dropdown, a search box (display name, family, company), and two tables: active models first, inactive second. Each lists display name, family, company, region, year, and size, 10 per page with **Previous** and **Next**, paged on its own. Paging keeps the scroll position. **Turn on** is green. **Turn off** is red, and **Edit** sits next to it. The OpenRouter id is only in the edit form. Turning a model off leaves it out of new rounds. Add one by typing an OpenRouter id, a display name, a company, a family, a region, a year, and a size. Edit those fields on a row, including the family. A new family name is saved when it is not already in the list. A new model starts off. Past games keep the traits they froze. Company logos come from the `logos` bucket. Logo upload, categories, and scoring settings are not on these pages.
+`/admin` and `/admin/models` and `/admin/classes` are the admin pages in this build. `/admin/models` has a closed **Add a model** dropdown, a search box (display name, family, company, class), and two tables: active models first, inactive second. Each lists display name, family, classes, company, region, year, and size, 10 per page with **Previous** and **Next**, paged on its own. Paging keeps the scroll position. **Turn on** is green. **Turn off** is red, and **Edit** sits next to it. The OpenRouter id is only in the edit form. Turning a model off leaves it out of new rounds. Add one by typing an OpenRouter id, a display name, a company, a family, a region, a year, and a size, and by checking any classes that already exist. Edit those fields on a row, including the family and the classes. A new family name is saved when it is not already in the list. A new model starts off. Past games keep the traits they froze. `/admin/classes` creates and edits a class: name, description, optional company, no logo. Company logos come from the `logos` bucket. Logo upload, categories, and scoring settings are not on these pages. The class game mode is not here.
 
 The later cockpit (spend, categories, families, confusion, transcripts) is still specified in [Admin](admin.md).

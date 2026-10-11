@@ -3,6 +3,7 @@ import test from "node:test";
 import { currentRules, rulesForCategory } from "./config";
 import {
   buildTraits,
+  categoryAllowsHints,
   eliminatedCompanyIds,
   filterCandidates,
   hintOffered,
@@ -56,7 +57,7 @@ test("the scoring numbers are the agreed ones", () => {
   assert.equal(rules.tokenScale, 10000);
   assert.equal(rules.tokenCap, 10);
   assert.equal(rules.noHintMultiplier, 2);
-  assert.deepEqual(rules.hintCosts, { year: 100, size: 100, region: 400, company: 600, family: 600 });
+  assert.deepEqual(rules.hintCosts, { year: 100, size: 100, region: 400, company: 600 });
 });
 
 test("a round started under the old numbers is scored with the current ones", () => {
@@ -117,15 +118,15 @@ test("penalties come off the base before the token factor", () => {
 });
 
 test("every hint has its own price", () => {
-  const prices: Record<HintKey, number> = { year: 100, size: 100, region: 400, company: 600, family: 600 };
+  const prices: Record<HintKey, number> = { year: 100, size: 100, region: 400, company: 600 };
   for (const [key, price] of Object.entries(prices) as [HintKey, number][]) {
     const result = scoreRound({ rules, ...none, namedModel: true, tokens: 1000, hints: [key] });
     assert.equal(result.score, (2000 - price) * 10, key);
     assert.equal(result.breakdown.find((line) => line.label.endsWith("hint"))?.points, -price, key);
   }
-  const all = scoreRound({ rules, ...none, namedModel: true, tokens: 1000, hints: ["company", "family", "region", "year", "size"] });
-  assert.equal(all.score, 2000);
-  assert.match(all.explanation.join("\n"), /Company −600\. Family −600\. Region −400\. Year −100\. Size −100/);
+  const all = scoreRound({ rules, ...none, namedModel: true, tokens: 1000, hints: ["company", "region", "year", "size"] });
+  assert.equal(all.score, 8000);
+  assert.match(all.explanation.join("\n"), /Company −600\. Region −400\. Year −100\. Size −100/);
 });
 
 test("the no-hint multiplier applies only to a round with no hint", () => {
@@ -236,7 +237,7 @@ test("the total never goes below 0", () => {
   assert.equal(small.breakdown.some((line) => line.label === "Floor at 0"), false);
 });
 
-test("a revealed company, family, or region is known and narrows the list", () => {
+test("a revealed company or region is known and narrows the list", () => {
   const models = [
     model({ id: "haiku", name: "Haiku", companyId: "anthropic", companyName: "Anthropic", familyId: "haiku", region: "us" }),
     model({ id: "luna", name: "Luna", companyId: "openai", companyName: "OpenAI", familyId: "gpt", region: "us" }),
@@ -249,8 +250,15 @@ test("a revealed company, family, or region is known and narrows the list", () =
   assert.deepEqual(filterCandidates(traits, byRegion).map((row) => row.id), ["flash"]);
   const byCompany = knownValues({ traits, hidden, guesses: [], hints: ["company"], noHint: false });
   assert.equal(byCompany.companyId, "deepseek");
-  const byFamily = knownValues({ traits, hidden, guesses: [], hints: ["family"], noHint: false });
-  assert.equal(byFamily.familyId, "deepseek");
+  const familyHit = knownValues({
+    traits,
+    hidden,
+    guesses: [{ modelCorrect: false, companyCorrect: false, familyCorrect: true, regionCorrect: false }],
+    hints: [],
+    noHint: false,
+  });
+  assert.equal(familyHit.familyId, undefined);
+  assert.equal(filterCandidates(traits, familyHit).length, 3);
 });
 
 test("a hint is not offered for a trait the round already showed", () => {
@@ -267,13 +275,9 @@ test("a hint is not offered for a trait the round already showed", () => {
   assert.equal(ask("company"), false);
   assert.equal(ask("region"), false);
   assert.equal(ask("size"), false);
-  assert.equal(ask("family"), true);
   assert.equal(ask("year"), true);
-  assert.equal(ask("family", { hints: ["family"] }), false);
+  assert.equal(ask("year", { hints: ["year"] }), false);
   assert.equal(ask("year", { noHint: true }), false);
-  const matched = [{ modelCorrect: false, companyCorrect: false, familyCorrect: true, regionCorrect: true }];
-  assert.equal(ask("family", { guesses: matched }), false);
-  assert.equal(ask("family", { guesses: matched, noHint: true }), false);
 });
 
 test("a match shown by a guess is not offered as a hint", () => {
@@ -288,7 +292,6 @@ test("a match shown by a guess is not offered as a hint", () => {
   const offer = (key: HintKey) => hintOffered({ key, traits, hidden, guesses, hints: [], noHint: false });
   assert.equal(offer("company"), false);
   assert.equal(offer("region"), true);
-  assert.equal(offer("family"), true);
 });
 
 test("no-hint mode does not narrow the list on a match", () => {
@@ -400,7 +403,46 @@ test("a wrong guess keeps the model and names the traits it missed", () => {
     named.map((guess) => guess.id),
     ["luna", "flash"],
   );
-  assert.deepEqual(named[0]?.wrong, ["company", "family"]);
-  assert.deepEqual(named[1]?.wrong, ["company", "region", "family"]);
+  assert.deepEqual(named[0]?.wrong, ["company"]);
+  assert.deepEqual(named[1]?.wrong, ["company", "region"]);
   assert.deepEqual(missedGuesses(traits, guesses, true)[0]?.wrong, []);
+});
+
+test("hints are only possible on daily, all models, and custom", () => {
+  assert.equal(categoryAllowsHints("daily"), true);
+  assert.equal(categoryAllowsHints("all"), true);
+  assert.equal(categoryAllowsHints("custom"), true);
+  for (const category of ["class", "region", "company", "family", "latest"]) {
+    assert.equal(categoryAllowsHints(category), false, category);
+  }
+});
+
+test("a finished round does not list the family", () => {
+  const models = [
+    model({ id: "haiku", name: "Haiku", companyId: "anthropic", companyName: "Anthropic", familyId: "haiku" }),
+    model({ id: "luna", name: "Luna", companyId: "openai", companyName: "OpenAI", familyId: "gpt" }),
+  ];
+  const traits = buildTraits(models);
+  const game = toPublicGame({
+    id: "game",
+    category: "all",
+    poolKey: null,
+    noHint: false,
+    status: "solved",
+    messageCount: 1,
+    awaitingGuess: false,
+    rules,
+    traits,
+    modelId: "haiku",
+    hints: [],
+    guesses: [],
+    guessedModelIds: [],
+    transcript: [],
+    score: 1,
+    breakdown: [],
+    explanation: [],
+  });
+  assert.equal(game.model && "family" in game.model, false);
+  assert.equal(game.given.some((row) => row.key === "family"), false);
+  assert.equal("family" in game.hints, false);
 });

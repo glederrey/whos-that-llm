@@ -44,7 +44,7 @@ There is no `rules/page.tsx`. There is no `me/page.tsx` in the first build.
   companyPoints: 300,
   tokenScale: 10000,
   tokenCap: 10,
-  hintCosts: { year: 100, size: 100, region: 400, company: 600, family: 600 },
+  hintCosts: { year: 100, size: 100, region: 400, company: 600 },
   wrongGuessCost: 100,
   noHintMultiplier: 2,
   hourlyCap: 20,
@@ -87,15 +87,15 @@ Slugs checked against public listings in October 2026. Re-check on the day of th
 | Our id | OpenRouter id | Company | Family | Size | Reasoning | Notes |
 |---|---|---|---|---|---|---|
 | `claude-opus-4-8` | `anthropic/claude-opus-4.8` | Anthropic | opus | large | yes | Pair with Opus 5.5 so the family can be played later |
-| `claude-opus-5-5` | `anthropic/claude-opus-5.5` | Anthropic | opus | large | yes | Confirm the slug. Expensive. `is_latest` |
+| `claude-opus-5-5` | `anthropic/claude-opus-5.5` | Anthropic | opus | large | yes | Confirm the slug. Expensive. |
 | `claude-sonnet-5` | `anthropic/claude-sonnet-5` | Anthropic | sonnet | medium | yes | |
-| `claude-sonnet-5-5` | `anthropic/claude-sonnet-5.5` | Anthropic | sonnet | medium | yes | Released 2026-09-28. `is_latest` |
+| `claude-sonnet-5-5` | `anthropic/claude-sonnet-5.5` | Anthropic | sonnet | medium | yes | Released 2026-09-28. |
 | `claude-haiku-4-5` | `anthropic/claude-haiku-4.5` | Anthropic | haiku | small | yes | Starts enabled. Released 2025-10-15. The only other small Anthropic id on OpenRouter. $1 / $5 per million tokens |
 | `claude-haiku-5-5` | `anthropic/claude-haiku-5.5` | Anthropic | haiku | small | yes | Starts enabled. Released 2026-10-07. Haiku is enabled now that a second Haiku exists |
 | `gpt-5-6-luna` | `openai/gpt-5.6-luna` | OpenAI | gpt | small | yes | Starts enabled. Treat Luna / Sol / Terra as one family until play says otherwise |
 | `gpt-5-6-luna-pro` | `openai/gpt-5.6-luna-pro` | OpenAI | gpt | small | yes | Starts enabled. Released 2026-07-09. Same list price as GPT-5.6 Luna |
 | `gpt-6-luna` | `openai/gpt-6-luna` | OpenAI | gpt | small | yes | Starts enabled. Released 2026-09-22. $0.10 / $0.50 per million tokens |
-| `gpt-5-6-sol` | `openai/gpt-5.6-sol` | OpenAI | gpt | medium | yes | `is_latest` |
+| `gpt-5-6-sol` | `openai/gpt-5.6-sol` | OpenAI | gpt | medium | yes | |
 | `gpt-5-6-terra` | `openai/gpt-5.6-terra` | OpenAI | gpt | large | yes | |
 | `deepseek-v4-flash` | `deepseek/deepseek-v4-flash` | DeepSeek | deepseek | small | yes | Starts enabled. China. Open weights is an admin fact. Confirm it on the model page. Play does not use it |
 | `deepseek-v4-pro` | `deepseek/deepseek-v4-pro` | DeepSeek | deepseek | large | yes | |
@@ -118,7 +118,7 @@ The first build is a playable All models round. Gael plays it locally, then the 
 4. `lib/game.ts`: frozen traits, server-filtered guess list, compare, hints, no-hint mode, score. All models, ten messages, a guess the player can skip, give up. The result page shows the breakdown and the short explanation. The total is never below 0. Play across the enabled models. If a family is indistinguishable, disable that family. Do not change the schema to save it.
 5. The hourly cap and one active round. A credit error sets `app_settings.paused` for everyone.
 6. Leaderboard for All models: rank, name, best score.
-7. Later: daily, company, family, region, custom. They are pool filters plus the given-trait rule. Custom is a choice of models. There is no Latest category and no Origin category.
+7. Later: daily, company, family, region, custom, and class. They are pool filters plus the given-trait rule. Custom is a choice of models, hints can be on, and it has no leaderboard. Class is not built. Hints are only on Daily, All models, and Custom. There is no Latest category and no Origin category. `models.is_latest` is dropped.
 8. Later: home weekly top 5 and daily result stats. The profile, with stats, past games, and username changes, is in this prototype.
 9. Later: admin. Spend, stats, families, roster, logos in Supabase Storage with a URL fallback, pause switch, recent rounds.
 10. Publish a GitHub Release. That deploys the release tag to the `*.vercel.app` URL. A domain comes after someone besides us is playing.

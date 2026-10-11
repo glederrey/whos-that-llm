@@ -2,7 +2,7 @@
 
 One Supabase Postgres database. The catalog, the rounds, and the cost ledger are tables in it.
 
-The browser may read `companies`, `families`, and the view `models_public`. Those rows are the roster a player is allowed to see. `models_public` is `models` where `enabled` is true, and the columns are `id`, `name`, `company_id`, and `logo_path`. It omits `openrouter_id`, `provider_settings`, the two prices, `family_id`, `size`, `released_on`, `is_latest`, `open_weights`, and `reasoning`. The guess list for a round does not come from this view. The server sends logo, company, and name for the models that are still legal.
+The browser may read `companies`, `families`, and the view `models_public`. Those rows are the roster a player is allowed to see. `models_public` is `models` where `enabled` is true, and the columns are `id`, `name`, `company_id`, and `logo_path`. It omits `openrouter_id`, `provider_settings`, the two prices, `family_id`, `size`, `released_on`, `open_weights`, and `reasoning`. The guess list for a round does not come from this view. The server sends logo, company, and name for the models that are still legal. `classes` and `model_classes` are admin tables. The browser does not read them. The class game mode is not built.
 
 The secret of an open round is `games.model_id`. The browser never queries `games`. Server routes use the secret key, which bypasses row level security. Row level security denies `anon` and `authenticated` on `games`, `messages`, `guesses`, and `usage`.
 
@@ -27,6 +27,7 @@ A failed call writes `usage` and does not write `messages`, because there is no 
 | Table | `anon` / `authenticated` | Service role |
 |---|---|---|
 | `companies`, `families`, `models_public`, `categories` where `enabled` | `select`. The table grant is required as well as the policy. A new Supabase project does not add it | write on the base tables |
+| `classes`, `model_classes` | no privileges | read and write |
 | `profiles` | `select` own row. `update` own row only while `username` is null. A later rename goes through `set_username` | write |
 | `games`, `messages`, `guesses`, `usage` | no privileges | read and write |
 | `leaderboard(category, since)` | `execute` | execute |
@@ -61,6 +62,30 @@ The uploaded objects are `anthropic.png`, `openai.png`, `deepseek.png`, and `mis
 
 The id is the stable key. Past rounds copy the display name into `games.traits`, so a rename does not rewrite them.
 
+### `classes`
+
+A class is a group of models for a later game mode. It is not a game category. Opus can be one class. GPT vs Claude can be another. There is no logo column. When a class has a company, a later screen uses that company's logo. When it has none, that screen uses the site logo.
+
+| Column | Type | Notes |
+|---|---|---|
+| `id` | text, pk | Slug from the name at create, such as `opus` or `gpt-vs-claude`. It does not change when the name is edited |
+| `name` | text, unique | Display name |
+| `description` | text | Can be empty |
+| `company_id` | text, null, fk `companies` | Optional. Set null on company delete |
+| `created_at` | timestamptz | |
+| `updated_at` | timestamptz | |
+
+### `model_classes`
+
+A model can belong to several classes. There is no class column on `models`.
+
+| Column | Type | Notes |
+|---|---|---|
+| `model_id` | text, fk `models` | on delete cascade. Part of the primary key |
+| `class_id` | text, fk `classes` | on delete cascade. Part of the primary key |
+
+anon and authenticated cannot read or write these two tables. The server key does that after the owner check.
+
 ### `models`
 
 | Column | Type | Notes |
@@ -74,7 +99,6 @@ The id is the stable key. Past rounds copy the display name into `games.traits`,
 | `open_weights` | boolean | Admin fact. Play does not read it |
 | `reasoning` | boolean | Admin fact. Play does not read it |
 | `provider_settings` | jsonb | default `{}`. Passed through on the call. Not a player-facing trait |
-| `is_latest` | boolean | The newest model in its family. Admin only. It does not make a category |
 | `released_on` | date | Required while `enabled`. The year hint reads the calendar year |
 | `enabled` | boolean | default false. False keeps the row and pulls the model out of every draw |
 | `logo_path` | text, null | Overrides the company logo. Storage path or `https` URL |
@@ -109,7 +133,7 @@ The lobby and the leaderboard read this table. The built-in rows are seeded and 
 | `blurb` | text | The one sentence on the main page and on the card |
 | `enabled` | boolean | False hides the lobby card. The main page still shows the blurb, with **Coming soon.** Past rounds stay |
 | `leaderboard` | boolean | True for `all` and `daily`. False for the others. A main family board can be turned on later |
-| `hints_allowed` | boolean | True for `all`, `region`, and `daily`. False for `company`, `family`, and `custom` |
+| `hints_allowed` | boolean | True only for `daily`, `all`, and `custom`. False for `company`, `family`, `region`, and every other row |
 | `sort_order` | int | Main page and lobby order |
 | `created_at` | timestamptz | |
 
@@ -186,14 +210,14 @@ Indexes:
   "companyPoints": 300,
   "tokenScale": 10000,
   "tokenCap": 10,
-  "hintCosts": { "year": 100, "size": 100, "region": 400, "company": 600, "family": 600 },
+  "hintCosts": { "year": 100, "size": 100, "region": 400, "company": 600 },
   "wrongGuessCost": 100,
   "noHintMultiplier": 2,
   "hintsAllowed": true
 }
 ```
 
-`hintsAllowed` is copied from `categories.hints_allowed` at start. The other fields are copied from config. Scoring reads the current config numbers when the round ends, so a stored copy from an older version does not change the score. `hints` may only contain `company`, `family`, `region`, `year`, and `size`, each once. The route checks that.
+`hintsAllowed` is copied from `categories.hints_allowed` at start. The other fields are copied from config. Scoring reads the current config numbers when the round ends, so a stored copy from an older version does not change the score. `hints` may only contain `company`, `region`, `year`, and `size`, each once. The route checks that. Family is not a hint.
 
 `traits` shape:
 

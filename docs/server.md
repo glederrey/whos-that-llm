@@ -17,30 +17,27 @@ type PublicGame = {
   poolLabel: string;
   noHint: boolean;
   hintsAllowed: boolean;
-  hintCosts: Record<"company" | "family" | "region" | "year" | "size", number>;  // so the hint buttons do not hardcode prices
+  hintCosts: Record<"company" | "region" | "year" | "size", number>;  // so the hint buttons do not hardcode prices
   status: "active" | "solved" | "miss" | "given_up";
   messageNumber: number;     // replies already stored, 0–10
   messageLimit: number;      // from games.rules
   awaitingGuess: boolean;
-  given: { key: "company" | "family" | "region" | "year" | "size"; label: string; value: string }[];
+  given: { key: "company" | "region" | "year" | "size"; label: string; value: string }[];
   feedback: null | {
     company: "match" | "miss" | null;   // null when that trait is given, or before any guess
     region: "match" | "miss" | null;
-    familySame: boolean;                // true only on a hit. A miss stays false and the UI says nothing
     companyValue: string | null;        // set on a company match
     regionValue: string | null;         // "USA", "China", or "Europe" on a region match
-    familyValue: string | null;         // family name on a family match
   };
   pastGuesses: {                   // wrong model guesses, oldest first. Empty traits in no-hint mode
     id: string;
     name: string;
     companyName: string;
     logoPath: string;
-    wrong: ("company" | "region" | "family")[];
+    wrong: ("company" | "region")[];
   }[];
   hints: {
     company: string | null;  // the company name once bought, else null
-    family: string | null;   // the family name once bought, else null
     region: string | null;   // "USA", "China", or "Europe" once bought, else null
     year: string | null;     // "2026" once bought, else null
     size: string | null;     // "Small", "Medium", or "Large" once bought, else null
@@ -52,7 +49,6 @@ type PublicGame = {
     companyName: string;
     logoPath: string;
     region: string;
-    family: string;
     year: number;
     size: string;
   };
@@ -64,7 +60,7 @@ type PublicGame = {
 
 `feedback` is null for the whole round when `noHint` is true, and on Origin. `given` is still sent. `candidates` is the filtered list: logo, company, and name only. The server removes models that contradict a known trait, and models already guessed, before it sends the list. The client does not receive family, region, year, size, weights, or reasoning, and it does not filter.
 
-Known traits are given values, bought hints, and matched company, region, and family. When hints are on, a company miss also removes every model from that company. A company hit leaves that company's other models. In no-hint mode, matches are stored on the guess row and do not become known, and a company miss removes nothing, so they do not narrow `candidates`.
+Known traits are given values, bought hints, and matched company and region. Family is stored on the frozen model and on the guess row, and it is not sent as a hint, a given line, or a result fact. When hints are on, a company miss also removes every model from that company. A company hit leaves that company's other models. In no-hint mode, matches are stored on the guess row and do not become known, and a company miss removes nothing, so they do not narrow `candidates`.
 
 Do not tell the client which traits the highlighted row would hit. That preview would be the answer.
 
@@ -76,7 +72,7 @@ Do not tell the client which traits the highlighted row would hit. That preview 
 | `GET /api/games/:id` | The public object |
 | `POST /api/games/:id/messages` | Send a message, stream the model |
 | `POST /api/games/:id/guesses` | One guess for the open turn |
-| `POST /api/games/:id/hints` | Buy a company, family, region, year, or size hint |
+| `POST /api/games/:id/hints` | Buy a company, region, year, or size hint |
 | `POST /api/games/:id/give-up` | End the round, show the model, stay off the leaderboard |
 | `GET /api/leaderboard?category=&period=week\|all` | Rank, name, score |
 | `PATCH /api/me` | Set `{ username }`. Also rewrites `games.username` for that user id |
@@ -136,7 +132,7 @@ Reject unless `awaiting_guess` is true. Lock the game row.
 
 The guessed model must be in the filtered candidate list built from `games.traits` and the known values. Anything else is `409` `conflict`. Do not write a guess. The turn stays open.
 
-Otherwise insert the guess row. The unique `(game_id, turn)` loses the race for the second request (`409` `turn`). Compare the guess to the frozen hidden model. A point trait that is given stays false in the score even if the boolean is true. Family is stored and pays nothing. Set `awaiting_guess = false`.
+Otherwise insert the guess row. The unique `(game_id, turn)` loses the race for the second request (`409` `turn`). Compare the guess to the frozen hidden model. A point trait that is given stays false in the score even if the boolean is true. Family is stored and pays nothing, and it is not shown. Set `awaiting_guess = false`.
 
 Pause does not block a guess, a hint, or a give-up. It blocks starting a round and calling the model.
 
@@ -146,9 +142,9 @@ If this was the last message and the model was not named, set `status = 'miss'` 
 
 ### `POST /api/games/:id/hints`
 
-Body: `{ key: "company" | "family" | "region" | "year" | "size" }`.
+Body: `{ key: "company" | "region" | "year" | "size" }`.
 
-Lock the game row. Reject when `no_hint`, when `rules.hintsAllowed` is false, when the round is not `active`, when the key is already in `hints`, when the key is not one of `company`, `family`, `region`, `year`, or `size`, when that trait is given, and when a guess already matched that company, region, or family. Append the key. The next `candidates` list drops models whose frozen value for that trait disagrees. Return `PublicGame`. The price (company 600, family 600, region 400, year 100, size 100) is not subtracted until the round ends.
+Lock the game row. Reject when `no_hint`, when `rules.hintsAllowed` is false, when the round is not `active`, when the key is already in `hints`, when the key is not one of `company`, `region`, `year`, or `size`, when that trait is given, and when a guess already matched that company or region. Family is rejected. Append the key. The next `candidates` list drops models whose frozen value for that trait disagrees. Return `PublicGame`. The price (company 600, region 400, year 100, size 100) is not subtracted until the round ends. Hints are copied on only for Daily, All models, and Custom.
 
 ### `POST /api/games/:id/give-up`
 

@@ -3,15 +3,16 @@ import test from "node:test";
 import { pageOf, searchRoster } from "./roster-list";
 
 const rows = [
-  { name: "GPT Luna", familyName: "GPT", companyName: "OpenAI" },
-  { name: "Claude Haiku", familyName: "Claude", companyName: "Anthropic" },
-  { name: "Qwen Max", familyName: "Qwen", companyName: "Alibaba" },
+  { name: "GPT Luna", familyName: "GPT", companyName: "OpenAI", classNames: "Latest OpenAI" },
+  { name: "Claude Haiku", familyName: "Claude", companyName: "Anthropic", classNames: "Haiku" },
+  { name: "Qwen Max", familyName: "Qwen", companyName: "Alibaba", classNames: "" },
 ];
 
 test("search matches name, family, and company without case", () => {
   assert.equal(searchRoster(rows, "  luna ").length, 1);
   assert.equal(searchRoster(rows, "CLAUDE")[0].name, "Claude Haiku");
   assert.equal(searchRoster(rows, "alibaba")[0].name, "Qwen Max");
+  assert.equal(searchRoster(rows, "latest openai")[0].name, "GPT Luna");
   assert.equal(searchRoster(rows, "").length, 3);
   assert.equal(searchRoster(rows, "nothing").length, 0);
 });

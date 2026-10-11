@@ -3,7 +3,7 @@ import type { Rules } from "./config";
 export type Region = "us" | "cn" | "eu";
 export type Size = "small" | "medium" | "large";
 export type TraitKey = "company" | "family" | "region" | "year" | "size";
-export type HintKey = TraitKey;
+export type HintKey = "company" | "region" | "year" | "size";
 export type GameStatus = "active" | "solved" | "miss" | "given_up";
 
 export type FrozenModel = {
@@ -55,7 +55,7 @@ export type PastGuess = {
   name: string;
   companyName: string;
   logoPath: string;
-  wrong: Array<"company" | "region" | "family">;
+  wrong: Array<"company" | "region">;
 };
 
 export type PublicGame = {
@@ -73,10 +73,8 @@ export type PublicGame = {
   feedback: null | {
     company: "match" | "miss" | null;
     region: "match" | "miss" | null;
-    familySame: boolean;
     companyValue: string | null;
     regionValue: string | null;
-    familyValue: string | null;
   };
   hints: Record<HintKey, string | null>;
   candidates: PublicCandidate[];
@@ -87,7 +85,6 @@ export type PublicGame = {
     companyName: string;
     logoPath: string;
     region: string;
-    family: string;
     year: number;
     size: string;
   };
@@ -166,13 +163,12 @@ export function knownValues(input: {
   const known: Known = {};
   const { traits, hidden, guesses, hints, noHint } = input;
   if (traits.given.includes("company") || hints.includes("company")) known.companyId = hidden.companyId;
-  if (traits.given.includes("family") || hints.includes("family")) known.familyId = hidden.familyId;
+  if (traits.given.includes("family")) known.familyId = hidden.familyId;
   if (traits.given.includes("region") || hints.includes("region")) known.region = hidden.region;
   if (traits.given.includes("year") || hints.includes("year")) known.year = hidden.year;
   if (traits.given.includes("size") || hints.includes("size")) known.size = hidden.size;
   if (!noHint) {
     if (guesses.some((guess) => guess.companyCorrect)) known.companyId = hidden.companyId;
-    if (guesses.some((guess) => guess.familyCorrect)) known.familyId = hidden.familyId;
     if (guesses.some((guess) => guess.regionCorrect)) known.region = hidden.region;
   }
   return known;
@@ -189,7 +185,6 @@ export function hintOffered(input: {
   if (input.noHint || input.hints.includes(input.key)) return false;
   const known = knownValues(input);
   if (input.key === "company") return known.companyId === undefined;
-  if (input.key === "family") return known.familyId === undefined;
   if (input.key === "region") return known.region === undefined;
   if (input.key === "year") return known.year === undefined;
   return known.size === undefined;
@@ -206,7 +201,6 @@ export function missedGuesses(traits: Traits, guesses: RecordedGuess[], noHint: 
       if (!noHint) {
         if (!given.has("company") && !guess.companyCorrect) wrong.push("company");
         if (!given.has("region") && !guess.regionCorrect) wrong.push("region");
-        if (!given.has("family") && !guess.familyCorrect) wrong.push("family");
       }
       return {
         id: guess.modelId as string,
@@ -302,11 +296,22 @@ export type ScoreInput = {
 
 const hintNames: Record<HintKey, string> = {
   company: "Company",
-  family: "Family",
   region: "Region",
   year: "Year",
   size: "Size",
 };
+
+const hintKeyList: readonly HintKey[] = ["company", "region", "year", "size"];
+
+/** Hints exist only on Daily, All models, and Custom. Every other category, including class and region, has none. */
+export function categoryAllowsHints(category: string): boolean {
+  return category === "daily" || category === "all" || category === "custom";
+}
+
+export function playableHints(value: readonly string[] | null | undefined): HintKey[] {
+  if (!value) return [];
+  return value.filter((key): key is HintKey => hintKeyList.includes(key as HintKey));
+}
 
 export function scoreRound(input: ScoreInput): { score: number; breakdown: ScoreLine[]; explanation: string[] } {
   const { rules } = input;
@@ -314,7 +319,8 @@ export function scoreRound(input: ScoreInput): { score: number; breakdown: Score
   const regionKnown = input.regionGiven || input.hints.includes("region");
   const companyKnown = input.companyGiven || input.hints.includes("company");
   const factor = tokenFactor(input.tokens, rules);
-  const noHintMode = input.noHint && input.hints.length === 0;
+  const boughtHints = playableHints(input.hints);
+  const noHintMode = input.noHint && boughtHints.length === 0;
   const noHintFactor = noHintMode ? rules.noHintMultiplier : 1;
 
   let base = 0;
@@ -335,7 +341,7 @@ export function scoreRound(input: ScoreInput): { score: number; breakdown: Score
   }
 
   let penalties = 0;
-  for (const hint of input.hints) {
+  for (const hint of boughtHints) {
     const cost = rules.hintCosts[hint];
     penalties += cost;
     breakdown.push({ label: `${hintNames[hint]} hint`, points: -cost });
@@ -371,8 +377,9 @@ function explainScore(
 ): string[] {
   const { rules } = input;
   const wrongGuesses = input.wrongGuesses ?? 0;
-  const regionKnown = input.regionGiven || input.hints.includes("region");
-  const companyKnown = input.companyGiven || input.hints.includes("company");
+  const bought = playableHints(input.hints);
+  const regionKnown = input.regionGiven || bought.includes("region");
+  const companyKnown = input.companyGiven || bought.includes("company");
   const lines = [
     `Your score starts from the base and subtracts penalties. That subtotal is multiplied by ${formatInt(rules.tokenScale)} divided by the tokens used, capped at ${formatFactor(rules.tokenCap)}, then by ${formatFactor(rules.noHintMultiplier)}× if you played with no hints. It is rounded and never goes below 0.`,
   ];
@@ -390,10 +397,10 @@ function explainScore(
     lines.push(`Base: ${formatInt(rules.companyPoints)} for the company.`);
   }
 
-  if (input.hints.length === 0) {
+  if (bought.length === 0) {
     lines.push("Hints: none.");
   } else {
-    const parts = input.hints.map((hint) => `${hintNames[hint]} −${formatInt(rules.hintCosts[hint])}`);
+    const parts = bought.map((hint) => `${hintNames[hint]} −${formatInt(rules.hintCosts[hint])}`);
     lines.push(`Hints: ${parts.join(". ")}.`);
   }
   if (wrongGuesses === 0) {
@@ -441,11 +448,13 @@ export function poolLabel(category: string, poolKey: string | null, traits: Trai
 }
 
 export function givenRows(traits: Traits, hidden: FrozenModel): PublicGame["given"] {
-  return traits.given.map((key) => ({
-    key,
-    label: traitLabel(key),
-    value: displayValue(hidden, key),
-  }));
+  return traits.given
+    .filter((key) => key !== "family")
+    .map((key) => ({
+      key,
+      label: traitLabel(key),
+      value: displayValue(hidden, key),
+    }));
 }
 
 function traitLabel(key: TraitKey): string {
@@ -492,12 +501,11 @@ export function toPublicGame(input: {
     hints: input.hints,
     noHint: input.noHint,
   });
+  const hints = playableHints(input.hints);
   const regionGiven = input.traits.given.includes("region");
   const companyGiven = input.traits.given.includes("company");
-  const familyGiven = input.traits.given.includes("family");
   const regionMatched = input.guesses.some((guess) => guess.regionCorrect);
   const companyMatched = input.guesses.some((guess) => guess.companyCorrect);
-  const familyMatched = input.guesses.some((guess) => guess.familyCorrect);
   const showFeedback = !input.noHint && input.guesses.length > 0 && input.category !== "origin";
 
   const game: PublicGame = {
@@ -516,18 +524,15 @@ export function toPublicGame(input: {
       ? {
           company: companyGiven ? null : companyMatched ? "match" : "miss",
           region: regionGiven ? null : regionMatched ? "match" : "miss",
-          familySame: !familyGiven && familyMatched,
           companyValue: !companyGiven && companyMatched ? hidden.companyName : null,
           regionValue: !regionGiven && regionMatched ? regionLabel(hidden.region) : null,
-          familyValue: !familyGiven && familyMatched ? hidden.familyName : null,
         }
       : null,
     hints: {
-      company: input.hints.includes("company") ? displayValue(hidden, "company") : null,
-      family: input.hints.includes("family") ? displayValue(hidden, "family") : null,
-      region: input.hints.includes("region") ? displayValue(hidden, "region") : null,
-      year: input.hints.includes("year") ? displayValue(hidden, "year") : null,
-      size: input.hints.includes("size") ? displayValue(hidden, "size") : null,
+      company: hints.includes("company") ? displayValue(hidden, "company") : null,
+      region: hints.includes("region") ? displayValue(hidden, "region") : null,
+      year: hints.includes("year") ? displayValue(hidden, "year") : null,
+      size: hints.includes("size") ? displayValue(hidden, "size") : null,
     },
     candidates: filterCandidates(
       input.traits,
@@ -545,7 +550,6 @@ export function toPublicGame(input: {
       companyName: hidden.companyName,
       logoPath: hidden.logoPath,
       region: regionLabel(hidden.region),
-      family: hidden.familyName,
       year: hidden.year,
       size: sizeLabel(hidden.size),
     };
