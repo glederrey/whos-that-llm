@@ -107,7 +107,7 @@ The lobby and the leaderboard read this table. The built-in rows are seeded and 
 | `id` | text, pk | `daily`, `all`, `company`, `family`, `region`, `custom`. Never changes. `games.category` stores it |
 | `name` | text | Card title |
 | `blurb` | text | The one sentence on the main page and on the card |
-| `enabled` | boolean | False hides the lobby card. The main page still shows the blurb, with **Not open yet.** Past rounds stay |
+| `enabled` | boolean | False hides the lobby card. The main page still shows the blurb, with **Coming soon.** Past rounds stay |
 | `leaderboard` | boolean | True for `all` and `daily`. False for the others. A main family board can be turned on later |
 | `hints_allowed` | boolean | True for `all`, `region`, and `daily`. False for `company`, `family`, and `custom` |
 | `sort_order` | int | Main page and lobby order |
