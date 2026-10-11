@@ -242,18 +242,18 @@ A page, not a popup. Only for `solved`, `miss`, and `given_up`. An active round 
 
 The score is the integer from [Rules](rules.md), never below 0. When the total comes to less than 0 before the floor, a **Floor at 0** line brings it to 0.
 
-The breakdown is the lines from [Rules](rules.md), in that order, then **Total**. The parts add up to the total.
+The breakdown is the lines from [Rules](rules.md), in that order, then **Total**. Penalty lines are minus points. The token line and the no-hint line are multiplier rows: token count and the × factor, not points removed. The total is the multiplied result.
 
 Next to the breakdown, heading **How this score works**, these lines and no others. Fill them with this round's numbers.
 
-> Your score starts from the base and subtracts penalties. That is multiplied by the token factor, then by 2× if you played with no hints. It is rounded and never goes below 0.
+> Your score starts from the base and subtracts penalties. That subtotal is multiplied by 10,000 divided by the tokens used, capped at 10, then by 2× if you played with no hints. It is rounded and never goes below 0.
 
 - Base: **2,000** for naming the model.
 - Or, when the model was not named: **Base: 400** — region 100, company 300. Drop a trait that did not match, was given, or was revealed, so a region-only base reads **Base: 100** for the region, a company-only base reads **Base: 300** for the company, and nothing matched reads **Base: 0**.
 - **Hints: Year −100. Size −100.** When none were bought: **Hints: none.**
 - **Wrong guesses: 1 × −100.** When none were made: **Wrong guesses: none.**
 - **Before the multiplier: 2,000 − 200 = 1,800.**
-- **Tokens: 500.** Token factor **1,000/500.** Under 100 tokens: **Tokens: 40, counted as 100.** Token factor **1,000/100.**
+- **Tokens: 500.** Token factor **×10** (10,000/500, capped at 10). At 2,694 tokens: **Tokens: 2,694.** Token factor **×3.712** (10,000/2,694). At 0 tokens: **Tokens: 0.** Token factor **×10.**
 - When no-hint mode was on and no hint was bought: **No-hint: ×2.**
 - When the total came to less than 0: **The total came to less than 0, so it is shown as 0.**
 

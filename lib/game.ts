@@ -30,7 +30,13 @@ export type GuessFlags = {
   regionCorrect: boolean;
 };
 
-export type ScoreLine = { label: string; points: number };
+export type ScoreLine = {
+  label: string;
+  /** Point change for the base, a penalty, or the floor. Null on a multiplier row. */
+  points: number | null;
+  /** Set on a multiplier row. The card shows this instead of points. */
+  multiplier?: string;
+};
 
 export type PublicCandidate = {
   id: string;
@@ -270,9 +276,15 @@ function formatInt(value: number): string {
   return Math.trunc(value).toLocaleString("en-US");
 }
 
-function formatFactor(value: number): string {
+export function formatFactor(value: number): string {
   const rounded = Math.round(value * 1000) / 1000;
   return String(rounded);
+}
+
+/** min(tokenCap, tokenScale / tokens). Zero tokens is the cap, so the factor never divides by zero. */
+export function tokenFactor(tokens: number, rules: Pick<Rules, "tokenScale" | "tokenCap">): number {
+  if (tokens <= 0) return rules.tokenCap;
+  return Math.min(rules.tokenCap, rules.tokenScale / tokens);
 }
 
 export type ScoreInput = {
@@ -301,8 +313,7 @@ export function scoreRound(input: ScoreInput): { score: number; breakdown: Score
   const wrongGuesses = input.wrongGuesses ?? 0;
   const regionKnown = input.regionGiven || input.hints.includes("region");
   const companyKnown = input.companyGiven || input.hints.includes("company");
-  const countedTokens = Math.max(input.tokens, rules.tokenFloor);
-  const tokenFactor = rules.tokenScale / countedTokens;
+  const factor = tokenFactor(input.tokens, rules);
   const noHintMode = input.noHint && input.hints.length === 0;
   const noHintFactor = noHintMode ? rules.noHintMultiplier : 1;
 
@@ -335,24 +346,20 @@ export function scoreRound(input: ScoreInput): { score: number; breakdown: Score
     breakdown.push({ label: `Wrong guesses · ${wrongGuesses}`, points: -cost });
   }
 
-  const net = base - penalties;
-  const afterTokens = roundHalfUp(net * tokenFactor);
-  const afterMode = roundHalfUp(net * tokenFactor * noHintFactor);
-  const tokenNote =
-    input.tokens < rules.tokenFloor
-      ? `${formatInt(input.tokens)} tokens, counted as ${formatInt(countedTokens)}`
-      : `${formatInt(input.tokens)} tokens`;
+  const subtotal = base - penalties;
+  const total = roundHalfUp(subtotal * factor * noHintFactor);
   breakdown.push({
-    label: `Tokens · ${tokenNote} · ×${formatFactor(tokenFactor)}`,
-    points: afterTokens - net,
+    label: `Tokens · ${formatInt(input.tokens)} tokens`,
+    points: null,
+    multiplier: `×${formatFactor(factor)}`,
   });
   if (noHintMode) {
-    breakdown.push({ label: `No-hint · ×${formatFactor(noHintFactor)}`, points: afterMode - afterTokens });
+    breakdown.push({ label: "No-hint", points: null, multiplier: `×${formatFactor(noHintFactor)}` });
   }
-  const score = Math.max(0, afterMode);
-  if (afterMode < 0) breakdown.push({ label: "Floor at 0", points: score - afterMode });
+  const score = Math.max(0, total);
+  if (total < 0) breakdown.push({ label: "Floor at 0", points: score - total });
 
-  return { score, breakdown, explanation: explainScore(input, base, penalties, afterMode, noHintMode) };
+  return { score, breakdown, explanation: explainScore(input, base, penalties, total, noHintMode) };
 }
 
 function explainScore(
@@ -367,7 +374,7 @@ function explainScore(
   const regionKnown = input.regionGiven || input.hints.includes("region");
   const companyKnown = input.companyGiven || input.hints.includes("company");
   const lines = [
-    `Your score starts from the base and subtracts penalties. That is multiplied by the token factor, then by ${formatFactor(rules.noHintMultiplier)}× if you played with no hints. It is rounded and never goes below 0.`,
+    `Your score starts from the base and subtracts penalties. That subtotal is multiplied by ${formatInt(rules.tokenScale)} divided by the tokens used, capped at ${formatFactor(rules.tokenCap)}, then by ${formatFactor(rules.noHintMultiplier)}× if you played with no hints. It is rounded and never goes below 0.`,
   ];
   if (input.namedModel) {
     lines.push(`Base: ${formatInt(rules.modelBase)} for naming the model.`);
@@ -396,18 +403,21 @@ function explainScore(
   }
   lines.push(`Before the multiplier: ${formatInt(base)} − ${formatInt(penalties)} = ${formatInt(base - penalties)}.`);
 
-  if (input.tokens < rules.tokenFloor) {
-    lines.push(
-      `Tokens: ${formatInt(input.tokens)}, counted as ${formatInt(rules.tokenFloor)}. Token factor ${formatInt(rules.tokenScale)}/${formatInt(rules.tokenFloor)}.`,
-    );
-  } else {
-    lines.push(
-      `Tokens: ${formatInt(input.tokens)}. Token factor ${formatInt(rules.tokenScale)}/${formatInt(input.tokens)}.`,
-    );
-  }
+  lines.push(tokenExplanation(input.tokens, rules));
   if (noHintMode) lines.push(`No-hint: ×${formatFactor(rules.noHintMultiplier)}.`);
   if (total < 0) lines.push("The total came to less than 0, so it is shown as 0.");
   return lines;
+}
+
+function tokenExplanation(tokens: number, rules: Rules): string {
+  const factor = tokenFactor(tokens, rules);
+  const shown = formatFactor(factor);
+  if (tokens <= 0) return `Tokens: 0. Token factor ×${shown}.`;
+  const ratio = `${formatInt(rules.tokenScale)}/${formatInt(tokens)}`;
+  if (tokens * rules.tokenCap < rules.tokenScale) {
+    return `Tokens: ${formatInt(tokens)}. Token factor ×${shown} (${ratio}, capped at ${formatFactor(rules.tokenCap)}).`;
+  }
+  return `Tokens: ${formatInt(tokens)}. Token factor ×${shown} (${ratio}).`;
 }
 
 export function poolLabel(category: string, poolKey: string | null, traits: Traits): string {
