@@ -67,10 +67,6 @@ export default async function HomePage({
           <span>Few tokens and few hints score the most.</span>
         </li>
       </ol>
-      <p className="muted">
-        Not knowing a recent model name is normal even for a new model, because a training cutoff lags the release, so that
-        is not a reliable clue about age.
-      </p>
       <dl className="stats">
         <div>
           <dt>Models in play</dt>
