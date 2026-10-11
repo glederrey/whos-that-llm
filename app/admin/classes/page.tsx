@@ -39,7 +39,7 @@ export default async function ClassesPage({
         </form>
       </details>
       <div className="card roster-card">
-        <table className="roster compact">
+        <table className="roster compact classes">
           <thead>
             <tr>
               <th>Name</th>
@@ -74,9 +74,11 @@ function ClassRowView({ row, companies }: { row: ClassRow; companies: { id: stri
       <td>{row.description || "—"}</td>
       <td>{row.companyName ?? "None"}</td>
       <td>
-        <button className="button-quiet" type="button" popoverTarget={panel}>
-          Edit
-        </button>
+        <div className="roster-buttons">
+          <button className="button-quiet" type="button" popoverTarget={panel}>
+            Edit
+          </button>
+        </div>
         <div id={panel} popover="auto" className="roster-edit card">
           <form action={saveClass} className="stack">
             <h2>Edit {row.name}</h2>
