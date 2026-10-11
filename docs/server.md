@@ -173,14 +173,14 @@ The prompt stays this English text. Do not tell the model which language to answ
 Call settings, the same for every model except `provider_settings`:
 
 - temperature `0.8`
-- `maxOutputTokens` = `rules.maxOutputTokens` (500), clamped in code even if a row says otherwise
+- `maxOutputTokens` = `rules.maxOutputTokens` (1,000), clamped in code even if a row says otherwise
 - no tools, no web search
 - `provider_settings` spread into the OpenRouter provider options
 - stream the text word by word
 
 `provider_settings` exists because the lowest reasoning effort is not the same string at every vendor. The seed records the value that actually worked. A reasoning model cannot be enabled while this object is empty. That is a cost control. Reasoning is not a trait in the game.
 
-Some APIs count reasoning inside the output budget. A model can then spend the 500 tokens thinking and return almost nothing visible. An empty successful reply still spends the message. `usage.reasoning_tokens` is how admin notices the spend. Disable that model, or lower the setting further, before leaving it in the roster.
+Some APIs count reasoning inside the output budget. A model can then spend the 1,000 tokens thinking and return almost nothing visible. An empty successful reply still spends the message. `usage.reasoning_tokens` is how admin notices the spend. Disable that model, or lower the setting further, before leaving it in the roster.
 
 Record from the result: input tokens, output tokens, reasoning tokens, cache-read tokens, `cost_usd`, and the generation id when OpenRouter returns one. The score uses input plus output on rows whose `error_code` is null.
 
