@@ -42,7 +42,7 @@ export function DeleteAccountForm({
   return (
     <form action={deleteAccount} className="card stack" onSubmit={onSubmit}>
       {returnTo === "profile" ? <h2>Delete account</h2> : null}
-      <p>This removes your profile, picture, and games, including your name on the leaderboard. This cannot be undone.</p>
+      <p>This removes your profile and picture, and your name on the leaderboard. This cannot be undone.</p>
       {shown ? (
         <p className="error" role="alert">
           {shown}

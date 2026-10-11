@@ -13,6 +13,7 @@ import {
 } from "./admin-model";
 import type { Region, Size } from "./game";
 import { companyLogoPath } from "./logos";
+import { countedPlayerId } from "./anonymize-account";
 import { presentLogo, serviceOrThrow } from "./rounds";
 
 export type RosterRow = {
@@ -261,7 +262,10 @@ async function countPlayers(client: SupabaseClient): Promise<number> {
   for (let from = 0; from < 20000; from += 1000) {
     const { data, error } = await client.from("games").select("user_id").range(from, from + 999);
     if (error) throw new Error("Could not read stats.");
-    for (const row of data ?? []) ids.add(row.user_id as string);
+    for (const row of data ?? []) {
+      const id = countedPlayerId(row.user_id);
+      if (id) ids.add(id);
+    }
     if (!data || data.length < 1000) break;
   }
   return ids.size;

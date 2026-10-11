@@ -90,9 +90,11 @@ test("account deletion uses only the signed-in user", () => {
   const lib = fs.readFileSync(path.join(root, "lib/account-delete.ts"), "utf8");
   assert.match(lib, /import "server-only"/);
   assert.match(lib, /deleteUser\(user\.id, false\)/);
-  assert.match(lib, /\.from\("usage"\)\.delete\(\)\.eq\("user_id", userId\)/);
-  assert.match(lib, /\.from\("games"\)\.delete\(\)\.eq\("user_id", userId\)/);
-  const rowsAt = lib.indexOf("removeOwnedRows(client, user.id)");
+  assert.match(lib, /\.from\("games"\)\.update\(clearedGameLink\(\)\)\.eq\("user_id", userId\)/);
+  assert.match(lib, /\.from\("usage"\)\.update\(clearedUsageLink\(\)\)\.eq\("user_id", userId\)/);
+  assert.doesNotMatch(lib, /\.from\("games"\)\.delete\(/);
+  assert.doesNotMatch(lib, /\.from\("usage"\)\.delete\(/);
+  const rowsAt = lib.indexOf("anonymizeOwnedRows(client, user.id)");
   const avatarAt = lib.indexOf("removeAvatars(client, user.id)");
   const authAt = lib.indexOf("deleteUser(user.id, false)");
   assert.ok(rowsAt !== -1 && rowsAt < avatarAt && avatarAt < authAt);
@@ -115,6 +117,8 @@ test("account deletion uses only the signed-in user", () => {
   assert.match(theme, /prefers-color-scheme: dark/);
   assert.match(theme, /text\/plain/);
   const form = fs.readFileSync(path.join(root, "components/delete-account-form.tsx"), "utf8");
+  assert.match(form, /This removes your profile and picture, and your name on the leaderboard/);
+  assert.doesNotMatch(form, /and games/);
   assert.match(form, /deleteNotice\(notice\)/);
   assert.match(form, /name="confirm"/);
   assert.match(form, /preventDefault\(\)/);
@@ -127,11 +131,18 @@ test("account deletion uses only the signed-in user", () => {
   assert.doesNotMatch(editor, /deleteUser|deleteSignedInAccount|deleteAccount/);
 });
 
-test("deleting an account removes that player's rounds", () => {
-  const sql = fs.readFileSync(path.join(root, "supabase/migrations/0014_delete_games_with_account.sql"), "utf8");
+test("deleting an account keeps the rounds and drops the player", () => {
+  const sql = fs.readFileSync(path.join(root, "supabase/migrations/0017_anonymize_games_on_account_delete.sql"), "utf8");
+  assert.match(sql, /alter table public\.games alter column user_id drop not null/);
+  assert.match(sql, /alter table public\.games alter column username drop not null/);
+  assert.match(sql, /alter table public\.usage alter column user_id drop not null/);
   assert.match(sql, /games_user_id_fkey/);
-  assert.match(sql, /on delete cascade/);
-  assert.doesNotMatch(sql, /on delete restrict/);
+  assert.match(sql, /on delete set null/);
+  assert.match(sql, /g\.user_id is not null/);
+  assert.match(sql, /g\.username is not null/);
+  assert.match(sql, /btrim\(g\.username\) <> ''/);
+  assert.doesNotMatch(sql, /on delete cascade/);
+  assert.doesNotMatch(sql, /delete from public\.games/);
 });
 
 test("client roles cannot write the roster", () => {
