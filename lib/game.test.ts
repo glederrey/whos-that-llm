@@ -346,7 +346,7 @@ test("a wrong company leaves the guess search only in hint mode", () => {
     regionCorrect: traits.models[modelId]?.region === hidden.region,
   });
 
-  assert.deepEqual(listed([guess("luna", false)], false), ["haiku", "opus", "sonnet", "flash"]);
+  assert.deepEqual(listed([guess("luna", false)], false), ["haiku", "opus", "sonnet"]);
   assert.deepEqual(eliminatedCompanyIds(traits, [guess("luna", false)], false), ["openai"]);
   assert.deepEqual(listed([guess("sonnet", true)], false), ["haiku", "opus"]);
   assert.deepEqual(eliminatedCompanyIds(traits, [guess("sonnet", true)], false), []);

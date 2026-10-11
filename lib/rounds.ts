@@ -626,7 +626,10 @@ function recordedGuesses(
   return rows.map((guess) => ({
     turn: guess.turn ?? 0,
     modelId: guess.guessed_model_id,
-    region: guess.guessed_region ?? null,
+    region:
+      guess.guessed_region === "us" || guess.guessed_region === "cn" || guess.guessed_region === "eu"
+        ? guess.guessed_region
+        : null,
     modelCorrect: Boolean(guess.model_correct),
     companyCorrect: Boolean(guess.company_correct),
     regionCorrect: Boolean(guess.region_correct),
