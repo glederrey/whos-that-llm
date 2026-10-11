@@ -3,7 +3,7 @@ import type { Region, Size } from "./game";
 export type RosterNotice = "invalid" | "duplicate" | "taken" | "year" | "reasoning" | "classes" | "save";
 
 const notices: Record<RosterNotice, string> = {
-  invalid: "Check the OpenRouter id, name, company, region, year, and size.",
+  invalid: "Check the OpenRouter id, name, company, region, release date, size, and prices.",
   duplicate: "That OpenRouter id is already on a model.",
   taken: "That model is already in the roster.",
   year: "Add a year before turning this model on.",
@@ -51,7 +51,7 @@ export function parseRegion(value: string): Region | null {
 
 export function parseSize(value: string): Size | null {
   const text = value.trim().toLowerCase();
-  if (text === "small" || text === "medium" || text === "large") return text;
+  if (text === "nano" || text === "small" || text === "medium" || text === "large" || text === "xxl") return text;
   return null;
 }
 
@@ -64,6 +64,25 @@ export function parseYear(value: string): number | null {
 
 export function yearOf(value: string | null): string {
   return value?.match(/^(\d{4})/)?.[1] ?? "";
+}
+
+export function parseReleasedOn(value: string): string | null {
+  const text = value.trim();
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(text)) return null;
+  const [year, month, day] = text.split("-").map(Number);
+  if (year < 2010 || year > 2100) return null;
+  const parsed = new Date(Date.UTC(year, month - 1, day));
+  if (Number.isNaN(parsed.getTime()) || parsed.toISOString().slice(0, 10) !== text) return null;
+  return text;
+}
+
+/** Empty is null. A typed number is kept as typed. Anything else is invalid. */
+export function parsePriceInput(value: string | undefined): number | null | undefined {
+  const text = (value ?? "").trim().replace(/^\$/, "");
+  if (!text) return null;
+  if (!/^\d+(\.\d+)?$/.test(text)) return undefined;
+  const parsed = Number(text);
+  return Number.isFinite(parsed) ? parsed : undefined;
 }
 
 export function releasedOnForYear(previous: string | null, year: number): string {
@@ -93,7 +112,10 @@ export type ModelFields = {
   company: string;
   region: Region;
   year: number;
+  releasedOn: string | null;
   size: Size;
+  inputUsdPerMtok: number | null;
+  outputUsdPerMtok: number | null;
 };
 
 export function parseModelFields(raw: {
@@ -102,7 +124,10 @@ export function parseModelFields(raw: {
   company?: string;
   region?: string;
   year?: string;
+  releasedOn?: string;
   size?: string;
+  inputPrice?: string;
+  outputPrice?: string;
 }): ModelFields | null {
   const openrouterId = raw.openrouterId?.trim() ?? "";
   const name = raw.name?.trim() ?? "";
@@ -111,10 +136,14 @@ export function parseModelFields(raw: {
   if (name.length < 1 || name.length > 80) return null;
   if (!companyIdFromName(company)) return null;
   const region = parseRegion(raw.region ?? "");
-  const year = parseYear(raw.year ?? "");
+  const releasedOn = raw.releasedOn?.trim() ? parseReleasedOn(raw.releasedOn) : null;
+  if (raw.releasedOn?.trim() && !releasedOn) return null;
+  const year = releasedOn ? Number(releasedOn.slice(0, 4)) : parseYear(raw.year ?? "");
   const size = parseSize(raw.size ?? "");
-  if (!region || year === null || !size) return null;
-  return { openrouterId, name, company, region, year, size };
+  const inputUsdPerMtok = parsePriceInput(raw.inputPrice);
+  const outputUsdPerMtok = parsePriceInput(raw.outputPrice);
+  if (!region || year === null || !size || inputUsdPerMtok === undefined || outputUsdPerMtok === undefined) return null;
+  return { openrouterId, name, company, region, year, releasedOn, size, inputUsdPerMtok, outputUsdPerMtok };
 }
 
 export function rosterNotice(code: string | undefined): string | null {

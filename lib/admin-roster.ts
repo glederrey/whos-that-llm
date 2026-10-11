@@ -13,6 +13,7 @@ import {
   type RosterNotice,
 } from "./admin-model";
 import type { Region, Size } from "./game";
+import { readListPrice } from "./list-price";
 import { companyLogoPath } from "./logos";
 import { countedPlayerId } from "./anonymize-account";
 import { presentLogo, serviceOrThrow } from "./rounds";
@@ -25,6 +26,8 @@ export type RosterRow = {
   region: Region;
   year: string;
   size: Size;
+  inputUsdPerMtok: number | null;
+  outputUsdPerMtok: number | null;
   enabled: boolean;
   logoUrl: string;
   classIds: string[];
@@ -69,7 +72,7 @@ export async function loadRoster(): Promise<{ rows: RosterRow[]; companies: Comp
   const [{ data, error }, companies, classes] = await Promise.all([
     client
       .from("models")
-      .select("id, openrouter_id, name, size, released_on, enabled, logo_path, company_id, companies(name, region, logo_path), model_classes(class_id)")
+      .select("id, openrouter_id, name, size, released_on, enabled, input_usd_per_mtok, output_usd_per_mtok, logo_path, company_id, companies(name, region, logo_path), model_classes(class_id)")
       .order("enabled", { ascending: false })
       .order("name"),
     loadCompanies(client),
@@ -89,6 +92,8 @@ export async function loadRoster(): Promise<{ rows: RosterRow[]; companies: Comp
       region: company?.region ?? "us",
       year: String(row.released_on ?? "").slice(0, 4),
       size: row.size as Size,
+      inputUsdPerMtok: readListPrice(row.input_usd_per_mtok),
+      outputUsdPerMtok: readListPrice(row.output_usd_per_mtok),
       enabled: Boolean(row.enabled),
       logoUrl: presentLogo((row.logo_path as string | null) || company?.logo_path || "", companyId),
       classIds,
@@ -104,7 +109,10 @@ export async function createRosterModel(raw: {
   company?: string;
   region?: string;
   year?: string;
+  releasedOn?: string;
   size?: string;
+  inputPrice?: string;
+  outputPrice?: string;
   classIds?: string[];
 }): Promise<RosterNotice | null> {
   await requireOwner();
@@ -131,7 +139,9 @@ export async function createRosterModel(raw: {
     open_weights: false,
     reasoning: false,
     provider_settings: {},
-    released_on: releasedOnForYear(null, fields.year),
+    released_on: fields.releasedOn ?? releasedOnForYear(null, fields.year),
+    input_usd_per_mtok: fields.inputUsdPerMtok,
+    output_usd_per_mtok: fields.outputUsdPerMtok,
     enabled: false,
     logo_path: null,
     updated_at: new Date().toISOString(),
@@ -147,7 +157,10 @@ export async function updateRosterModel(raw: {
   company?: string;
   region?: string;
   year?: string;
+  releasedOn?: string;
   size?: string;
+  inputPrice?: string;
+  outputPrice?: string;
   classIds?: string[];
 }): Promise<RosterNotice | null> {
   await requireOwner();
@@ -168,7 +181,9 @@ export async function updateRosterModel(raw: {
     name: fields.name,
     company_id: company.id,
     size: fields.size,
-    released_on: releasedOnForYear(current.data.released_on as string | null, fields.year),
+    released_on: fields.releasedOn ?? releasedOnForYear(current.data.released_on as string | null, fields.year),
+    input_usd_per_mtok: fields.inputUsdPerMtok,
+    output_usd_per_mtok: fields.outputUsdPerMtok,
     updated_at: new Date().toISOString(),
   };
   const { error } = await client.from("models").update(patch).eq("id", id);

@@ -7,7 +7,7 @@ import {
 } from "./admin-metrics";
 import type { Region, Size } from "./game";
 
-const sizes: Size[] = ["small", "medium", "large"];
+const sizes: Size[] = ["nano", "small", "medium", "large", "xxl"];
 const regions: Region[] = ["us", "cn", "eu"];
 
 export type PublicGameFact = GameFact & {

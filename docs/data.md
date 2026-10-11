@@ -82,20 +82,20 @@ anon and authenticated cannot read or write these two tables. The server key doe
 | `openrouter_id` | text, unique | `anthropic/claude-sonnet-5.5` |
 | `name` | text | Claude Sonnet 5.5 |
 | `company_id` | text, fk | |
-| `size` | text | `small`, `medium`, `large`. A hint. Not a point trait and not a category |
+| `size` | text | `nano`, `small`, `medium`, `large`, `xxl`. A hint. Not a point trait and not a category |
 | `open_weights` | boolean | Admin fact. Play does not read it |
 | `reasoning` | boolean | Admin fact. Play does not read it |
 | `provider_settings` | jsonb | default `{}`. Passed through on the call. Not a player-facing trait |
 | `released_on` | date | Required while `enabled`. The year hint reads the calendar year |
 | `enabled` | boolean | default false. False keeps the row and pulls the model out of every draw |
 | `logo_path` | text, null | Overrides the company logo. Storage path or `https` URL |
-| `input_usd_per_mtok` | numeric, null | List price, admin only |
-| `output_usd_per_mtok` | numeric, null | |
+| `input_usd_per_mtok` | numeric, null | Dollars per 1M input tokens. Admin only. OpenRouter's per-token price times 1,000,000. $1 or more rounds to a whole number. Under $1 keeps one decimal, or two when one decimal would be 0 |
+| `output_usd_per_mtok` | numeric, null | Dollars per 1M output tokens. Same rounding |
 | `updated_at` | timestamptz | The seed will not clobber a newer edit |
 
 Checks:
 
-- `size` is `small`, `medium`, or `large`.
+- `size` is `nano`, `small`, `medium`, `large`, or `xxl`.
 - `enabled` implies `released_on` is not null.
 - `enabled` and `reasoning` together imply `provider_settings` is not `{}`. That check is there so a thinking model cannot be turned on with no effort setting. It does not put reasoning into the game.
 

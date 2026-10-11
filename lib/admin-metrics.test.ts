@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { computeGameMetrics, modeRows, percent, usd, type GameFact, type UsageFact } from "./admin-metrics";
+import { computeGameMetrics, percent, usd, type GameFact, type UsageFact } from "./admin-metrics";
+import { modeRows } from "./mode-rows";
 
 const now = new Date("2026-10-10T12:00:00Z");
 

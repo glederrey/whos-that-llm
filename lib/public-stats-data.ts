@@ -94,7 +94,7 @@ function hiddenTrait(traits: unknown, modelId: string): { size: Size | null; reg
   const size = (model as { size?: unknown }).size;
   const region = (model as { region?: unknown }).region;
   return {
-    size: size === "small" || size === "medium" || size === "large" ? size : null,
+    size: size === "nano" || size === "small" || size === "medium" || size === "large" || size === "xxl" ? size : null,
     region: region === "us" || region === "cn" || region === "eu" ? region : null,
   };
 }

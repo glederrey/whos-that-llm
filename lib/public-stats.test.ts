@@ -83,12 +83,12 @@ test("public stats keep outcomes and drop cost", () => {
   assert.equal(stats.confusion[0].count, 3);
   assert.deepEqual(
     stats.sizes.map((row) => row.key),
-    ["small", "medium", "large"],
+    ["nano", "small", "medium", "large", "xxl"],
   );
-  assert.equal(stats.sizes[0].finished, 2);
-  assert.equal(stats.sizes[1].finished, 0);
-  assert.equal(stats.sizes[1].solveRate, null);
-  assert.equal(stats.sizes[2].solveRate, 0.5);
+  assert.equal(stats.sizes[1].finished, 2);
+  assert.equal(stats.sizes[2].finished, 0);
+  assert.equal(stats.sizes[2].solveRate, null);
+  assert.equal(stats.sizes[3].solveRate, 0.5);
   assert.equal(stats.regions.find((row) => row.key === "eu")?.finished, 1);
   assert.equal(stats.regions.find((row) => row.key === "cn")?.games, 1);
 

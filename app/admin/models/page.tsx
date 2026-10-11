@@ -1,24 +1,29 @@
 import Link from "next/link";
+import { AddModelForm } from "@/components/add-model-form";
 import { CompanyLogo } from "@/components/company-logo";
+import { ModelFields } from "@/components/model-fields";
+import { RosterReturnFields } from "@/components/roster-return-fields";
 import { SectionNav } from "@/components/section-nav";
-import { addModel, saveModel, setModelEnabled } from "@/app/admin/actions";
+import { saveModel, setModelEnabled } from "@/app/admin/actions";
 import { rosterNotice } from "@/lib/admin-model";
 import { loadRoster, type ClassRow, type RosterRow } from "@/lib/admin-roster";
-import { pageOf, searchRoster } from "@/lib/roster-list";
+import { modelsReturnPath, pageOf, rosterSortOf, searchRoster, sortRoster, type RosterSort, type RosterSortColumn } from "@/lib/roster-list";
 import { regionLabel, sizeLabel } from "@/lib/game";
+import { formatListPrice, formatPriceInput } from "@/lib/list-price";
 
 export const dynamic = "force-dynamic";
 
 export default async function ModelsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ notice?: string; q?: string; active?: string; inactive?: string }>;
+  searchParams: Promise<{ notice?: string; q?: string; active?: string; inactive?: string; sort?: string; dir?: string }>;
 }) {
   const params = await searchParams;
   const notice = rosterNotice(params.notice);
   const { rows, companies, classes } = await loadRoster();
   const query = (params.q ?? "").slice(0, 100);
-  const found = searchRoster(rows, query);
+  const sort = rosterSortOf(params.sort, params.dir);
+  const found = sortRoster(searchRoster(rows, query), sort);
   const active = pageOf(found.filter((row) => row.enabled), params.active);
   const inactive = pageOf(found.filter((row) => !row.enabled), params.inactive);
 
@@ -27,7 +32,8 @@ export default async function ModelsPage({
       <SectionNav />
       <h1>Models</h1>
       <p className="muted">
-        Turning a model off leaves it out of new rounds. Games already started keep the model they drew.
+        Turning a model off leaves it out of new rounds. Games already started keep the model they drew. Input and
+        output are the list price in dollars per 1 million tokens.
       </p>
       {notice ? (
         <p className="error" role="alert">
@@ -36,31 +42,27 @@ export default async function ModelsPage({
       ) : null}
       <details className="card roster-add">
         <summary>Add a model</summary>
-        <form action={addModel} className="stack">
-          <div className="roster-form">
-            <ModelFields classes={classes} />
-          </div>
-          <p className="muted">A new model stays off until you turn it on. A new company name is added to the list.</p>
-          <div>
-            <button className="button" type="submit">
-              Add model
-            </button>
-          </div>
-        </form>
+        <AddModelForm classes={classes} query={query} sort={sort} activePage={active.page} inactivePage={inactive.page} />
       </details>
       <form action="/admin/models" method="get" className="roster-search">
+          {sort.column === "name" && sort.dir === "asc" ? null : (
+            <>
+              <input type="hidden" name="sort" value={sort.column} />
+              <input type="hidden" name="dir" value={sort.dir} />
+            </>
+          )}
           <input type="search" name="q" defaultValue={query} placeholder="Search by name, company, or class" aria-label="Search models" />
         <button className="button" type="submit">
           Search
         </button>
         {query ? (
-          <Link className="button-quiet" href="/admin/models">
-            Clear
+          <Link className="button-quiet" href={modelsHref({ query: "", activePage: 1, inactivePage: 1, sort })}>
+            Reset
           </Link>
         ) : null}
       </form>
-      <RosterSection title="Active models" empty="No active models." list={active} query={query} pageKey="active" otherPage={inactive.page} classes={classes} />
-      <RosterSection title="Inactive models" empty="No inactive models." list={inactive} query={query} pageKey="inactive" otherPage={active.page} classes={classes} />
+      <RosterSection title="Active models" empty="No active models." list={active} query={query} pageKey="active" otherPage={inactive.page} sort={sort} classes={classes} />
+      <RosterSection title="Inactive models" empty="No inactive models." list={inactive} query={query} pageKey="inactive" otherPage={active.page} sort={sort} classes={classes} />
       <datalist id="roster-companies">
         {companies.map((company) => (
           <option key={company.id} value={company.name} />
@@ -72,13 +74,25 @@ export default async function ModelsPage({
 
 type RosterPage = { rows: RosterRow[]; page: number; pageCount: number };
 
-function modelsHref(query: string, activePage: number, inactivePage: number) {
-  const params = new URLSearchParams();
-  if (query) params.set("q", query);
-  if (activePage > 1) params.set("active", String(activePage));
-  if (inactivePage > 1) params.set("inactive", String(inactivePage));
-  const text = params.toString();
-  return text ? `/admin/models?${text}` : "/admin/models";
+const sortLabels: Record<RosterSortColumn, string> = {
+  name: "Name",
+  company: "Company",
+  region: "Region",
+  year: "Year",
+  size: "Size",
+  input: "Input",
+  output: "Output",
+  classes: "Classes",
+};
+
+function modelsHref(state: { query: string; activePage: number; inactivePage: number; sort: RosterSort }) {
+  return modelsReturnPath({
+    q: state.query,
+    sort: state.sort.column,
+    dir: state.sort.dir,
+    active: state.activePage > 1 ? String(state.activePage) : "",
+    inactive: state.inactivePage > 1 ? String(state.inactivePage) : "",
+  });
 }
 
 function RosterSection({
@@ -88,6 +102,7 @@ function RosterSection({
   query,
   pageKey,
   otherPage,
+  sort,
   classes,
 }: {
   title: string;
@@ -96,10 +111,23 @@ function RosterSection({
   query: string;
   pageKey: "active" | "inactive";
   otherPage: number;
+  sort: RosterSort;
   classes: ClassRow[];
 }) {
   const hrefFor = (page: number) =>
-    pageKey === "active" ? modelsHref(query, page, otherPage) : modelsHref(query, otherPage, page);
+    modelsHref({
+      query,
+      sort,
+      activePage: pageKey === "active" ? page : otherPage,
+      inactivePage: pageKey === "inactive" ? page : otherPage,
+    });
+  const sortHref = (column: RosterSortColumn) =>
+    modelsHref({
+      query,
+      activePage: 1,
+      inactivePage: 1,
+      sort: { column, dir: sort.column === column && sort.dir === "asc" ? "desc" : "asc" },
+    });
   return (
     <section className="stack">
       <h2>{title}</h2>
@@ -111,18 +139,31 @@ function RosterSection({
             <table className="roster models">
               <thead>
                 <tr>
-                  <th>Name</th>
-                  <th>Company</th>
-                  <th>Region</th>
-                  <th>Year</th>
-                  <th>Size</th>
-                  <th>Classes</th>
+                  {(Object.keys(sortLabels) as RosterSortColumn[]).map((column) => {
+                    const active = sort.column === column;
+                    return (
+                      <th key={column} aria-sort={active ? (sort.dir === "asc" ? "ascending" : "descending") : "none"}>
+                        <Link href={sortHref(column)} scroll={false}>
+                          {sortLabels[column]}
+                          {active ? (sort.dir === "asc" ? " ↑" : " ↓") : ""}
+                        </Link>
+                      </th>
+                    );
+                  })}
                   <th></th>
                 </tr>
               </thead>
               <tbody>
                 {list.rows.map((row) => (
-                  <ModelRow key={row.id} row={row} classes={classes} />
+                  <ModelRow
+                    key={row.id}
+                    row={row}
+                    classes={classes}
+                    query={query}
+                    sort={sort}
+                    activePage={pageKey === "active" ? list.page : otherPage}
+                    inactivePage={pageKey === "inactive" ? list.page : otherPage}
+                  />
                 ))}
               </tbody>
             </table>
@@ -154,7 +195,21 @@ function RosterSection({
   );
 }
 
-function ModelRow({ row, classes }: { row: RosterRow; classes: ClassRow[] }) {
+function ModelRow({
+  row,
+  classes,
+  query,
+  sort,
+  activePage,
+  inactivePage,
+}: {
+  row: RosterRow;
+  classes: ClassRow[];
+  query: string;
+  sort: RosterSort;
+  activePage: number;
+  inactivePage: number;
+}) {
   const panel = `edit-${row.id}`;
   return (
     <tr className={row.enabled ? undefined : "is-off"}>
@@ -168,10 +223,13 @@ function ModelRow({ row, classes }: { row: RosterRow; classes: ClassRow[] }) {
       <td>{regionLabel(row.region)}</td>
       <td>{row.year || "—"}</td>
       <td>{sizeLabel(row.size)}</td>
+      <td>{formatListPrice(row.inputUsdPerMtok)}</td>
+      <td>{formatListPrice(row.outputUsdPerMtok)}</td>
       <td>{row.classNames || "—"}</td>
       <td>
         <div className="roster-buttons">
           <form action={setModelEnabled}>
+            <RosterReturnFields query={query} sort={sort} activePage={activePage} inactivePage={inactivePage} />
             <input type="hidden" name="id" value={row.id} />
             <input type="hidden" name="enabled" value={row.enabled ? "0" : "1"} />
             <button className={row.enabled ? "button-off" : "button-on"} type="submit">
@@ -185,6 +243,7 @@ function ModelRow({ row, classes }: { row: RosterRow; classes: ClassRow[] }) {
         <div id={panel} popover="auto" className="roster-edit card">
           <form action={saveModel} className="stack">
             <h2>Edit {row.name}</h2>
+            <RosterReturnFields query={query} sort={sort} activePage={activePage} inactivePage={inactivePage} />
             <input type="hidden" name="id" value={row.id} />
             <div className="roster-form">
               <ModelFields
@@ -194,11 +253,13 @@ function ModelRow({ row, classes }: { row: RosterRow; classes: ClassRow[] }) {
                 region={row.region}
                 year={row.year}
                 size={row.size}
+                inputPrice={formatPriceInput(row.inputUsdPerMtok)}
+                outputPrice={formatPriceInput(row.outputUsdPerMtok)}
                 classes={classes}
                 classIds={row.classIds}
               />
             </div>
-            <p className="muted">Region belongs to the company. New games use it.</p>
+            <p className="muted">Prices are dollars per 1 million tokens. Region belongs to the company. New games use it.</p>
             <div className="row">
               <button className="button" type="submit">
                 Save
@@ -211,77 +272,5 @@ function ModelRow({ row, classes }: { row: RosterRow; classes: ClassRow[] }) {
         </div>
       </td>
     </tr>
-  );
-}
-
-function ModelFields({
-  openrouterId = "",
-  name = "",
-  company = "",
-  region = "us",
-  year = "",
-  size = "small",
-  classes = [],
-  classIds = [],
-}: {
-  openrouterId?: string;
-  name?: string;
-  company?: string;
-  region?: string;
-  year?: string;
-  size?: string;
-  classes?: ClassRow[];
-  classIds?: string[];
-}) {
-  return (
-    <>
-      <label>
-        OpenRouter id
-        <input name="openrouterId" defaultValue={openrouterId} placeholder="openai/gpt-5.6-luna" required />
-      </label>
-      <label>
-        Display name
-        <input name="name" defaultValue={name} required />
-      </label>
-      <label>
-        Company
-        <input name="company" defaultValue={company} list="roster-companies" required />
-      </label>
-      <label>
-        Region
-        <select name="region" defaultValue={region} required>
-          <option value="us">USA</option>
-          <option value="cn">China</option>
-          <option value="eu">Europe</option>
-        </select>
-      </label>
-      <label>
-        Year
-        <input name="year" defaultValue={year} inputMode="numeric" required />
-      </label>
-      <label>
-        Size
-        <select name="size" defaultValue={size} required>
-          <option value="small">Small</option>
-          <option value="medium">Medium</option>
-          <option value="large">Large</option>
-        </select>
-      </label>
-      <fieldset className="class-picks">
-        <legend>Classes</legend>
-        {classes.length === 0 ? (
-          <p className="muted">
-            No classes yet. <a href="/admin/classes">Create one</a> before attaching it here.
-          </p>
-        ) : (
-          classes.map((item) => (
-            <label key={item.id}>
-              <input type="checkbox" name="classId" value={item.id} defaultChecked={classIds.includes(item.id)} />
-              {item.name}
-            </label>
-          ))
-        )}
-      </fieldset>
-    </>
   );
 }
