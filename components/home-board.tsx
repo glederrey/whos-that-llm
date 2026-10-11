@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { config } from "@/lib/config";
 import { difficulties, difficultyBlurb, difficultyLabel, type Difficulty } from "@/lib/difficulty";
 
 export type HomeCategory = {
@@ -263,7 +262,7 @@ export function HomeBoard({
                           <input type="checkbox" checked={noHint} onChange={(event) => setNoHint(event.target.checked)} />
                           <span>
                             <strong>Play without hints.</strong>
-                            <span className="muted"> No hints. No match feedback. Score × {config.noHintMultiplier}.</span>
+                            <span className="muted"> No hints. No match feedback.</span>
                           </span>
                         </label>
                       ) : null}

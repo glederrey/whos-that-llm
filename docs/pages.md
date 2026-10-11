@@ -125,7 +125,7 @@ Requires a session. No session goes to `/login?next=/play`. No username goes to 
 - All models opens. Coming soon modes stay closed: Daily, Class, Company, Region, and Custom keep the **Coming soon** badge and do not show an expand chevron. Inside an open mode, **Choose difficulty** lists Easy, Medium, Hard, and Impossible on one line each: the name, then the short line beside it, and the turned-on model count on the right. The colors match the leaderboard: Easy `#1c7c43`, Medium `#d4a017`, Hard `#c41b15`, Impossible `#a78bfa`, on the name and the left edge. Only All models can start a round. Custom has no difficulty: **The player chooses that pool.**
 - An open All models round shows **Continue** beside the row.
 - A difficulty is disabled when the hour is full, the game is paused, a round is already open, or that pool has fewer than 2 turned-on models.
-- Inside the open All models row, off by default: **Play without hints.** Beside it: **No hints. No match feedback. Score × 2.** It stays editable until a difficulty is chosen.
+- Inside the open All models row, off by default: **Play without hints.** Beside it: **No hints. No match feedback.** It stays editable until a difficulty is chosen.
 
 Company and Region go to `/play/new?category=…` once they are built. Custom is a later choice of models. Hints can be on for that choice, and it has no leaderboard. Class is a card with **Coming soon.** The class game mode is not built. There is no Family card, no Latest card, and no Origin card.
 
