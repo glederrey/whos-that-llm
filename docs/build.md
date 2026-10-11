@@ -46,7 +46,7 @@ There is no `rules/page.tsx`. There is no `me/page.tsx` in the first build.
   tokenFloor: 100,
   hintCosts: { year: 100, size: 100, region: 400, company: 600, family: 600 },
   wrongGuessCost: 100,
-  noHintMultiplier: 1.5,
+  noHintMultiplier: 2,
   hourlyCap: 20,
   tipUrl: "https://ko-fi.com/glederrey"
 }

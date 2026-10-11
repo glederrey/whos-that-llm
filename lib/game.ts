@@ -367,7 +367,7 @@ function explainScore(
   const regionKnown = input.regionGiven || input.hints.includes("region");
   const companyKnown = input.companyGiven || input.hints.includes("company");
   const lines = [
-    "Your score starts from the base and subtracts penalties. That is multiplied by the token factor, then by 1.5 if you played with no hints. It is rounded and never goes below 0.",
+    `Your score starts from the base and subtracts penalties. That is multiplied by the token factor, then by ${formatFactor(rules.noHintMultiplier)}× if you played with no hints. It is rounded and never goes below 0.`,
   ];
   if (input.namedModel) {
     lines.push(`Base: ${formatInt(rules.modelBase)} for naming the model.`);

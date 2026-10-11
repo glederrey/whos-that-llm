@@ -53,7 +53,7 @@ test("the scoring numbers are the agreed ones", () => {
   assert.equal(rules.wrongGuessCost, 100);
   assert.equal(rules.tokenScale, 1000);
   assert.equal(rules.tokenFloor, 100);
-  assert.equal(rules.noHintMultiplier, 1.5);
+  assert.equal(rules.noHintMultiplier, 2);
   assert.deepEqual(rules.hintCosts, { year: 100, size: 100, region: 400, company: 600, family: 600 });
 });
 
@@ -117,13 +117,14 @@ test("every hint has its own price", () => {
 
 test("the no-hint multiplier applies only to a round with no hint", () => {
   const blind = scoreRound({ rules, ...none, namedModel: true, tokens: 500, noHint: true });
-  assert.equal(blind.score, 6000);
+  assert.equal(blind.score, 8000);
   assert.deepEqual(
     blind.breakdown.map((line) => line.points),
-    [2000, 2000, 2000],
+    [2000, 2000, 4000],
   );
   assert.equal(blind.breakdown.at(-1)?.label.startsWith("No-hint"), true);
-  assert.match(blind.explanation.join("\n"), /No-hint: ×1\.5/);
+  assert.match(blind.explanation[0] ?? "", /then by 2× if you played with no hints/);
+  assert.match(blind.explanation.join("\n"), /No-hint: ×2\./);
   const hinted = scoreRound({ rules, ...none, namedModel: true, tokens: 500, noHint: true, hints: ["year"] });
   assert.equal(hinted.score, 3800);
   assert.doesNotMatch(hinted.explanation.join("\n"), /No-hint/);
@@ -136,7 +137,7 @@ test("a miss scores the region and company it matched", () => {
   assert.equal(both.score, 200);
   assert.equal(sum(both.breakdown), 200);
   const noBoost = scoreRound({ rules, ...none, regionMatched: true, companyMatched: true, tokens: 2000, noHint: true });
-  assert.equal(noBoost.score, 300);
+  assert.equal(noBoost.score, 400);
   const given = scoreRound({ rules, ...none, regionMatched: true, companyMatched: true, regionGiven: true, tokens: 1000 });
   assert.equal(given.score, 300);
   const nothing = scoreRound({ rules, ...none, tokens: 1000 });

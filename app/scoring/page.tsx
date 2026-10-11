@@ -48,7 +48,7 @@ export default function ScoringPage() {
             <strong>4. No-hint mode</strong>
             <span>
               Play without hints and the roster never shrinks and no hint buttons are offered. A round played that way is multiplied by{" "}
-              {config.noHintMultiplier}. Buying a hint means you are in the other mode, so there is no multiplier.
+              {config.noHintMultiplier}×. Buying a hint means you are in the other mode, so the multiplier stays at 1×.
             </span>
           </li>
           <li>
