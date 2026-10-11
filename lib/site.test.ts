@@ -10,6 +10,8 @@ test("sitemap lists the public pages on the www origin", () => {
     "https://www.whos-that-llm.com/",
     "https://www.whos-that-llm.com/scoring",
     "https://www.whos-that-llm.com/leaderboard",
+    "https://www.whos-that-llm.com/statistics",
+    "https://www.whos-that-llm.com/why",
   ]);
   for (const url of urls) assert.equal(url.startsWith(`${siteOrigin}/`), true);
   const listed = urls.join(" ");
