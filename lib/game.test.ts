@@ -371,15 +371,87 @@ test("a wrong company leaves the guess search only in hint mode", () => {
     modelId,
     modelCorrect: false,
     companyCorrect,
-    regionCorrect: false,
+    regionCorrect: traits.models[modelId]?.region === hidden.region,
   });
 
-  assert.deepEqual(listed([guess("luna", false)], false), ["haiku", "opus", "sonnet", "flash"]);
+  assert.deepEqual(listed([guess("luna", false)], false), ["haiku", "opus", "sonnet"]);
   assert.deepEqual(eliminatedCompanyIds(traits, [guess("luna", false)], false), ["openai"]);
   assert.deepEqual(listed([guess("sonnet", true)], false), ["haiku", "opus"]);
   assert.deepEqual(eliminatedCompanyIds(traits, [guess("sonnet", true)], false), []);
   assert.deepEqual(listed([guess("luna", false)], true), ["haiku", "opus", "sonnet", "flash", "gpt"]);
   assert.deepEqual(eliminatedCompanyIds(traits, [guess("luna", false)], true), []);
+});
+
+test("a wrong region removes that region's models from the list", () => {
+  const models = [
+    model({ id: "haiku", name: "Haiku", companyId: "anthropic", companyName: "Anthropic", region: "us" }),
+    model({ id: "luna", name: "Luna", companyId: "openai", companyName: "OpenAI", region: "us" }),
+    model({ id: "flash", name: "Flash", companyId: "deepseek", companyName: "DeepSeek", region: "cn" }),
+    model({ id: "qwen", name: "Qwen", companyId: "alibaba", companyName: "Alibaba", region: "cn" }),
+    model({ id: "mistral", name: "Mistral", companyId: "mistral", companyName: "Mistral", region: "eu" }),
+  ];
+  const traits = buildTraits(models);
+  const listed = (guesses: RecordedGuess[], noHint = false) =>
+    toPublicGame({
+      id: "game",
+      category: "all",
+      poolKey: null,
+      noHint,
+      status: "active",
+      messageCount: 1,
+      awaitingGuess: true,
+      rules,
+      traits,
+      modelId: "haiku",
+      hints: [],
+      guesses,
+      guessedModelIds: guesses.flatMap((guess) => (guess.modelId ? [guess.modelId] : [])),
+      transcript: [],
+      score: null,
+      breakdown: null,
+      explanation: null,
+    }).candidates.map((row) => row.id);
+  const regionsLeft = (ids: string[]) => ids.map((id) => traits.models[id]?.region);
+
+  const afterModel = listed([
+    {
+      turn: 1,
+      modelId: "flash",
+      modelCorrect: false,
+      companyCorrect: false,
+      regionCorrect: false,
+    },
+  ]);
+  assert.equal(regionsLeft(afterModel).includes("cn"), false);
+  assert.deepEqual(afterModel, ["haiku", "mistral", "luna"]);
+
+  const afterRegion = listed([
+    {
+      turn: 1,
+      modelId: null,
+      region: "eu",
+      modelCorrect: false,
+      companyCorrect: false,
+      regionCorrect: false,
+    },
+  ]);
+  assert.equal(regionsLeft(afterRegion).includes("eu"), false);
+  assert.deepEqual(afterRegion, ["qwen", "haiku", "flash", "luna"]);
+
+  const blind = listed(
+    [
+      {
+        turn: 1,
+        modelId: "flash",
+        modelCorrect: false,
+        companyCorrect: false,
+        regionCorrect: false,
+      },
+    ],
+    true,
+  );
+  assert.equal(blind.includes("qwen"), true);
+  assert.equal(blind.includes("flash"), false);
 });
 
 test("a wrong guess keeps the model and names the traits it missed", () => {

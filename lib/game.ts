@@ -46,6 +46,8 @@ export type PublicCandidate = {
 export type RecordedGuess = GuessFlags & {
   modelId: string | null;
   turn: number;
+  /** Present on a region guess that names the region without a model. */
+  region?: Region | null;
 };
 
 export type PastGuess = {
@@ -224,18 +226,42 @@ export function eliminatedCompanyIds(
   return [...companies];
 }
 
+function isRegion(value: string | null | undefined): value is Region {
+  return value === "us" || value === "cn" || value === "eu";
+}
+
+/** Regions a guess has ruled out. A model guess uses that model's region; a region guess uses its own. */
+export function eliminatedRegions(
+  traits: Traits,
+  guesses: Array<{ modelId: string | null; regionCorrect: boolean; region?: string | null }>,
+  noHint: boolean,
+): Region[] {
+  if (noHint) return [];
+  const regions = new Set<Region>();
+  for (const guess of guesses) {
+    if (guess.regionCorrect) continue;
+    const fromModel = guess.modelId ? traits.models[guess.modelId]?.region : undefined;
+    const region = fromModel ?? (isRegion(guess.region) ? guess.region : undefined);
+    if (region) regions.add(region);
+  }
+  return [...regions];
+}
+
 export function filterCandidates(
   traits: Traits,
   known: Known,
   excludeIds: string[] = [],
   excludeCompanyIds: string[] = [],
+  excludeRegions: readonly string[] = [],
 ): PublicCandidate[] {
   const excluded = new Set(excludeIds);
   const excludedCompanies = new Set(excludeCompanyIds);
+  const excludedRegions = new Set(excludeRegions);
   return Object.entries(traits.models)
     .filter(([id, model]) => {
       if (excluded.has(id)) return false;
       if (excludedCompanies.has(model.companyId)) return false;
+      if (excludedRegions.has(model.region)) return false;
       if (known.companyId && model.companyId !== known.companyId) return false;
       if (known.region && model.region !== known.region) return false;
       if (known.year !== undefined && model.year !== known.year) return false;
@@ -541,6 +567,7 @@ export function toPublicGame(input: {
       known,
       input.guessedModelIds,
       eliminatedCompanyIds(input.traits, input.guesses, input.noHint),
+      eliminatedRegions(input.traits, input.guesses, input.noHint),
     ),
     pastGuesses: missedGuesses(input.traits, input.guesses, input.noHint),
     transcript: input.transcript,
