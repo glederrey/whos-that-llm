@@ -4,13 +4,12 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { requireOwner } from "./admin-access";
 import {
   computeGameMetrics,
-  modeRows,
   type GameFact,
   type GameMetrics,
   type GuessFact,
-  type ModeRow,
   type UsageFact,
 } from "./admin-metrics";
+import { modeRows, type ModeRow } from "./mode-rows";
 import { serviceOrThrow } from "./rounds";
 
 const pageSize = 1000;

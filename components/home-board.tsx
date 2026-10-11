@@ -144,7 +144,7 @@ export function HomeBoard({
       return;
     }
     if (body.error === "not_found") {
-      setNotice("That category is not open yet.");
+      setNotice("That mode is not open yet.");
       return;
     }
     setNotice("Not enough models.");
@@ -155,7 +155,7 @@ export function HomeBoard({
 
   return (
     <div className="stack">
-      <h1 className="goal">Game categories</h1>
+      <h1 className="goal">Game modes</h1>
       <p className="lede">
         One LLM, 10 messages. Guess which one it is, and earn a place on the leaderboard.
       </p>

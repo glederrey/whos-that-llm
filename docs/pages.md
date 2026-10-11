@@ -106,7 +106,7 @@ One narrow card. The heading is **Sign in** or **Create account**. A text link u
 
 Requires a session. No session goes to `/login?next=/play`. No username goes to `/welcome?next=/play`.
 
-- Heading: **Game categories**
+- Heading: **Game modes**
 - Line: **One LLM, 10 messages. Guess which one it is, and earn a place on the leaderboard.** Scoring is the header link.
 - A status bar: **7 games left**, then **Adding a new game to the pool at 14:22** when a round has already started in the rolling hour. The time is the oldest `started_at` in that window plus one hour, in the viewer's local zone. At the cap: **None left** and **Next one at 14:22.** Right-aligned on the same row: **Twenty games an hour. One more, and the developer goes broke.** On a narrow screen the count, the time, and that sentence stack on the left. The number is `hourlyCap`, written as a word up to twenty. When the game is paused, the bar says **The game is paused.**
 - Category rows. Daily first, then All models, Class, Company, Region, Custom. A category that is not enabled yet has **Coming soon.** and no button. The sentences are the `categories.blurb` column:
