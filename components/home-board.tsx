@@ -262,7 +262,7 @@ export function HomeBoard({
                           <input type="checkbox" checked={noHint} onChange={(event) => setNoHint(event.target.checked)} />
                           <span>
                             <strong>Play without hints.</strong>
-                            <span className="muted"> No hints. No match feedback.</span>
+                            <span className="muted">No hints. No match feedback.</span>
                           </span>
                         </label>
                       ) : null}

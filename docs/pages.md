@@ -125,7 +125,7 @@ Requires a session. No session goes to `/login?next=/play`. No username goes to 
 - All models opens. Coming soon modes stay closed: Daily, Class, Company, Region, and Custom keep the **Coming soon** badge and do not show an expand chevron. Inside an open mode, **Choose difficulty** lists Easy, Medium, Hard, and Impossible on one line each: the name, then the short line beside it, and the turned-on model count on the right. The colors match the leaderboard: Easy `#1c7c43`, Medium `#d4a017`, Hard `#c41b15`, Impossible `#a78bfa`, on the name and the left edge. Only All models can start a round. Custom has no difficulty: **The player chooses that pool.**
 - An open All models round shows **Continue** beside the row.
 - A difficulty is disabled when the hour is full, the game is paused, a round is already open, or that pool has fewer than 2 turned-on models.
-- Inside the open All models row, off by default: **Play without hints.** Beside it: **No hints. No match feedback.** It stays editable until a difficulty is chosen.
+- Inside the open All models row, off by default: **Play without hints.** Beside it: **No hints. No match feedback.** On a normal-width page that is one line. On a phone, the checkbox and **Play without hints.** stay on the first line, and **No hints. No match feedback.** moves to the next line. It stays editable until a difficulty is chosen.
 
 Company and Region go to `/play/new?category=…` once they are built. Custom is a later choice of models. Hints can be on for that choice, and it has no leaderboard. Class is a card with **Coming soon.** The class game mode is not built. There is no Family card, no Latest card, and no Origin card.
 
@@ -276,7 +276,7 @@ The middle is one slot, and it follows the selected mode. All models, and Daily 
 
 Any difficulty is a score from whichever difficulty was played. That board shows a difficulty chip on the row, in that difficulty's color. The other four do not. A round played with no hints has a **No hints** chip on every one of the five. The opening board is All models, Any difficulty, this week.
 
-**This week** and **All time** stay on the right. Weeks start Monday 00:00 UTC. The tab label says **This week (UTC)**.
+**This week** and **All time** stay on the right when the three groups fit on one row. On a narrow screen they stack, full width, in this order: game modes, the middle control, then This week and All time. Weeks start Monday 00:00 UTC. The tab label says **This week (UTC)**.
 
 A counted round is `solved` or `miss`. Give-up does not appear. Rank is the best score, highest first. Ties break by fewer messages on that round, then by earlier finish. A score of 0 stays on the board.
 

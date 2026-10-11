@@ -547,6 +547,12 @@ html[data-theme="dark"] .segmented a.difficulty-impossible[aria-pressed="true"] 
   background: var(--soft);
   font-size: 14px;
 }
+.category-check .muted::before { content: " "; }
+@media (max-width: 720px) {
+  .category-check { align-items: flex-start; }
+  .category-check > span { display: flex; flex-direction: column; align-items: flex-start; }
+  .category-check .muted::before { content: none; }
+}
 
 /* Tables and boards */
 .board { width: 100%; border-collapse: collapse; }
@@ -681,6 +687,28 @@ html[data-theme="dark"] {
   border-radius: 12px;
 }
 .board-controls select:disabled { opacity: 0.45; cursor: not-allowed; }
+@media (max-width: 1020px) {
+  .board-controls {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+  .board-controls-modes,
+  .board-controls-middle,
+  .board-controls-period {
+    width: 100%;
+    justify-self: stretch;
+  }
+  .board-controls-middle { justify-content: flex-start; }
+  .board-controls .segmented {
+    width: 100%;
+    max-width: 100%;
+    flex-wrap: wrap;
+    box-sizing: border-box;
+  }
+  .board-controls select { width: 100%; max-width: 100%; }
+}
 .pager { align-items: center; justify-content: space-between; }
 .pager .row { gap: 8px; }
 .pager .muted { font-size: 14px; }
