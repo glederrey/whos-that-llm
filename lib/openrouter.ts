@@ -53,7 +53,7 @@ export async function streamHiddenReply(input: {
   let streamError: unknown = null;
   const result = streamText({
     model: openrouter(input.openrouterId),
-    system: systemPrompt,
+    system: systemPrompt(),
     messages,
     temperature: 0.8,
     maxOutputTokens: input.maxOutputTokens,
