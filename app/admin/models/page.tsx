@@ -112,11 +112,11 @@ function RosterSection({
               <thead>
                 <tr>
                   <th>Name</th>
-                  <th>Classes</th>
                   <th>Company</th>
                   <th>Region</th>
                   <th>Year</th>
                   <th>Size</th>
+                  <th>Classes</th>
                   <th></th>
                 </tr>
               </thead>
@@ -159,7 +159,6 @@ function ModelRow({ row, classes }: { row: RosterRow; classes: ClassRow[] }) {
   return (
     <tr className={row.enabled ? undefined : "is-off"}>
       <td>{row.name}</td>
-      <td>{row.classNames || "—"}</td>
       <td>
         <span className="roster-company">
           <CompanyLogo src={row.logoUrl} />
@@ -169,6 +168,7 @@ function ModelRow({ row, classes }: { row: RosterRow; classes: ClassRow[] }) {
       <td>{regionLabel(row.region)}</td>
       <td>{row.year || "—"}</td>
       <td>{sizeLabel(row.size)}</td>
+      <td>{row.classNames || "—"}</td>
       <td>
         <div className="roster-buttons">
           <form action={setModelEnabled}>

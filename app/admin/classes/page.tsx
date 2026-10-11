@@ -39,7 +39,7 @@ export default async function ClassesPage({
         </form>
       </details>
       <div className="card roster-card">
-        <table className="roster">
+        <table className="roster compact">
           <thead>
             <tr>
               <th>Name</th>
