@@ -900,7 +900,7 @@ html[data-theme="dark"] .md a { color: var(--teal); }
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 12px 28px;
+  padding: 14px 38px;
 }
 .profile-file-name {
   max-width: 100%;
