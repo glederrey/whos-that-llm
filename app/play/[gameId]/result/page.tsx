@@ -18,7 +18,7 @@ export default async function ResultPage({ params }: { params: Promise<{ gameId:
   const categories = await listCategories();
   const onBoard = Boolean(categories.find((category) => category.id === game.category)?.leaderboard);
   const again =
-    game.category === "company" || game.category === "family" || game.category === "region"
+    game.category === "company" || game.category === "region"
       ? `/play/new?category=${game.category}`
       : "/play";
 

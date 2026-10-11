@@ -2,7 +2,7 @@ import type { Rules } from "./config";
 
 export type Region = "us" | "cn" | "eu";
 export type Size = "small" | "medium" | "large";
-export type TraitKey = "company" | "family" | "region" | "year" | "size";
+export type TraitKey = "company" | "region" | "year" | "size";
 export type HintKey = "company" | "region" | "year" | "size";
 export type GameStatus = "active" | "solved" | "miss" | "given_up";
 
@@ -10,8 +10,6 @@ export type FrozenModel = {
   name: string;
   companyId: string;
   companyName: string;
-  familyId: string;
-  familyName: string;
   region: Region;
   size: Size;
   year: number;
@@ -26,7 +24,6 @@ export type Traits = {
 export type GuessFlags = {
   modelCorrect: boolean;
   companyCorrect: boolean;
-  familyCorrect: boolean;
   regionCorrect: boolean;
 };
 
@@ -93,7 +90,7 @@ export type PublicGame = {
   explanation?: string[];
 };
 
-const traitOrder: TraitKey[] = ["company", "family", "region", "year", "size"];
+const traitOrder: TraitKey[] = ["company", "region", "year", "size"];
 
 export function regionLabel(region: Region): string {
   if (region === "us") return "USA";
@@ -126,7 +123,6 @@ export function buildTraits(models: Array<FrozenModel & { id: string }>): Traits
 
 function traitValue(model: FrozenModel, key: TraitKey): string {
   if (key === "company") return model.companyId;
-  if (key === "family") return model.familyId;
   if (key === "region") return model.region;
   if (key === "year") return String(model.year);
   return model.size;
@@ -136,7 +132,6 @@ export function compareGuess(hidden: FrozenModel, guess: FrozenModel): GuessFlag
   return {
     modelCorrect: false,
     companyCorrect: hidden.companyId === guess.companyId,
-    familyCorrect: hidden.familyId === guess.familyId,
     regionCorrect: hidden.region === guess.region,
   };
 }
@@ -147,7 +142,6 @@ export function compareModel(hiddenId: string, guessId: string, hidden: FrozenMo
 
 export type Known = {
   companyId?: string;
-  familyId?: string;
   region?: Region;
   year?: number;
   size?: Size;
@@ -163,7 +157,6 @@ export function knownValues(input: {
   const known: Known = {};
   const { traits, hidden, guesses, hints, noHint } = input;
   if (traits.given.includes("company") || hints.includes("company")) known.companyId = hidden.companyId;
-  if (traits.given.includes("family")) known.familyId = hidden.familyId;
   if (traits.given.includes("region") || hints.includes("region")) known.region = hidden.region;
   if (traits.given.includes("year") || hints.includes("year")) known.year = hidden.year;
   if (traits.given.includes("size") || hints.includes("size")) known.size = hidden.size;
@@ -240,7 +233,6 @@ export function filterCandidates(
       if (excluded.has(id)) return false;
       if (excludedCompanies.has(model.companyId)) return false;
       if (known.companyId && model.companyId !== known.companyId) return false;
-      if (known.familyId && model.familyId !== known.familyId) return false;
       if (known.region && model.region !== known.region) return false;
       if (known.year !== undefined && model.year !== known.year) return false;
       if (known.size && model.size !== known.size) return false;
@@ -437,10 +429,6 @@ export function poolLabel(category: string, poolKey: string | null, traits: Trai
     const name = Object.values(traits.models).find((model) => model.companyId === poolKey)?.companyName;
     return `Company · ${name ?? first?.companyName ?? poolKey ?? ""}`;
   }
-  if (category === "family") {
-    const name = Object.values(traits.models).find((model) => model.familyId === poolKey)?.familyName;
-    return `Family · ${name ?? first?.familyName ?? poolKey ?? ""}`;
-  }
   if (category === "region" && (poolKey === "us" || poolKey === "cn" || poolKey === "eu")) {
     return `Region · ${regionLabel(poolKey)}`;
   }
@@ -448,9 +436,7 @@ export function poolLabel(category: string, poolKey: string | null, traits: Trai
 }
 
 export function givenRows(traits: Traits, hidden: FrozenModel): PublicGame["given"] {
-  return traits.given
-    .filter((key) => key !== "family")
-    .map((key) => ({
+  return traits.given.map((key) => ({
       key,
       label: traitLabel(key),
       value: displayValue(hidden, key),
@@ -459,7 +445,6 @@ export function givenRows(traits: Traits, hidden: FrozenModel): PublicGame["give
 
 function traitLabel(key: TraitKey): string {
   if (key === "company") return "Company";
-  if (key === "family") return "Family";
   if (key === "region") return "Region";
   if (key === "year") return "Year";
   return "Size";
@@ -467,7 +452,6 @@ function traitLabel(key: TraitKey): string {
 
 function displayValue(model: FrozenModel, key: TraitKey): string {
   if (key === "company") return model.companyName;
-  if (key === "family") return model.familyName;
   if (key === "region") return regionLabel(model.region);
   if (key === "year") return String(model.year);
   return sizeLabel(model.size);

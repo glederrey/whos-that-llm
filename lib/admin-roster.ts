@@ -21,7 +21,6 @@ export type RosterRow = {
   id: string;
   openrouterId: string;
   name: string;
-  familyName: string;
   companyName: string;
   region: Region;
   year: string;
@@ -39,8 +38,6 @@ export type ClassRow = {
   companyId: string | null;
   companyName: string | null;
 };
-
-export type NamedRow = { id: string; name: string };
 
 export type AdminStats = {
   roster: number;
@@ -66,31 +63,28 @@ export async function loadAdminStats(): Promise<AdminStats> {
   return { roster, active, players, gamesToday, games };
 }
 
-export async function loadRoster(): Promise<{ rows: RosterRow[]; companies: CompanyRow[]; families: NamedRow[]; classes: ClassRow[] }> {
+export async function loadRoster(): Promise<{ rows: RosterRow[]; companies: CompanyRow[]; classes: ClassRow[] }> {
   await requireOwner();
   const client = serviceOrThrow();
-  const [{ data, error }, companies, families, classes] = await Promise.all([
+  const [{ data, error }, companies, classes] = await Promise.all([
     client
       .from("models")
-      .select("id, openrouter_id, name, size, released_on, enabled, logo_path, company_id, family_id, companies(name, region, logo_path), families(name), model_classes(class_id)")
+      .select("id, openrouter_id, name, size, released_on, enabled, logo_path, company_id, companies(name, region, logo_path), model_classes(class_id)")
       .order("enabled", { ascending: false })
       .order("name"),
     loadCompanies(client),
-    loadFamilies(client),
     loadClasses(client),
   ]);
-  if (error || !companies || !families || !classes) throw new Error("Could not read the roster.");
+  if (error || !companies || !classes) throw new Error("Could not read the roster.");
   const className = new Map(classes.map((item) => [item.id, item.name]));
   const rows: RosterRow[] = (data ?? []).map((row) => {
     const company = first(row.companies as { name: string; region: Region; logo_path: string } | { name: string; region: Region; logo_path: string }[] | null);
-    const family = first(row.families as { name: string } | { name: string }[] | null);
     const companyId = row.company_id as string;
     const classIds = membershipIds(row.model_classes);
     return {
       id: row.id as string,
       openrouterId: row.openrouter_id as string,
       name: row.name as string,
-      familyName: family?.name ?? (row.family_id as string),
       companyName: company?.name ?? companyId,
       region: company?.region ?? "us",
       year: String(row.released_on ?? "").slice(0, 4),
@@ -101,14 +95,13 @@ export async function loadRoster(): Promise<{ rows: RosterRow[]; companies: Comp
       classNames: classIds.map((id) => className.get(id) ?? id).join(", "),
     };
   });
-  return { rows, companies, families, classes };
+  return { rows, companies, classes };
 }
 
 export async function createRosterModel(raw: {
   openrouterId?: string;
   name?: string;
   company?: string;
-  family?: string;
   region?: string;
   year?: string;
   size?: string;
@@ -129,14 +122,11 @@ export async function createRosterModel(raw: {
   if (duplicate.data) return "duplicate";
   const company = await resolveCompany(client, fields.company, fields.region);
   if (typeof company === "string") return company;
-  const familyId = await resolveFamily(client, fields.family);
-  if (familyId === "invalid" || familyId === "save") return familyId;
   const { error } = await client.from("models").insert({
     id,
     openrouter_id: fields.openrouterId,
     name: fields.name,
     company_id: company.id,
-    family_id: familyId,
     size: fields.size,
     open_weights: false,
     reasoning: false,
@@ -155,7 +145,6 @@ export async function updateRosterModel(raw: {
   openrouterId?: string;
   name?: string;
   company?: string;
-  family?: string;
   region?: string;
   year?: string;
   size?: string;
@@ -174,13 +163,10 @@ export async function updateRosterModel(raw: {
   if (duplicate.data && duplicate.data.id !== id) return "duplicate";
   const company = await resolveCompany(client, fields.company, fields.region);
   if (typeof company === "string") return company;
-  const familyId = await resolveFamily(client, fields.family);
-  if (familyId === "invalid" || familyId === "save") return familyId;
   const patch: Record<string, unknown> = {
     openrouter_id: fields.openrouterId,
     name: fields.name,
     company_id: company.id,
-    family_id: familyId,
     size: fields.size,
     released_on: releasedOnForYear(current.data.released_on as string | null, fields.year),
     updated_at: new Date().toISOString(),
@@ -239,25 +225,6 @@ async function resolveCompany(client: SupabaseClient, name: string, region: Regi
     existing.region = region;
   }
   return existing;
-}
-
-async function resolveFamily(client: SupabaseClient, name: string): Promise<string | RosterNotice> {
-  const id = companyIdFromName(name);
-  if (!id) return "invalid";
-  const families = await loadFamilies(client);
-  if (!families) return "save";
-  const trimmed = name.trim();
-  const existing = families.find((family) => family.id === id || family.name.toLowerCase() === trimmed.toLowerCase());
-  if (existing) return existing.id;
-  const { error } = await client.from("families").insert({ id, name: trimmed, enabled: true });
-  if (error) return "save";
-  return id;
-}
-
-async function loadFamilies(client: SupabaseClient): Promise<NamedRow[] | null> {
-  const { data, error } = await client.from("families").select("id, name").order("name");
-  if (error) return null;
-  return (data ?? []).map((row) => ({ id: row.id as string, name: row.name as string }));
 }
 
 async function loadCompanies(client: SupabaseClient): Promise<CompanyRow[] | null> {

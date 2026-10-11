@@ -11,8 +11,8 @@ export type HomeCategory = {
   enabled: boolean;
 };
 
-const order = ["daily", "all", "company", "family", "region", "custom"];
-const hidden = new Set(["latest", "origin"]);
+const order = ["daily", "all", "company", "region", "custom"];
+const hidden = new Set(["latest", "origin", "family"]);
 
 const numberWords = [
   "Zero",

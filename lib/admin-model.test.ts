@@ -56,7 +56,6 @@ test("model fields reject a bad region or year", () => {
       openrouterId: "openai/gpt-5.6-luna",
       name: "GPT-5.6 Luna",
       company: "OpenAI",
-      family: "GPT",
       region: "USA",
       year: "2026",
       size: "small",
@@ -68,15 +67,14 @@ test("model fields reject a bad region or year", () => {
       openrouterId: "openai/gpt-5.6-luna",
       name: "GPT-5.6 Luna",
       company: "OpenAI",
-      family: "GPT",
       region: "USA",
       year: "2026",
       size: "small",
-    })?.family,
-    "GPT",
+    })?.company,
+    "OpenAI",
   );
   assert.equal(parseModelFields({ openrouterId: "openai/gpt-5.6-luna", name: "GPT", company: "OpenAI", region: "moon", year: "2026", size: "small" }), null);
-  assert.equal(parseModelFields({ openrouterId: "openai/gpt-5.6-luna", name: "GPT", company: "OpenAI", family: "G", region: "us", year: "2026", size: "small" }), null);
+  assert.equal(parseModelFields({ openrouterId: "openai/gpt-5.6-luna", name: "GPT", company: "O", region: "us", year: "2026", size: "small" }), null);
 });
 
 test("unknown notices stay blank", () => {

@@ -58,9 +58,9 @@ type PublicGame = {
 };
 ```
 
-`feedback` is null for the whole round when `noHint` is true, and on Origin. `given` is still sent. `candidates` is the filtered list: logo, company, and name only. The server removes models that contradict a known trait, and models already guessed, before it sends the list. The client does not receive family, region, year, size, weights, or reasoning, and it does not filter.
+`feedback` is null for the whole round when `noHint` is true, and on Origin. `given` is still sent. `candidates` is the filtered list: logo, company, and name only. The server removes models that contradict a known trait, and models already guessed, before it sends the list. The client does not receive region, year, size, weights, or reasoning, and it does not filter.
 
-Known traits are given values, bought hints, and matched company and region. Family is stored on the frozen model and on the guess row, and it is not sent as a hint, a given line, or a result fact. When hints are on, a company miss also removes every model from that company. A company hit leaves that company's other models. In no-hint mode, matches are stored on the guess row and do not become known, and a company miss removes nothing, so they do not narrow `candidates`.
+Known traits are given values, bought hints, and matched company and region. When hints are on, a company miss also removes every model from that company. A company hit leaves that company's other models. In no-hint mode, matches are stored on the guess row and do not become known, and a company miss removes nothing, so they do not narrow `candidates`.
 
 Do not tell the client which traits the highlighted row would hit. That preview would be the answer.
 
@@ -84,7 +84,6 @@ Do not tell the client which traits the highlighted row would hit. That preview 
 | `PATCH /api/admin/models/:id` | Admin, later. Including `enabled`. Trait edits apply to new games only |
 | `DELETE /api/admin/models/:id` | Admin, later. Rejected when a game references it |
 | `PATCH /api/admin/categories/:id` | Admin, later. Name, blurb, enabled, leaderboard, hints_allowed, sort |
-| `POST /api/admin/families` | Admin, later. Create, rename, enable, delete |
 | `POST /api/admin/companies` | Admin, later. `{ id, name, region }` plus a logo upload or a logo URL |
 | `POST /api/admin/logos` | Admin, later. Upload to Supabase Storage. The response is the path to store |
 
@@ -102,7 +101,7 @@ In one transaction:
 1. Reject if `profiles.username` is null (`422`, `username`). Reject if this user has a row with `status = 'active'` (`409`, `active_game`).
 2. Reject if they have 20 rows with `started_at` in the last hour (`429`, `hourly_cap`, body includes `nextAt`).
 3. For `daily`, reject a second `daily_key` of today (`409`, `daily_done`).
-4. Load the category and reject it unless `categories.enabled` (`404`). Build the pool. `all` and `daily` use every enabled model. `company` uses `poolKey` as a company id. `family` uses `poolKey` as a family id. `region` uses `poolKey` as `us`, `cn`, or `eu`. `custom` is not built yet. Reject a pool with fewer than 2 enabled models, except daily, which still rejects an empty roster. The error is `422` `pool_too_small`. `poolKey` is required for company, family, and region, and rejected for the others.
+4. Load the category and reject it unless `categories.enabled` (`404`). Build the pool. `all` and `daily` use every enabled model. `company` uses `poolKey` as a company id. `region` uses `poolKey` as `us`, `cn`, or `eu`. `custom` is not built yet. Reject a pool with fewer than 2 enabled models, except daily, which still rejects an empty roster. The error is `422` `pool_too_small`. `poolKey` is required for company and region, and rejected for the others.
 5. Draw a uniform model from that pool. Daily copies the model id, the `pool_model_ids`, and the trait snapshot already stored for today's `daily_key` when any player has started it. Otherwise draw once and that id, that roster, and those traits are what later rows copy. Two people starting the daily in the same instant must not draw two models: take a transaction-level lock on a single advisory key for the UTC date, then read-or-insert.
 6. Freeze traits from the current catalog into `games.traits`. Insert `games` with `pool_model_ids` set to that pool, `rules` copied from config, `rules.hintsAllowed` copied from `categories.hints_allowed`, `username` copied from the profile, `hints = '{}'`, `message_count = 0`, `awaiting_guess = false`, `no_hint` from the body. Origin stores `no_hint` false and `hintsAllowed` false. Do not write a score on insert.
 
@@ -132,7 +131,7 @@ Reject unless `awaiting_guess` is true. Lock the game row.
 
 The guessed model must be in the filtered candidate list built from `games.traits` and the known values. Anything else is `409` `conflict`. Do not write a guess. The turn stays open.
 
-Otherwise insert the guess row. The unique `(game_id, turn)` loses the race for the second request (`409` `turn`). Compare the guess to the frozen hidden model. A point trait that is given stays false in the score even if the boolean is true. Family is stored and pays nothing, and it is not shown. Set `awaiting_guess = false`.
+Otherwise insert the guess row. The unique `(game_id, turn)` loses the race for the second request (`409` `turn`). Compare the guess to the frozen hidden model. A point trait that is given stays false in the score even if the boolean is true. Set `awaiting_guess = false`.
 
 Pause does not block a guess, a hint, or a give-up. It blocks starting a round and calling the model.
 
@@ -144,7 +143,7 @@ If this was the last message and the model was not named, set `status = 'miss'` 
 
 Body: `{ key: "company" | "region" | "year" | "size" }`.
 
-Lock the game row. Reject when `no_hint`, when `rules.hintsAllowed` is false, when the round is not `active`, when the key is already in `hints`, when the key is not one of `company`, `region`, `year`, or `size`, when that trait is given, and when a guess already matched that company or region. Family is rejected. Append the key. The next `candidates` list drops models whose frozen value for that trait disagrees. Return `PublicGame`. The price (company 600, region 400, year 100, size 100) is not subtracted until the round ends. Hints are copied on only for Daily, All models, and Custom.
+Lock the game row. Reject when `no_hint`, when `rules.hintsAllowed` is false, when the round is not `active`, when the key is already in `hints`, when the key is not one of `company`, `region`, `year`, or `size`, when that trait is given, and when a guess already matched that company or region. Append the key. The next `candidates` list drops models whose frozen value for that trait disagrees. Return `PublicGame`. The price (company 600, region 400, year 100, size 100) is not subtracted until the round ends. Hints are copied on only for Daily, All models, and Custom.
 
 ### `POST /api/games/:id/give-up`
 

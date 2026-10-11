@@ -2,7 +2,7 @@
 
 One Supabase Postgres database. The catalog, the rounds, and the cost ledger are tables in it.
 
-The browser may read `companies`, `families`, and the view `models_public`. Those rows are the roster a player is allowed to see. `models_public` is `models` where `enabled` is true, and the columns are `id`, `name`, `company_id`, and `logo_path`. It omits `openrouter_id`, `provider_settings`, the two prices, `family_id`, `size`, `released_on`, `open_weights`, and `reasoning`. The guess list for a round does not come from this view. The server sends logo, company, and name for the models that are still legal. `classes` and `model_classes` are admin tables. The browser does not read them. The class game mode is not built.
+The browser may read `companies` and the view `models_public`. Those rows are the roster a player is allowed to see. `models_public` is `models` where `enabled` is true, and the columns are `id`, `name`, `company_id`, and `logo_path`. It omits `openrouter_id`, `provider_settings`, the two prices, `size`, `released_on`, `open_weights`, and `reasoning`. The guess list for a round does not come from this view. The server sends logo, company, and name for the models that are still legal. `classes` and `model_classes` are admin tables. The public statistics page reads class membership on the server. The browser does not read those tables. The class game mode is not built.
 
 The secret of an open round is `games.model_id`. The browser never queries `games`. Server routes use the secret key, which bypasses row level security. Row level security denies `anon` and `authenticated` on `games`, `messages`, `guesses`, and `usage`.
 
@@ -26,7 +26,7 @@ A failed call writes `usage` and does not write `messages`, because there is no 
 
 | Table | `anon` / `authenticated` | Service role |
 |---|---|---|
-| `companies`, `families`, `models_public`, `categories` where `enabled` | `select`. The table grant is required as well as the policy. A new Supabase project does not add it | write on the base tables |
+| `companies`, `models_public`, `categories` where `enabled` | `select`. The table grant is required as well as the policy. A new Supabase project does not add it | write on the base tables |
 | `classes`, `model_classes` | no privileges | read and write |
 | `profiles` | `select` own row. `update` own row only while `username` is null. A later rename goes through `set_username` | write |
 | `games`, `messages`, `guesses`, `usage` | no privileges | read and write |
@@ -49,18 +49,6 @@ A failed call writes `usage` and does not write `messages`, because there is no 
 | `created_at` | timestamptz | default `now()` |
 
 The uploaded objects are `anthropic.png`, `openai.png`, `deepseek.png`, and `mistral.png`. The bucket also accepts SVG and WebP, at most 1 MB. The game reads `logo_path`. A missing file shows no image. The bucket is public, so those URLs load. There is no SELECT policy, so clients cannot list the objects. Each object is cached for a year. The URL stays the same between visits.
-
-### `families`
-
-| Column | Type | Notes |
-|---|---|---|
-| `id` | text, pk | `opus`. Never changes. Past rounds store it inside `games.traits` |
-| `name` | text, unique | Display, editable |
-| `enabled` | boolean | False hides it from the family picker. Models keep the id |
-| `created_at` | timestamptz | |
-| `updated_at` | timestamptz | |
-
-The id is the stable key. Past rounds copy the display name into `games.traits`, so a rename does not rewrite them.
 
 ### `classes`
 
@@ -94,7 +82,6 @@ anon and authenticated cannot read or write these two tables. The server key doe
 | `openrouter_id` | text, unique | `anthropic/claude-sonnet-5.5` |
 | `name` | text | Claude Sonnet 5.5 |
 | `company_id` | text, fk | |
-| `family_id` | text, fk | |
 | `size` | text | `small`, `medium`, `large`. A hint. Not a point trait and not a category |
 | `open_weights` | boolean | Admin fact. Play does not read it |
 | `reasoning` | boolean | Admin fact. Play does not read it |
@@ -118,9 +105,9 @@ Region is not a column here. It comes from the company. The year hint uses `extr
 
 `enabled` is the on/off switch. Turning it off is how a model is removed from play. The row stays, so old rounds still resolve the name from `games.traits`. A hard delete is allowed only when no `games.model_id` points at it.
 
-Editing `company_id`, `family_id`, `size`, `released_on`, or the company region applies to new games only. A round already started keeps `games.traits`.
+Editing `company_id`, `size`, `released_on`, or the company region applies to new games only. A round already started keeps `games.traits`.
 
-anon and authenticated cannot insert, update, or delete `models`, `companies`, or `families`. The server key does that after the owner check. There is no public function for the private roster counts.
+anon and authenticated cannot insert, update, or delete `models` or `companies`. The server key does that after the owner check. There is no public function for the private roster counts.
 
 ### `categories`
 
@@ -128,12 +115,12 @@ The lobby and the leaderboard read this table. The built-in rows are seeded and 
 
 | Column | Type | Notes |
 |---|---|---|
-| `id` | text, pk | `daily`, `all`, `company`, `family`, `region`, `custom`. Never changes. `games.category` stores it |
+| `id` | text, pk | `daily`, `all`, `company`, `region`, `custom`. Never changes. `games.category` stores it |
 | `name` | text | Card title |
 | `blurb` | text | The one sentence on the main page and on the card |
 | `enabled` | boolean | False hides the lobby card. The main page still shows the blurb, with **Coming soon.** Past rounds stay |
-| `leaderboard` | boolean | True for `all` and `daily`. False for the others. A main family board can be turned on later |
-| `hints_allowed` | boolean | True only for `daily`, `all`, and `custom`. False for `company`, `family`, `region`, and every other row |
+| `leaderboard` | boolean | True for `all` and `daily`. False for the others. A class leaderboard is one board per class, and it is not built |
+| `hints_allowed` | boolean | True only for `daily`, `all`, and `custom`. False for `company`, `region`, and every other row |
 | `sort_order` | int | Main page and lobby order |
 | `created_at` | timestamptz | |
 
@@ -217,7 +204,7 @@ Indexes:
 }
 ```
 
-`hintsAllowed` is copied from `categories.hints_allowed` at start. The other fields are copied from config. Scoring reads the current config numbers when the round ends, so a stored copy from an older version does not change the score. `hints` may only contain `company`, `region`, `year`, and `size`, each once. The route checks that. Family is not a hint.
+`hintsAllowed` is copied from `categories.hints_allowed` at start. The other fields are copied from config. Scoring reads the current config numbers when the round ends, so a stored copy from an older version does not change the score. `hints` may only contain `company`, `region`, `year`, and `size`, each once. The route checks that.
 
 `traits` shape:
 
@@ -229,8 +216,6 @@ Indexes:
       "name": "Claude Sonnet 5.5",
       "companyId": "anthropic",
       "companyName": "Anthropic",
-      "familyId": "sonnet",
-      "familyName": "Sonnet",
       "region": "us",
       "size": "medium",
       "year": 2026,
@@ -272,7 +257,6 @@ One row per submitted guess, including the solve and a wrong fifth guess. Give-u
 | `guessed_region` | text, null | `us` / `cn` / `eu`. For a model guess, copy it from the frozen company |
 | `model_correct` | boolean | True when the named model is the hidden one |
 | `company_correct` | boolean | |
-| `family_correct` | boolean | Stored for feedback and for the later daily stat. Pays nothing |
 | `region_correct` | boolean | |
 | `created_at` | timestamptz | |
 
@@ -353,7 +337,6 @@ Right company, never named the model. "Found" means any guess in that round hit 
 ```sql
 select t.name as truth,
        count(distinct g.id) filter (where gs.company_correct) as company_found,
-       count(distinct g.id) filter (where gs.family_correct) as family_found,
        count(distinct g.id) as rounds
 from games g
 join models t on t.id = g.model_id

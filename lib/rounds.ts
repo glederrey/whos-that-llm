@@ -18,6 +18,7 @@ import {
   type PublicGame,
   type RecordedGuess,
   type ScoreLine,
+  type TraitKey,
   type Traits,
 } from "./game";
 import { logoPathForPlay, logoPublicUrl } from "./logos";
@@ -85,20 +86,17 @@ async function loadCatalog(client: SupabaseClient): Promise<CatalogModel[]> {
   const { data, error } = await client
     .from("models")
     .select(
-      "id, name, company_id, family_id, size, released_on, enabled, logo_path, openrouter_id, provider_settings, companies(name, region, logo_path), families(name)",
+      "id, name, company_id, size, released_on, enabled, logo_path, openrouter_id, provider_settings, companies(name, region, logo_path)",
     )
     .eq("enabled", true);
   if (error) throw new Error(error.message);
   return (data ?? []).map((row) => {
     const company = first(row.companies) as { name: string; region: FrozenModel["region"]; logo_path: string };
-    const family = first(row.families) as { name: string };
     return {
       id: row.id as string,
       name: row.name as string,
       companyId: row.company_id as string,
       companyName: company.name,
-      familyId: row.family_id as string,
-      familyName: family.name,
       region: company.region,
       size: row.size as FrozenModel["size"],
       year: new Date(`${row.released_on}T00:00:00Z`).getUTCFullYear(),
@@ -121,12 +119,25 @@ export function presentLogo(path: string, companyId: string): string {
   return logoPublicUrl(base, stored);
 }
 
+const keptTraits = new Set<TraitKey>(["company", "region", "year", "size"]);
+
 function presentTraits(traits: Traits): Traits {
   const models: Traits["models"] = {};
   for (const [id, model] of Object.entries(traits.models)) {
-    models[id] = { ...model, logoPath: presentLogo(model.logoPath, model.companyId) };
+    models[id] = {
+      name: model.name,
+      companyId: model.companyId,
+      companyName: model.companyName,
+      region: model.region,
+      size: model.size,
+      year: model.year,
+      logoPath: presentLogo(model.logoPath, model.companyId),
+    };
   }
-  return { given: traits.given, models };
+  return {
+    given: traits.given.filter((key): key is TraitKey => keptTraits.has(key as TraitKey)),
+    models,
+  };
 }
 
 export async function listCategories() {
@@ -207,7 +218,7 @@ async function loadGame(client: SupabaseClient, gameId: string, userId: string):
   const { data, error } = await client.from("games").select("*").eq("id", gameId).eq("user_id", userId).maybeSingle();
   if (error) throw new Error(error.message);
   const game = (data as GameRow | null) ?? null;
-  return game ? { ...game, rules: currentRules(game.rules), hints: playableHints(game.hints) } : null;
+  return game ? { ...game, traits: presentTraits(game.traits), rules: currentRules(game.rules), hints: playableHints(game.hints) } : null;
 }
 
 export async function readPublicGame(gameId: string, userId: string): Promise<PublicGame | null> {
@@ -218,7 +229,7 @@ export async function readPublicGame(gameId: string, userId: string): Promise<Pu
     client.from("messages").select("turn, role, content").eq("game_id", gameId).order("turn").order("role"),
     client
       .from("guesses")
-      .select("turn, guessed_model_id, model_correct, company_correct, family_correct, region_correct")
+      .select("turn, guessed_model_id, model_correct, company_correct, region_correct")
       .eq("game_id", gameId)
       .order("turn"),
   ]);
@@ -324,13 +335,12 @@ export async function submitGuess(gameId: string, userId: string, modelId: strin
 
   const { data: guesses } = await client
     .from("guesses")
-    .select("guessed_model_id, model_correct, company_correct, family_correct, region_correct")
+    .select("guessed_model_id, model_correct, company_correct, region_correct")
     .eq("game_id", gameId);
   const previous = (guesses ?? []).map((guess) => ({
     modelId: guess.guessed_model_id,
     modelCorrect: Boolean(guess.model_correct),
     companyCorrect: Boolean(guess.company_correct),
-    familyCorrect: Boolean(guess.family_correct),
     regionCorrect: Boolean(guess.region_correct),
   }));
   const guessedModelIds = previous
@@ -382,7 +392,6 @@ export async function submitGuess(gameId: string, userId: string, modelId: strin
       p_region: guessed.region,
       p_model_correct: flags.modelCorrect,
       p_company_correct: flags.companyCorrect,
-      p_family_correct: flags.familyCorrect,
       p_region_correct: flags.regionCorrect,
       p_finish: finish,
       p_score: score,
@@ -402,12 +411,11 @@ export async function buyHint(gameId: string, userId: string, key: string): Prom
   if (!hidden) return fail(409, "conflict");
   const { data: guesses } = await client
     .from("guesses")
-    .select("model_correct, company_correct, family_correct, region_correct")
+    .select("model_correct, company_correct, region_correct")
     .eq("game_id", gameId);
   const flags: GuessFlags[] = (guesses ?? []).map((guess) => ({
     modelCorrect: Boolean(guess.model_correct),
     companyCorrect: Boolean(guess.company_correct),
-    familyCorrect: Boolean(guess.family_correct),
     regionCorrect: Boolean(guess.region_correct),
   }));
   const offered = hintOffered({
@@ -438,7 +446,6 @@ export async function giveUp(gameId: string, userId: string): Promise<ApiFailure
     const flags: GuessFlags[] = (guesses ?? []).map((guess) => ({
       modelCorrect: Boolean(guess.model_correct),
       companyCorrect: Boolean(guess.company_correct),
-      familyCorrect: false,
       regionCorrect: Boolean(guess.region_correct),
     }));
     const scored = await scoreFrom(client, game, flags, false);
@@ -609,7 +616,6 @@ function recordedGuesses(
     guessed_model_id: string | null;
     model_correct: boolean;
     company_correct: boolean;
-    family_correct: boolean;
     region_correct: boolean;
   }[],
 ): RecordedGuess[] {
@@ -618,7 +624,6 @@ function recordedGuesses(
     modelId: guess.guessed_model_id,
     modelCorrect: Boolean(guess.model_correct),
     companyCorrect: Boolean(guess.company_correct),
-    familyCorrect: Boolean(guess.family_correct),
     regionCorrect: Boolean(guess.region_correct),
   }));
 }

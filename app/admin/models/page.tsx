@@ -16,7 +16,7 @@ export default async function ModelsPage({
 }) {
   const params = await searchParams;
   const notice = rosterNotice(params.notice);
-  const { rows, companies, families, classes } = await loadRoster();
+  const { rows, companies, classes } = await loadRoster();
   const query = (params.q ?? "").slice(0, 100);
   const found = searchRoster(rows, query);
   const active = pageOf(found.filter((row) => row.enabled), params.active);
@@ -40,7 +40,7 @@ export default async function ModelsPage({
           <div className="roster-form">
             <ModelFields classes={classes} />
           </div>
-          <p className="muted">A new model stays off until you turn it on. Type the family. A new name is added to the list.</p>
+          <p className="muted">A new model stays off until you turn it on. A new company name is added to the list.</p>
           <div>
             <button className="button" type="submit">
               Add model
@@ -49,7 +49,7 @@ export default async function ModelsPage({
         </form>
       </details>
       <form action="/admin/models" method="get" className="roster-search">
-          <input type="search" name="q" defaultValue={query} placeholder="Search by name, family, company, or class" aria-label="Search models" />
+          <input type="search" name="q" defaultValue={query} placeholder="Search by name, company, or class" aria-label="Search models" />
         <button className="button" type="submit">
           Search
         </button>
@@ -64,11 +64,6 @@ export default async function ModelsPage({
       <datalist id="roster-companies">
         {companies.map((company) => (
           <option key={company.id} value={company.name} />
-        ))}
-      </datalist>
-      <datalist id="roster-families">
-        {families.map((family) => (
-          <option key={family.id} value={family.name} />
         ))}
       </datalist>
     </div>
@@ -117,7 +112,6 @@ function RosterSection({
               <thead>
                 <tr>
                   <th>Name</th>
-                  <th>Family</th>
                   <th>Classes</th>
                   <th>Company</th>
                   <th>Region</th>
@@ -165,7 +159,6 @@ function ModelRow({ row, classes }: { row: RosterRow; classes: ClassRow[] }) {
   return (
     <tr className={row.enabled ? undefined : "is-off"}>
       <td>{row.name}</td>
-      <td>{row.familyName}</td>
       <td>{row.classNames || "—"}</td>
       <td>
         <span className="roster-company">
@@ -198,7 +191,6 @@ function ModelRow({ row, classes }: { row: RosterRow; classes: ClassRow[] }) {
                 openrouterId={row.openrouterId}
                 name={row.name}
                 company={row.companyName}
-                family={row.familyName}
                 region={row.region}
                 year={row.year}
                 size={row.size}
@@ -226,7 +218,6 @@ function ModelFields({
   openrouterId = "",
   name = "",
   company = "",
-  family = "",
   region = "us",
   year = "",
   size = "small",
@@ -236,7 +227,6 @@ function ModelFields({
   openrouterId?: string;
   name?: string;
   company?: string;
-  family?: string;
   region?: string;
   year?: string;
   size?: string;
@@ -256,10 +246,6 @@ function ModelFields({
       <label>
         Company
         <input name="company" defaultValue={company} list="roster-companies" required />
-      </label>
-      <label>
-        Family
-        <input name="family" defaultValue={family} list="roster-families" required />
       </label>
       <label>
         Region

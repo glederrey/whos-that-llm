@@ -23,6 +23,7 @@ function game(
     category: "all",
     size: "small",
     region: "us",
+    classIds: [],
     ...extra,
   };
 }
@@ -59,8 +60,9 @@ test("public stats keep outcomes and drop cost", () => {
       { id: "daily", name: "Daily" },
       { id: "all", name: "All models" },
       { id: "company", name: "Company" },
-      { id: "family", name: "Family" },
+      { id: "custom", name: "Custom" },
     ],
+    [],
     now,
   );
 
@@ -92,7 +94,7 @@ test("public stats keep outcomes and drop cost", () => {
 
   assert.deepEqual(
     stats.categories.map((row) => row.id),
-    ["daily", "all", "company", "family"],
+    ["daily", "all", "company", "custom"],
   );
   assert.equal(stats.categories[0].finished, 1);
   assert.equal(stats.categories[1].outcome?.solveRate, 2 / 3);
@@ -104,7 +106,7 @@ test("public stats keep outcomes and drop cost", () => {
 });
 
 test("an empty category list does not invent rows", () => {
-  const stats = computePublicStats([], [], [], [], now);
+  const stats = computePublicStats([], [], [], [], [], now);
   assert.equal(stats.outcome.solveRate, null);
   assert.equal(stats.outcome.tokensPerGame, null);
   assert.equal(stats.models.length, 0);
@@ -119,6 +121,7 @@ test("a finished category outside the list is still shown", () => {
     [],
     [],
     [{ id: "all", name: "All models" }],
+    [],
     now,
   );
   assert.deepEqual(
@@ -131,6 +134,36 @@ test("a finished category outside the list is still shown", () => {
   assert.equal(stats.sizes.find((row) => row.key === "unknown"), undefined);
 });
 
+test("a round counts in each class, and a model with no class adds no row", () => {
+  const stats = computePublicStats(
+    [
+      game("1", "opus", "solved", 2, { classIds: ["opus", "latest"] }),
+      game("2", "haiku", "miss", 4, { classIds: ["haiku"] }),
+      game("3", "luna", "solved", 1, { classIds: [] }),
+    ],
+    [],
+    [],
+    [],
+    [
+      { id: "empty", name: "Empty" },
+      { id: "opus", name: "Opus" },
+      { id: "latest", name: "Latest" },
+      { id: "haiku", name: "Haiku" },
+    ],
+    now,
+  );
+  assert.deepEqual(
+    stats.classes.map((row) => [row.name, row.games, row.solveRate]),
+    [
+      ["Empty", 0, null],
+      ["Haiku", 1, 0],
+      ["Latest", 1, 1],
+      ["Opus", 1, 1],
+    ],
+  );
+  assert.equal(stats.classes.some((row) => row.name === "luna" || row.key === "none"), false);
+});
+
 test("the public stats page does not read prices, billing, or account rows", () => {
   const loader = fs.readFileSync(path.join(root, "lib/public-stats-data.ts"), "utf8");
   const page = fs.readFileSync(path.join(root, "app/statistics/page.tsx"), "utf8");
@@ -141,6 +174,8 @@ test("the public stats page does not read prices, billing, or account rows", () 
   }
   assert.match(why, /Over time I think I could tell an Opus 4.5 from a 4.7 and a 4.8\. Like a wine\.\.\./);
   assert.match(page, /No finished games in this category yet/);
+  assert.match(page, /<h2>Class<\/h2>/);
+  assert.doesNotMatch(page, /<h2>Family<\/h2>/);
   assert.doesNotMatch(page, /How the rounds have gone/);
   assert.equal(page.includes("requireOwner"), false);
   assert.doesNotMatch(loader, /\.(?:eq|neq|not|filter|is|in|gt|gte|lt|lte)\(/);
