@@ -298,11 +298,14 @@ The landing top 5 is this board for All models, all time, five rows: rank, name,
 
 Public. No session. Linked from the header.
 
-- Heading: **Why this game?**
-- The friend's line, as said: **Over time I think I could tell an Opus 4.5 from a 4.7 and a 4.8. Like a wine...**
-- Gael wanted to see if people can tell models apart from a few messages.
-- He is a data scientist. Rounds gather which models get confused with which, including size and region. The aim is to share that later for research. **Statistics** links to `/statistics`.
-- **What is stored.** The site stores the username and the game data: messages, token counts, guesses, the model, and the rest of the round. It does not use other personal information. Sign-in goes through Supabase for security.
+First person. The words:
+
+- **A friend once told me:**
+- **Over time I think I could tell an Opus 4.5 from a 4.7 and a 4.8. Like a wine...**
+- **I laughed, and then I couldn't stop thinking about it. Can people actually tell models apart from just a few messages? Or do we only think we can?**
+- **I'm a data scientist, so my first instinct was to go and collect data. That's really what this game is for. Sure, it's fun to play, but every round also tells me something: which models get confused with each other, whether big models are easy to spot next to small ones, whether a model's origin shows through, and plenty of things I haven't thought of yet.**
+- **I plan to share this data openly for research later on. Until then, the statistics page shows what we've learned so far.** **statistics** links to `/statistics`.
+- Heading: **What I store.** **I keep your username and your game data: the messages, token counts, your guesses, which model you were talking to, and the other details of each round. That's it. I don't collect any other personal information. Sign in is handled by Supabase, so I never see or store your email or your password.**
 
 ## Statistics (`/statistics`)
 
