@@ -975,7 +975,7 @@ html[data-theme="dark"] .md a { color: var(--teal); }
 }
 .roster-actions summary::-webkit-details-marker { display: none; }
 .roster-actions details[open] summary { border-color: var(--teal); }
-.roster.models { min-width: 760px; }
+.roster.models { min-width: 980px; }
 .roster.models td, .roster.classes td { vertical-align: middle; }
 .roster.classes th:last-child, .roster.classes td:last-child { text-align: right; width: 1%; }
 .roster-buttons { display: flex; gap: 8px; align-items: center; justify-content: flex-end; flex-wrap: nowrap; }

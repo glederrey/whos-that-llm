@@ -6,6 +6,7 @@ import { rosterNotice } from "@/lib/admin-model";
 import { loadRoster, type ClassRow, type RosterRow } from "@/lib/admin-roster";
 import { pageOf, searchRoster } from "@/lib/roster-list";
 import { regionLabel, sizeLabel } from "@/lib/game";
+import { formatListPrice } from "@/lib/list-price";
 
 export const dynamic = "force-dynamic";
 
@@ -27,7 +28,8 @@ export default async function ModelsPage({
       <SectionNav />
       <h1>Models</h1>
       <p className="muted">
-        Turning a model off leaves it out of new rounds. Games already started keep the model they drew.
+        Turning a model off leaves it out of new rounds. Games already started keep the model they drew. Input and
+        output are the list price in dollars per 1 million tokens.
       </p>
       {notice ? (
         <p className="error" role="alert">
@@ -116,6 +118,8 @@ function RosterSection({
                   <th>Region</th>
                   <th>Year</th>
                   <th>Size</th>
+                  <th>Input</th>
+                  <th>Output</th>
                   <th>Classes</th>
                   <th></th>
                 </tr>
@@ -168,6 +172,8 @@ function ModelRow({ row, classes }: { row: RosterRow; classes: ClassRow[] }) {
       <td>{regionLabel(row.region)}</td>
       <td>{row.year || "—"}</td>
       <td>{sizeLabel(row.size)}</td>
+      <td>{formatListPrice(row.inputUsdPerMtok)}</td>
+      <td>{formatListPrice(row.outputUsdPerMtok)}</td>
       <td>{row.classNames || "—"}</td>
       <td>
         <div className="roster-buttons">

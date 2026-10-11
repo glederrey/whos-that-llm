@@ -13,6 +13,7 @@ import {
   type RosterNotice,
 } from "./admin-model";
 import type { Region, Size } from "./game";
+import { readListPrice } from "./list-price";
 import { companyLogoPath } from "./logos";
 import { countedPlayerId } from "./anonymize-account";
 import { presentLogo, serviceOrThrow } from "./rounds";
@@ -25,6 +26,8 @@ export type RosterRow = {
   region: Region;
   year: string;
   size: Size;
+  inputUsdPerMtok: number | null;
+  outputUsdPerMtok: number | null;
   enabled: boolean;
   logoUrl: string;
   classIds: string[];
@@ -69,7 +72,7 @@ export async function loadRoster(): Promise<{ rows: RosterRow[]; companies: Comp
   const [{ data, error }, companies, classes] = await Promise.all([
     client
       .from("models")
-      .select("id, openrouter_id, name, size, released_on, enabled, logo_path, company_id, companies(name, region, logo_path), model_classes(class_id)")
+      .select("id, openrouter_id, name, size, released_on, enabled, input_usd_per_mtok, output_usd_per_mtok, logo_path, company_id, companies(name, region, logo_path), model_classes(class_id)")
       .order("enabled", { ascending: false })
       .order("name"),
     loadCompanies(client),
@@ -89,6 +92,8 @@ export async function loadRoster(): Promise<{ rows: RosterRow[]; companies: Comp
       region: company?.region ?? "us",
       year: String(row.released_on ?? "").slice(0, 4),
       size: row.size as Size,
+      inputUsdPerMtok: readListPrice(row.input_usd_per_mtok),
+      outputUsdPerMtok: readListPrice(row.output_usd_per_mtok),
       enabled: Boolean(row.enabled),
       logoUrl: presentLogo((row.logo_path as string | null) || company?.logo_path || "", companyId),
       classIds,

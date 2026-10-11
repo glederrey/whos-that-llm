@@ -89,8 +89,8 @@ anon and authenticated cannot read or write these two tables. The server key doe
 | `released_on` | date | Required while `enabled`. The year hint reads the calendar year |
 | `enabled` | boolean | default false. False keeps the row and pulls the model out of every draw |
 | `logo_path` | text, null | Overrides the company logo. Storage path or `https` URL |
-| `input_usd_per_mtok` | numeric, null | List price, admin only |
-| `output_usd_per_mtok` | numeric, null | |
+| `input_usd_per_mtok` | numeric, null | Dollars per 1M input tokens. Admin only. OpenRouter's per-token price times 1,000,000. $1 or more rounds to a whole number. Under $1 keeps one decimal, or two when one decimal would be 0 |
+| `output_usd_per_mtok` | numeric, null | Dollars per 1M output tokens. Same rounding |
 | `updated_at` | timestamptz | The seed will not clobber a newer edit |
 
 Checks:
