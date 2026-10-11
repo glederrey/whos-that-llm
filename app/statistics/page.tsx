@@ -21,12 +21,6 @@ export default async function StatisticsPage() {
         Back
       </a>
       <h1>Statistics</h1>
-      <p className="lede">How the rounds have gone.</p>
-      <p className="muted">
-        Rates use finished games: solved, missed, and given up. A round still open is counted in the totals, and left out
-        of anything that would name its model. Tokens are prompt plus completion.
-      </p>
-
       <h2>Games</h2>
       <Figures items={gameFigures(stats.outcome)} />
 

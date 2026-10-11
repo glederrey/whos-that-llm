@@ -306,14 +306,14 @@ First person. The words:
 - **I'm a data scientist, so my first instinct was to collect data. That's really what this game is for. Sure, it's fun to play, but every round also tells me something: which models get confused with each other, whether big models are easy to spot next to small ones, whether a model's origin shows through, and plenty of things I haven't thought of yet.**
 - **I plan to share this data openly for research later on. Until then, the statistics page shows what the data says so far.** **statistics** links to `/statistics`.
 - Heading: **What I store.** **I keep your username and your game data: the messages, token counts, your guesses, which model you were talking to, and the other details of each round. That's it. I don't collect any other personal information. Sign in is handled by Supabase. Your email is stored there only so you can log in, and I never use it for anything else. I never see your password.**
-- **You can delete your account and all your data at any time from your profile.** **profile** links to `/profile`.
+- **You can delete your account at any time from your profile. Your name comes off the leaderboard. Finished games stay in the statistics without your name.** **profile** links to `/profile`.
 - Heading: **Who am I.** **I'm Gael, a data scientist based in Fribourg, Switzerland, with a PhD from EPFL.** His master thesis was about beer reviews. He built the game on his own time and pays for the API calls. A tip is optional. **Ko-fi** links to `tipUrl`. **LinkedIn** links to `https://www.linkedin.com/in/gael-lederrey`. **GitHub** links to `https://github.com/glederrey`.
 
 ## Statistics (`/statistics`)
 
-Public. No session. Linked from the header. Same shape as the admin stats page, without prices, spend, or OpenRouter billing.
+Public. No session. Linked from the header. Same shape as the admin stats page, without prices, spend, or OpenRouter billing. The heading is **Statistics**, then **Games**. There is no intro under the heading.
 
-Rates use finished games. A round still open is in the totals and stays out of any list that would name its model. A category with no finished games says **No finished games in this category yet.** It does not show a made-up rate. Categories come from the `categories` table, so a later category appears here with that empty state until it has a finished round.
+Rates use finished games. A round still open is in the totals and stays out of any list that would name its model. A game with no account still counts. A category with no finished games says **No finished games in this category yet.** It does not show a made-up rate. Categories come from the `categories` table, so a later category appears here with that empty state until it has a finished round.
 
 - Solve rate, give-ups, correct guesses, messages per game, tokens per game, region found
 - Games started per UTC day, last 14 days

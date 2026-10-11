@@ -38,7 +38,8 @@ export default function WhyPage() {
         else. I never see your password.
       </p>
       <p>
-        You can delete your account and all your data at any time from your <a href="/profile">profile</a>.
+        You can delete your account at any time from your <a href="/profile">profile</a>. Your name comes off the
+        leaderboard. Finished games stay in the statistics without your name.
       </p>
       <h2>Who am I</h2>
       <p>

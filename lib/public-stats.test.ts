@@ -141,5 +141,7 @@ test("the public stats page does not read prices, billing, or account rows", () 
   }
   assert.match(why, /Over time I think I could tell an Opus 4.5 from a 4.7 and a 4.8\. Like a wine\.\.\./);
   assert.match(page, /No finished games in this category yet/);
+  assert.doesNotMatch(page, /How the rounds have gone/);
   assert.equal(page.includes("requireOwner"), false);
+  assert.doesNotMatch(loader, /\.(?:eq|neq|not|filter|is|in|gt|gte|lt|lte)\(/);
 });
