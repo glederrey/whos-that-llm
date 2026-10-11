@@ -61,4 +61,5 @@ test("company is filled only when the org is one of ours", () => {
   assert.equal(blank.inputPrice, "");
   assert.equal(blank.outputPrice, "");
   assert.equal("size" in blank, false);
+  assert.equal("difficulty" in blank, false);
 });

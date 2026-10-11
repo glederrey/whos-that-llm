@@ -1,3 +1,4 @@
+import { difficultyLabel, type Difficulty } from "@/lib/difficulty";
 import { Avatar } from "./avatar";
 
 export type BoardRow = {
@@ -7,9 +8,11 @@ export type BoardRow = {
   mine?: boolean;
   avatarUrl?: string | null;
   seed?: string;
+  difficulty?: Difficulty | null;
+  noHint?: boolean;
 };
 
-export function BoardTable({ rows }: { rows: BoardRow[] }) {
+export function BoardTable({ rows, showDifficulty = false }: { rows: BoardRow[]; showDifficulty?: boolean }) {
   return (
     <div className="card board-card">
       <table className="board">
@@ -35,6 +38,10 @@ export function BoardTable({ rows }: { rows: BoardRow[] }) {
                   <span className="player">
                     <Avatar seed={row.seed || row.name} src={row.avatarUrl} size={28} />
                     <span>{row.name}</span>
+                    {showDifficulty && row.difficulty ? (
+                      <span className={`board-chip difficulty-${row.difficulty}`}>{difficultyLabel[row.difficulty]}</span>
+                    ) : null}
+                    {row.noHint ? <span className="board-chip no-hints">No hints</span> : null}
                     {row.mine ? <span className="you-tag">You</span> : null}
                   </span>
                 </td>

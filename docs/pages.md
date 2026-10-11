@@ -79,7 +79,7 @@ Two columns. On a narrow screen they stack.
 - Left: the logo, large.
 - Right: **Find the model.** Then: a hidden model answers you. You have ten messages. Name it when you want. Find it, and the round is yours. Miss the name, and the company and the region can still count.
 - Under the buttons: three counts. **Models in play** is the enabled roster. **Games today (UTC)** counts games whose `started_at` is on the current UTC day. **Players** is the number of distinct accounts that have started a game.
-- Under the counts: **Top 5 · All models**, all-time, columns rank, name, score. The name has that player's profile picture beside it. **Full leaderboard** opens `/leaderboard?category=all&period=all`.
+- Under the counts: **Top 5**, with the same bar as the full leaderboard. It shows that board's rows, stopped at 5. **Full leaderboard** opens `/leaderboard` with the same choice. Changing a control on either page is the same choice on the other.
 - Signed out: **Sign up** goes to `/login?tab=create&next=/play`. **Sign in** goes to `/login?next=/play`.
 - Signed in: **Play** goes to `/play`.
 - Under the buttons: **The leaderboard is open to everyone. An account is only for playing.** Scoring is the header link.
@@ -122,10 +122,10 @@ Requires a session. No session goes to `/login?next=/play`. No username goes to 
 
 - Daily block, later, and only when Daily is enabled: **Today's model is live.** Button **Play today's**. The name is absent. Disabled, with **The game is paused.**, when the game is paused. No session goes to `/login` and then into today's round. An open daily round shows **Continue**. A day already started, including a give-up, shows **You already played today's model.** and does not start another.
 - Weekly top 5, later: rank, name, and score from the All models board for the current week, limited to 5. If the week has no counted round: **No finished games this week.**
-- **Play** sits on the right of the category row. On a narrow screen it spans the row. All models starts the round. The other rows keep **Coming soon** on the right until they are built.
-- An open round turns that **Play** into **Continue**.
-- **Play** is disabled when the hour is full, the game is paused, or the All models pool has fewer than 2 models (**Not enough models.**).
-- Under the All models row, a full-width option, off by default: **Play without hints.** Beside it: **No hints. No match feedback. Score × 2.** It stays editable until Play.
+- All models opens. Coming soon modes stay closed: Daily, Class, Company, Region, and Custom keep the **Coming soon** badge and do not show an expand chevron. Inside an open mode, **Choose difficulty** lists Easy, Medium, Hard, and Impossible on one line each: the name, then the short line beside it, and the turned-on model count on the right. The colors match the leaderboard: Easy `#1c7c43`, Medium `#d4a017`, Hard `#c41b15`, Impossible `#a78bfa`, on the name and the left edge. Only All models can start a round. Custom has no difficulty: **The player chooses that pool.**
+- An open All models round shows **Continue** beside the row.
+- A difficulty is disabled when the hour is full, the game is paused, a round is already open, or that pool has fewer than 2 turned-on models.
+- Inside the open All models row, off by default: **Play without hints.** Beside it: **No hints. No match feedback.** On a normal-width page that is one line. On a phone, the checkbox and **Play without hints.** stay on the first line, and **No hints. No match feedback.** moves to the next line. It stays editable until a difficulty is chosen.
 
 Company and Region go to `/play/new?category=…` once they are built. Custom is a later choice of models. Hints can be on for that choice, and it has no leaderboard. Class is a card with **Coming soon.** The class game mode is not built. There is no Family card, no Latest card, and no Origin card.
 
@@ -270,9 +270,13 @@ Daily stats, later, on a daily result, once at least one daily round has finishe
 
 **Back** returns home. It is a text button with a chevron, larger than a footnote link.
 
-Tabs are the categories with a leaderboard that are enabled. That is All models, and Daily when it is open. Company, Region, and Custom are not tabs. A class leaderboard is one board per class, and it is not built.
+One bar. Game modes sit on the left, in play-page order: Daily, All models, Class, Company. Region and Custom are not on it. All models is the open mode. Daily, Class, and Company stay visible and grayed out, and they cannot be selected while those game modes are closed. A closed mode in the URL falls back to All models.
 
-A second switch: **This week** and **All time**. Weeks start Monday 00:00 UTC. The tab label says **This week (UTC)**.
+The middle is one slot, and it follows the selected mode. All models, and Daily once that mode is open, use the difficulty tabs: **Any difficulty**, **Easy**, **Medium**, **Hard**, and **Impossible**. Those tabs stay hidden while Daily is grayed out. Class uses a dropdown of every class, and that dropdown shows only when Class is selected. Company uses a dropdown of every company, and that dropdown shows only when Company is selected. With All models selected, the bar is the mode tabs, the difficulty tabs, and This week or All time. No class or company dropdown is visible.
+
+Any difficulty is a score from whichever difficulty was played. That board shows a difficulty chip on the row, in that difficulty's color. The other four do not. A round played with no hints has a **No hints** chip on every one of the five. The opening board is All models, Any difficulty, this week.
+
+**This week** and **All time** stay on the right when the three groups fit on one row. On a narrow screen they stack, full width, in this order: game modes, the middle control, then This week and All time. Each group's buttons share that row, so the leftover space is split evenly and the row is full. Weeks start Monday 00:00 UTC. The tab label says **This week (UTC)**.
 
 A counted round is `solved` or `miss`. Give-up does not appear. Rank is the best score, highest first. Ties break by fewer messages on that round, then by earlier finish. A score of 0 stays on the board.
 
@@ -286,11 +290,13 @@ Two players may share a username. They are separate rows, because the account id
 
 Row colors, on the leaderboard page and on the landing top 5. Rank 1 is gold, rank 2 is silver, rank 3 is bronze. The signed-in player's row is teal. If the signed-in player is rank 1, 2, or 3, the row keeps its gold, silver, or bronze. It is not replaced by teal. That row is marked with a teal ring and a **You** tag instead, so both facts show. On any other rank, the signed-in row is teal with the same ring and tag.
 
-Twenty rows per page. **Previous** and **Next** move the page. **Your place** appears when the signed-in player has a row and it is not on the current page. It opens the page that contains them.
+Twenty rows per page. **Previous** and **Next** move the page. On a phone those two buttons and the page count span the width of the board, with Previous on the left and Next on the right. **Your place** appears when the signed-in player has a row and it is not on the current page. It opens the page that contains them.
+
+The table is flush on a phone, the same as on a computer. The rows go to the edges of the card. There is no extra padding around them.
 
 Empty: **No finished games on this board yet.**
 
-The landing top 5 is this board for All models, all time, five rows: rank, name, score, with the same picture beside the name.
+The landing top 5 uses this same bar and the same rows, stopped at 5. Columns: rank, name, score, with the same picture beside the name.
 
 ## Why this game? (`/why`)
 
@@ -350,6 +356,6 @@ The copy says this removes the profile and picture, and the name on the leaderbo
 
 `/admin/modes` shows each game category, including one with zero games: games, open, finished, solved, solve rate, and give-ups. A class leaderboard is not a row here. The class game mode is not built.
 
-This build's admin pages are `/admin`, `/admin/costs`, `/admin/games`, `/admin/modes`, `/admin/models`, and `/admin/classes`. `/admin/models` has a closed **Add a model** dropdown, a search box (display name, company, class), and two tables: active models first, inactive second. Each lists display name, company, region, year, size, input price, output price, and classes, 10 per page with **Previous** and **Next**, paged on its own. Clicking a data header sorts both tables by that column, and clicking it again reverses the order. The turn-on and edit controls are not a sort column. Paging keeps the scroll position. **Turn on** is green. **Turn off** is red, and **Edit** sits next to it. **Reset** sits by the search box only while a search is active, and saving an edit stays on that search. Turning a model off leaves it out of new rounds. Add starts with an OpenRouter id. Looking it up fills the display name, the company when that org is one we already have, the release date, and the input and output prices. Size and classes stay empty until he fills them. He can change any filled value before saving. Edit those fields on a row, including the classes and the prices. A new model starts off. Past games keep the traits they froze. `/admin/classes` creates and edits a class: name, description, optional company, no logo. Company logos come from the `logos` bucket. Logo upload, categories, and scoring settings are not on these pages. The class game mode is not here.
+This build's admin pages are `/admin`, `/admin/costs`, `/admin/games`, `/admin/modes`, `/admin/models`, and `/admin/classes`. `/admin/models` has a closed **Add a model** dropdown, a search box (display name, company, class), and two tables: active models first, inactive second. Each lists display name, company, region, year, size, input price, output price, and classes, 10 per page with **Previous** and **Next**, paged on its own. Clicking a data header sorts both tables ascending. Clicking it again sorts descending. A third click clears the sort and returns the default order. Clicking a different column starts that column at ascending. The turn-on and edit controls are not a sort column. Paging keeps the scroll position. **On** is green. **Off** is red, and **Edit** sits next to it. **Reset** sits by the search box only while a search is active, and saving an edit stays on that search. Turning a model off leaves it out of new rounds. Add starts with an OpenRouter id. Looking it up fills the display name, the company when that org is one we already have, the release date, and the input and output prices. Size and classes stay empty until he fills them. He can change any filled value before saving. Edit those fields on a row, including the classes and the prices. A new model starts off. Past games keep the traits they froze. `/admin/classes` creates and edits a class: name, description, optional company, no logo. Company logos come from the `logos` bucket. Logo upload, categories, and scoring settings are not on these pages. The class game mode is not here.
 
 The later cockpit (the pause switch, categories, confusion, transcripts) is still specified in [Admin](admin.md).

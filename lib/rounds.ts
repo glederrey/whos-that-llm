@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { config, currentRules, rulesForCategory, type Rules } from "./config";
+import { difficulties, difficultyFromStored, difficultyNumber, inDifficultyPool, type BoardDifficulty, type Difficulty } from "./difficulty";
 import {
   buildTraits,
   compareModel,
@@ -41,6 +42,7 @@ type GameRow = {
   no_hint: boolean;
   rules: Rules;
   hints: HintKey[];
+  difficulty: number | string | null;
   message_count: number;
   awaiting_guess: boolean;
   score: number | null;
@@ -81,19 +83,23 @@ async function rpc(client: SupabaseClient, fn: string, args: Record<string, unkn
   return data as RpcResult;
 }
 
-type CatalogModel = FrozenModel & { id: string; openrouterId: string; providerSettings: unknown };
+type CatalogModel = FrozenModel & { id: string; openrouterId: string; providerSettings: unknown; difficulty: Difficulty };
 
-async function loadCatalog(client: SupabaseClient): Promise<CatalogModel[]> {
-  const { data, error } = await client
+async function loadCatalog(client: SupabaseClient, maxDifficulty?: Difficulty): Promise<CatalogModel[]> {
+  let query = client
     .from("models")
     .select(
-      "id, name, company_id, size, released_on, enabled, logo_path, openrouter_id, provider_settings, companies(name, region, logo_path)",
+      "id, name, company_id, size, released_on, enabled, difficulty, logo_path, openrouter_id, provider_settings, companies(name, region, logo_path)",
     )
     .eq("enabled", true);
+  if (maxDifficulty) query = query.lte("difficulty", difficultyNumber[maxDifficulty]);
+  const { data, error } = await query;
   if (error) throw new Error(error.message);
-  return (data ?? []).map((row) => {
+  return (data ?? []).flatMap((row) => {
+    const difficulty = difficultyFromStored(row.difficulty);
+    if (!difficulty) return [];
     const company = first(row.companies) as { name: string; region: FrozenModel["region"]; logo_path: string };
-    return {
+    return [{
       id: row.id as string,
       name: row.name as string,
       companyId: row.company_id as string,
@@ -104,8 +110,17 @@ async function loadCatalog(client: SupabaseClient): Promise<CatalogModel[]> {
       logoPath: presentLogo((row.logo_path as string | null) || company.logo_path, row.company_id as string),
       openrouterId: row.openrouter_id as string,
       providerSettings: row.provider_settings,
-    };
+      difficulty,
+    }];
   });
+}
+
+export function difficultyCounts(models: Array<{ difficulty: Difficulty }>): Record<Difficulty, number> {
+  const counts = { easy: 0, medium: 0, hard: 0, impossible: 0 };
+  for (const game of difficulties) {
+    counts[game] = models.filter((model) => inDifficultyPool(model.difficulty, game)).length;
+  }
+  return counts;
 }
 
 function first<T>(value: T | T[] | null): T {
@@ -151,6 +166,20 @@ export async function listCategories() {
   return data ?? [];
 }
 
+export async function listBoardOptions() {
+  const client = serviceOrThrow();
+  const [classes, companies] = await Promise.all([
+    client.from("classes").select("id, name").order("name"),
+    client.from("companies").select("id, name").order("name"),
+  ]);
+  if (classes.error) throw new Error(classes.error.message);
+  if (companies.error) throw new Error(companies.error.message);
+  return {
+    classes: (classes.data ?? []).map((row) => ({ id: row.id as string, name: row.name as string })),
+    companies: (companies.data ?? []).map((row) => ({ id: row.id as string, name: row.name as string })),
+  };
+}
+
 export async function lobbyState(userId: string) {
   const client = serviceOrThrow();
   const since = new Date(Date.now() - 60 * 60 * 1000).toISOString();
@@ -180,11 +209,16 @@ export async function lobbyState(userId: string) {
     cap: config.hourlyCap,
     activeGameId: (active?.id as string | undefined) ?? null,
     poolSize: catalog.length,
+    difficultyCounts: difficultyCounts(catalog),
     nextAt,
   };
 }
 
-export async function startAllModels(userId: string, noHint: boolean): Promise<{ gameId: string } | ApiFailure> {
+export async function startAllModels(
+  userId: string,
+  noHint: boolean,
+  difficulty: Difficulty,
+): Promise<{ gameId: string } | ApiFailure> {
   const client = serviceOrThrow();
   const { data: category, error } = await client
     .from("categories")
@@ -194,7 +228,7 @@ export async function startAllModels(userId: string, noHint: boolean): Promise<{
   if (error) throw new Error(error.message);
   if (!category?.enabled) return fail(404, "not_found");
 
-  const catalog = await loadCatalog(client);
+  const catalog = await loadCatalog(client, difficulty);
   if (catalog.length < 2) return fail(422, "pool_too_small");
   const drawn = catalog[Math.floor(Math.random() * catalog.length)];
   if (!drawn) return fail(422, "pool_too_small");
@@ -209,6 +243,7 @@ export async function startAllModels(userId: string, noHint: boolean): Promise<{
     p_pool_model_ids: catalog.map((model) => model.id),
     p_traits: traits,
     p_rules: rulesForCategory(Boolean(category.hints_allowed) && categoryAllowsHints(category.id)),
+    p_difficulty: difficultyNumber[difficulty],
   });
   const failure = fromRpc(result);
   if (failure) return failure;
@@ -242,6 +277,7 @@ export async function readPublicGame(gameId: string, userId: string): Promise<Pu
     id: game.id,
     category: game.category,
     poolKey: game.pool_key,
+    difficulty: difficultyFromStored(game.difficulty),
     noHint: game.no_hint,
     status: game.status,
     messageCount: game.message_count,
@@ -488,6 +524,7 @@ async function scoreFrom(client: SupabaseClient, game: GameRow, guesses: GuessFl
     noHint: game.no_hint,
     hints: game.hints ?? [],
     wrongGuesses: guesses.filter((guess) => !guess.modelCorrect).length,
+    difficulty: difficultyFromStored(game.difficulty),
   });
 }
 
@@ -498,6 +535,8 @@ export type BoardRow = {
   mine: boolean;
   avatarUrl: string | null;
   seed: string;
+  difficulty: Difficulty | null;
+  noHint: boolean;
 };
 
 type BoardEntry = {
@@ -507,6 +546,8 @@ type BoardEntry = {
   mine?: boolean;
   user_id?: string | null;
   avatar_path?: string | null;
+  difficulty?: number | string | null;
+  no_hint?: boolean | null;
 };
 
 function toBoardRow(entry: BoardEntry, mine: boolean): BoardRow {
@@ -518,10 +559,17 @@ function toBoardRow(entry: BoardEntry, mine: boolean): BoardRow {
     mine,
     avatarUrl: avatarPublicUrl(publicEnv()?.url ?? "", entry.avatar_path ?? null),
     seed: userId || entry.name,
+    difficulty: difficultyFromStored(entry.difficulty),
+    noHint: Boolean(entry.no_hint),
   };
 }
 
-export async function leaderboard(category: string, period: string, viewerId?: string | null) {
+export async function leaderboard(
+  category: string,
+  period: string,
+  viewerId?: string | null,
+  difficulty?: BoardDifficulty | null,
+) {
   const client = serviceOrThrow();
   const { data: row } = await client.from("categories").select("leaderboard").eq("id", category).maybeSingle();
   if (!row?.leaderboard) return fail(404, "not_found");
@@ -530,6 +578,7 @@ export async function leaderboard(category: string, period: string, viewerId?: s
     category,
     since,
     viewer: viewerId ?? null,
+    p_difficulty: difficulty && difficulty !== "any" ? difficultyNumber[difficulty] : null,
   });
   if (!fresh.error) {
     const rows = ((fresh.data ?? []) as BoardEntry[]).map((entry) => toBoardRow(entry, Boolean(entry.mine)));
@@ -569,12 +618,9 @@ async function markLegacyMine(
   );
 }
 
-export async function landingSnapshot(viewerId?: string | null) {
+export async function landingSnapshot() {
   const client = serviceOrThrow();
-  const stats = await readPublicStats(client);
-  const board = await leaderboard("all", "all", viewerId);
-  const top = "rows" in board ? board.rows.slice(0, 5) : [];
-  return { ...stats, top };
+  return readPublicStats(client);
 }
 
 async function readPublicStats(client: SupabaseClient) {

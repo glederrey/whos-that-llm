@@ -7,7 +7,8 @@ import { SectionNav } from "@/components/section-nav";
 import { saveModel, setModelEnabled } from "@/app/admin/actions";
 import { rosterNotice } from "@/lib/admin-model";
 import { loadRoster, type ClassRow, type RosterRow } from "@/lib/admin-roster";
-import { modelsReturnPath, pageOf, rosterSortOf, searchRoster, sortRoster, type RosterSort, type RosterSortColumn } from "@/lib/roster-list";
+import { modelsReturnPath, nextRosterSort, pageOf, rosterSortOf, searchRoster, sortRoster, type RosterSort, type RosterSortColumn } from "@/lib/roster-list";
+import { difficultyLabel } from "@/lib/difficulty";
 import { regionLabel, sizeLabel } from "@/lib/game";
 import { formatListPrice, formatPriceInput } from "@/lib/list-price";
 
@@ -45,12 +46,12 @@ export default async function ModelsPage({
         <AddModelForm classes={classes} query={query} sort={sort} activePage={active.page} inactivePage={inactive.page} />
       </details>
       <form action="/admin/models" method="get" className="roster-search">
-          {sort.column === "name" && sort.dir === "asc" ? null : (
+          {sort ? (
             <>
               <input type="hidden" name="sort" value={sort.column} />
               <input type="hidden" name="dir" value={sort.dir} />
             </>
-          )}
+          ) : null}
           <input type="search" name="q" defaultValue={query} placeholder="Search by name, company, or class" aria-label="Search models" />
         <button className="button" type="submit">
           Search
@@ -80,6 +81,7 @@ const sortLabels: Record<RosterSortColumn, string> = {
   region: "Region",
   year: "Year",
   size: "Size",
+  difficulty: "Difficulty",
   input: "Input",
   output: "Output",
   classes: "Classes",
@@ -88,8 +90,8 @@ const sortLabels: Record<RosterSortColumn, string> = {
 function modelsHref(state: { query: string; activePage: number; inactivePage: number; sort: RosterSort }) {
   return modelsReturnPath({
     q: state.query,
-    sort: state.sort.column,
-    dir: state.sort.dir,
+    sort: state.sort?.column,
+    dir: state.sort?.dir,
     active: state.activePage > 1 ? String(state.activePage) : "",
     inactive: state.inactivePage > 1 ? String(state.inactivePage) : "",
   });
@@ -126,7 +128,7 @@ function RosterSection({
       query,
       activePage: 1,
       inactivePage: 1,
-      sort: { column, dir: sort.column === column && sort.dir === "asc" ? "desc" : "asc" },
+      sort: nextRosterSort(sort, column),
     });
   return (
     <section className="stack">
@@ -140,7 +142,7 @@ function RosterSection({
               <thead>
                 <tr>
                   {(Object.keys(sortLabels) as RosterSortColumn[]).map((column) => {
-                    const active = sort.column === column;
+                    const active = sort?.column === column;
                     return (
                       <th key={column} aria-sort={active ? (sort.dir === "asc" ? "ascending" : "descending") : "none"}>
                         <Link href={sortHref(column)} scroll={false}>
@@ -223,6 +225,7 @@ function ModelRow({
       <td>{regionLabel(row.region)}</td>
       <td>{row.year || "—"}</td>
       <td>{sizeLabel(row.size)}</td>
+      <td>{row.difficulty ? difficultyLabel[row.difficulty] : "—"}</td>
       <td>{formatListPrice(row.inputUsdPerMtok)}</td>
       <td>{formatListPrice(row.outputUsdPerMtok)}</td>
       <td>{row.classNames || "—"}</td>
@@ -233,7 +236,7 @@ function ModelRow({
             <input type="hidden" name="id" value={row.id} />
             <input type="hidden" name="enabled" value={row.enabled ? "0" : "1"} />
             <button className={row.enabled ? "button-off" : "button-on"} type="submit">
-              {row.enabled ? "Turn off" : "Turn on"}
+              {row.enabled ? "Off" : "On"}
             </button>
           </form>
           <button className="button-quiet" type="button" popoverTarget={panel}>
@@ -253,6 +256,7 @@ function ModelRow({
                 region={row.region}
                 year={row.year}
                 size={row.size}
+                difficulty={row.difficulty ?? ""}
                 inputPrice={formatPriceInput(row.inputUsdPerMtok)}
                 outputPrice={formatPriceInput(row.outputUsdPerMtok)}
                 classes={classes}

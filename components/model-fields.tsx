@@ -1,3 +1,5 @@
+import { difficulties, difficultyLabel, type Difficulty } from "@/lib/difficulty";
+
 export type ModelFieldClass = { id: string; name: string };
 
 export function ModelFields({
@@ -8,6 +10,7 @@ export function ModelFields({
   year = "",
   releasedOn,
   size = "small",
+  difficulty = "",
   inputPrice = "",
   outputPrice = "",
   classes = [],
@@ -21,6 +24,7 @@ export function ModelFields({
   year?: string;
   releasedOn?: string;
   size?: string;
+  difficulty?: Difficulty | "";
   inputPrice?: string;
   outputPrice?: string;
   classes?: ModelFieldClass[];
@@ -72,6 +76,17 @@ export function ModelFields({
           <option value="medium">Medium</option>
           <option value="large">Large</option>
           <option value="xxl">XXL</option>
+        </select>
+      </label>
+      <label>
+        Difficulty
+        <select name="difficulty" defaultValue={difficulty} required>
+          {difficulty ? null : <option value="">Choose</option>}
+          {difficulties.map((item) => (
+            <option key={item} value={item}>
+              {difficultyLabel[item]}
+            </option>
+          ))}
         </select>
       </label>
       <label>

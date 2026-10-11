@@ -1,12 +1,13 @@
+import { difficultyNumber, type Difficulty } from "./difficulty";
 import { regionLabel, type Region, type Size } from "./game";
 
 export const rosterPageSize = 10;
 
-export const rosterSortColumns = ["name", "company", "region", "year", "size", "input", "output", "classes"] as const;
+export const rosterSortColumns = ["name", "company", "region", "year", "size", "difficulty", "input", "output", "classes"] as const;
 
 export type RosterSortColumn = (typeof rosterSortColumns)[number];
 
-export type RosterSort = { column: RosterSortColumn; dir: "asc" | "desc" };
+export type RosterSort = { column: RosterSortColumn; dir: "asc" | "desc" } | null;
 
 type Searchable = { name: string; companyName: string; classNames: string };
 
@@ -15,6 +16,7 @@ type Sortable = Searchable & {
   region: Region;
   year: string;
   size: Size;
+  difficulty: Difficulty | null;
   inputUsdPerMtok: number | null;
   outputUsdPerMtok: number | null;
 };
@@ -22,11 +24,19 @@ type Sortable = Searchable & {
 const sizeRank: Record<Size, number> = { nano: 0, small: 1, medium: 2, large: 3, xxl: 4 };
 
 export function rosterSortOf(sort: unknown, dir: unknown): RosterSort {
-  if (typeof sort !== "string" || !rosterSortColumns.includes(sort as RosterSortColumn)) return { column: "name", dir: "asc" };
+  if (typeof sort !== "string" || !rosterSortColumns.includes(sort as RosterSortColumn)) return null;
   return { column: sort as RosterSortColumn, dir: dir === "desc" ? "desc" : "asc" };
 }
 
+/** Ascending, then descending, then no sort. A different column starts at ascending. */
+export function nextRosterSort(current: RosterSort, column: RosterSortColumn): RosterSort {
+  if (!current || current.column !== column) return { column, dir: "asc" };
+  if (current.dir === "asc") return { column, dir: "desc" };
+  return null;
+}
+
 export function sortRoster<T extends Sortable>(rows: T[], sort: RosterSort): T[] {
+  if (!sort) return rows.slice();
   const sorted = rows.slice().sort((a, b) => compareRows(a, b, sort.column) || compareText(a.name, b.name) || a.id.localeCompare(b.id));
   return sort.dir === "desc" ? sorted.reverse() : sorted;
 }
@@ -37,6 +47,9 @@ function compareRows(a: Sortable, b: Sortable, column: RosterSortColumn): number
   if (column === "region") return compareText(regionLabel(a.region), regionLabel(b.region));
   if (column === "year") return compareMissingLast(yearNumber(a.year), yearNumber(b.year));
   if (column === "size") return sizeRank[a.size] - sizeRank[b.size];
+  if (column === "difficulty") {
+    return compareMissingLast(a.difficulty ? difficultyNumber[a.difficulty] : null, b.difficulty ? difficultyNumber[b.difficulty] : null);
+  }
   if (column === "input") return compareMissingLast(a.inputUsdPerMtok, b.inputUsdPerMtok);
   if (column === "output") return compareMissingLast(a.outputUsdPerMtok, b.outputUsdPerMtok);
   return compareTextMissingLast(a.classNames, b.classNames);
@@ -87,7 +100,7 @@ export function modelsReturnPath(raw: {
   const query = (raw.q ?? "").trim().slice(0, 100);
   if (query) params.set("q", query);
   const sort = rosterSortOf(raw.sort, raw.dir);
-  if (sort.column !== "name" || sort.dir !== "asc") {
+  if (sort) {
     params.set("sort", sort.column);
     params.set("dir", sort.dir);
   }

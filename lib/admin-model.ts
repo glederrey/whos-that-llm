@@ -1,9 +1,10 @@
+import { parseDifficulty, type Difficulty } from "./difficulty";
 import type { Region, Size } from "./game";
 
 export type RosterNotice = "invalid" | "duplicate" | "taken" | "year" | "reasoning" | "classes" | "save";
 
 const notices: Record<RosterNotice, string> = {
-  invalid: "Check the OpenRouter id, name, company, region, release date, size, and prices.",
+  invalid: "Check the OpenRouter id, name, company, region, release date, size, difficulty, and prices.",
   duplicate: "That OpenRouter id is already on a model.",
   taken: "That model is already in the roster.",
   year: "Add a year before turning this model on.",
@@ -114,6 +115,7 @@ export type ModelFields = {
   year: number;
   releasedOn: string | null;
   size: Size;
+  difficulty: Difficulty;
   inputUsdPerMtok: number | null;
   outputUsdPerMtok: number | null;
 };
@@ -126,6 +128,7 @@ export function parseModelFields(raw: {
   year?: string;
   releasedOn?: string;
   size?: string;
+  difficulty?: string;
   inputPrice?: string;
   outputPrice?: string;
 }): ModelFields | null {
@@ -140,10 +143,11 @@ export function parseModelFields(raw: {
   if (raw.releasedOn?.trim() && !releasedOn) return null;
   const year = releasedOn ? Number(releasedOn.slice(0, 4)) : parseYear(raw.year ?? "");
   const size = parseSize(raw.size ?? "");
+  const difficulty = parseDifficulty(raw.difficulty);
   const inputUsdPerMtok = parsePriceInput(raw.inputPrice);
   const outputUsdPerMtok = parsePriceInput(raw.outputPrice);
-  if (!region || year === null || !size || inputUsdPerMtok === undefined || outputUsdPerMtok === undefined) return null;
-  return { openrouterId, name, company, region, year, releasedOn, size, inputUsdPerMtok, outputUsdPerMtok };
+  if (!region || year === null || !size || !difficulty || inputUsdPerMtok === undefined || outputUsdPerMtok === undefined) return null;
+  return { openrouterId, name, company, region, year, releasedOn, size, difficulty, inputUsdPerMtok, outputUsdPerMtok };
 }
 
 export function rosterNotice(code: string | undefined): string | null {

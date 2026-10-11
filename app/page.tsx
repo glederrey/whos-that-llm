@@ -1,7 +1,10 @@
 import { redirect } from "next/navigation";
+import { BoardControls } from "@/components/board-controls";
 import { BoardTable } from "@/components/board-table";
 import { ResetPassword } from "@/components/reset-password";
-import { landingSnapshot } from "@/lib/rounds";
+import { anyDifficulty } from "@/lib/difficulty";
+import { boardChoice, boardHref, boardModes } from "@/lib/board-query";
+import { landingSnapshot, leaderboard, listBoardOptions, listCategories } from "@/lib/rounds";
 import { currentProfile } from "@/lib/session";
 
 export const dynamic = "force-dynamic";
@@ -9,7 +12,7 @@ export const dynamic = "force-dynamic";
 export default async function HomePage({
   searchParams,
 }: {
-  searchParams: Promise<{ reset?: string; error?: string }>;
+  searchParams: Promise<{ reset?: string; error?: string; category?: string; period?: string; difficulty?: string }>;
 }) {
   const params = await searchParams;
   if (params.error === "access_denied") redirect("/login?error=cancelled");
@@ -17,7 +20,11 @@ export default async function HomePage({
   const resetting = params.reset === "1";
   if (user && !username && !resetting) redirect("/welcome");
   const signedIn = Boolean(user && username);
-  const snapshot = await landingSnapshot(user?.id);
+  const [snapshot, categories, options] = await Promise.all([landingSnapshot(), listCategories(), listBoardOptions()]);
+  const modes = boardModes(categories);
+  const choice = boardChoice(params, modes);
+  const board = await leaderboard(choice.category, choice.period, user?.id, choice.difficulty);
+  const top = "rows" in board ? board.rows.slice(0, 5) : [];
 
   return (
     <div className="stack landing">
@@ -59,7 +66,7 @@ export default async function HomePage({
         <li>
           <span className="step-no">2</span>
           <strong>Guess when you want</strong>
-          <span>Name it, or stay in the chat. A guess is never forced.</span>
+          <span>Name it, or stay in the chat.</span>
         </li>
         <li>
           <span className="step-no">3</span>
@@ -83,13 +90,14 @@ export default async function HomePage({
       </dl>
       <section className="stack">
         <div className="section-head">
-          <h2>Top 5 · All models</h2>
-          <a href="/leaderboard?category=all&period=all">Full leaderboard</a>
+          <h2>Top 5</h2>
+          <a href={boardHref("/leaderboard", choice)}>Full leaderboard</a>
         </div>
-        {snapshot.top.length === 0 ? (
-          <div className="card empty">No finished games yet. Be the first on the board.</div>
+        <BoardControls base="/" modes={modes} classes={options.classes} companies={options.companies} {...choice} />
+        {top.length === 0 ? (
+          <div className="card empty">No finished games on this board yet.</div>
         ) : (
-          <BoardTable rows={snapshot.top} />
+          <BoardTable rows={top} showDifficulty={choice.difficulty === anyDifficulty} />
         )}
       </section>
     </div>

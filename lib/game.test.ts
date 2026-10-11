@@ -215,6 +215,34 @@ test("1,000 tokens or fewer is 10×, including 0", () => {
   assert.equal(scoreRound({ rules, ...none, namedModel: true, tokens: 1001 }).score, 19980);
 });
 
+test("difficulty multiplies after the token factor and the no-hint multiplier", () => {
+  const easy = scoreRound({ rules, ...none, namedModel: true, tokens: 500, difficulty: "easy" });
+  assert.equal(easy.score, 10000);
+  assert.equal(easy.breakdown.at(-1)?.label, "Difficulty · Easy");
+  assert.equal(easy.breakdown.at(-1)?.points, null);
+  assert.equal(easy.breakdown.at(-1)?.multiplier, "×0.5");
+  assert.match(easy.explanation.join("\n"), /Difficulty: Easy ×0\.5\./);
+  const medium = scoreRound({ rules, ...none, namedModel: true, tokens: 500, difficulty: "medium" });
+  assert.equal(medium.score, 20000);
+  assert.equal(medium.breakdown.at(-1)?.multiplier, "×1");
+  const hard = scoreRound({ rules, ...none, namedModel: true, tokens: 500, difficulty: "hard" });
+  assert.equal(hard.score, 40000);
+  assert.equal(hard.breakdown.at(-1)?.multiplier, "×2");
+  const stacked = scoreRound({ rules, ...none, namedModel: true, tokens: 500, noHint: true, difficulty: "impossible" });
+  assert.equal(stacked.score, 120000);
+  assert.deepEqual(
+    stacked.breakdown.slice(-3).map((line) => [line.label, line.points, line.multiplier]),
+    [
+      ["Tokens · 500 tokens", null, "×10"],
+      ["No-hint", null, "×2"],
+      ["Difficulty · Impossible", null, "×3"],
+    ],
+  );
+  const half = scoreRound({ rules, ...none, regionMatched: true, tokens: 16000, difficulty: "hard" });
+  assert.equal(half.score, 125);
+  assert.equal(scoreRound({ rules, ...none, namedModel: true, tokens: 500 }).breakdown.some((line) => line.label.startsWith("Difficulty")), false);
+});
+
 test("the total rounds half up once, after both multipliers", () => {
   assert.equal(scoreRound({ rules, ...none, regionMatched: true, tokens: 16000 }).score, 63);
   assert.equal(scoreRound({ rules, ...none, regionMatched: true, tokens: 15000 }).score, 67);

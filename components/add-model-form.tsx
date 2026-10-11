@@ -47,7 +47,7 @@ export function AddModelForm({
         setNote("OpenRouter has no model with that id. Fill in the form.");
       } else {
         setDraft(result.draft);
-        setNote("Size and classes stay blank. Change anything before you save.");
+        setNote("Size, difficulty, and classes stay blank. OpenRouter does not set the difficulty. Change anything before you save.");
       }
       setLookupKey((current) => current + 1);
     } finally {
