@@ -644,26 +644,30 @@ html[data-theme="dark"] {
 .tabs { display: flex; gap: 8px; flex-wrap: wrap; }
 .filters { display: flex; gap: 12px 20px; flex-wrap: wrap; align-items: center; justify-content: space-between; }
 .board-controls {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
   align-items: center;
-  gap: 10px 16px;
 }
-.board-controls-modes { margin-right: auto; }
-.board-controls-period { margin-left: auto; }
+.board-controls-modes,
+.board-controls-middle,
+.board-controls-period { grid-area: 1 / 1; }
+.board-controls-modes { justify-self: start; }
 .board-controls-middle {
+  justify-self: center;
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  flex: 1 1 auto;
 }
-.board-controls .segmented { flex-wrap: wrap; }
+.board-controls-period { justify-self: end; }
+.board-controls .segmented { flex-wrap: nowrap; max-width: none; }
+.board-controls .segmented a,
+.board-controls .segmented span[aria-disabled="true"] {
+  white-space: nowrap;
+  padding: 7px 8px;
+}
 .board-controls .segmented span[aria-disabled="true"] {
   color: var(--mute);
   opacity: 0.45;
-  padding: 7px 14px;
   font-weight: 500;
   font-size: 14px;
   cursor: not-allowed;
@@ -671,7 +675,8 @@ html[data-theme="dark"] {
 .board-controls select {
   width: auto;
   min-width: 9rem;
-  padding: 7px 12px;
+  height: 40px;
+  padding: 0 12px;
   border-radius: 12px;
 }
 .board-controls select:disabled { opacity: 0.45; cursor: not-allowed; }
@@ -1091,7 +1096,14 @@ html[data-theme="dark"] .md a { color: var(--teal); }
 }
 .roster-actions summary::-webkit-details-marker { display: none; }
 .roster-actions details[open] summary { border-color: var(--teal); }
-.roster.models { min-width: 980px; }
+.roster.models { width: 100%; min-width: 0; }
+.roster.models th,
+.roster.models td { padding: 10px 8px; }
+.roster.models th:last-child,
+.roster.models td:last-child { white-space: nowrap; }
+.roster.models .button-on,
+.roster.models .button-off,
+.roster.models .button-quiet { padding: 6px 10px; }
 .roster.models td, .roster.classes td { vertical-align: middle; }
 .roster.classes th:last-child, .roster.classes td:last-child { text-align: right; width: 1%; }
 .roster-buttons { display: flex; gap: 8px; align-items: center; justify-content: flex-end; flex-wrap: nowrap; }
