@@ -1356,7 +1356,8 @@ html[data-theme="dark"] .history-facts .board-chip.no-hints {
     text-align: center;
   }
   .header, .page, .footer-inner { width: calc(100% - 24px); }
-  .page:has(.auth-screen) { flex: 1 0 auto; display: flex; flex-direction: column; padding-top: 0; padding-bottom: 0; }
+  /* 12px matches the header's bottom padding, so the open space above the card matches the space above the footer. */
+  .page:has(.auth-screen) { flex: 1 0 auto; display: flex; flex-direction: column; padding-top: 0; padding-bottom: 12px; }
   .auth-screen { margin-top: auto; margin-bottom: auto; }
   .page:has(.auth-screen) + .footer { margin-top: 0; }
   .header { padding-top: 14px; column-gap: 8px; row-gap: 0; min-height: 64px; flex-wrap: nowrap; align-items: center; }
