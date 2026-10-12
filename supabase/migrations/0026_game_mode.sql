@@ -6,7 +6,9 @@ alter table public.categories rename to game_modes;
 alter table public.games rename column category to game_mode;
 alter policy categories_read on public.game_modes rename to game_modes_read;
 
-create or replace function public.leaderboard(game_mode text, since timestamptz, viewer uuid default null, p_difficulty smallint default null)
+drop function if exists public.leaderboard(text, timestamptz, uuid, smallint);
+
+create function public.leaderboard(game_mode text, since timestamptz, viewer uuid default null, p_difficulty smallint default null)
 returns table (rank bigint, name text, score int, mine boolean, user_id uuid, avatar_path text, difficulty smallint, no_hint boolean)
 language sql
 stable
@@ -54,7 +56,11 @@ as $$
   order by best.score desc, best.message_count asc, best.finished_at asc, best.username;
 $$;
 
-create or replace function public.start_game(
+grant execute on function public.leaderboard(text, timestamptz, uuid, smallint) to anon, authenticated, service_role;
+
+drop function if exists public.start_game(uuid, int, text, text, boolean, text, text[], jsonb, jsonb, smallint);
+
+create function public.start_game(
   p_user_id uuid,
   p_hourly_cap int,
   p_game_mode text,
@@ -139,3 +145,6 @@ begin
   return jsonb_build_object('ok', true, 'gameId', new_id);
 end;
 $$;
+
+revoke all on function public.start_game(uuid, int, text, text, boolean, text, text[], jsonb, jsonb, smallint) from public, anon, authenticated;
+grant execute on function public.start_game(uuid, int, text, text, boolean, text, text[], jsonb, jsonb, smallint) to service_role;
