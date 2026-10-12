@@ -72,6 +72,7 @@ test("a met rule turns green and an unmet rule stays grey", () => {
   assert.match(block, /\.must-contain ul \{[^}]*padding-left: 16px[^}]*grid-template-columns: 1fr 1fr/);
   assert.match(block, /\.must-contain li:nth-child\(3\) \{ grid-column: 2; grid-row: 1 \/ 3; align-self: center; \}/);
   assert.match(block, /\.must-contain li:nth-child\(5\) \{ grid-column: 2; grid-row: 2 \/ 4; align-self: center; \}/);
+  assert.match(block, /@media \(max-width: 560px\) \{\s*\.must-contain ul \{ padding-left: 0; \}/);
   assert.equal(css.includes(".strength"), false);
   assert.equal(passwordRulesText, "At least 8 characters, a lowercase letter, an uppercase letter, a digit, and a symbol.");
 });

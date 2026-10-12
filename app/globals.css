@@ -419,6 +419,9 @@ textarea { min-height: 76px; resize: vertical; }
 .must-contain li[data-met="true"] { color: #0b6b2e; font-family: var(--font-bold), var(--font), "Segoe UI", sans-serif; font-weight: 700; }
 html[data-theme="dark"] .must-contain li[data-met="true"] { color: #4cce7a; font-family: var(--font-bold), var(--font), "Segoe UI", sans-serif; font-weight: 700; }
 .must-contain svg { width: 14px; height: 14px; flex: none; }
+@media (max-width: 560px) {
+  .must-contain ul { padding-left: 0; }
+}
 .sr-only {
   position: absolute;
   width: 1px;
