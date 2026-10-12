@@ -1250,6 +1250,26 @@ html[data-theme="dark"] .history-facts .board-chip.no-hints {
 .roster th a:hover,
 .roster th[aria-sort="ascending"] a,
 .roster th[aria-sort="descending"] a { color: var(--text); }
+.roster th:has(> button.roster-sort) { padding: 0; }
+.roster th button.roster-sort {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 12px 14px;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  text-align: left;
+  text-transform: inherit;
+  cursor: pointer;
+}
+.roster th.group button.roster-sort { text-align: center; }
+.roster th button.roster-sort:hover,
+.roster th[aria-sort="ascending"] button.roster-sort,
+.roster th[aria-sort="descending"] button.roster-sort { color: var(--text); }
 .roster td { text-align: left; padding: 12px 14px; border-top: 1px solid var(--line); vertical-align: top; }
 .roster tr.is-off td { color: var(--mute); }
 .roster-company { display: inline-flex; align-items: center; gap: 10px; }

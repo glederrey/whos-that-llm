@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import type { ActivityPeriod } from "./openrouter-usage";
-import { nextSpendSort, sortSpendRows, spendHref, spendRows, spendSortOf, type SpendRow } from "./spend-table";
+import { nextSpendSort, sortSpendRows, spendRows, spendSortOf, type SpendRow } from "./spend-table";
 
 function period(models: ActivityPeriod["models"]): ActivityPeriod {
   return {
@@ -27,8 +27,6 @@ test("a spend column cycles through ascending, descending, and the original orde
   assert.deepEqual(nextSpendSort({ column: "paid30", dir: "desc" }, "model"), { column: "model", dir: "asc" });
   assert.equal(spendSortOf("buttons", "desc"), null);
   assert.deepEqual(spendSortOf("requests7", "desc"), { column: "requests7", dir: "desc" });
-  assert.equal(spendHref(null), "/admin/costs");
-  assert.equal(spendHref({ column: "tokens30", dir: "asc" }), "/admin/costs?sort=tokens30&dir=asc");
 });
 
 test("sorting moves model rows and leaves the original order for the third click", () => {

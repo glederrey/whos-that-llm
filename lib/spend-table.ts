@@ -72,8 +72,3 @@ export function sortSpendRows(rows: SpendRow[], sort: SpendSort): SpendRow[] {
     .map((item) => item.row);
   return sort.dir === "desc" ? sorted.reverse() : sorted;
 }
-
-export function spendHref(sort: SpendSort): string {
-  if (!sort) return "/admin/costs";
-  return `/admin/costs?${new URLSearchParams({ sort: sort.column, dir: sort.dir })}`;
-}

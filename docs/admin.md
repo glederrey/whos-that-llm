@@ -19,8 +19,8 @@ A subnav sits on every one of those pages: **Stats, Costs, Games, Modes, Models,
 `/admin/costs` is the money page.
 
 - **OpenRouter spend**, read from OpenRouter on every load with `OPENROUTER_API_KEY` (a runtime variable, never baked at build time). `GET /api/v1/key` gives what that key has paid all time. `GET /api/v1/activity` gives requests, tokens, and spend per model for completed UTC days, and `POST /api/v1/analytics/query` adds the current UTC day, which activity leaves out. Last 30 days and last 7 days are those same rows, so a charge from today is in both windows and in the table. Clicking a column title sorts the model rows ascending, then descending, then back to the original order. All models stays the summary row. OpenRouter only serves activity to a management key and covers the whole account, so set `OPENROUTER_MANAGEMENT_KEY` if the game key is not one. The key total and the per-model section fail on their own: the page says so in that section and still renders the rest.
-- **Our ledger**: cost per game, cost per solved game, ledger spend, and failed calls. Tokens and cost are the `usage` rows saved from each OpenRouter reply. This is not the OpenRouter bill above it.
-- **Spend by hidden model**: requests, tokens, cost, and cost per game, highest cost first.
+- **Our ledger**: cost per game, ledger spend, and failed calls. Tokens and cost are the `usage` rows saved from each OpenRouter reply. This is not the OpenRouter bill above it.
+- **Spend by hidden model**: the model that was the answer in the game. The name is shown on this page. Requests, tokens, cost, and cost per game, from our ledger, all time, highest cost first.
 
 `/admin/games` is play, without money columns: solve rate, give-ups, correct guesses, messages, tokens, games started per UTC day for 14 days, and which models are hardest to find (games, solve rate, messages when solved).
 

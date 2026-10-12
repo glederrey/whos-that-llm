@@ -5,18 +5,11 @@ import { compact, usd } from "@/lib/admin-metrics";
 import { loadRoster } from "@/lib/admin-roster";
 import { loadGameMetrics } from "@/lib/admin-stats";
 import { loadOpenRouterSpend } from "@/lib/openrouter-spend";
-import { spendSortOf } from "@/lib/spend-table";
 
 export const dynamic = "force-dynamic";
 
-export default async function CostsPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ sort?: string; dir?: string }>;
-}) {
+export default async function CostsPage() {
   await requireOwner();
-  const params = await searchParams;
-  const sort = spendSortOf(params.sort, params.dir);
   const rosterPromise = loadRoster();
   const metricsPromise = loadGameMetrics();
   const roster = await rosterPromise;
@@ -38,14 +31,16 @@ export default async function CostsPage({
         What OpenRouter billed, read from OpenRouter when this page loads. Paid all time is this API key. Last 30 days
         and last 7 days include the current UTC day, and the table counts those same charges.
       </p>
-      <Spend spend={spend} nameFor={(slug) => byOpenRouterId.get(slug) ?? byId.get(slug) ?? slug} sort={sort} />
+      <Spend spend={spend} nameFor={(slug) => byOpenRouterId.get(slug) ?? byId.get(slug) ?? slug} />
 
       <h2>Our ledger</h2>
       <p className="muted">Cost and tokens saved from each OpenRouter reply. This is not the OpenRouter bill above.</p>
       <Figures items={costFigures(metrics)} />
 
       <h2>Spend by hidden model</h2>
-      <p className="muted">All time, from our ledger, highest cost first.</p>
+      <p className="muted">
+        The model that was the answer in the game. The name is shown here. All time, from our ledger, highest cost first.
+      </p>
       <div className="card roster-card">
         <table className="roster compact">
           <thead>

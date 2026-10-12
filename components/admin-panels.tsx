@@ -1,8 +1,8 @@
-import Link from "next/link";
 import { compact, decimal, percent, usd, type GameMetrics } from "@/lib/admin-metrics";
 import type { OpenRouterSpend } from "@/lib/openrouter-spend";
 import type { ActivityPeriod } from "@/lib/openrouter-usage";
-import { nextSpendSort, periodSide, sortSpendRows, spendHref, spendRows, type SpendSide, type SpendSort, type SpendSortColumn } from "@/lib/spend-table";
+import { SpendActivityTable } from "@/components/spend-activity-table";
+import { periodSide, spendRows } from "@/lib/spend-table";
 
 export type Figure = { label: string; value: string; note?: string };
 
@@ -51,11 +51,6 @@ export function costFigures(metrics: GameMetrics): Figure[] {
   return [
     { label: "Cost per game", value: usd(metrics.costPerGame), note: "Finished games" },
     {
-      label: "Cost per solved game",
-      value: usd(metrics.costPerSolvedGame),
-      note: "Spend on finished games over solved games",
-    },
-    {
       label: "Ledger spend",
       value: usd(metrics.ledgerCostUsd),
       note: `${metrics.ledgerRequests.toLocaleString("en-US")} requests, ${compact(metrics.ledgerTokens)} tokens`,
@@ -68,15 +63,7 @@ export function costFigures(metrics: GameMetrics): Figure[] {
   ];
 }
 
-export function Spend({
-  spend,
-  nameFor,
-  sort,
-}: {
-  spend: OpenRouterSpend;
-  nameFor: (slug: string) => string;
-  sort: SpendSort;
-}) {
+export function Spend({ spend, nameFor }: { spend: OpenRouterSpend; nameFor: (slug: string) => string }) {
   const { totals, activity } = spend;
   const figures: Figure[] = [];
   if (totals.ok) {
@@ -98,7 +85,11 @@ export function Spend({
       )}
       {figures.length > 0 ? <Figures items={figures} /> : null}
       {activity.ok ? (
-        <ActivityTable week={activity.value.week} month={activity.value.month} nameFor={nameFor} sort={sort} />
+        <SpendActivityTable
+          rows={spendRows(activity.value.week, activity.value.month, nameFor)}
+          week={periodSide(activity.value.week)}
+          month={periodSide(activity.value.month)}
+        />
       ) : (
         <p className="error" role="alert">
           OpenRouter per-model usage could not be loaded. {activity.error}
@@ -110,112 +101,6 @@ export function Spend({
 
 function periodNote(period: ActivityPeriod): string {
   return `${period.requests.toLocaleString("en-US")} requests, ${compact(period.promptTokens + period.completionTokens)} tokens`;
-}
-
-const metricColumns: { column: SpendSortColumn; label: string; hint: string }[] = [
-  { column: "paid7", label: "Paid", hint: "Last 7 days" },
-  { column: "requests7", label: "Requests", hint: "Last 7 days" },
-  { column: "tokens7", label: "Tokens", hint: "Last 7 days" },
-  { column: "paid30", label: "Paid", hint: "Last 30 days" },
-  { column: "requests30", label: "Requests", hint: "Last 30 days" },
-  { column: "tokens30", label: "Tokens", hint: "Last 30 days" },
-];
-
-function ActivityTable({
-  week,
-  month,
-  nameFor,
-  sort,
-}: {
-  week: ActivityPeriod;
-  month: ActivityPeriod;
-  nameFor: (slug: string) => string;
-  sort: SpendSort;
-}) {
-  const rows = sortSpendRows(spendRows(week, month, nameFor), sort);
-  return (
-    <div className="card roster-card">
-      <table className="roster compact">
-        <thead>
-          <tr>
-            <SortHeader column="model" label="Model" sort={sort} rowSpan={2} />
-            <th colSpan={3} className="group">
-              Last 7 days
-            </th>
-            <th colSpan={3} className="group">
-              Last 30 days
-            </th>
-          </tr>
-          <tr>
-            {metricColumns.map((column) => (
-              <SortHeader key={column.column} column={column.column} label={column.label} hint={column.hint} sort={sort} />
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {rows.length === 0 ? (
-            <tr>
-              <td colSpan={7} className="muted">
-                No OpenRouter activity in the last 30 days.
-              </td>
-            </tr>
-          ) : (
-            <>
-              <tr className="total-row">
-                <td>All models</td>
-                <Cells row={periodSide(week)} />
-                <Cells row={periodSide(month)} />
-              </tr>
-              {rows.map((row) => (
-                <tr key={row.slug}>
-                  <td title={row.slug}>{row.name}</td>
-                  <Cells row={row.week} />
-                  <Cells row={row.month} />
-                </tr>
-              ))}
-            </>
-          )}
-        </tbody>
-      </table>
-    </div>
-  );
-}
-
-function SortHeader({
-  column,
-  label,
-  hint,
-  sort,
-  rowSpan,
-}: {
-  column: SpendSortColumn;
-  label: string;
-  hint?: string;
-  sort: SpendSort;
-  rowSpan?: number;
-}) {
-  const active = sort?.column === column;
-  return (
-    <th rowSpan={rowSpan} aria-sort={active ? (sort.dir === "asc" ? "ascending" : "descending") : "none"}>
-      <Link href={spendHref(nextSpendSort(sort, column))} scroll={false}>
-        {hint ? <span className="sr-only">{hint} </span> : null}
-        {label}
-        {active ? (sort.dir === "asc" ? " ↑" : " ↓") : ""}
-      </Link>
-    </th>
-  );
-}
-
-function Cells({ row }: { row: SpendSide }) {
-  return (
-    <>
-      <td>{usd(row.usd)}</td>
-      <td>{row.requests.toLocaleString("en-US")}</td>
-      <td title={`${row.promptTokens.toLocaleString("en-US")} in, ${row.completionTokens.toLocaleString("en-US")} out`}>
-        {compact(row.promptTokens + row.completionTokens)}
-      </td>
-    </>
-  );
 }
 
 export function DayBars({ days }: { days: GameMetrics["days"] }) {
