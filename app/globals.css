@@ -407,9 +407,9 @@ textarea { min-height: 76px; resize: vertical; }
 }
 .password-eye:hover { background: var(--soft); color: var(--text); }
 .password-eye svg { width: 18px; height: 18px; }
-.must-contain { display: grid; gap: 6px; font-size: 13px; font-weight: 400; color: var(--mute); padding-left: 16px; }
+.must-contain { display: grid; gap: 6px; font-size: 13px; font-weight: 400; color: var(--mute); }
 .must-contain p { font-weight: 500; color: var(--text); }
-.must-contain ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 3px; }
+.must-contain ul { list-style: none; margin: 0; padding: 0; padding-left: 16px; display: grid; gap: 3px; }
 .must-contain li { display: flex; align-items: center; gap: 8px; color: var(--mute); transition: color 0.15s ease; }
 .must-contain li[data-met="true"] { color: #0b6b2e; font-family: var(--font-bold), var(--font), "Segoe UI", sans-serif; font-weight: 700; }
 html[data-theme="dark"] .must-contain li[data-met="true"] { color: #4cce7a; font-family: var(--font-bold), var(--font), "Segoe UI", sans-serif; font-weight: 700; }

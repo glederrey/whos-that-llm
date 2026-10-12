@@ -1,9 +1,13 @@
+// Same symbols Supabase accepts for its strongest password rule.
+// Letters such as à are not in that set.
+const symbols = "!@#$%^&*()_+-=[]{};'\\:\"|<>?,./`~";
+
 const checks = [
   { label: "At least 8 characters", missing: "at least 8 characters", met: (password: string) => password.length >= 8 },
   { label: "A lowercase letter", missing: "a lowercase letter", met: (password: string) => /[a-z]/.test(password) },
   { label: "An uppercase letter", missing: "an uppercase letter", met: (password: string) => /[A-Z]/.test(password) },
   { label: "A digit", missing: "a digit", met: (password: string) => /\d/.test(password) },
-  { label: "A symbol", missing: "a symbol", met: (password: string) => /[^A-Za-z0-9]/.test(password) },
+  { label: "A symbol", missing: "a symbol", met: (password: string) => [...password].some((char) => symbols.includes(char)) },
 ] as const;
 
 export function passwordChecks(password: string): { label: string; met: boolean }[] {

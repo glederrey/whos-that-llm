@@ -31,6 +31,14 @@ test("a password without a symbol names the symbol", () => {
   assert.equal(passwordStrength("Abcdefg1"), 4);
 });
 
+test("an accented letter is not a symbol", () => {
+  assert.equal(passwordProblem("asdasd98Là"), "Password needs a symbol.");
+  assert.equal(passwordChecks("asdasd98Là").find((rule) => rule.label === "A symbol")?.met, false);
+  assert.equal(passwordProblem("Abcdef1à"), "Password needs a symbol.");
+  assert.equal(passwordProblem("Abcdef1 "), "Password needs a symbol.");
+  assert.equal(passwordProblem("asdasd98L!"), null);
+});
+
 test("a password that meets every rule is accepted", () => {
   assert.equal(passwordProblem("Abcdef1!"), null);
   assert.equal(passwordStrength("Abcdef1!"), 5);
@@ -59,7 +67,9 @@ test("a met rule turns green and an unmet rule stays grey", () => {
   const layout = fs.readFileSync(path.join(root, "app/layout.tsx"), "utf8");
   assert.match(layout, /roboto-latin-700\.woff2/);
   assert.match(layout, /variable: "--font-bold"/);
-  assert.match(block, /\.must-contain \{[^}]*padding-left: 16px/);
+  const container = block.match(/\.must-contain \{[^}]*\}/)?.[0] ?? "";
+  assert.equal(container.includes("padding-left"), false);
+  assert.match(block, /\.must-contain ul \{[^}]*padding-left: 16px/);
   assert.equal(css.includes(".strength"), false);
   assert.equal(passwordRulesText, "At least 8 characters, a lowercase letter, an uppercase letter, a digit, and a symbol.");
 });
