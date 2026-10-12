@@ -1096,6 +1096,11 @@ html[data-theme="dark"] .md a { color: var(--teal); }
 .history-facts { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; min-width: 0; }
 .history-outcome { display: flex; align-items: center; gap: 12px; }
 .board-chip.history-mode { background: var(--soft); color: var(--text); border: 1px solid var(--line); }
+html[data-theme="dark"] .board-chip.history-mode,
+html[data-theme="dark"] .history-facts .board-chip.no-hints {
+  background: #3a3a3a;
+  border-color: #8a8a8a;
+}
 .history-status { text-align: left; white-space: nowrap; }
 .history-status[data-state="solved"] { color: #1c7c43; font-weight: 600; }
 .history-status[data-state="given_up"] { color: var(--miss-press); font-weight: 600; }
