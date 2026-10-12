@@ -1,6 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { hasAdminFlag } from "@/lib/admin-model";
+import { authCookieOptions } from "@/lib/auth-cookies";
 import { publicEnv } from "./env";
 
 function isPrivatePath(pathname: string) {
@@ -20,7 +21,9 @@ export async function updateSession(request: NextRequest) {
   const env = publicEnv();
   if (!env) return hidden ? hide(request) : response;
 
+  const secure = request.nextUrl.protocol === "https:";
   const supabase = createServerClient(env.url, env.key, {
+    cookieOptions: authCookieOptions(secure),
     cookies: {
       getAll() {
         return request.cookies.getAll();
@@ -29,7 +32,7 @@ export async function updateSession(request: NextRequest) {
         for (const { name, value } of cookiesToSet) request.cookies.set(name, value);
         response = NextResponse.next({ request });
         for (const { name, value, options } of cookiesToSet) {
-          response.cookies.set(name, value, options);
+          response.cookies.set(name, value, { ...options, ...authCookieOptions(secure) });
         }
       },
     },
@@ -41,7 +44,9 @@ export async function updateSession(request: NextRequest) {
     const url = request.nextUrl.clone();
     url.searchParams.delete("code");
     const redirect = NextResponse.redirect(url);
-    for (const cookie of response.cookies.getAll()) redirect.cookies.set(cookie);
+    for (const cookie of response.cookies.getAll()) {
+      redirect.cookies.set({ ...cookie, ...authCookieOptions(secure) });
+    }
     return redirect;
   }
 

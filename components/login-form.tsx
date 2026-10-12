@@ -2,7 +2,9 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { createBrowserSupabase } from "@/lib/supabase/browser";
+import { sendPasswordReset, signInWithEmail, signUpWithEmail, startGoogleSignIn, type AuthNotice } from "@/app/auth/actions";
+import { passwordChecks, passwordProblem } from "@/lib/password-rules";
+import { safeNext } from "@/lib/paths";
 
 export function LoginForm({
   next,
@@ -18,30 +20,33 @@ export function LoginForm({
   const [storedOpen, setStoredOpen] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState(cancelled ? "Google sign-in was cancelled." : "");
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
 
-  function mapError(message: string) {
-    const text = message.toLowerCase();
-    if (text.includes("already")) return "That email is already registered.";
-    if (text.includes("confirm")) return "Confirm your email, then come back.";
-    if (text.includes("invalid") || text.includes("credential")) return "Wrong email or password.";
+  function showTab(next: "sign-in" | "create") {
+    setTab(next);
+    setError("");
+    setNote("");
+  }
+
+  function noticeError(notice: AuthNotice) {
+    if (notice === "exists") return "That email is already registered.";
+    if (notice === "confirm") return "Confirm your email, then come back.";
     return "Wrong email or password.";
   }
 
   async function google() {
     setBusy(true);
     setError("");
-    const supabase = createBrowserSupabase();
-    const { error: authError } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: { redirectTo: `${window.location.origin}/` },
-    });
-    if (authError) {
-      setError("Google sign-in was cancelled.");
-      setBusy(false);
+    const result = await startGoogleSignIn();
+    if ("url" in result) {
+      window.location.assign(result.url);
+      return;
     }
+    setError("Google sign-in was cancelled.");
+    setBusy(false);
   }
 
   async function submit(event: React.FormEvent) {
@@ -49,37 +54,38 @@ export function LoginForm({
     setBusy(true);
     setError("");
     setNote("");
-    const supabase = createBrowserSupabase();
     if (tab === "create") {
-      const { data, error: authError } = await supabase.auth.signUp({
-        email,
-        password,
-        options: { emailRedirectTo: `${window.location.origin}/` },
-      });
+      const problem = passwordProblem(password);
+      if (problem) {
+        setBusy(false);
+        setError(problem);
+        return;
+      }
+      const result = await signUpWithEmail(email, password);
       setBusy(false);
-      if (authError) {
-        setError(mapError(authError.message));
+      if (result === "confirm") {
+        setNote("Supabase will email you a confirmation link. Check your email.");
         return;
       }
-      if (data.user && data.user.identities && data.user.identities.length === 0) {
-        setError("That email is already registered.");
+      if (result && typeof result === "object") {
+        setError(result.rules);
         return;
       }
-      if (data.session) {
-        router.push(next);
-        router.refresh();
+      if (result) {
+        setError(noticeError(result));
         return;
       }
-      setNote("Supabase will email you a confirmation link. Check your email.");
+      router.push(safeNext(next));
+      router.refresh();
       return;
     }
-    const { error: authError } = await supabase.auth.signInWithPassword({ email, password });
+    const result = await signInWithEmail(email, password);
     setBusy(false);
-    if (authError) {
-      setError(mapError(authError.message));
+    if (result) {
+      setError(noticeError(result));
       return;
     }
-    router.push(next);
+    router.push(safeNext(next));
     router.refresh();
   }
 
@@ -91,10 +97,7 @@ export function LoginForm({
       return;
     }
     setBusy(true);
-    const supabase = createBrowserSupabase();
-    await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/?reset=1`,
-    });
+    await sendPasswordReset(email);
     setBusy(false);
     setNote("Check your email.");
   }
@@ -102,13 +105,13 @@ export function LoginForm({
   const signingIn = tab === "sign-in";
 
   return (
-    <div className="auth">
+    <div className="auth auth-screen">
       <h1>{signingIn ? "Sign in" : "Create account"}</h1>
       <div className="segmented" role="group" aria-label="Sign in or create an account">
-        <button type="button" aria-pressed={signingIn} onClick={() => setTab("sign-in")}>
+        <button type="button" aria-pressed={signingIn} onClick={() => showTab("sign-in")}>
           Sign in
         </button>
-        <button type="button" aria-pressed={!signingIn} onClick={() => setTab("create")}>
+        <button type="button" aria-pressed={!signingIn} onClick={() => showTab("create")}>
           Create account
         </button>
       </div>
@@ -127,23 +130,48 @@ export function LoginForm({
           Email
           <input type="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} required />
         </label>
-        <label>
-          Password
-          <input
-            type="password"
-            autoComplete={signingIn ? "current-password" : "new-password"}
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            required
-          />
-        </label>
+        <div className="password-block">
+          <label htmlFor="account-password">Password</label>
+          <div className="password-field">
+            <input
+              id="account-password"
+              type={showPassword ? "text" : "password"}
+              autoComplete={signingIn ? "current-password" : "new-password"}
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              required
+            />
+            <button
+              type="button"
+              className="password-eye"
+              aria-pressed={showPassword}
+              aria-controls="account-password"
+              aria-label={showPassword ? "Hide password" : "Show password"}
+              onClick={() => setShowPassword((shown) => !shown)}
+            >
+              {showPassword ? <EyeOffIcon /> : <EyeIcon />}
+            </button>
+          </div>
+          {signingIn ? null : (
+            <div className="must-contain">
+              <p>Must contain</p>
+              <ul>
+                {passwordChecks(password).map((rule) => (
+                  <li key={rule.label} data-met={rule.met ? "true" : "false"}>
+                    {rule.met ? <CheckIcon /> : <CrossIcon />}
+                    <span className="sr-only">{rule.met ? "Met, " : "Needed, "}</span>
+                    {rule.label}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
         {signingIn ? (
           <button type="button" className="text-link forgot" onClick={forgot} disabled={busy}>
             Forgot password
           </button>
         ) : (
-          <>
-          <p className="muted">Supabase will email you a confirmation link.</p>
           <div>
             <button
               type="button"
@@ -170,14 +198,50 @@ export function LoginForm({
               </div>
             ) : null}
           </div>
-          </>
         )}
         <button type="submit" className="button" disabled={busy}>
           {signingIn ? "Sign in" : "Create account"}
         </button>
+        {signingIn ? null : <p className="auth-confirm">Supabase will email you a confirmation link.</p>}
       </form>
       {note ? <p className="muted">{note}</p> : null}
       {error ? <p className="error">{error}</p> : null}
     </div>
+  );
+}
+
+function CheckIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" d="m5 12 5 5L20 7" />
+    </svg>
+  );
+}
+
+function CrossIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" d="M6 6l12 12M18 6 6 18" />
+    </svg>
+  );
+}
+
+function EyeIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" />
+      <circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" strokeWidth="2" />
+    </svg>
+  );
+}
+
+function EyeOffIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M3 3l18 18" />
+      <path fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M10.5 10.7a3 3 0 0 0 4.2 4.2" />
+      <path fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M9.9 5.2A10.4 10.4 0 0 1 12 5c6.5 0 10 7 10 7a17 17 0 0 1-3.1 4.1" />
+      <path fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M6.1 6.1C3.6 7.9 2 12 2 12a18 18 0 0 0 6.2 5.7 10.6 10.6 0 0 0 5.1 1.1" />
+    </svg>
   );
 }

@@ -2,9 +2,9 @@
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
+import { signOut } from "@/app/auth/actions";
 import { Avatar } from "./avatar";
 import { ThemeToggle } from "./theme-toggle";
-import { createBrowserSupabase } from "@/lib/supabase/browser";
 
 export function AccountMenu({
   userId,
@@ -29,9 +29,8 @@ export function AccountMenu({
     return () => document.removeEventListener("mousedown", onPointer);
   }, []);
 
-  async function signOut() {
-    const supabase = createBrowserSupabase();
-    await supabase.auth.signOut();
+  async function signOutAccount() {
+    await signOut();
     setOpen(false);
     router.push("/");
     router.refresh();
@@ -71,7 +70,7 @@ export function AccountMenu({
                 </a>
               ) : null}
               <div className="menu-rule" />
-              <button type="button" className="menu-item" onClick={() => void signOut()}>
+              <button type="button" className="menu-item" onClick={() => void signOutAccount()}>
                 Sign out
               </button>
             </>
