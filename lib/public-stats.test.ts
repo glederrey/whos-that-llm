@@ -248,7 +248,10 @@ test("the public stats page does not read prices, billing, or account rows", () 
   assert.match(home, /id: "class"[\s\S]*enabled: false/);
   assert.doesNotMatch(board, /<h2>Family<\/h2>/);
   assert.doesNotMatch(page, /How the rounds have gone/);
-  assert.match(fs.readFileSync(path.join(root, "app/globals.css"), "utf8"), /\.stat-modes \{[^}]*flex-wrap: wrap|\.segmented \{[^}]*flex-wrap: wrap/);
+  const css = fs.readFileSync(path.join(root, "app/globals.css"), "utf8");
+  assert.match(css, /\.stat-modes \{[^}]*grid-template-columns: repeat\(7, minmax\(0, 1fr\)\)/);
+  assert.match(css, /\.stat-modes > :nth-child\(-n \+ 4\) \{ grid-column: span 3; \}/);
+  assert.match(css, /\.stat-modes > :nth-child\(n \+ 5\) \{ grid-column: span 4; \}/);
   assert.equal(page.includes("requireOwner"), false);
   assert.doesNotMatch(loader, /\.(?:eq|neq|not|filter|is|in|gt|gte|lt|lte)\(/);
 });

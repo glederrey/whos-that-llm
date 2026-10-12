@@ -409,9 +409,14 @@ textarea { min-height: 76px; resize: vertical; }
 }
 .segmented button:hover, .segmented a:hover { color: var(--text); }
 .segmented [aria-pressed="true"], .segmented [aria-selected="true"] { background: var(--teal); color: #062e2e; }
-.stat-modes { width: 100%; max-width: 100%; }
+.stat-modes {
+  display: grid;
+  width: 100%;
+  max-width: 100%;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+}
 .stat-modes > button,
-.stat-modes > span { white-space: nowrap; }
+.stat-modes > span { width: 100%; box-sizing: border-box; white-space: nowrap; text-align: center; }
 .stat-modes > span[aria-disabled="true"] {
   color: var(--mute);
   opacity: 0.45;
@@ -419,6 +424,13 @@ textarea { min-height: 76px; resize: vertical; }
   font-size: 14px;
   padding: 7px 14px;
   cursor: not-allowed;
+}
+@media (max-width: 720px) {
+  .stat-modes { grid-template-columns: repeat(12, minmax(0, 1fr)); }
+  .stat-modes > :nth-child(-n + 4) { grid-column: span 3; }
+  .stat-modes > :nth-child(n + 5) { grid-column: span 4; }
+  .stat-modes > button,
+  .stat-modes > span[aria-disabled="true"] { font-size: 13px; padding: 7px 6px; }
 }
 html[data-theme="dark"] .segmented a { color: var(--mute); }
 html[data-theme="dark"] .segmented a:hover { color: var(--text); }
