@@ -21,7 +21,7 @@ The brand is three flat colors, taken from the logo. No fourth brand hue, and no
 | Ink | `#141414` | The logo ground. Text on light surfaces |
 | Paper | `#EBEBEB` | The question mark. Text on dark surfaces. Cards in the light theme |
 | Teal | `#00BBC9` | The dot. The one accent: links, the score on the result, a matched trait, the primary button |
-| Teal press | `#008F99` | Hover and pressed, same hue, darker |
+| Teal press | `#007F88` / `#008F99` | Light theme, then dark theme. Same hue, darker than the teal. Links and the quote on a light page, and hover in both themes |
 | Teal wash | `#E6F8F8` / `#062E2E` | A matched trait background, light theme then dark theme |
 | Canvas light | `#E0E0E1` | Page background, light theme |
 | Canvas dark | `#141414` | Page background, dark theme. A step off pure black so a light card can lift |
@@ -307,12 +307,14 @@ First person. The words:
 
 - **Who's that LLM?** is bold, then **started with something a friend said:**
 - The line is large, in the teal, with quotation marks: **“Over time I think I could tell an Opus 4.5 from a 4.7 and a 4.8. Like a wine...”**
-- **I laughed, and then I couldn't stop thinking about it. Can people actually tell models apart from just a few messages? Or do we only think we can?**
+- **I laughed, and then I couldn't stop thinking about it. Can people actually tell models apart from just a few messages? Especially models from the same family? Or do we only think we can?**
 - **I'm a data scientist, so my first instinct was to collect data. That's really what this game is for. Sure, it's fun to play, but every round also tells me something: which models get confused with each other, whether big models are easy to spot next to small ones, whether a model's origin shows through, and plenty of things I haven't thought of yet.**
 - **I plan to share this data openly for research later on. Until then, the statistics page shows what the data says so far.** **statistics** links to `/statistics`.
-- Heading: **What I store.** **I keep your username and your game data: the messages, token counts, your guesses, which model you were talking to, and the other details of each round. That's it. I don't collect any other personal information. Sign in is handled by Supabase. Your email is stored there only so you can log in, and I never use it for anything else. I never see your password.**
+- Heading: **What data do I store?** **I keep your username and your game data: the messages, token counts, your guesses, which model you were talking to, and the other details of each round. That's it. I don't collect any other personal information. Sign in is handled by Supabase. Your email is stored there only so you can log in, and I never use it for anything else. I never see your password.**
 - **You can delete your account at any time from your profile. Your username comes off the leaderboard. Finished games stay in the statistics without your username.** **profile** links to `/profile`.
-- Heading: **Who am I.** **I'm Gael, a data scientist based in Fribourg, Switzerland, with a PhD from EPFL.** His master thesis was about beer reviews. He built the game on his own time and pays for the API calls. A tip is optional. **Ko-fi** links to `tipUrl`. **LinkedIn** links to `https://www.linkedin.com/in/gael-lederrey`. **GitHub** links to `https://github.com/glederrey`.
+- Heading: **Who am I?** **I'm Gael, a data scientist based in Fribourg, Switzerland, with a PhD from EPFL.** His master thesis was about beer reviews. **By the way, if you want to chat about the game, the data, or anything else, you can find me on LinkedIn and GitHub.** **LinkedIn** links to `https://www.linkedin.com/in/gael-lederrey`. **GitHub** links to `https://github.com/glederrey`.
+- Heading: **Do you want to contribute?** **Who's that LLM?** is bold, then **is a small side project, and it gets better with help. If you have an idea, want to contribute, or found a bug, you're very welcome to open an issue on GitHub. Whether it's a typo or a big suggestion, I'd love to hear about it.** **open an issue on GitHub** links to `https://github.com/glederrey/whos-that-llm/issues`.
+- Heading: **Do you want to support the project?** He built the game on his own time and pays for the API calls. A tip is optional. **Ko-fi** links to `tipUrl`.
 
 ## Statistics (`/statistics`)
 

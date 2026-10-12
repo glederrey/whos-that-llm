@@ -3,7 +3,7 @@
   --ink: #141414;
   --paper: #ebebeb;
   --teal: #00bbc9;
-  --teal-press: #008f99;
+  --teal-press: #007f88;
   --teal-wash: #e6f8f8;
   --canvas: #e0e0e1;
   --card: #ffffff;
@@ -23,6 +23,7 @@
 
 html[data-theme="dark"] {
   color-scheme: dark;
+  --teal-press: #008f99;
   --teal-wash: #062e2e;
   --canvas: #141414;
   --card: #1e1e1e;
@@ -222,6 +223,11 @@ p { margin: 0; }
 .lede, .limits, .muted { color: var(--mute); }
 .lede { font-size: 17px; }
 .stack { display: grid; gap: 16px; }
+/* The 16px stack gap is the space between paragraphs. A heading's own 8px
+   bottom margin was added on top of that, so the title sat farther from its
+   paragraph than from the paragraph above. These margins land at 24px above
+   a heading and 8px below it. */
+.why h2 { margin-top: 8px; margin-bottom: -8px; }
 .landing { gap: 36px; }
 .landing .hero { padding-bottom: 0; }
 .landing .stats { margin: 0; }
