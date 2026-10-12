@@ -35,6 +35,18 @@ test("a weak-password response uses the same missing-rule message", () => {
   assert.equal(weakPasswordNotice("nope", { code: "invalid_credentials", message: "Invalid login credentials" }), null);
 });
 
+test("the strength bar stays red until every rule is met", () => {
+  const css = fs.readFileSync(path.join(root, "app/globals.css"), "utf8");
+  const block = css.slice(css.indexOf(".strength span {"), css.indexOf(".segmented {"));
+  assert.match(block, /background: var\(--miss\)/);
+  const level3 = block.match(/\.strength\[data-level="3"\] span \{[^}]+\}/);
+  const level4 = block.match(/\.strength\[data-level="4"\] span \{[^}]+\}/);
+  assert.ok(level3);
+  assert.equal(level3[0].includes("background"), false);
+  assert.match(level4?.[0] ?? "", /background: var\(--teal\)/);
+  assert.equal(passwordRulesText.startsWith("8+ characters"), true);
+});
+
 test("sign-up checks the rules before the auth call and sign-in stays generic", () => {
   const form = fs.readFileSync(path.join(root, "components/login-form.tsx"), "utf8");
   const actions = fs.readFileSync(path.join(root, "app/auth/actions.ts"), "utf8");

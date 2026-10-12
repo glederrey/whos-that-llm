@@ -423,7 +423,7 @@ textarea { min-height: 76px; resize: vertical; }
 }
 .strength[data-level="1"] span { width: 25%; }
 .strength[data-level="2"] span { width: 50%; }
-.strength[data-level="3"] span { width: 75%; background: var(--teal-press); }
+.strength[data-level="3"] span { width: 75%; }
 .strength[data-level="4"] span { width: 100%; background: var(--teal); }
 .segmented {
   display: inline-flex;

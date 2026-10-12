@@ -7,7 +7,7 @@ const checks = [
 
 export const passwordRuleCount = checks.length;
 
-export const passwordRulesText = "Use 8 characters, a lowercase letter, an uppercase letter, and a symbol.";
+export const passwordRulesText = "8+ characters, a lowercase letter, an uppercase letter, and a symbol.";
 
 export function passwordStrength(password: string): number {
   return checks.reduce((count, check) => count + (check.met(password) ? 1 : 0), 0);
