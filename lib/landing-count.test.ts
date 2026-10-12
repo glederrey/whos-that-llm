@@ -24,7 +24,7 @@ test("a round counts as played only after it is solved, missed, or given up", ()
 
 test("games today on the main page ignores an in-progress round", () => {
   const listed = finishedGameStatuses.map((status) => `'${status}'`).join(", ");
-  for (const file of ["supabase/v1.sql", "supabase/migrations/0024_finished_games_today.sql"]) {
+  for (const file of ["supabase/v0.1.sql", "supabase/migrations/0024_finished_games_today.sql"]) {
     const where = gamesTodayWhere(fs.readFileSync(path.join(root, file), "utf8"));
     assert.match(where, /started_at >= \(date_trunc\('day', now\(\) at time zone 'utc'\) at time zone 'utc'\)/);
     assert.match(where, new RegExp(`status in \\(${listed}\\)`));

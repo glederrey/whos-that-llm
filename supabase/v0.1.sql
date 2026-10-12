@@ -1,4 +1,4 @@
--- v1.0.0 restore for an empty database.
+-- v0.1 baseline for a fresh database.
 -- This is not a patch for a database that already has the migrations.
 
 create table public.companies (
