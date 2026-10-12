@@ -222,6 +222,11 @@ p { margin: 0; }
 .lede, .limits, .muted { color: var(--mute); }
 .lede { font-size: 17px; }
 .stack { display: grid; gap: 16px; }
+/* The 16px stack gap is the space between paragraphs. A heading's own 8px
+   bottom margin was added on top of that, so the title sat farther from its
+   paragraph than from the paragraph above. These margins land at 24px above
+   a heading and 8px below it. */
+.why h2 { margin-top: 8px; margin-bottom: -8px; }
 .landing { gap: 36px; }
 .landing .hero { padding-bottom: 0; }
 .landing .stats { margin: 0; }

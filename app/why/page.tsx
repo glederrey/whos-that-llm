@@ -2,7 +2,7 @@ import { config } from "@/lib/config";
 
 export default function WhyPage() {
   return (
-    <div className="stack">
+    <div className="stack why">
       <a className="back" href="/">
         <svg viewBox="0 0 24 24" aria-hidden="true">
           <path fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M15 6 9 12l6 6" />
