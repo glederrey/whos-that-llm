@@ -41,3 +41,29 @@ test("games today on the main page ignores a round with no finished_at", () => {
   const home = fs.readFileSync(path.join(root, "app/page.tsx"), "utf8");
   assert.match(home, /snapshot\.gamesToday/);
 });
+
+test("players on the main page are distinct accounts with a finished game", () => {
+  const sql = fs.readFileSync(path.join(root, "supabase/migrations/0029_finished_players.sql"), "utf8");
+  assert.match(
+    sql,
+    /'players',\s*\(\s*select count\(distinct user_id\)::int\s*from public\.games\s*where finished_at is not null\s*and user_id is not null\s*\)/,
+  );
+  assert.doesNotMatch(sql, /from public\.profiles/);
+  assert.doesNotMatch(sql, /alter table|delete from|truncate/i);
+  const today = gamesTodayWhere(sql);
+  assert.match(today, /started_at >= \(date_trunc\('day', now\(\) at time zone 'utc'\) at time zone 'utc'\)/);
+  assert.match(today, /finished_at is not null/);
+  const rounds = fs.readFileSync(path.join(root, "lib/rounds.ts"), "utf8");
+  assert.match(
+    rounds,
+    /from\("games"\)\s*\.select\("user_id"\)\s*\.not\("finished_at", "is", null\)\s*\.not\("user_id", "is", null\)/,
+  );
+  const home = fs.readFileSync(path.join(root, "app/page.tsx"), "utf8");
+  assert.match(home, /<dt>Games today<\/dt>/);
+  assert.doesNotMatch(home, /Games today \(UTC\)/);
+  const admin = fs.readFileSync(path.join(root, "app/admin/page.tsx"), "utf8");
+  assert.match(admin, /Games today \(UTC\)/);
+  const controls = fs.readFileSync(path.join(root, "components/board-controls.tsx"), "utf8");
+  assert.match(controls, /This week/);
+  assert.match(controls, /This month/);
+});
