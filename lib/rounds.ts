@@ -653,7 +653,12 @@ async function readPublicStats(client: SupabaseClient) {
 async function countPlayers(client: SupabaseClient) {
   const ids = new Set<string>();
   for (let from = 0; from < 20000; from += 1000) {
-    const { data, error } = await client.from("games").select("user_id").range(from, from + 999);
+    const { data, error } = await client
+      .from("games")
+      .select("user_id")
+      .not("finished_at", "is", null)
+      .not("user_id", "is", null)
+      .range(from, from + 999);
     if (error) throw new Error(error.message);
     for (const row of data ?? []) {
       const id = countedPlayerId(row.user_id);

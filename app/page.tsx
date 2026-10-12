@@ -80,7 +80,7 @@ export default async function HomePage({
           <dd>{snapshot.models.toLocaleString("en-US")}</dd>
         </div>
         <div>
-          <dt>Games today (UTC)</dt>
+          <dt>Games today</dt>
           <dd>{snapshot.gamesToday.toLocaleString("en-US")}</dd>
         </div>
         <div>
