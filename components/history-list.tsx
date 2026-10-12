@@ -1,7 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import type { Difficulty } from "@/lib/difficulty";
+import { difficultyText } from "@/lib/round-facts";
 import { CompanyLogo } from "./company-logo";
+import { RoundFacts } from "./round-facts";
 
 export type HistoryItem = {
   id: string;
@@ -17,6 +20,9 @@ export type HistoryItem = {
   logoPath: string | null;
   companyFound: boolean;
   regionFound: boolean;
+  mode: string;
+  difficulty: Difficulty | null;
+  noHint: boolean;
 };
 
 export function HistoryList({ items }: { items: HistoryItem[] }) {
@@ -36,62 +42,88 @@ export function HistoryList({ items }: { items: HistoryItem[] }) {
               aria-controls={panel}
               onClick={() => setOpenId(open ? null : item.id)}
             >
-              <span>{item.when}</span>
-              <span className="history-status" data-state={item.state}>
-                {item.status}
-              </span>
-              <span className="history-score" data-best={item.best ? "true" : undefined}>
-                {item.score}
-                {item.best ? <span className="history-best-note"> (best score)</span> : null}
+              <span className="history-when">{item.when}</span>
+              <HistoryFacts item={item} />
+              <span className="history-outcome">
+                <span className="history-status" data-state={item.state}>
+                  {item.status}
+                </span>
+                <span className="history-score" data-best={item.best ? "true" : undefined}>
+                  {item.score}
+                  {item.best ? <span className="history-best-note"> (best score)</span> : null}
+                </span>
               </span>
             </button>
-            {open ? (
-              <div id={panel} className="history-detail">
-                {item.logoPath && item.modelName ? (
-                  <div className="history-model">
-                    <CompanyLogo src={item.logoPath} />
-                    <span>
-                      {item.companyName ? (
-                        <>
-                          {item.companyName}
-                          <br />
-                        </>
-                      ) : null}
-                      {item.modelName}
-                    </span>
-                  </div>
-                ) : null}
-                <dl className="summary-list">
-                  <dt>Date</dt>
-                  <dd>{item.when}</dd>
-                  <dt>Model</dt>
-                  <dd>{item.modelName ?? "Hidden until the round ends."}</dd>
-                  <dt>Status</dt>
-                  <dd>{item.status}</dd>
-                  <dt>Score</dt>
-                  <dd>
-                    {item.score}
-                    {item.best ? " (best score)" : ""}
-                  </dd>
-                  <dt>Tokens</dt>
-                  <dd>{item.tokens}</dd>
-                  <dt>Messages used</dt>
-                  <dd>{item.messages}</dd>
-                  <dt>Company</dt>
-                  <dd>{item.companyFound ? "Found" : "Not found"}</dd>
-                  <dt>Region</dt>
-                  <dd>{item.regionFound ? "Found" : "Not found"}</dd>
-                </dl>
-                {item.state === "active" ? (
-                  <p>
-                    <a href={`/play/${item.id}`}>Continue</a>
-                  </p>
-                ) : null}
-              </div>
-            ) : null}
+            {open ? <HistoryDetail item={item} panel={panel} /> : null}
           </li>
         );
       })}
     </ul>
+  );
+}
+
+export function HistoryFacts({ item }: { item: HistoryItem }) {
+  return (
+    <span className="history-facts">
+      <span className="board-chip history-mode">{item.mode}</span>
+      {item.difficulty ? (
+        <span className={`board-chip difficulty-${item.difficulty}`}>{difficultyText(item.difficulty)}</span>
+      ) : null}
+      {item.noHint ? <span className="board-chip no-hints">No hints</span> : null}
+    </span>
+  );
+}
+
+export function HistoryDetail({ item, panel }: { item: HistoryItem; panel?: string }) {
+  return (
+    <div id={panel} className="history-detail">
+      {item.logoPath && item.modelName ? (
+        <div className="history-model">
+          <CompanyLogo src={item.logoPath} />
+          <span>
+            {item.companyName ? (
+              <>
+                {item.companyName}
+                <br />
+              </>
+            ) : null}
+            {item.modelName}
+          </span>
+        </div>
+      ) : null}
+      <dl className="summary-list">
+        <dt>Date</dt>
+        <dd>{item.when}</dd>
+        <RoundFacts mode={item.mode} difficulty={difficultyText(item.difficulty)} />
+        {item.noHint ? (
+          <>
+            <dt>Hints</dt>
+            <dd>No hints</dd>
+          </>
+        ) : null}
+        <dt>Model</dt>
+        <dd>{item.modelName ?? "Hidden until the round ends."}</dd>
+        <dt>Status</dt>
+        <dd>{item.status}</dd>
+        <dt>Score</dt>
+        <dd>
+          {item.score}
+          {item.best ? " (best score)" : ""}
+        </dd>
+        <dt>Tokens</dt>
+        <dd>{item.tokens}</dd>
+        <dt>Messages used</dt>
+        <dd>{item.messages}</dd>
+        <dt>Company</dt>
+        <dd>{item.companyFound ? "Found" : "Not found"}</dd>
+        <dt>Region</dt>
+        <dd>{item.regionFound ? "Found" : "Not found"}</dd>
+      </dl>
+      {item.state === "active" ? (
+        <p>
+          <a href={`/play/${item.id}`}>Continue</a>
+        </p>
+      ) : null}
+    </div>
   );
 }

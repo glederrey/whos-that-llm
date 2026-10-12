@@ -1,6 +1,8 @@
 import { notFound, redirect } from "next/navigation";
 import { CompanyLogo } from "@/components/company-logo";
 import { MarkdownMessage } from "@/components/markdown-message";
+import { ResultSummary } from "@/components/round-facts";
+import { difficultyText, playedRoundFacts } from "@/lib/round-facts";
 import { listCategories, readPublicGame } from "@/lib/rounds";
 import { currentProfile } from "@/lib/session";
 
@@ -16,7 +18,13 @@ export default async function ResultPage({ params }: { params: Promise<{ gameId:
   if (!game || !game.model) notFound();
   if (game.status === "active") redirect(`/play/${gameId}`);
   const categories = await listCategories();
-  const onBoard = Boolean(categories.find((category) => category.id === game.category)?.leaderboard);
+  const mode = categories.find((category) => category.id === game.category);
+  const facts = playedRoundFacts({
+    categoryId: game.category,
+    categoryName: mode?.name,
+    difficulty: game.difficulty,
+  });
+  const onBoard = Boolean(mode?.leaderboard);
   const again =
     game.category === "company" || game.category === "region"
       ? `/play/new?category=${game.category}`
@@ -48,6 +56,7 @@ export default async function ResultPage({ params }: { params: Promise<{ gameId:
       <p className="status" data-state={state}>
         {status}
       </p>
+      <ResultSummary mode={facts.mode} difficulty={difficultyText(facts.difficulty)} noHint={game.noHint} />
       {game.score !== undefined && game.breakdown && game.explanation ? (
         <div className="result-grid">
           <section className="card score-card">

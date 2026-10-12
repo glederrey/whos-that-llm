@@ -233,6 +233,7 @@ A page, not a popup. Only for `solved`, `miss`, and `given_up`. An active round 
 
 - Logo, model name, company, region, year, and size. Origin names the model here. The round never did.
 - Status line: **Solved on message 2.** or **Miss.** or **Given up. This round is not on the leaderboard.**
+- Summary: **Game mode** is the category name, and **Difficulty** is Easy, Medium, Hard, or Impossible. A round stored with no difficulty says **—**. A round played without hints says **No hints**.
 - The score, then the breakdown, then the short explanation. A give-up before any reply has no score and no breakdown. The status line is enough.
 - The transcript
 - **Play again** returns to the lobby. It does not start a round. A company or region round returns to that category's pool picker. Latest returns to the lobby.
@@ -335,7 +336,7 @@ Private. The account menu shows **Profile** once the player has a username. No s
 - Username field, same rules as welcome. **Save** updates the profile and every game row for that user id. The leaderboard follows. An empty name is rejected.
 - **Picture.** Optional upload, JPEG, PNG, or WebP, at most 1 MB. A larger file or any other type shows **Use a JPEG, PNG, or WebP under 1 MB.** It replaces the generated mark in the header. People who skipped it on welcome add it here.
 - Stats: games played, solved, missed, given up, solve rate, best score, average score, average messages on a solved game.
-- Games: 10 per page, **Previous** and **Next**. Clicking a row opens its summary in place, directly under that row, and clicking it again closes it. One row is open at a time. The summary shows the company logo and model name, date, status, score, messages used, and whether company and region were found. No transcript. A logo that fails to load is hidden. An open round hides the model and logo and links to **Continue**.
+- Games: 10 per page, **Previous** and **Next**. The closed row shows the date, then a chip for the game mode, a difficulty chip, and a **No hints** chip when that round was played without hints, then the status and the score. On a phone the date is on its own line, and the status stays beside the score. The chip uses the same colours as the leaderboard. A round stored with no difficulty has no difficulty chip. Clicking a row opens its summary in place, directly under that row, and clicking it again closes it. One row is open at a time. The summary shows the company logo and model name, date, game mode, difficulty, whether it was played with no hints, status, score, messages used, and whether company and region were found. Game mode is the category name. Difficulty is Easy, Medium, Hard, or Impossible, or **—** when the round stored none. No transcript. A logo that fails to load is hidden. An open round hides the model and logo and links to **Continue**.
 - **Delete account.** Under the games. The player checks **I want to delete my account.** and submits **Delete account**. Clicking the button before that box is checked does not submit, does not reload, and does not move the page. The delete runs only after the box is checked. The same form is on `/account/delete`.
 
 ## Delete account (`/account/delete` and `/profile`)
