@@ -9,7 +9,6 @@ import {
   eliminatedRegions,
   filterCandidates,
   categoryAllowsHints,
-  finishedGameStatuses,
   hintOffered,
   playableHints,
   knownValues,
@@ -643,7 +642,7 @@ async function readPublicStats(client: SupabaseClient) {
       .from("games")
       .select("id", { count: "exact", head: true })
       .gte("started_at", start)
-      .in("status", [...finishedGameStatuses]),
+      .not("finished_at", "is", null),
     countPlayers(client),
   ]);
   if (models.error) throw new Error(models.error.message);

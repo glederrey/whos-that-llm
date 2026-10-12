@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
 import test from "node:test";
-import { computePublicStats, type PublicGameFact, type PublicGuessFact, type PublicUsageFact } from "./public-stats";
+import { computePublicStats, statisticModes, type PublicGameFact, type PublicGuessFact, type PublicUsageFact } from "./public-stats";
 
 const now = new Date("2026-10-10T12:00:00Z");
 const root = path.resolve(import.meta.dirname, "..");
@@ -20,6 +20,7 @@ function game(
     status,
     messageCount,
     startedAt: "2026-10-10T08:00:00Z",
+    finishedAt: status === "solved" || status === "miss" || status === "given_up" ? "2026-10-10T09:00:00Z" : null,
     category: "all",
     size: "small",
     region: "us",
@@ -69,7 +70,9 @@ test("public stats keep outcomes and drop cost", () => {
   assert.equal(stats.outcome.finished, 4);
   assert.equal(stats.outcome.solved, 2);
   assert.equal(stats.outcome.solveRate, 0.5);
-  assert.equal(stats.outcome.open, 1);
+  assert.equal(stats.outcome.open, 0);
+  assert.equal(stats.days.find((day) => day.date === "2026-10-10")?.games, 3);
+  assert.equal(stats.days.find((day) => day.date === "2026-10-10")?.solved, 2);
   assert.equal(stats.outcome.messagesPerGame, (3 + 10 + 2 + 4) / 4);
   assert.equal(stats.outcome.tokensPerGame, (100 + 250 + 50) / 4);
   assert.equal(stats.outcome.regionFoundRate, 0.75);
@@ -99,7 +102,8 @@ test("public stats keep outcomes and drop cost", () => {
   assert.equal(stats.categories[0].finished, 1);
   assert.equal(stats.categories[1].outcome?.solveRate, 2 / 3);
   assert.equal(stats.categories[2].outcome, null);
-  assert.equal(stats.categories[2].open, 1);
+  assert.equal(stats.categories[2].open, 0);
+  assert.equal(stats.categories[2].games, 0);
   assert.equal(stats.categories[2].models.length, 0);
   assert.equal(stats.categories[3].finished, 0);
   assert.equal(stats.categories[3].outcome, null);
@@ -164,24 +168,87 @@ test("a round counts in each class, and a model with no class adds no row", () =
   assert.equal(stats.classes.some((row) => row.name === "luna" || row.key === "none"), false);
 });
 
+test("a solved round with no finished_at does not count", () => {
+  const stats = computePublicStats(
+    [
+      game("done", "opus", "solved", 2),
+      game("stale", "haiku", "solved", 8, { finishedAt: null, category: "daily" }),
+      game("open", "secret", "active", 5, { finishedAt: null }),
+    ],
+    [
+      { gameId: "done", modelId: "opus", inputTokens: 10, outputTokens: 10 },
+      { gameId: "stale", modelId: "haiku", inputTokens: 40, outputTokens: 10 },
+      { gameId: "open", modelId: "secret", inputTokens: 80, outputTokens: 20 },
+    ],
+    [
+      { gameId: "done", modelCorrect: true, guessedModelId: "opus", regionCorrect: true },
+      { gameId: "stale", modelCorrect: true, guessedModelId: "haiku", regionCorrect: true },
+      { gameId: "open", modelCorrect: false, guessedModelId: "opus", regionCorrect: true },
+    ],
+    [
+      { id: "all", name: "All models" },
+      { id: "daily", name: "Daily" },
+    ],
+    [],
+    now,
+  );
+  assert.equal(stats.outcome.finished, 1);
+  assert.equal(stats.outcome.solved, 1);
+  assert.equal(stats.outcome.open, 0);
+  assert.equal(stats.outcome.guesses, 1);
+  assert.equal(stats.outcome.tokensPerGame, 20);
+  assert.equal(stats.outcome.messagesPerGame, 2);
+  assert.equal(stats.days.find((day) => day.date === "2026-10-10")?.games, 1);
+  assert.equal(stats.models.length, 1);
+  assert.equal(stats.categories.find((row) => row.id === "daily")?.finished, 0);
+  assert.equal(JSON.stringify(stats).includes("haiku"), false);
+  assert.equal(JSON.stringify(stats).includes("secret"), false);
+});
+
+test("only Main and All models can be selected", () => {
+  assert.deepEqual(
+    statisticModes.map((mode) => [mode.name, mode.enabled]),
+    [
+      ["Main", true],
+      ["Daily", false],
+      ["All models", true],
+      ["Class", false],
+      ["Company", false],
+      ["Region", false],
+      ["Custom", false],
+    ],
+  );
+});
+
 test("the public stats page does not read prices, billing, or account rows", () => {
   const loader = fs.readFileSync(path.join(root, "lib/public-stats-data.ts"), "utf8");
   const page = fs.readFileSync(path.join(root, "app/statistics/page.tsx"), "utf8");
+  const board = fs.readFileSync(path.join(root, "components/statistics-board.tsx"), "utf8");
   const why = fs.readFileSync(path.join(root, "app/why/page.tsx"), "utf8");
   for (const banned of ["cost_usd", "openrouter", "price", "requireOwner", "user_id", "username", "content", "usd("]) {
     assert.equal(loader.toLowerCase().includes(banned), false, banned);
     assert.equal(page.toLowerCase().includes(banned), false, banned);
+    assert.equal(board.toLowerCase().includes(banned), false, banned);
   }
   assert.match(why, /Over time I think I could tell an Opus 4.5 from a 4.7 and a 4.8\. Like a wine\.\.\./);
-  assert.match(page, /No finished games in this category yet/);
-  assert.match(page, /<h2>Class<\/h2>/);
+  assert.match(board, /No finished games in this category yet/);
+  assert.match(board, /mode === "class"/);
+  assert.doesNotMatch(board, /still open/);
+  assert.doesNotMatch(board, /\$\{outcome\.open\}/);
+  assert.doesNotMatch(board, /Unfinished games/);
+  assert.match(board, /useState<StatisticModeId>\("main"\)/);
+  assert.match(board, /type="button"/);
+  assert.doesNotMatch(board, /href=/);
+  assert.doesNotMatch(board, /useRouter|router\.push|window\.location/);
   assert.match(loader, /readAll\(client, "model_classes", "model_id, class_id", \["model_id", "class_id"\]\)/);
-  const board = fs.readFileSync(path.join(root, "components/home-board.tsx"), "utf8");
-  assert.match(board, /\["daily", "all", "class", "company", "region", "custom"\]/);
-  assert.match(board, /One class of models\. Opus, or GPT vs Claude\./);
-  assert.match(board, /id: "class"[\s\S]*enabled: false/);
-  assert.doesNotMatch(page, /<h2>Family<\/h2>/);
+  assert.match(loader, /finished_at/);
+  const home = fs.readFileSync(path.join(root, "components/home-board.tsx"), "utf8");
+  assert.match(home, /\["daily", "all", "class", "company", "region", "custom"\]/);
+  assert.match(home, /One class of models\. Opus, or GPT vs Claude\./);
+  assert.match(home, /id: "class"[\s\S]*enabled: false/);
+  assert.doesNotMatch(board, /<h2>Family<\/h2>/);
   assert.doesNotMatch(page, /How the rounds have gone/);
+  assert.match(fs.readFileSync(path.join(root, "app/globals.css"), "utf8"), /\.stat-modes \{[^}]*flex-wrap: wrap|\.segmented \{[^}]*flex-wrap: wrap/);
   assert.equal(page.includes("requireOwner"), false);
   assert.doesNotMatch(loader, /\.(?:eq|neq|not|filter|is|in|gt|gte|lt|lte)\(/);
 });

@@ -1,5 +1,6 @@
 import {
   computeGameMetrics,
+  hasFinishedAt,
   type DayCount,
   type GameFact,
   type GuessFact,
@@ -86,7 +87,22 @@ export type CategoryReport = {
   outcome: Outcome | null;
   models: ModelOutcome[];
   confusion: ConfusionPair[];
+  days: DayCount[];
+  sizes: TraitRow[];
+  regions: TraitRow[];
 };
+
+export const statisticModes = [
+  { id: "main", name: "Main", enabled: true },
+  { id: "daily", name: "Daily", enabled: false },
+  { id: "all", name: "All models", enabled: true },
+  { id: "class", name: "Class", enabled: false },
+  { id: "company", name: "Company", enabled: false },
+  { id: "region", name: "Region", enabled: false },
+  { id: "custom", name: "Custom", enabled: false },
+] as const;
+
+export type StatisticModeId = (typeof statisticModes)[number]["id"];
 
 export type PublicStats = {
   outcome: Outcome;
@@ -98,12 +114,6 @@ export type PublicStats = {
   classes: ClassStat[];
   categories: CategoryReport[];
 };
-
-const finishedStatus = new Set(["solved", "miss", "given_up"]);
-
-function isFinished(status: string): boolean {
-  return finishedStatus.has(status);
-}
 
 function tiedUsage(rows: PublicUsageFact[], ids: Set<string>): UsageFact[] {
   return rows
@@ -243,22 +253,58 @@ function categoryReport(
   games: PublicGameFact[],
   usage: PublicUsageFact[],
   guesses: PublicGuessFact[],
+  now?: Date,
 ): CategoryReport {
   const rows = games.filter((game) => game.category === category.id);
-  const finished = rows.filter((game) => isFinished(game.status));
-  const open = rows.filter((game) => game.status === "active").length;
-  if (finished.length === 0) {
-    return { id: category.id, name: category.name, games: rows.length, open, finished: 0, outcome: null, models: [], confusion: [] };
+  if (rows.length === 0) {
+    return {
+      id: category.id,
+      name: category.name,
+      games: 0,
+      open: 0,
+      finished: 0,
+      outcome: null,
+      models: [],
+      confusion: [],
+      days: [],
+      sizes: [],
+      regions: [],
+    };
   }
+  const ids = new Set(rows.map((game) => game.id));
+  const metrics = computeGameMetrics(
+    rows,
+    tiedUsage(usage, ids),
+    asGuesses(guesses.filter((guess) => ids.has(guess.gameId))),
+    now,
+  );
   return {
     id: category.id,
     name: category.name,
     games: rows.length,
-    open,
-    finished: finished.length,
-    outcome: outcomeFrom(finished, usage, guesses),
-    models: modelsFrom(finished, usage, guesses),
-    confusion: confusionPairs(finished, guesses),
+    open: 0,
+    finished: rows.length,
+    outcome: {
+      games: rows.length,
+      open: 0,
+      finished: rows.length,
+      solved: metrics.solved,
+      missed: metrics.missed,
+      givenUp: metrics.givenUp,
+      solveRate: rows.length > 0 ? metrics.solved / rows.length : null,
+      giveUpRate: rows.length > 0 ? metrics.givenUp / rows.length : null,
+      guesses: metrics.guesses,
+      correctGuesses: metrics.correctGuesses,
+      guessAccuracy: metrics.guessAccuracy,
+      messagesPerGame: metrics.messagesPerGame,
+      tokensPerGame: metrics.tokensPerGame,
+      regionFoundRate: regionFoundRate(rows, guesses),
+    },
+    models: modelsFrom(rows, usage, guesses),
+    confusion: confusionPairs(rows, guesses),
+    days: metrics.days,
+    sizes: traitRows(rows, usage, guesses, "size", sizes),
+    regions: traitRows(rows, usage, guesses, "region", regions),
   };
 }
 
@@ -270,41 +316,41 @@ export function computePublicStats(
   classes: NamedClass[] = [],
   now: Date = new Date(),
 ): PublicStats {
-  const finished = games.filter((game) => isFinished(game.status));
+  const counted = games.filter((game) => hasFinishedAt(game));
   const playable = categories.filter((category) => category.id !== "family");
   const known = new Set(playable.map((category) => category.id));
-  const extra = [...new Set(finished.map((game) => game.category).filter((id) => id !== "family" && !known.has(id)))].sort();
+  const extra = [...new Set(counted.map((game) => game.category).filter((id) => id !== "family" && !known.has(id)))].sort();
   const listed = [...playable, ...extra.map((id) => ({ id, name: id }))];
-  const finishedIds = new Set(finished.map((game) => game.id));
+  const countedIds = new Set(counted.map((game) => game.id));
   const overall = computeGameMetrics(
-    games,
-    tiedUsage(usage, finishedIds),
-    asGuesses(guesses.filter((guess) => finishedIds.has(guess.gameId))),
+    counted,
+    tiedUsage(usage, countedIds),
+    asGuesses(guesses.filter((guess) => countedIds.has(guess.gameId))),
     now,
   );
   return {
     outcome: {
-      games: overall.games,
-      open: overall.open,
-      finished: overall.finished,
+      games: counted.length,
+      open: 0,
+      finished: counted.length,
       solved: overall.solved,
       missed: overall.missed,
       givenUp: overall.givenUp,
-      solveRate: overall.solveRate,
-      giveUpRate: overall.giveUpRate,
+      solveRate: counted.length > 0 ? overall.solved / counted.length : null,
+      giveUpRate: counted.length > 0 ? overall.givenUp / counted.length : null,
       guesses: overall.guesses,
       correctGuesses: overall.correctGuesses,
       guessAccuracy: overall.guessAccuracy,
       messagesPerGame: overall.messagesPerGame,
       tokensPerGame: overall.tokensPerGame,
-      regionFoundRate: regionFoundRate(finished, guesses),
+      regionFoundRate: regionFoundRate(counted, guesses),
     },
-    models: modelsFrom(finished, usage, guesses),
+    models: modelsFrom(counted, usage, guesses),
     days: overall.days,
-    confusion: confusionPairs(finished, guesses),
-    sizes: traitRows(finished, usage, guesses, "size", sizes),
-    regions: traitRows(finished, usage, guesses, "region", regions),
-    classes: classRows(finished, usage, guesses, classes),
-    categories: listed.map((category) => categoryReport(category, games, usage, guesses)),
+    confusion: confusionPairs(counted, guesses),
+    sizes: traitRows(counted, usage, guesses, "size", sizes),
+    regions: traitRows(counted, usage, guesses, "region", regions),
+    classes: classRows(counted, usage, guesses, classes),
+    categories: listed.map((category) => categoryReport(category, counted, usage, guesses, now)),
   };
 }
