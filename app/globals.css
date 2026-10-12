@@ -579,8 +579,6 @@ html[data-theme="dark"] .segmented a.difficulty-impossible[aria-pressed="true"] 
 .board .player-marks { display: inline-flex; align-items: center; justify-content: flex-end; gap: 8px; }
 .board .player-marks > .board-chip,
 .board .mark-slot { flex: none; }
-.board .player-marks > .board-chip[class*="difficulty-"],
-.board .mark-slot { width: 5.5rem; justify-content: center; }
 .board-chip {
   display: inline-flex;
   align-items: center;
@@ -632,7 +630,9 @@ html[data-theme="dark"] .segmented a.difficulty-impossible[aria-pressed="true"] 
   .board tbody tr.gold td,
   .board tbody tr.silver td,
   .board tbody tr.bronze td,
-  .board tbody tr.mine td { background: transparent; box-shadow: none; }
+  .board tbody tr.mine td,
+  .board tbody tr.mine td:first-child,
+  .board tbody tr.mine td:last-child { background: transparent; box-shadow: none; }
   .board tbody tr.mine { box-shadow: inset 0 0 0 2px var(--teal); }
   .board tbody tr:not(.medal):not(.mine):hover { background: var(--soft); }
   .board tbody tr:not(.medal):not(.mine):hover td { background: transparent; }
