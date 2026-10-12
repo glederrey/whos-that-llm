@@ -4,7 +4,13 @@ export type GameFact = {
   status: string;
   messageCount: number;
   startedAt: string;
+  /** Set when the round is finished. Null while it is still in progress. */
+  finishedAt: string | null;
 };
+
+export function hasFinishedAt(game: { finishedAt: string | null }): boolean {
+  return game.finishedAt != null && game.finishedAt !== "";
+}
 
 export type UsageFact = {
   gameId: string | null;
@@ -47,6 +53,8 @@ export type GameMetrics = {
   correctGuesses: number;
   guessAccuracy: number | null;
   guessesPerGame: number | null;
+  unfinished: number;
+  unfinishedRate: number | null;
   messagesPerGame: number | null;
   tokensPerGame: number | null;
   costPerGame: number | null;
@@ -112,7 +120,8 @@ export function computeGameMetrics(
   const open = games.filter((game) => game.status === OPEN).length;
   const finished = finishedIds.size;
 
-  const playedIds = games.filter((game) => game.messageCount > 0).map((game) => game.id);
+  const finishedAtIds = new Set(games.filter((game) => hasFinishedAt(game)).map((game) => game.id));
+  const unfinished = games.length - finishedAtIds.size;
   const sumOver = (ids: Iterable<string>, source: Map<string, number>) => {
     let total = 0;
     for (const id of ids) total += source.get(id) ?? 0;
@@ -125,7 +134,7 @@ export function computeGameMetrics(
   const guessesPerGame = new Map<string, number>();
   let correctGuesses = 0;
   for (const guess of guesses) {
-    if (!byGame.has(guess.gameId)) continue;
+    if (!finishedAtIds.has(guess.gameId)) continue;
     guessesPerGame.set(guess.gameId, (guessesPerGame.get(guess.gameId) ?? 0) + 1);
     if (guess.modelCorrect) correctGuesses += 1;
   }
@@ -143,7 +152,9 @@ export function computeGameMetrics(
     guesses: totalGuesses,
     correctGuesses,
     guessAccuracy: ratio(correctGuesses, totalGuesses),
-    guessesPerGame: ratio(totalGuesses, playedIds.length),
+    guessesPerGame: ratio(totalGuesses, finishedAtIds.size),
+    unfinished,
+    unfinishedRate: ratio(unfinished, games.length),
     messagesPerGame: ratio(finishedMessages, finished),
     tokensPerGame: ratio(finishedTokens, finished),
     costPerGame: ratio(finishedCost, finished),

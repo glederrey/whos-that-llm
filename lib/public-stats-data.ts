@@ -16,7 +16,7 @@ export type PublicStatsPayload = {
 export async function loadPublicStats(): Promise<PublicStatsPayload> {
   const client = serviceOrThrow();
   const [games, usage, guesses, categories, models, classes, memberships] = await Promise.all([
-    readAll(client, "games", "id, model_id, status, message_count, started_at, category, traits"),
+    readAll(client, "games", "id, model_id, status, message_count, started_at, finished_at, category, traits"),
     readAll(client, "usage", "id, game_id, model_id, input_tokens, output_tokens"),
     readAll(client, "guesses", "id, game_id, guessed_model_id, model_correct, region_correct"),
     readAll(client, "categories", "id, name, sort_order"),
@@ -60,6 +60,7 @@ function gameFact(row: Record<string, unknown>, classIds: string[]): PublicGameF
     status: row.status as string,
     messageCount: Number(row.message_count ?? 0),
     startedAt: row.started_at as string,
+    finishedAt: typeof row.finished_at === "string" && row.finished_at.length > 0 ? row.finished_at : null,
     category: row.category as string,
     size: trait.size,
     region: trait.region,

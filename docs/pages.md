@@ -78,7 +78,7 @@ Two columns. On a narrow screen they stack.
 
 - Left: the logo, large.
 - Right: **Find the model.** Then: a hidden model answers you. You have ten messages. Name it when you want. Find it, and the round is yours. Miss the name, and the company and the region can still count.
-- Under the buttons: three counts. **Models in play** is the enabled roster. **Games today (UTC)** counts finished games whose `started_at` is on the current UTC day. Finished is solved, not solved, or given up. An in-progress round does not count. **Players** is the number of distinct accounts that have started a game.
+- Under the buttons: three counts. **Models in play** is the enabled roster. **Games today (UTC)** counts games whose `started_at` is on the current UTC day and whose `finished_at` is set. A round that was started and not finished does not count. **Players** is the number of distinct accounts that have started a game.
 - Under the counts: **Top 5**, with the same bar as the full leaderboard. It shows that board's rows, stopped at 5. **Full leaderboard** opens `/leaderboard` with the same choice. Changing a control on either page is the same choice on the other.
 - Signed out: **Sign up** goes to `/login?tab=create&next=/play`. **Sign in** goes to `/login?next=/play`.
 - Signed in: **Play** goes to `/play`.
@@ -316,16 +316,16 @@ First person. The words:
 
 ## Statistics (`/statistics`)
 
-Public. No session. Linked from the header. It does not show prices, spend, or OpenRouter billing. The heading is **Statistics**, then **Games**. There is no intro under the heading.
+Public. No session. Linked from the header. It does not show prices, spend, or OpenRouter billing. The heading is **Statistics**. Mode buttons are next, then the stats. There is no intro under the heading.
 
-Rates use finished games. A round still open is in the totals and stays out of any list that would name its model. A game with no account still counts. A category with no finished games says **No finished games in this category yet.** It does not show a made-up rate. Categories come from the `categories` table, so a later category appears here with that empty state until it has a finished round.
+A game counts only when `finished_at` is set. A round that was started and not finished is left out of every figure, the chart, and the lists. The page does not say how many rounds are still open. A game with no account still counts once it is finished. Arrival shows the overall stats. Mode buttons sit under the heading: **All modes**, **Daily**, **All models**, **Class**, **Company**, **Region**, and **Custom**. Only **All modes** and **All models** can be chosen. **All modes** is the arrival view, every game mode together. The others stay visible and gray, the same as a mode that is not open on the leaderboard. Choosing **All models** replaces the overall stats with that mode. The seven buttons share the bar in equal widths. On a phone they sit on two rows, four then three, and each row fills the width. They do not reload the page. Class is not on the overall stats. Family is not a section.
 
-- Solve rate, give-ups, correct guesses, messages per game, tokens per game, region found
-- Games started per UTC day, last 14 days
+- Solve rate, give-ups, correct guesses, messages per game, tokens per game, region found. Give-ups do not mention open rounds
+- Finished games started per UTC day, last 14 days
 - Which models are hardest to find: games, solve rate, messages when solved, tokens
 - Wrong names: hidden model, the model named instead, and how often
-- Size, region, and class of the hidden model. Class uses current class membership. A round counts in each class that model belongs to. A model with no class is left out, and the page does not invent a class for it
-- One block per category. Family is not a category and not a section
+- Size and region of the hidden model
+- **All models** uses the same blocks for that category. A category with no finished games says **No finished games in this category yet.** It does not show a made-up rate
 
 Tokens are prompt plus completion. Nothing on this page is a price.
 

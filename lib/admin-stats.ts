@@ -19,7 +19,7 @@ export async function loadGameMetrics(): Promise<GameMetrics> {
   await requireOwner();
   const client = serviceOrThrow();
   const [games, usage, guesses] = await Promise.all([
-    readAll(client, "games", "id, model_id, status, message_count, started_at"),
+    readAll(client, "games", "id, model_id, status, message_count, started_at, finished_at"),
     readAll(
       client,
       "usage",
@@ -33,6 +33,7 @@ export async function loadGameMetrics(): Promise<GameMetrics> {
     status: row.status as string,
     messageCount: Number(row.message_count ?? 0),
     startedAt: row.started_at as string,
+    finishedAt: typeof row.finished_at === "string" && row.finished_at.length > 0 ? row.finished_at : null,
   }));
   const usageFacts: UsageFact[] = usage.map((row) => ({
     gameId: (row.game_id as string | null) ?? null,

@@ -33,10 +33,15 @@ export function playFigures(metrics: GameMetrics): Figure[] {
     {
       label: "Correct guesses",
       value: percent(metrics.guessAccuracy),
-      note: `${metrics.correctGuesses} of ${metrics.guesses} guesses. ${decimal(metrics.guessesPerGame)} per game`,
+      note: `${metrics.correctGuesses} of ${metrics.guesses} guesses on finished games. ${decimal(metrics.guessesPerGame)} per finished game`,
     },
     { label: "Messages per game", value: decimal(metrics.messagesPerGame), note: "Finished games" },
     { label: "Tokens per game", value: compact(metrics.tokensPerGame), note: "Prompt plus completion" },
+    {
+      label: "Unfinished games",
+      value: percent(metrics.unfinishedRate),
+      note: `${metrics.unfinished.toLocaleString("en-US")} of ${metrics.games.toLocaleString("en-US")}`,
+    },
   ];
 }
 

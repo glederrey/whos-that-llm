@@ -6,7 +6,15 @@ import { modeRows } from "./mode-rows";
 const now = new Date("2026-10-10T12:00:00Z");
 
 function game(id: string, modelId: string, status: string, messageCount: number, day = "2026-10-10"): GameFact {
-  return { id, modelId, status, messageCount, startedAt: `${day}T08:00:00Z` };
+  const finished = status === "solved" || status === "miss" || status === "given_up";
+  return {
+    id,
+    modelId,
+    status,
+    messageCount,
+    startedAt: `${day}T08:00:00Z`,
+    finishedAt: finished ? `${day}T09:00:00Z` : null,
+  };
 }
 
 function use(gameId: string, modelId: string, tokens: number, cost: number, failed = false): UsageFact {
@@ -34,6 +42,7 @@ test("rates use finished games and cost follows the ledger", () => {
     { gameId: "2", modelCorrect: false },
     { gameId: "2", modelCorrect: false },
     { gameId: "4", modelCorrect: true },
+    { gameId: "5", modelCorrect: true },
     { gameId: "gone", modelCorrect: true },
   ];
   const metrics = computeGameMetrics(games, usage, guesses, now, 3);
@@ -43,7 +52,11 @@ test("rates use finished games and cost follows the ledger", () => {
   assert.equal(metrics.giveUpRate, 0.25);
   assert.equal(metrics.open, 1);
   assert.equal(metrics.guesses, 4);
+  assert.equal(metrics.correctGuesses, 2);
   assert.equal(metrics.guessAccuracy, 0.5);
+  assert.equal(metrics.guessesPerGame, 1);
+  assert.equal(metrics.unfinished, 1);
+  assert.equal(metrics.unfinishedRate, 0.2);
   assert.equal(metrics.messagesPerGame, 5);
   assert.equal(metrics.tokensPerGame, 175);
   assert.ok(Math.abs((metrics.costPerGame ?? 0) - 0.225) < 1e-9);
