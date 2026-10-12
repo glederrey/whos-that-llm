@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { config, currentRules, rulesForCategory, type Rules } from "./config";
+import { boardSince } from "./board-query";
 import { difficulties, difficultyFromStored, difficultyNumber, inDifficultyPool, type BoardDifficulty, type Difficulty } from "./difficulty";
 import {
   buildTraits,
@@ -574,7 +575,7 @@ export async function leaderboard(
   const client = serviceOrThrow();
   const { data: row } = await client.from("categories").select("leaderboard").eq("id", category).maybeSingle();
   if (!row?.leaderboard) return fail(404, "not_found");
-  const since = period === "week" ? mondayUtc() : "1970-01-01T00:00:00.000Z";
+  const since = boardSince(period === "month" || period === "all" ? period : "week");
   const fresh = await client.rpc("leaderboard", {
     category,
     since,
@@ -697,14 +698,6 @@ function sortTranscript(
       role: message.role as "user" | "assistant",
       content: message.content,
     }));
-}
-
-function mondayUtc() {
-  const now = new Date();
-  const day = now.getUTCDay();
-  const diff = day === 0 ? 6 : day - 1;
-  const monday = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - diff));
-  return monday.toISOString();
 }
 
 export async function setUsername(userId: string, raw: string): Promise<ApiFailure | null> {

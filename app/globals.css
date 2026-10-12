@@ -571,9 +571,14 @@ html[data-theme="dark"] .segmented a.difficulty-impossible[aria-pressed="true"] 
 .board tbody tr:first-child td { border-top: 0; }
 .board tbody tr:not(.medal):not(.mine):hover td { background: var(--soft); }
 .board .rank { width: 76px; }
-.board .num, .board th.num { text-align: right; font-variant-numeric: tabular-nums; }
-.board td.name { font-weight: 500; }
-.board .player { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 10px; min-height: 28px; line-height: 1.2; }
+.board .num, .board th.num { width: 1%; text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.board td.name { width: 100%; max-width: 0; font-weight: 500; overflow: hidden; }
+.board .marks { width: 1%; text-align: right; white-space: nowrap; padding-left: 8px; padding-right: 12px; }
+.board .player { display: flex; align-items: center; flex-wrap: nowrap; gap: 8px 10px; min-height: 28px; min-width: 0; line-height: 1.2; }
+.board .player-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.board .player-marks { display: inline-flex; align-items: center; justify-content: flex-end; gap: 8px; }
+.board .player-marks > .board-chip,
+.board .mark-slot { flex: none; }
 .board-chip {
   display: inline-flex;
   align-items: center;
@@ -1320,6 +1325,13 @@ html[data-theme="dark"] .history-facts .board-chip.no-hints {
   .score { font-size: 44px; }
   .model-lockup { align-items: flex-start; }
   .dialog { width: calc(100vw - 32px); }
+}
+
+@media (max-width: 480px) {
+  .board th, .board td { padding: 10px 8px; }
+  .board .rank { width: 44px; }
+  .board .marks { padding-left: 4px; padding-right: 4px; }
+  .board .num, .board th.num { padding-left: 6px; padding-right: 8px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
