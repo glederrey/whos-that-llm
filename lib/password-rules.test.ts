@@ -69,7 +69,8 @@ test("a met rule turns green and an unmet rule stays grey", () => {
   assert.match(layout, /variable: "--font-bold"/);
   const container = block.match(/\.must-contain \{[^}]*\}/)?.[0] ?? "";
   assert.equal(container.includes("padding-left"), false);
-  assert.match(block, /\.must-contain ul \{[^}]*padding-left: 16px/);
+  assert.match(block, /\.must-contain ul \{[^}]*padding-left: 16px[^}]*grid-template-columns: 1fr 1fr/);
+  assert.match(block, /\.must-contain li:first-child \{ grid-column: 1 \/ -1; \}/);
   assert.equal(css.includes(".strength"), false);
   assert.equal(passwordRulesText, "At least 8 characters, a lowercase letter, an uppercase letter, a digit, and a symbol.");
 });
@@ -86,6 +87,9 @@ test("sign-up checks the rules before the auth call and sign-in stays generic", 
   assert.match(form, /showTab\("sign-in"\)/);
   assert.match(form, /showTab\("create"\)/);
   assert.match(form, /Must contain/);
+  assert.ok(form.indexOf('className="auth-confirm"') > form.indexOf('type="submit"'));
+  const css = fs.readFileSync(path.join(root, "app/globals.css"), "utf8");
+  assert.match(css, /\.auth-confirm \{ color: var\(--mute\); font-size: 14px; font-weight: 500; \}/);
   assert.match(form, /passwordChecks\(password\)/);
   assert.equal(form.includes("passwordRulesText"), false);
   assert.equal(form.includes('role="meter"'), false);

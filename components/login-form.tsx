@@ -172,8 +172,6 @@ export function LoginForm({
             Forgot password
           </button>
         ) : (
-          <>
-          <p className="muted">Supabase will email you a confirmation link.</p>
           <div>
             <button
               type="button"
@@ -200,11 +198,11 @@ export function LoginForm({
               </div>
             ) : null}
           </div>
-          </>
         )}
         <button type="submit" className="button" disabled={busy}>
           {signingIn ? "Sign in" : "Create account"}
         </button>
+        {signingIn ? null : <p className="auth-confirm">Supabase will email you a confirmation link.</p>}
       </form>
       {note ? <p className="muted">{note}</p> : null}
       {error ? <p className="error">{error}</p> : null}

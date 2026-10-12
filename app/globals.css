@@ -409,7 +409,8 @@ textarea { min-height: 76px; resize: vertical; }
 .password-eye svg { width: 18px; height: 18px; }
 .must-contain { display: grid; gap: 6px; font-size: 13px; font-weight: 400; color: var(--mute); }
 .must-contain p { font-weight: 500; color: var(--text); }
-.must-contain ul { list-style: none; margin: 0; padding: 0; padding-left: 16px; display: grid; gap: 3px; }
+.must-contain ul { list-style: none; margin: 0; padding: 0; padding-left: 16px; display: grid; grid-template-columns: 1fr 1fr; column-gap: 8px; row-gap: 3px; }
+.must-contain li:first-child { grid-column: 1 / -1; }
 .must-contain li { display: flex; align-items: center; gap: 8px; color: var(--mute); transition: color 0.15s ease; }
 .must-contain li[data-met="true"] { color: #0b6b2e; font-family: var(--font-bold), var(--font), "Segoe UI", sans-serif; font-weight: 700; }
 html[data-theme="dark"] .must-contain li[data-met="true"] { color: #4cce7a; font-family: var(--font-bold), var(--font), "Segoe UI", sans-serif; font-weight: 700; }
@@ -489,6 +490,7 @@ html[data-theme="dark"] .segmented a[aria-pressed="true"] { color: #062e2e; }
 }
 html[data-theme="dark"] .text-link { color: var(--teal); }
 .forgot { justify-self: start; font-size: 14px; }
+.auth-confirm { color: var(--mute); font-size: 14px; font-weight: 500; }
 .or {
   display: flex;
   align-items: center;
