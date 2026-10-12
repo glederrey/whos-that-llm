@@ -78,6 +78,7 @@ test("OpenRouter spend is read at request time on the server", () => {
   assert.match(text, /cache: "no-store"/);
   assert.match(text, /\/key`/);
   assert.match(text, /\/activity`/);
+  assert.match(text, /\/analytics\/query`/);
   assert.doesNotMatch(text, /sk-or-/);
   for (const relative of ["app/admin/page.tsx", "app/admin/costs/page.tsx", "app/admin/games/page.tsx", "app/admin/modes/page.tsx"]) {
     const page = fs.readFileSync(path.join(root, relative), "utf8");
@@ -88,6 +89,22 @@ test("OpenRouter spend is read at request time on the server", () => {
   }
   const costs = fs.readFileSync(path.join(root, "app/admin/costs/page.tsx"), "utf8");
   assert.match(costs, /loadOpenRouterSpend/);
+  assert.match(costs, /Our ledger/);
+  assert.match(costs, /Spend by hidden model/);
+  assert.match(costs, /include the current UTC day/);
+  const panels = fs.readFileSync(path.join(root, "components/admin-panels.tsx"), "utf8");
+  assert.doesNotMatch(panels, /Paid this UTC/);
+  assert.doesNotMatch(panels, /Cost per solved game/);
+  const all = panels.indexOf("Paid, all time");
+  const month = panels.indexOf("Paid, last 30 days");
+  const week = panels.indexOf("Paid, last 7 days");
+  assert.ok(all !== -1 && all < month && month < week);
+  const table = fs.readFileSync(path.join(root, "components/spend-activity-table.tsx"), "utf8");
+  assert.match(table, /"use client"/);
+  assert.match(table, /nextSpendSort/);
+  assert.match(table, /All models/);
+  assert.doesNotMatch(table, /openrouter-spend/);
+  assert.doesNotMatch(table, /href=/);
   const home = fs.readFileSync(path.join(root, "app/admin/page.tsx"), "utf8");
   assert.doesNotMatch(home, /loadOpenRouterSpend/);
   assert.doesNotMatch(home, /loadGameMetrics/);
