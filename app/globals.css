@@ -385,6 +385,46 @@ textarea { min-height: 76px; resize: vertical; }
 }
 .auth .button-google svg { width: 18px; height: 18px; }
 .auth input { padding: 11px 12px; }
+.password-block { display: grid; gap: 6px; font-size: 14px; font-weight: 500; }
+.password-field { position: relative; }
+.password-field input { padding-right: 42px; }
+.password-field input::-ms-reveal,
+.password-field input::-ms-clear { display: none; }
+.password-eye {
+  position: absolute;
+  top: 50%;
+  right: 6px;
+  transform: translateY(-50%);
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--mute);
+}
+.password-eye:hover { background: var(--soft); color: var(--text); }
+.password-eye svg { width: 18px; height: 18px; }
+.password-rules { font-size: 13px; font-weight: 400; }
+.strength {
+  height: 4px;
+  border-radius: 999px;
+  background: var(--line);
+  overflow: hidden;
+}
+.strength span {
+  display: block;
+  height: 100%;
+  width: 0;
+  background: var(--miss);
+  transition: width 0.15s ease, background 0.15s ease;
+}
+.strength[data-level="1"] span { width: 25%; }
+.strength[data-level="2"] span { width: 50%; }
+.strength[data-level="3"] span { width: 75%; background: var(--teal-press); }
+.strength[data-level="4"] span { width: 100%; background: var(--teal); }
 .segmented {
   display: inline-flex;
   gap: 2px;

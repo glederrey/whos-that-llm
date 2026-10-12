@@ -2,10 +2,13 @@
 
 import { headers } from "next/headers";
 import { allowedAuthUrl, authRedirectOrigin } from "@/lib/auth-cookies";
+import { passwordProblem, weakPasswordNotice } from "@/lib/password-rules";
 import { publicEnv } from "@/lib/supabase/env";
 import { createSessionClient } from "@/lib/supabase/server";
 
 export type AuthNotice = "invalid" | "exists" | "confirm" | "auth";
+
+export type SignUpNotice = AuthNotice | { rules: string };
 
 async function redirectOrigin(): Promise<string> {
   const headerList = await headers();
@@ -24,7 +27,9 @@ export async function startGoogleSignIn(): Promise<{ url: string } | { error: "a
   return { url: data.url };
 }
 
-export async function signUpWithEmail(email: string, password: string): Promise<AuthNotice | null> {
+export async function signUpWithEmail(email: string, password: string): Promise<SignUpNotice | null> {
+  const problem = passwordProblem(password);
+  if (problem) return { rules: problem };
   const supabase = await createSessionClient();
   if (!supabase) return "auth";
   const { data, error } = await supabase.auth.signUp({
@@ -33,6 +38,8 @@ export async function signUpWithEmail(email: string, password: string): Promise<
     options: { emailRedirectTo: `${await redirectOrigin()}/` },
   });
   if (error) {
+    const weak = weakPasswordNotice(password, error);
+    if (weak) return { rules: weak };
     const text = error.message.toLowerCase();
     if (text.includes("already")) return "exists";
     if (text.includes("confirm")) return "confirm";

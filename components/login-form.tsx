@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { sendPasswordReset, signInWithEmail, signUpWithEmail, startGoogleSignIn } from "@/app/auth/actions";
+import { sendPasswordReset, signInWithEmail, signUpWithEmail, startGoogleSignIn, type AuthNotice } from "@/app/auth/actions";
+import { passwordProblem, passwordRuleCount, passwordRulesText, passwordStrength } from "@/lib/password-rules";
 import { safeNext } from "@/lib/paths";
 
 export function LoginForm({
@@ -19,11 +20,12 @@ export function LoginForm({
   const [storedOpen, setStoredOpen] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState(cancelled ? "Google sign-in was cancelled." : "");
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
 
-  function noticeError(notice: "invalid" | "exists" | "confirm" | "auth") {
+  function noticeError(notice: AuthNotice) {
     if (notice === "exists") return "That email is already registered.";
     if (notice === "confirm") return "Confirm your email, then come back.";
     return "Wrong email or password.";
@@ -47,10 +49,20 @@ export function LoginForm({
     setError("");
     setNote("");
     if (tab === "create") {
+      const problem = passwordProblem(password);
+      if (problem) {
+        setBusy(false);
+        setError(problem);
+        return;
+      }
       const result = await signUpWithEmail(email, password);
       setBusy(false);
       if (result === "confirm") {
         setNote("Supabase will email you a confirmation link. Check your email.");
+        return;
+      }
+      if (result && typeof result === "object") {
+        setError(result.rules);
         return;
       }
       if (result) {
@@ -112,16 +124,45 @@ export function LoginForm({
           Email
           <input type="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} required />
         </label>
-        <label>
-          Password
-          <input
-            type="password"
-            autoComplete={signingIn ? "current-password" : "new-password"}
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            required
-          />
-        </label>
+        <div className="password-block">
+          <label htmlFor="account-password">Password</label>
+          <div className="password-field">
+            <input
+              id="account-password"
+              type={showPassword ? "text" : "password"}
+              autoComplete={signingIn ? "current-password" : "new-password"}
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              required
+            />
+            <button
+              type="button"
+              className="password-eye"
+              aria-pressed={showPassword}
+              aria-controls="account-password"
+              aria-label={showPassword ? "Hide password" : "Show password"}
+              onClick={() => setShowPassword((shown) => !shown)}
+            >
+              {showPassword ? <EyeOffIcon /> : <EyeIcon />}
+            </button>
+          </div>
+          {signingIn ? null : (
+            <>
+              <p className="muted password-rules">{passwordRulesText}</p>
+              <div
+                className="strength"
+                data-level={passwordStrength(password)}
+                role="meter"
+                aria-label="Password strength"
+                aria-valuemin={0}
+                aria-valuemax={passwordRuleCount}
+                aria-valuenow={passwordStrength(password)}
+              >
+                <span />
+              </div>
+            </>
+          )}
+        </div>
         {signingIn ? (
           <button type="button" className="text-link forgot" onClick={forgot} disabled={busy}>
             Forgot password
@@ -164,5 +205,25 @@ export function LoginForm({
       {note ? <p className="muted">{note}</p> : null}
       {error ? <p className="error">{error}</p> : null}
     </div>
+  );
+}
+
+function EyeIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" />
+      <circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" strokeWidth="2" />
+    </svg>
+  );
+}
+
+function EyeOffIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M3 3l18 18" />
+      <path fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M10.5 10.7a3 3 0 0 0 4.2 4.2" />
+      <path fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M9.9 5.2A10.4 10.4 0 0 1 12 5c6.5 0 10 7 10 7a17 17 0 0 1-3.1 4.1" />
+      <path fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M6.1 6.1C3.6 7.9 2 12 2 12a18 18 0 0 0 6.2 5.7 10.6 10.6 0 0 0 5.1 1.1" />
+    </svg>
   );
 }
