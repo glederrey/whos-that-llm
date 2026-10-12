@@ -1,7 +1,7 @@
 import { parseDifficulty, type Difficulty } from "./difficulty";
 import type { Region, Size } from "./game";
 
-export type RosterNotice = "invalid" | "duplicate" | "taken" | "year" | "reasoning" | "classes" | "save";
+export type RosterNotice = "invalid" | "duplicate" | "taken" | "year" | "reasoning" | "categories" | "save";
 
 const notices: Record<RosterNotice, string> = {
   invalid: "Check the OpenRouter id, name, company, region, release date, size, difficulty, and prices.",
@@ -9,7 +9,7 @@ const notices: Record<RosterNotice, string> = {
   taken: "That model is already in the roster.",
   year: "Add a year before turning this model on.",
   reasoning: "This model needs provider settings before it can be turned on.",
-  classes: "Pick classes from the list.",
+  categories: "Pick categories from the list.",
   save: "Could not save that model.",
 };
 

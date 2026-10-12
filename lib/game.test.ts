@@ -1,9 +1,9 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { currentRules, rulesForCategory } from "./config";
+import { currentRules, rulesForGameMode } from "./config";
 import {
   buildTraits,
-  categoryAllowsHints,
+  gameModeAllowsHints,
   eliminatedCompanyIds,
   filterCandidates,
   hintOffered,
@@ -18,7 +18,7 @@ import {
   type ScoreLine,
 } from "./game";
 
-const rules = rulesForCategory(true);
+const rules = rulesForGameMode(true);
 
 function model(
   partial: Partial<FrozenModel> & Pick<FrozenModel, "name" | "companyId"> & { id?: string },
@@ -349,7 +349,7 @@ test("a wrong company leaves the guess search only in hint mode", () => {
   const listed = (guesses: RecordedGuess[], noHint: boolean) =>
     toPublicGame({
       id: "game",
-      category: "all",
+      gameMode: "all",
       poolKey: null,
       noHint,
       status: "active",
@@ -394,7 +394,7 @@ test("a wrong region removes that region's models from the list", () => {
   const listed = (guesses: RecordedGuess[], noHint = false) =>
     toPublicGame({
       id: "game",
-      category: "all",
+      gameMode: "all",
       poolKey: null,
       noHint,
       status: "active",
@@ -495,11 +495,11 @@ test("a wrong guess keeps the model and names the traits it missed", () => {
 });
 
 test("hints are only possible on daily, all models, and custom", () => {
-  assert.equal(categoryAllowsHints("daily"), true);
-  assert.equal(categoryAllowsHints("all"), true);
-  assert.equal(categoryAllowsHints("custom"), true);
-  for (const category of ["class", "region", "company", "latest"]) {
-    assert.equal(categoryAllowsHints(category), false, category);
+  assert.equal(gameModeAllowsHints("daily"), true);
+  assert.equal(gameModeAllowsHints("all"), true);
+  assert.equal(gameModeAllowsHints("custom"), true);
+  for (const gameMode of ["class", "region", "company", "latest"]) {
+    assert.equal(gameModeAllowsHints(gameMode), false, gameMode);
   }
 });
 
@@ -511,7 +511,7 @@ test("a finished round lists company, region, year, and size", () => {
   const traits = buildTraits(models);
   const game = toPublicGame({
     id: "game",
-    category: "all",
+    gameMode: "all",
     poolKey: null,
     noHint: false,
     status: "solved",

@@ -1,26 +1,26 @@
 import { SectionNav } from "@/components/section-nav";
-import { addClass, saveClass } from "@/app/admin/actions";
-import { classNotice } from "@/lib/admin-class";
-import { loadClassList, type ClassRow } from "@/lib/admin-roster";
+import { addCategory, saveCategory } from "@/app/admin/actions";
+import { categoryNotice } from "@/lib/admin-category";
+import { loadCategoryList, type CategoryRow } from "@/lib/admin-roster";
 
 export const dynamic = "force-dynamic";
 
-export default async function ClassesPage({
+export default async function CategoriesPage({
   searchParams,
 }: {
   searchParams: Promise<{ notice?: string }>;
 }) {
   const params = await searchParams;
-  const notice = classNotice(params.notice);
-  const { classes, companies } = await loadClassList();
+  const notice = categoryNotice(params.notice);
+  const { categories, companies } = await loadCategoryList();
 
   return (
     <div className="stack">
       <SectionNav />
-      <h1>Classes</h1>
+      <h1>Categories</h1>
       <p className="muted">
-        A class groups models for a later game. One model can be in several. Company is optional: Opus can belong to
-        Anthropic, and GPT vs Claude can belong to none. A class has no logo of its own.
+        A category is a set we define, not a lab&apos;s line. One model can be in several: only Opus, only the nano
+        models, or a pile of obscure ones. Company is optional. A category has no logo of its own.
       </p>
       {notice ? (
         <p className="error" role="alert">
@@ -28,18 +28,18 @@ export default async function ClassesPage({
         </p>
       ) : null}
       <details className="card roster-add">
-        <summary>Add a class</summary>
-        <form action={addClass} className="stack">
-          <ClassFields companies={companies} />
+        <summary>Add a category</summary>
+        <form action={addCategory} className="stack">
+          <CategoryFields companies={companies} />
           <div>
             <button className="button" type="submit">
-              Add class
+              Add category
             </button>
           </div>
         </form>
       </details>
       <div className="card roster-card">
-        <table className="roster compact classes">
+        <table className="roster compact categories">
           <thead>
             <tr>
               <th>Name</th>
@@ -49,14 +49,14 @@ export default async function ClassesPage({
             </tr>
           </thead>
           <tbody>
-            {classes.length === 0 ? (
+            {categories.length === 0 ? (
               <tr>
                 <td colSpan={4} className="muted">
-                  No classes yet.
+                  No categories yet.
                 </td>
               </tr>
             ) : (
-              classes.map((row) => <ClassRowView key={row.id} row={row} companies={companies} />)
+              categories.map((row) => <CategoryRowView key={row.id} row={row} companies={companies} />)
             )}
           </tbody>
         </table>
@@ -65,8 +65,8 @@ export default async function ClassesPage({
   );
 }
 
-function ClassRowView({ row, companies }: { row: ClassRow; companies: { id: string; name: string }[] }) {
-  const panel = `edit-class-${row.id}`;
+function CategoryRowView({ row, companies }: { row: CategoryRow; companies: { id: string; name: string }[] }) {
+  const panel = `edit-category-${row.id}`;
   const choices = companies;
   return (
     <tr>
@@ -80,10 +80,10 @@ function ClassRowView({ row, companies }: { row: ClassRow; companies: { id: stri
           </button>
         </div>
         <div id={panel} popover="auto" className="roster-edit card">
-          <form action={saveClass} className="stack">
+          <form action={saveCategory} className="stack">
             <h2>Edit {row.name}</h2>
             <input type="hidden" name="id" value={row.id} />
-            <ClassFields
+            <CategoryFields
               name={row.name}
               description={row.description}
               companyId={row.companyId ?? ""}
@@ -104,7 +104,7 @@ function ClassRowView({ row, companies }: { row: ClassRow; companies: { id: stri
   );
 }
 
-function ClassFields({
+function CategoryFields({
   name = "",
   description = "",
   companyId = "",

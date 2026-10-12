@@ -14,7 +14,7 @@ export default async function ModesPage() {
       <SectionNav />
       <h1>Modes</h1>
       <p className="muted">
-        Each game category, including ones that are not open yet. Solve rate is solved over finished games. A class
+        Each game mode, including ones that are not open yet. Solve rate is solved over finished games. A category
         leaderboard is not a row here.
       </p>
       <div className="card roster-card">

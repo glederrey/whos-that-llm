@@ -83,14 +83,14 @@ test("an empty database gives n/a, not NaN", () => {
   assert.equal(metrics.models.length, 0);
 });
 
-test("mode rows keep every category, including ones with no games", () => {
+test("mode rows keep every game mode, including ones with no games", () => {
   const rows = modeRows(
     [
-      { category: "all", status: "solved" },
-      { category: "all", status: "given_up" },
-      { category: "all", status: "active" },
-      { category: "custom", status: "miss" },
-      { category: "retired", status: "solved" },
+      { gameMode: "all", status: "solved" },
+      { gameMode: "all", status: "given_up" },
+      { gameMode: "all", status: "active" },
+      { gameMode: "custom", status: "miss" },
+      { gameMode: "retired", status: "solved" },
     ],
     [
       { id: "daily", name: "Daily" },

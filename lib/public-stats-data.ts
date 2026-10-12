@@ -2,7 +2,7 @@ import "server-only";
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Region, Size } from "./game";
-import { computePublicStats, type NamedCategory, type NamedClass, type PublicGameFact, type PublicGuessFact, type PublicUsageFact } from "./public-stats";
+import { computePublicStats, type NamedCategory, type NamedGameMode, type PublicGameFact, type PublicGuessFact, type PublicUsageFact } from "./public-stats";
 import { serviceOrThrow } from "./rounds";
 
 const pageSize = 1000;
@@ -15,43 +15,43 @@ export type PublicStatsPayload = {
 
 export async function loadPublicStats(): Promise<PublicStatsPayload> {
   const client = serviceOrThrow();
-  const [games, usage, guesses, categories, models, classes, memberships] = await Promise.all([
-    readAll(client, "games", "id, model_id, status, message_count, started_at, finished_at, category, traits"),
+  const [games, usage, guesses, gameModes, models, categories, memberships] = await Promise.all([
+    readAll(client, "games", "id, model_id, status, message_count, started_at, finished_at, game_mode, traits"),
     readAll(client, "usage", "id, game_id, model_id, input_tokens, output_tokens"),
     readAll(client, "guesses", "id, game_id, guessed_model_id, model_correct, region_correct"),
-    readAll(client, "categories", "id, name, sort_order"),
+    readAll(client, "game_modes", "id, name, sort_order"),
     readAll(client, "models", "id, name"),
-    readAll(client, "classes", "id, name"),
-    readAll(client, "model_classes", "model_id, class_id", ["model_id", "class_id"]),
+    readAll(client, "categories", "id, name"),
+    readAll(client, "model_categories", "model_id, category_id", ["model_id", "category_id"]),
   ]);
   const names: Record<string, string> = {};
   for (const row of models) names[row.id as string] = row.name as string;
-  const listed: NamedCategory[] = categories
+  const listed: NamedGameMode[] = gameModes
     .map((row) => ({ id: row.id as string, name: row.name as string, sort: Number(row.sort_order ?? 0) }))
     .sort((a, b) => a.sort - b.sort || a.id.localeCompare(b.id))
     .map(({ id, name }) => ({ id, name }));
-  const classNames: NamedClass[] = classes.map((row) => ({ id: row.id as string, name: row.name as string }));
-  const classesByModel = new Map<string, string[]>();
+  const categoryNames: NamedCategory[] = categories.map((row) => ({ id: row.id as string, name: row.name as string }));
+  const categoriesByModel = new Map<string, string[]>();
   for (const row of memberships) {
     const modelId = row.model_id as string;
-    const classId = row.class_id as string;
-    const current = classesByModel.get(modelId) ?? [];
-    if (!current.includes(classId)) current.push(classId);
-    classesByModel.set(modelId, current);
+    const categoryId = row.category_id as string;
+    const current = categoriesByModel.get(modelId) ?? [];
+    if (!current.includes(categoryId)) current.push(categoryId);
+    categoriesByModel.set(modelId, current);
   }
   return {
     names,
     stats: computePublicStats(
-      games.map((row) => gameFact(row, classesByModel.get(row.model_id as string) ?? [])),
+      games.map((row) => gameFact(row, categoriesByModel.get(row.model_id as string) ?? [])),
       usage.map(usageFact),
       guesses.map(guessFact),
       listed,
-      classNames,
+      categoryNames,
     ),
   };
 }
 
-function gameFact(row: Record<string, unknown>, classIds: string[]): PublicGameFact {
+function gameFact(row: Record<string, unknown>, categoryIds: string[]): PublicGameFact {
   const modelId = row.model_id as string;
   const trait = hiddenTrait(row.traits, modelId);
   return {
@@ -61,10 +61,10 @@ function gameFact(row: Record<string, unknown>, classIds: string[]): PublicGameF
     messageCount: Number(row.message_count ?? 0),
     startedAt: row.started_at as string,
     finishedAt: typeof row.finished_at === "string" && row.finished_at.length > 0 ? row.finished_at : null,
-    category: row.category as string,
+    gameMode: row.game_mode as string,
     size: trait.size,
     region: trait.region,
-    classIds,
+    categoryIds,
   };
 }
 

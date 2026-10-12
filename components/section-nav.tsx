@@ -6,7 +6,7 @@ export function SectionNav() {
       <a href="/admin/games">Games</a>
       <a href="/admin/modes">Modes</a>
       <a href="/admin/models">Models</a>
-      <a href="/admin/classes">Classes</a>
+      <a href="/admin/categories">Categories</a>
     </nav>
   );
 }

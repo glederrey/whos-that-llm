@@ -6,7 +6,7 @@ import { RosterReturnFields } from "@/components/roster-return-fields";
 import { SectionNav } from "@/components/section-nav";
 import { saveModel, setModelEnabled } from "@/app/admin/actions";
 import { rosterNotice } from "@/lib/admin-model";
-import { loadRoster, type ClassRow, type RosterRow } from "@/lib/admin-roster";
+import { loadRoster, type CategoryRow, type RosterRow } from "@/lib/admin-roster";
 import { modelsReturnPath, nextRosterSort, pageOf, rosterSortOf, searchRoster, sortRoster, type RosterSort, type RosterSortColumn } from "@/lib/roster-list";
 import { difficultyLabel } from "@/lib/difficulty";
 import { regionLabel, sizeLabel } from "@/lib/game";
@@ -21,7 +21,7 @@ export default async function ModelsPage({
 }) {
   const params = await searchParams;
   const notice = rosterNotice(params.notice);
-  const { rows, companies, classes } = await loadRoster();
+  const { rows, companies, categories } = await loadRoster();
   const query = (params.q ?? "").slice(0, 100);
   const sort = rosterSortOf(params.sort, params.dir);
   const found = sortRoster(searchRoster(rows, query), sort);
@@ -43,7 +43,7 @@ export default async function ModelsPage({
       ) : null}
       <details className="card roster-add">
         <summary>Add a model</summary>
-        <AddModelForm classes={classes} query={query} sort={sort} activePage={active.page} inactivePage={inactive.page} />
+        <AddModelForm categories={categories} query={query} sort={sort} activePage={active.page} inactivePage={inactive.page} />
       </details>
       <form action="/admin/models" method="get" className="roster-search">
           {sort ? (
@@ -52,7 +52,7 @@ export default async function ModelsPage({
               <input type="hidden" name="dir" value={sort.dir} />
             </>
           ) : null}
-          <input type="search" name="q" defaultValue={query} placeholder="Search by name, company, or class" aria-label="Search models" />
+          <input type="search" name="q" defaultValue={query} placeholder="Search by name, company, or category" aria-label="Search models" />
         <button className="button" type="submit">
           Search
         </button>
@@ -62,8 +62,8 @@ export default async function ModelsPage({
           </Link>
         ) : null}
       </form>
-      <RosterSection title="Active models" empty="No active models." list={active} query={query} pageKey="active" otherPage={inactive.page} sort={sort} classes={classes} />
-      <RosterSection title="Inactive models" empty="No inactive models." list={inactive} query={query} pageKey="inactive" otherPage={active.page} sort={sort} classes={classes} />
+      <RosterSection title="Active models" empty="No active models." list={active} query={query} pageKey="active" otherPage={inactive.page} sort={sort} categories={categories} />
+      <RosterSection title="Inactive models" empty="No inactive models." list={inactive} query={query} pageKey="inactive" otherPage={active.page} sort={sort} categories={categories} />
       <datalist id="roster-companies">
         {companies.map((company) => (
           <option key={company.id} value={company.name} />
@@ -84,7 +84,7 @@ const sortLabels: Record<RosterSortColumn, string> = {
   difficulty: "Difficulty",
   input: "Input",
   output: "Output",
-  classes: "Classes",
+  categories: "Categories",
 };
 
 function modelsHref(state: { query: string; activePage: number; inactivePage: number; sort: RosterSort }) {
@@ -105,7 +105,7 @@ function RosterSection({
   pageKey,
   otherPage,
   sort,
-  classes,
+  categories,
 }: {
   title: string;
   empty: string;
@@ -114,7 +114,7 @@ function RosterSection({
   pageKey: "active" | "inactive";
   otherPage: number;
   sort: RosterSort;
-  classes: ClassRow[];
+  categories: CategoryRow[];
 }) {
   const hrefFor = (page: number) =>
     modelsHref({
@@ -160,7 +160,7 @@ function RosterSection({
                   <ModelRow
                     key={row.id}
                     row={row}
-                    classes={classes}
+                    categories={categories}
                     query={query}
                     sort={sort}
                     activePage={pageKey === "active" ? list.page : otherPage}
@@ -199,14 +199,14 @@ function RosterSection({
 
 function ModelRow({
   row,
-  classes,
+  categories,
   query,
   sort,
   activePage,
   inactivePage,
 }: {
   row: RosterRow;
-  classes: ClassRow[];
+  categories: CategoryRow[];
   query: string;
   sort: RosterSort;
   activePage: number;
@@ -228,7 +228,7 @@ function ModelRow({
       <td>{row.difficulty ? difficultyLabel[row.difficulty] : "—"}</td>
       <td>{formatListPrice(row.inputUsdPerMtok)}</td>
       <td>{formatListPrice(row.outputUsdPerMtok)}</td>
-      <td>{row.classNames || "—"}</td>
+      <td>{row.categoryNames || "—"}</td>
       <td>
         <div className="roster-buttons">
           <form action={setModelEnabled}>
@@ -259,8 +259,8 @@ function ModelRow({
                 difficulty={row.difficulty ?? ""}
                 inputPrice={formatPriceInput(row.inputUsdPerMtok)}
                 outputPrice={formatPriceInput(row.outputUsdPerMtok)}
-                classes={classes}
-                classIds={row.classIds}
+                categories={categories}
+                categoryIds={row.categoryIds}
               />
             </div>
             <p className="muted">Prices are dollars per 1 million tokens. Region belongs to the company. New games use it.</p>

@@ -6,17 +6,17 @@ import { lookupOpenRouterModel } from "@/app/admin/model-lookup";
 import { validOpenRouterId } from "@/lib/admin-model";
 import type { ModelDraft } from "@/lib/openrouter-draft";
 import type { RosterSort } from "@/lib/roster-list";
-import { ModelFields, type ModelFieldClass } from "./model-fields";
+import { ModelFields, type ModelFieldCategory } from "./model-fields";
 import { RosterReturnFields } from "./roster-return-fields";
 
 export function AddModelForm({
-  classes,
+  categories,
   query,
   sort,
   activePage,
   inactivePage,
 }: {
-  classes: ModelFieldClass[];
+  categories: ModelFieldCategory[];
   query: string;
   sort: RosterSort;
   activePage: number;
@@ -47,7 +47,7 @@ export function AddModelForm({
         setNote("OpenRouter has no model with that id. Fill in the form.");
       } else {
         setDraft(result.draft);
-        setNote("Size, difficulty, and classes stay blank. OpenRouter does not set the difficulty. Change anything before you save.");
+        setNote("Size, difficulty, and categories stay blank. OpenRouter does not set the difficulty. Change anything before you save.");
       }
       setLookupKey((current) => current + 1);
     } finally {
@@ -87,7 +87,7 @@ export function AddModelForm({
               size=""
               inputPrice={draft.inputPrice}
               outputPrice={draft.outputPrice}
-              classes={classes}
+              categories={categories}
             />
           </div>
           <p className="muted">

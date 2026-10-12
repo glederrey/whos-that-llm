@@ -12,10 +12,10 @@ const sizes: Size[] = ["nano", "small", "medium", "large", "xxl"];
 const regions: Region[] = ["us", "cn", "eu"];
 
 export type PublicGameFact = GameFact & {
-  category: string;
+  gameMode: string;
   size: Size | null;
   region: Region | null;
-  classIds: string[];
+  categoryIds: string[];
 };
 
 export type PublicGuessFact = GuessFact & {
@@ -30,11 +30,11 @@ export type PublicUsageFact = {
   outputTokens: number;
 };
 
+export type NamedGameMode = { id: string; name: string };
+
 export type NamedCategory = { id: string; name: string };
 
-export type NamedClass = { id: string; name: string };
-
-export type ClassStat = TraitRow & { name: string };
+export type CategoryStat = TraitRow & { name: string };
 
 export type Outcome = {
   games: number;
@@ -78,7 +78,7 @@ export type TraitRow = {
   regionFoundRate: number | null;
 };
 
-export type CategoryReport = {
+export type GameModeReport = {
   id: string;
   name: string;
   games: number;
@@ -96,7 +96,7 @@ export const statisticModes = [
   { id: "main", name: "All modes", enabled: true },
   { id: "daily", name: "Daily", enabled: false },
   { id: "all", name: "All models", enabled: true },
-  { id: "class", name: "Class", enabled: false },
+  { id: "class", name: "Category", enabled: false },
   { id: "company", name: "Company", enabled: false },
   { id: "region", name: "Region", enabled: false },
   { id: "custom", name: "Custom", enabled: false },
@@ -111,8 +111,8 @@ export type PublicStats = {
   confusion: ConfusionPair[];
   sizes: TraitRow[];
   regions: TraitRow[];
-  classes: ClassStat[];
-  categories: CategoryReport[];
+  categories: CategoryStat[];
+  gameModes: GameModeReport[];
 };
 
 function tiedUsage(rows: PublicUsageFact[], ids: Set<string>): UsageFact[] {
@@ -222,16 +222,16 @@ function traitRows(
   });
 }
 
-function classRows(
+function categoryRows(
   games: PublicGameFact[],
   usage: PublicUsageFact[],
   guesses: PublicGuessFact[],
-  classes: NamedClass[],
-): ClassStat[] {
-  return [...classes]
+  categories: NamedCategory[],
+): CategoryStat[] {
+  return [...categories]
     .sort((a, b) => a.name.localeCompare(b.name) || a.id.localeCompare(b.id))
     .map((item) => {
-      const subset = games.filter((game) => game.classIds.includes(item.id));
+      const subset = games.filter((game) => game.categoryIds.includes(item.id));
       const outcome = outcomeFrom(subset, usage, guesses);
       const solved = subset.filter((game) => game.status === "solved").length;
       const solvedMessages = subset.reduce((sum, game) => (game.status === "solved" ? sum + game.messageCount : sum), 0);
@@ -248,18 +248,18 @@ function classRows(
     });
 }
 
-function categoryReport(
-  category: NamedCategory,
+function gameModeReport(
+  gameMode: NamedGameMode,
   games: PublicGameFact[],
   usage: PublicUsageFact[],
   guesses: PublicGuessFact[],
   now?: Date,
-): CategoryReport {
-  const rows = games.filter((game) => game.category === category.id);
+): GameModeReport {
+  const rows = games.filter((game) => game.gameMode === gameMode.id);
   if (rows.length === 0) {
     return {
-      id: category.id,
-      name: category.name,
+      id: gameMode.id,
+      name: gameMode.name,
       games: 0,
       open: 0,
       finished: 0,
@@ -279,8 +279,8 @@ function categoryReport(
     now,
   );
   return {
-    id: category.id,
-    name: category.name,
+    id: gameMode.id,
+    name: gameMode.name,
     games: rows.length,
     open: 0,
     finished: rows.length,
@@ -312,14 +312,14 @@ export function computePublicStats(
   games: PublicGameFact[],
   usage: PublicUsageFact[],
   guesses: PublicGuessFact[],
-  categories: NamedCategory[],
-  classes: NamedClass[] = [],
+  gameModes: NamedGameMode[],
+  categories: NamedCategory[] = [],
   now: Date = new Date(),
 ): PublicStats {
   const counted = games.filter((game) => hasFinishedAt(game));
-  const playable = categories.filter((category) => category.id !== "family");
-  const known = new Set(playable.map((category) => category.id));
-  const extra = [...new Set(counted.map((game) => game.category).filter((id) => id !== "family" && !known.has(id)))].sort();
+  const playable = gameModes.filter((gameMode) => gameMode.id !== "family");
+  const known = new Set(playable.map((gameMode) => gameMode.id));
+  const extra = [...new Set(counted.map((game) => game.gameMode).filter((id) => id !== "family" && !known.has(id)))].sort();
   const listed = [...playable, ...extra.map((id) => ({ id, name: id }))];
   const countedIds = new Set(counted.map((game) => game.id));
   const overall = computeGameMetrics(
@@ -350,7 +350,7 @@ export function computePublicStats(
     confusion: confusionPairs(counted, guesses),
     sizes: traitRows(counted, usage, guesses, "size", sizes),
     regions: traitRows(counted, usage, guesses, "region", regions),
-    classes: classRows(counted, usage, guesses, classes),
-    categories: listed.map((category) => categoryReport(category, counted, usage, guesses, now)),
+    categories: categoryRows(counted, usage, guesses, categories),
+    gameModes: listed.map((gameMode) => gameModeReport(gameMode, counted, usage, guesses, now)),
   };
 }

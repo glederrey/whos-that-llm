@@ -6,8 +6,8 @@ import { compact, decimal, percent, type DayCount } from "@/lib/admin-metrics";
 import { regionLabel, sizeLabel, type Region, type Size } from "@/lib/game";
 import {
   statisticModes,
-  type CategoryReport,
-  type ClassStat,
+  type CategoryStat,
+  type GameModeReport,
   type ConfusionPair,
   type ModelOutcome,
   type Outcome,
@@ -21,7 +21,7 @@ type Figure = { label: string; value: string; note?: string };
 export function StatisticsBoard({ stats, names }: { stats: PublicStats; names: Record<string, string> }) {
   const [mode, setMode] = useState<StatisticModeId>("main");
   const nameFor = (id: string) => names[id] ?? id;
-  const allModels = stats.categories.find((category) => category.id === "all");
+  const allModels = stats.gameModes.find((gameMode) => gameMode.id === "all");
 
   return (
     <div className="stack">
@@ -41,7 +41,7 @@ export function StatisticsBoard({ stats, names }: { stats: PublicStats; names: R
       {mode === "all" ? (
         <ModeStats report={allModels} nameFor={nameFor} />
       ) : mode === "class" ? (
-        <ClassMode classes={stats.classes} />
+        <CategoryMode categories={stats.categories} />
       ) : (
         <MainStats stats={stats} nameFor={nameFor} />
       )}
@@ -72,11 +72,11 @@ function MainStats({ stats, nameFor }: { stats: PublicStats; nameFor: (id: strin
   );
 }
 
-function ModeStats({ report, nameFor }: { report: CategoryReport | undefined; nameFor: (id: string) => string }) {
+function ModeStats({ report, nameFor }: { report: GameModeReport | undefined; nameFor: (id: string) => string }) {
   if (!report || report.outcome === null) {
     return (
       <div className="card empty">
-        <p>No finished games in this category yet.</p>
+        <p>No finished games in this game mode yet.</p>
       </div>
     );
   }
@@ -102,15 +102,15 @@ function ModeStats({ report, nameFor }: { report: CategoryReport | undefined; na
   );
 }
 
-function ClassMode({ classes }: { classes: ClassStat[] }) {
+function CategoryMode({ categories }: { categories: CategoryStat[] }) {
   return (
     <>
-      <h2>Class</h2>
+      <h2>Category</h2>
       <p className="muted">
-        By the classes of the hidden model. A round counts in each class that model belongs to. A model with no class is left
-        out.
+        By the categories of the hidden model. A round counts in each category that model belongs to. A model with no
+        category is left out.
       </p>
-      {classes.length === 0 ? <div className="card empty">No classes yet.</div> : <ClassTable rows={classes} />}
+      {categories.length === 0 ? <div className="card empty">No categories yet.</div> : <CategoryTable rows={categories} />}
     </>
   );
 }
@@ -226,13 +226,13 @@ function ConfusionTable({ rows, nameFor }: { rows: ConfusionPair[]; nameFor: (id
   );
 }
 
-function ClassTable({ rows }: { rows: ClassStat[] }) {
+function CategoryTable({ rows }: { rows: CategoryStat[] }) {
   return (
     <div className="card roster-card">
       <table className="roster compact">
         <thead>
           <tr>
-            <th>Class</th>
+            <th>Category</th>
             <th>Games</th>
             <th>Solve rate</th>
             <th>Messages when solved</th>

@@ -3,7 +3,7 @@ import { BoardControls } from "@/components/board-controls";
 import { BoardTable } from "@/components/board-table";
 import { anyDifficulty } from "@/lib/difficulty";
 import { boardChoice, boardHref, boardModes } from "@/lib/board-query";
-import { leaderboard, listBoardOptions, listCategories } from "@/lib/rounds";
+import { leaderboard, listBoardOptions, listGameModes } from "@/lib/rounds";
 import { currentProfile } from "@/lib/session";
 
 export const dynamic = "force-dynamic";
@@ -13,14 +13,14 @@ const pageSize = 20;
 export default async function LeaderboardPage({
   searchParams,
 }: {
-  searchParams: Promise<{ category?: string; period?: string; page?: string; difficulty?: string }>;
+  searchParams: Promise<{ gameMode?: string; period?: string; page?: string; difficulty?: string }>;
 }) {
   const params = await searchParams;
   const { user } = await currentProfile();
-  const [categories, options] = await Promise.all([listCategories(), listBoardOptions()]);
-  const modes = boardModes(categories);
+  const [gameModes, options] = await Promise.all([listGameModes(), listBoardOptions()]);
+  const modes = boardModes(gameModes);
   const choice = boardChoice(params, modes);
-  const result = await leaderboard(choice.category, choice.period, user?.id, choice.difficulty);
+  const result = await leaderboard(choice.gameMode, choice.period, user?.id, choice.difficulty);
   const rows = "rows" in result ? result.rows : [];
   const pageCount = Math.max(1, Math.ceil(rows.length / pageSize));
   const requested = Number(params.page);
@@ -38,7 +38,7 @@ export default async function LeaderboardPage({
         Back
       </a>
       <h1>Leaderboard</h1>
-      <BoardControls base="/leaderboard" modes={modes} classes={options.classes} companies={options.companies} {...choice} />
+      <BoardControls base="/leaderboard" modes={modes} categories={options.categories} companies={options.companies} {...choice} />
       {rows.length === 0 ? (
         <div className="card empty">No finished games on this board yet.</div>
       ) : (

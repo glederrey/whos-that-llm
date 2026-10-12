@@ -3,13 +3,13 @@ import { regionLabel, type Region, type Size } from "./game";
 
 export const rosterPageSize = 10;
 
-export const rosterSortColumns = ["name", "company", "region", "year", "size", "difficulty", "input", "output", "classes"] as const;
+export const rosterSortColumns = ["name", "company", "region", "year", "size", "difficulty", "input", "output", "categories"] as const;
 
 export type RosterSortColumn = (typeof rosterSortColumns)[number];
 
 export type RosterSort = { column: RosterSortColumn; dir: "asc" | "desc" } | null;
 
-type Searchable = { name: string; companyName: string; classNames: string };
+type Searchable = { name: string; companyName: string; categoryNames: string };
 
 type Sortable = Searchable & {
   id: string;
@@ -52,7 +52,7 @@ function compareRows(a: Sortable, b: Sortable, column: RosterSortColumn): number
   }
   if (column === "input") return compareMissingLast(a.inputUsdPerMtok, b.inputUsdPerMtok);
   if (column === "output") return compareMissingLast(a.outputUsdPerMtok, b.outputUsdPerMtok);
-  return compareTextMissingLast(a.classNames, b.classNames);
+  return compareTextMissingLast(a.categoryNames, b.categoryNames);
 }
 
 function compareText(a: string, b: string): number {
@@ -83,7 +83,7 @@ export function searchRoster<T extends Searchable>(rows: T[], query: string): T[
   const needle = query.trim().toLowerCase();
   if (!needle) return rows;
   return rows.filter((row) =>
-    [row.name, row.companyName, row.classNames].some((value) => value.toLowerCase().includes(needle)),
+    [row.name, row.companyName, row.categoryNames].some((value) => value.toLowerCase().includes(needle)),
   );
 }
 

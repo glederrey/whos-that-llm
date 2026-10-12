@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { createClass, createRosterModel, setRosterEnabled, updateClass, updateRosterModel } from "@/lib/admin-roster";
+import { createCategory, createRosterModel, setRosterEnabled, updateCategory, updateRosterModel } from "@/lib/admin-roster";
 import { modelsReturnPath } from "@/lib/roster-list";
 
 function text(formData: FormData, key: string): string {
@@ -22,11 +22,11 @@ function fields(formData: FormData) {
     difficulty: text(formData, "difficulty"),
     inputPrice: text(formData, "inputPrice"),
     outputPrice: text(formData, "outputPrice"),
-    classIds: formData.getAll("classId").flatMap((value) => (typeof value === "string" ? [value] : [])),
+    categoryIds: formData.getAll("categoryId").flatMap((value) => (typeof value === "string" ? [value] : [])),
   };
 }
 
-function classFields(formData: FormData) {
+function categoryFields(formData: FormData) {
   return {
     name: text(formData, "name"),
     description: text(formData, "description"),
@@ -37,7 +37,7 @@ function classFields(formData: FormData) {
 function finish(formData: FormData, notice: string | null) {
   revalidatePath("/admin");
   revalidatePath("/admin/models");
-  revalidatePath("/admin/classes");
+  revalidatePath("/admin/categories");
   redirect(
     modelsReturnPath({
       notice: notice ?? "",
@@ -50,10 +50,10 @@ function finish(formData: FormData, notice: string | null) {
   );
 }
 
-function finishClass(notice: string | null) {
-  revalidatePath("/admin/classes");
+function finishCategory(notice: string | null) {
+  revalidatePath("/admin/categories");
   revalidatePath("/admin/models");
-  redirect(notice ? `/admin/classes?notice=${notice}` : "/admin/classes");
+  redirect(notice ? `/admin/categories?notice=${notice}` : "/admin/categories");
 }
 
 export async function addModel(formData: FormData) {
@@ -68,10 +68,10 @@ export async function setModelEnabled(formData: FormData) {
   finish(formData, await setRosterEnabled(text(formData, "id"), text(formData, "enabled") === "1"));
 }
 
-export async function addClass(formData: FormData) {
-  finishClass(await createClass(classFields(formData)));
+export async function addCategory(formData: FormData) {
+  finishCategory(await createCategory(categoryFields(formData)));
 }
 
-export async function saveClass(formData: FormData) {
-  finishClass(await updateClass({ id: text(formData, "id"), ...classFields(formData) }));
+export async function saveCategory(formData: FormData) {
+  finishCategory(await updateCategory({ id: text(formData, "id"), ...categoryFields(formData) }));
 }

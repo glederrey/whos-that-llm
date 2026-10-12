@@ -25,20 +25,20 @@ const item = {
   noHint: false,
 };
 
-test("a stored category and difficulty become the labels a player sees", () => {
+test("a stored game mode and difficulty become the labels a player sees", () => {
   assert.deepEqual(
-    playedRoundFacts({ categoryId: "all", categoryName: "All models", difficulty: 3 }),
+    playedRoundFacts({ gameModeId: "all", gameModeName: "All models", difficulty: 3 }),
     { mode: "All models", difficulty: "hard" },
   );
   assert.deepEqual(
-    playedRoundFacts({ categoryId: "daily", categoryName: "  Daily  ", difficulty: "easy" }),
+    playedRoundFacts({ gameModeId: "daily", gameModeName: "  Daily  ", difficulty: "easy" }),
     { mode: "Daily", difficulty: "easy" },
   );
   assert.deepEqual(
-    playedRoundFacts({ categoryId: "company", categoryName: " ", difficulty: null }),
+    playedRoundFacts({ gameModeId: "company", gameModeName: " ", difficulty: null }),
     { mode: "company", difficulty: null },
   );
-  assert.equal(playedRoundFacts({ categoryId: "custom", categoryName: null, difficulty: 9 }).difficulty, null);
+  assert.equal(playedRoundFacts({ gameModeId: "custom", gameModeName: null, difficulty: 9 }).difficulty, null);
   assert.equal(difficultyText("hard"), "Hard");
   assert.equal(difficultyText(null), "—");
 });
@@ -76,14 +76,14 @@ test("the history dropdown names the mode and the difficulty", () => {
 });
 
 test("the results summary names the same mode and difficulty", () => {
-  const facts = playedRoundFacts({ categoryId: "all", categoryName: "All models", difficulty: 4 });
+  const facts = playedRoundFacts({ gameModeId: "all", gameModeName: "All models", difficulty: 4 });
   const html = renderToStaticMarkup(
     createElement(ResultSummary, { mode: facts.mode, difficulty: difficultyText(facts.difficulty), noHint: true }),
   );
   assert.equal(html.includes("Game mode") && html.includes("All models"), true);
   assert.equal(html.includes("Difficulty") && html.includes("Impossible"), true);
   assert.ok(html.includes("No hints"));
-  const missing = playedRoundFacts({ categoryId: "custom", categoryName: null, difficulty: null });
+  const missing = playedRoundFacts({ gameModeId: "custom", gameModeName: null, difficulty: null });
   const blank = renderToStaticMarkup(
     createElement(ResultSummary, { mode: missing.mode, difficulty: difficultyText(missing.difficulty) }),
   );
