@@ -1,6 +1,7 @@
 import {
   computeGameMetrics,
   hasFinishedAt,
+  utcDate,
   type DayCount,
   type GameFact,
   type GuessFact,
@@ -248,11 +249,21 @@ function categoryRows(
     });
 }
 
+/** A finished Daily round started today. Naming it would show today's hidden model. */
+function isTodayDaily(game: PublicGameFact, today: string): boolean {
+  return game.gameMode === "daily" && utcDate(game.startedAt) === today;
+}
+
+function withoutTodayDaily(games: PublicGameFact[], today: string): PublicGameFact[] {
+  return games.filter((game) => !isTodayDaily(game, today));
+}
+
 function gameModeReport(
   gameMode: NamedGameMode,
   games: PublicGameFact[],
   usage: PublicUsageFact[],
   guesses: PublicGuessFact[],
+  today: string,
   now?: Date,
 ): GameModeReport {
   const rows = games.filter((game) => game.gameMode === gameMode.id);
@@ -272,6 +283,7 @@ function gameModeReport(
     };
   }
   const ids = new Set(rows.map((game) => game.id));
+  const named = withoutTodayDaily(rows, today);
   const metrics = computeGameMetrics(
     rows,
     tiedUsage(usage, ids),
@@ -300,11 +312,11 @@ function gameModeReport(
       tokensPerGame: metrics.tokensPerGame,
       regionFoundRate: regionFoundRate(rows, guesses),
     },
-    models: modelsFrom(rows, usage, guesses),
-    confusion: confusionPairs(rows, guesses),
+    models: modelsFrom(named, usage, guesses),
+    confusion: confusionPairs(named, guesses),
     days: metrics.days,
-    sizes: traitRows(rows, usage, guesses, "size", sizes),
-    regions: traitRows(rows, usage, guesses, "region", regions),
+    sizes: traitRows(named, usage, guesses, "size", sizes),
+    regions: traitRows(named, usage, guesses, "region", regions),
   };
 }
 
@@ -317,6 +329,8 @@ export function computePublicStats(
   now: Date = new Date(),
 ): PublicStats {
   const counted = games.filter((game) => hasFinishedAt(game));
+  const today = utcDate(now);
+  const named = withoutTodayDaily(counted, today);
   const playable = gameModes.filter((gameMode) => gameMode.id !== "family");
   const known = new Set(playable.map((gameMode) => gameMode.id));
   const extra = [...new Set(counted.map((game) => game.gameMode).filter((id) => id !== "family" && !known.has(id)))].sort();
@@ -345,12 +359,12 @@ export function computePublicStats(
       tokensPerGame: overall.tokensPerGame,
       regionFoundRate: regionFoundRate(counted, guesses),
     },
-    models: modelsFrom(counted, usage, guesses),
+    models: modelsFrom(named, usage, guesses),
     days: overall.days,
-    confusion: confusionPairs(counted, guesses),
-    sizes: traitRows(counted, usage, guesses, "size", sizes),
-    regions: traitRows(counted, usage, guesses, "region", regions),
-    categories: categoryRows(counted, usage, guesses, categories),
-    gameModes: listed.map((gameMode) => gameModeReport(gameMode, counted, usage, guesses, now)),
+    confusion: confusionPairs(named, guesses),
+    sizes: traitRows(named, usage, guesses, "size", sizes),
+    regions: traitRows(named, usage, guesses, "region", regions),
+    categories: categoryRows(named, usage, guesses, categories),
+    gameModes: listed.map((gameMode) => gameModeReport(gameMode, counted, usage, guesses, today, now)),
   };
 }

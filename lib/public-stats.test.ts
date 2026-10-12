@@ -88,11 +88,11 @@ test("public stats keep outcomes and drop cost", () => {
     stats.sizes.map((row) => row.key),
     ["nano", "small", "medium", "large", "xxl"],
   );
-  assert.equal(stats.sizes[1].finished, 2);
+  assert.equal(stats.sizes[1].finished, 1);
   assert.equal(stats.sizes[2].finished, 0);
   assert.equal(stats.sizes[2].solveRate, null);
   assert.equal(stats.sizes[3].solveRate, 0.5);
-  assert.equal(stats.regions.find((row) => row.key === "eu")?.finished, 1);
+  assert.equal(stats.regions.find((row) => row.key === "eu")?.finished, 0);
   assert.equal(stats.regions.find((row) => row.key === "cn")?.games, 1);
 
   assert.deepEqual(
@@ -204,6 +204,126 @@ test("a solved round with no finished_at does not count", () => {
   assert.equal(stats.gameModes.find((row) => row.id === "daily")?.finished, 0);
   assert.equal(JSON.stringify(stats).includes("haiku"), false);
   assert.equal(JSON.stringify(stats).includes("secret"), false);
+});
+
+test("today's Daily rounds stay in the totals and leave the named breakdowns", () => {
+  const today = "2026-10-12";
+  const clock = new Date(`${today}T18:00:00Z`);
+  const stats = computePublicStats(
+    [
+      game("daily-today", "grok", "solved", 3, {
+        gameMode: "daily",
+        size: "xxl",
+        region: "us",
+        categoryIds: ["frontier"],
+        startedAt: `${today}T08:00:00Z`,
+        finishedAt: `${today}T09:00:00Z`,
+      }),
+      game("daily-today-medium", "kimi", "miss", 6, {
+        gameMode: "daily",
+        size: "medium",
+        region: "cn",
+        categoryIds: ["cn-labs"],
+        startedAt: `${today}T00:05:00Z`,
+        finishedAt: `${today}T01:00:00Z`,
+      }),
+      game("daily-yesterday", "opus", "miss", 5, {
+        gameMode: "daily",
+        size: "large",
+        region: "eu",
+        categoryIds: ["opus"],
+        startedAt: "2026-10-11T23:30:00Z",
+        finishedAt: "2026-10-11T23:50:00Z",
+      }),
+      game("all-today", "haiku", "solved", 2, {
+        gameMode: "all",
+        size: "small",
+        region: "eu",
+        categoryIds: ["haiku"],
+        startedAt: `${today}T10:00:00Z`,
+        finishedAt: `${today}T11:00:00Z`,
+      }),
+    ],
+    [{ gameId: "daily-today", modelId: "grok", inputTokens: 40, outputTokens: 10 }],
+    [
+      { gameId: "daily-today", modelCorrect: false, guessedModelId: "sonnet", regionCorrect: true },
+      { gameId: "daily-today-medium", modelCorrect: false, guessedModelId: "opus", regionCorrect: false },
+      { gameId: "daily-yesterday", modelCorrect: false, guessedModelId: "sonnet", regionCorrect: false },
+      { gameId: "all-today", modelCorrect: false, guessedModelId: "opus", regionCorrect: true },
+    ],
+    [
+      { id: "daily", name: "Daily" },
+      { id: "all", name: "All models" },
+      { id: "company", name: "Company" },
+    ],
+    [
+      { id: "frontier", name: "Frontier" },
+      { id: "cn-labs", name: "CN labs" },
+      { id: "opus", name: "Opus" },
+      { id: "haiku", name: "Haiku" },
+    ],
+    clock,
+  );
+
+  assert.equal(stats.outcome.finished, 4);
+  assert.equal(stats.outcome.solved, 2);
+  assert.equal(stats.outcome.guesses, 4);
+  assert.equal(stats.outcome.tokensPerGame, 50 / 4);
+  assert.equal(stats.days.find((day) => day.date === today)?.games, 3);
+  assert.equal(stats.days.find((day) => day.date === today)?.solved, 2);
+  assert.equal(stats.days.find((day) => day.date === "2026-10-11")?.games, 1);
+
+  assert.deepEqual(stats.models.map((row) => row.modelId).sort(), ["haiku", "opus"]);
+  assert.equal(JSON.stringify(stats.models).includes("grok"), false);
+  assert.equal(JSON.stringify(stats.models).includes("kimi"), false);
+  assert.deepEqual(
+    stats.confusion.map((row) => [row.hiddenModelId, row.guessedModelId, row.count]),
+    [
+      ["haiku", "opus", 1],
+      ["opus", "sonnet", 1],
+    ],
+  );
+  assert.equal(stats.sizes.find((row) => row.key === "xxl")?.games, 0);
+  assert.equal(stats.sizes.find((row) => row.key === "medium")?.games, 0);
+  assert.equal(stats.sizes.find((row) => row.key === "large")?.games, 1);
+  assert.equal(stats.sizes.find((row) => row.key === "small")?.games, 1);
+  assert.equal(stats.regions.find((row) => row.key === "us")?.games, 0);
+  assert.equal(stats.regions.find((row) => row.key === "cn")?.games, 0);
+  assert.equal(stats.regions.find((row) => row.key === "eu")?.games, 2);
+  assert.deepEqual(
+    stats.categories.map((row) => [row.name, row.games]),
+    [
+      ["CN labs", 0],
+      ["Frontier", 0],
+      ["Haiku", 1],
+      ["Opus", 1],
+    ],
+  );
+
+  const daily = stats.gameModes.find((row) => row.id === "daily");
+  assert.equal(daily?.finished, 3);
+  assert.equal(daily?.outcome?.solved, 1);
+  assert.equal(daily?.days.find((day) => day.date === today)?.games, 2);
+  assert.deepEqual(daily?.models.map((row) => row.modelId), ["opus"]);
+  assert.deepEqual(
+    daily?.confusion.map((row) => [row.hiddenModelId, row.guessedModelId]),
+    [["opus", "sonnet"]],
+  );
+  assert.equal(daily?.sizes.find((row) => row.key === "xxl")?.games, 0);
+  assert.equal(daily?.sizes.find((row) => row.key === "large")?.games, 1);
+  assert.equal(daily?.regions.find((row) => row.key === "us")?.games, 0);
+  assert.equal(daily?.regions.find((row) => row.key === "eu")?.games, 1);
+
+  const all = stats.gameModes.find((row) => row.id === "all");
+  assert.equal(all?.finished, 1);
+  assert.equal(all?.days.find((day) => day.date === today)?.games, 1);
+  assert.deepEqual(all?.models.map((row) => row.modelId), ["haiku"]);
+  assert.deepEqual(
+    all?.confusion.map((row) => [row.hiddenModelId, row.guessedModelId]),
+    [["haiku", "opus"]],
+  );
+  assert.equal(all?.sizes.find((row) => row.key === "small")?.games, 1);
+  assert.equal(all?.regions.find((row) => row.key === "eu")?.games, 1);
 });
 
 test("Daily can be selected, and Category, Company, Region, and Custom stay closed", () => {
