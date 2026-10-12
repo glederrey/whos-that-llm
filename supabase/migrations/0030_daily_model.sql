@@ -179,4 +179,8 @@ $$;
 revoke all on function public.start_game(uuid, int, text, text, boolean, text, text[], jsonb, jsonb, smallint) from public, anon, authenticated;
 grant execute on function public.start_game(uuid, int, text, text, boolean, text, text[], jsonb, jsonb, smallint) to service_role;
 
-update public.game_modes set enabled = true where id = 'daily';
+update public.game_modes
+set
+  enabled = true,
+  blurb = 'One round per difficulty. Everyone at that level gets the same model. A new puzzle tomorrow.'
+where id = 'daily';

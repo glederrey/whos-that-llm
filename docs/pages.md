@@ -113,14 +113,14 @@ Requires a session. No session goes to `/login?next=/play`. No username goes to 
 
 | Card | Sentence |
 |---|---|
-| Daily | The same model for everyone today. |
+| Daily | One round per difficulty. Everyone at that level gets the same model. A new puzzle tomorrow. |
 | All models | Any model in the roster. Name it, or take the region and the company. |
 | Class | One class of models. Opus, or GPT vs Claude. |
 | Company | The lab is already known. Name the model. |
 | Region | USA, China, or Europe. |
 | Custom | A custom choice of models. |
 
-- Daily opens the same way as All models: **Choose difficulty**, then Easy, Medium, Hard, and Impossible, and **Play without hints.** Under the sentence: **One round per difficulty. Everyone at that level gets the same model. A new puzzle tomorrow.** A finished difficulty is grayed out, says **Already played.**, and cannot be started again until tomorrow. An unfinished round of that difficulty stays open and resumes. A difficulty they have not started is not grayed out. Easy and Medium on the same day are two rounds.
+- Daily opens the same way as All models: **Choose difficulty**, then Easy, Medium, Hard, and Impossible, and **Play without hints.** Its sentence is **One round per difficulty. Everyone at that level gets the same model. A new puzzle tomorrow.** That sentence is the card, even when the stored blurb is still the old line. Daily is open on this page. It does not show **Coming soon.** A finished difficulty is grayed out, says **Already played.**, and cannot be started again until tomorrow. An unfinished round of that difficulty stays open and resumes. A difficulty they have not started is not grayed out. Easy and Medium on the same day are two rounds.
 - Weekly top 5, later: rank, name, and score from the All models board for the current week, limited to 5. If the week has no counted round: **No finished games this week.**
 - Daily and All models open. Coming soon modes stay closed: Class, Company, Region, and Custom keep the **Coming soon** badge and do not show an expand chevron. Inside an open mode, **Choose difficulty** lists Easy, Medium, Hard, and Impossible on one line each: the name, then the short line beside it, and the turned-on model count on the right. The colors match the leaderboard: Easy `#1c7c43`, Medium `#d4a017`, Hard `#c41b15`, Impossible `#a78bfa`, on the name and the left edge. Daily and All models can start a round. Custom has no difficulty: **The player chooses that pool.**
 - An open Daily or All models round shows **Continue** beside that row.

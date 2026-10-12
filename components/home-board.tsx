@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { canStartMode } from "@/lib/daily";
+import { canStartMode, presentDailyCard } from "@/lib/daily";
 import { difficulties, difficultyBlurb, difficultyLabel, type Difficulty } from "@/lib/difficulty";
 
 export type HomeGameMode = {
@@ -67,7 +67,7 @@ export function lineup(gameModes: HomeGameMode[]): HomeGameMode[] {
     return gameMode ? [gameMode] : [];
   });
   const rest = [...byId.values()].filter((gameMode) => !order.includes(gameMode.id));
-  return [...known, ...rest];
+  return [...known, ...rest].map((gameMode) => presentDailyCard(gameMode));
 }
 
 export function HomeBoard({
@@ -200,12 +200,6 @@ export function HomeBoard({
               <strong>{gameMode.name}</strong>
               <br />
               <span className="muted">{gameMode.blurb}</span>
-              {daily && gameMode.enabled ? (
-                <>
-                  <br />
-                  <span className="muted">One round per difficulty. Everyone at that level gets the same model. A new puzzle tomorrow.</span>
-                </>
-              ) : null}
               {playable && poolSize < 2 ? (
                 <>
                   <br />

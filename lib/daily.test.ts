@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
 import test from "node:test";
-import { canStartMode, dailyLevelClosed, dailyModel, dailyRoster, dailyRoundKey, startDailyRound, type DailyModel, type DailyPick } from "./daily";
+import { canStartMode, dailyCardBlurb, dailyLevelClosed, dailyModel, dailyRoster, dailyRoundKey, presentDailyCard, startDailyRound, type DailyModel, type DailyPick } from "./daily";
 import { poolLabel, type Traits } from "./game";
 
 const root = path.resolve(import.meta.dirname, "..");
@@ -152,12 +152,23 @@ test("daily uses the same header shape as all models", () => {
 
 test("the play page explains one round per difficulty", () => {
   const home = fs.readFileSync(path.join(root, "components/home-board.tsx"), "utf8");
-  assert.match(home, /One round per difficulty\. Everyone at that level gets the same model\. A new puzzle tomorrow\./);
+  const closed = presentDailyCard({
+    id: "daily",
+    blurb: "The same model for everyone today.",
+    enabled: false,
+  });
+  assert.equal(closed.blurb, dailyCardBlurb);
+  assert.equal(closed.enabled, true);
+  const category = presentDailyCard({ id: "class", blurb: "A set we define.", enabled: false });
+  assert.equal(category.enabled, false);
+  assert.equal(category.blurb, "A set we define.");
+  assert.match(home, /presentDailyCard/);
   assert.match(home, /dailyFinished\.includes\(difficulty\)/);
   assert.match(home, /is-done/);
   assert.match(home, /Already played\./);
   assert.match(home, /\(!daily && Boolean\(activeGameId\)\)/);
   assert.doesNotMatch(home, /dailyDone/);
+  assert.doesNotMatch(home, /The same model for everyone today/);
 });
 
 test("only daily and all models can start", () => {
@@ -177,7 +188,10 @@ test("daily stores one model per difficulty and does not reset play data", () =>
   assert.match(sql, /existing_status = 'active'/);
   assert.doesNotMatch(sql, /daily_key = \(timezone\('utc', now\(\)\)\)::date/);
   assert.match(sql, /'daily_done'/);
-  assert.match(sql, /update public\.game_modes set enabled = true where id = 'daily'/);
+  assert.match(sql, /update public\.game_modes/);
+  assert.match(sql, /enabled = true/);
+  assert.match(sql, /One round per difficulty\. Everyone at that level gets the same model\. A new puzzle tomorrow\./);
+  assert.match(sql, /where id = 'daily'/);
   assert.match(sql, /revoke all on table public\.daily_models from public, anon, authenticated/);
   assert.match(sql, /enable row level security/);
   assert.doesNotMatch(sql, /delete from|truncate|drop table|update public\.games|update public\.models|update public\.profiles/i);

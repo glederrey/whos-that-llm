@@ -26,9 +26,22 @@ export type DailyStart =
   | { kind: "start"; modelId: string; picks: DailyPick[] }
   | { kind: "empty"; picks: DailyPick[] };
 
+/** The Daily card on `/play`. This replaces the stored blurb. */
+export const dailyCardBlurb =
+  "One round per difficulty. Everyone at that level gets the same model. A new puzzle tomorrow.";
+
 /** Daily and All models. Category, Company, Region, and Custom stay closed. */
 export function canStartMode(id: string): boolean {
   return id === "all" || id === "daily";
+}
+
+/**
+ * Daily is open on the lobby. The card uses `dailyCardBlurb`.
+ * A stored `enabled = false` and the old blurb do not put Coming soon back.
+ */
+export function presentDailyCard<T extends { id: string; blurb: string; enabled: boolean }>(mode: T): T {
+  if (mode.id !== "daily") return mode;
+  return { ...mode, blurb: dailyCardBlurb, enabled: true };
 }
 
 /** UTC calendar day, `YYYY-MM-DD`. Tomorrow is a different key. */
