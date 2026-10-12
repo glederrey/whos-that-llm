@@ -94,7 +94,7 @@ export type GameModeReport = {
 
 export const statisticModes = [
   { id: "main", name: "All modes", enabled: true },
-  { id: "daily", name: "Daily", enabled: false },
+  { id: "daily", name: "Daily", enabled: true },
   { id: "all", name: "All models", enabled: true },
   { id: "class", name: "Category", enabled: false },
   { id: "company", name: "Company", enabled: false },

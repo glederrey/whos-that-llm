@@ -1,0 +1,152 @@
+import assert from "node:assert/strict";
+import fs from "node:fs";
+import path from "node:path";
+import test from "node:test";
+import { canStartMode, dailyModel, dailyRoster, startDailyRound, type DailyModel, type DailyPick } from "./daily";
+import { poolLabel, type Traits } from "./game";
+
+const root = path.resolve(import.meta.dirname, "..");
+
+const roster: DailyModel[] = [
+  { id: "haiku", difficulty: "easy" },
+  { id: "sonnet", difficulty: "medium" },
+  { id: "opus", difficulty: "hard" },
+  { id: "secret", difficulty: "impossible" },
+];
+
+const day = "2026-10-12";
+const nextDay = "2026-10-13";
+
+function last(count: number): number {
+  return count;
+}
+
+test("one model per difficulty per UTC day", () => {
+  let picks: DailyPick[] = [];
+  const easy = dailyModel(picks, day, "easy", roster, () => 0);
+  assert.ok(easy);
+  picks = easy.picks;
+  const easyAgain = dailyModel(picks, day, "easy", roster, last);
+  assert.equal(easyAgain?.modelId, "haiku");
+  assert.equal(easyAgain?.picks.length, 1);
+
+  const medium = dailyModel(picks, day, "medium", roster, last);
+  assert.equal(medium?.modelId, "sonnet");
+  picks = medium?.picks ?? picks;
+  const hard = dailyModel(picks, day, "hard", roster, last);
+  assert.equal(hard?.modelId, "opus");
+  picks = hard?.picks ?? picks;
+  const impossible = dailyModel(picks, day, "impossible", roster, last);
+  assert.equal(impossible?.modelId, "secret");
+  picks = impossible?.picks ?? picks;
+
+  assert.deepEqual(
+    picks.map((pick) => [pick.day, pick.difficulty, pick.modelId]),
+    [
+      [day, "easy", "haiku"],
+      [day, "medium", "sonnet"],
+      [day, "hard", "opus"],
+      [day, "impossible", "secret"],
+    ],
+  );
+  assert.equal(dailyModel(picks, day, "hard", roster, () => 0)?.modelId, "opus");
+
+  const tomorrow = dailyModel(picks, nextDay, "hard", roster, () => 0);
+  assert.equal(tomorrow?.modelId, "haiku");
+  assert.notEqual(tomorrow?.modelId, "opus");
+  assert.equal(tomorrow?.picks.filter((pick) => pick.day === nextDay && pick.difficulty === "hard").length, 1);
+});
+
+test("easy cannot draw an impossible model", () => {
+  assert.deepEqual(
+    dailyRoster(roster, "easy").map((model) => model.id),
+    ["haiku"],
+  );
+  assert.equal(dailyRoster(roster, "easy").some((model) => model.difficulty === "impossible"), false);
+  for (const roll of [0, 1, 3, 99]) {
+    const drawn = dailyModel([], day, "easy", roster, () => roll);
+    assert.equal(drawn?.modelId, "haiku");
+    assert.notEqual(drawn?.modelId, "secret");
+  }
+  assert.equal(dailyRoster(roster, "hard").some((model) => model.id === "secret"), false);
+  assert.equal(dailyModel([], day, "hard", roster, last)?.modelId, "opus");
+  assert.equal(dailyModel([], day, "impossible", roster, last)?.modelId, "secret");
+});
+
+test("a second start the same day returns the same round", () => {
+  const first = startDailyRound({
+    day,
+    difficulty: "easy",
+    roster,
+    picks: [],
+    round: null,
+    roll: () => 0,
+  });
+  assert.equal(first.kind, "start");
+  if (first.kind !== "start") return;
+
+  const second = startDailyRound({
+    day,
+    difficulty: "impossible",
+    roster,
+    picks: first.picks,
+    round: { id: "round-1", day, status: "active", modelId: first.modelId, difficulty: "easy" },
+    roll: last,
+  });
+  assert.equal(second.kind, "resume");
+  if (second.kind !== "resume") return;
+  assert.equal(second.gameId, "round-1");
+  assert.equal(second.modelId, first.modelId);
+  assert.equal(second.picks.length, first.picks.length);
+  assert.equal(second.picks.some((pick) => pick.difficulty === "impossible"), false);
+
+  for (const status of ["solved", "miss", "given_up"] as const) {
+    const finished = startDailyRound({
+      day,
+      difficulty: "easy",
+      roster,
+      picks: first.picks,
+      round: { id: "round-1", day, status, modelId: first.modelId, difficulty: "easy" },
+      roll: last,
+    });
+    assert.equal(finished.kind, "done");
+  }
+
+  const tomorrow = startDailyRound({
+    day: nextDay,
+    difficulty: "easy",
+    roster,
+    picks: first.picks,
+    round: { id: "round-1", day, status: "solved", modelId: first.modelId, difficulty: "easy" },
+    roll: () => 0,
+  });
+  assert.equal(tomorrow.kind, "start");
+});
+
+test("daily uses the same header shape as all models", () => {
+  const traits: Traits = { given: [], models: {} };
+  assert.equal(poolLabel("daily", null, traits, "medium"), "Daily · Medium");
+  assert.equal(poolLabel("all", null, traits, "medium"), "All models · Medium");
+});
+
+test("only daily and all models can start", () => {
+  assert.equal(canStartMode("daily"), true);
+  assert.equal(canStartMode("all"), true);
+  for (const id of ["class", "company", "region", "custom"]) assert.equal(canStartMode(id), false);
+});
+
+test("daily stores one model per difficulty and does not reset play data", () => {
+  const sql = fs.readFileSync(path.join(root, "supabase/migrations/0030_daily_model.sql"), "utf8");
+  assert.match(sql, /create table public\.daily_models/);
+  assert.match(sql, /primary key \(played_on, difficulty\)/);
+  assert.match(sql, /m\.difficulty <= p_difficulty/);
+  assert.match(sql, /daily_key/);
+  assert.match(sql, /existing_status = 'active'/);
+  assert.match(sql, /'daily_done'/);
+  assert.match(sql, /update public\.game_modes set enabled = true where id = 'daily'/);
+  assert.match(sql, /revoke all on table public\.daily_models from public, anon, authenticated/);
+  assert.match(sql, /enable row level security/);
+  assert.doesNotMatch(sql, /delete from|truncate|drop table|update public\.games|update public\.models|update public\.profiles/i);
+  const baseline = fs.readFileSync(path.join(root, "supabase/v0.2.sql"), "utf8");
+  assert.doesNotMatch(baseline, /daily_models/);
+});

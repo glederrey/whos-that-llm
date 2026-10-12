@@ -67,6 +67,21 @@ test("the month filter is one board choice", () => {
   assert.equal(boardChoice({}, modes).period, "week");
 });
 
+test("an open daily can be selected", () => {
+  const open = modes.map((mode) => (mode.id === "daily" ? { ...mode, open: true } : mode));
+  assert.deepEqual(boardChoice({ gameMode: "daily", difficulty: "hard", period: "week" }, open), {
+    gameMode: "daily",
+    period: "week",
+    difficulty: "hard",
+  });
+  assert.equal(boardModes([
+    { id: "daily", name: "Daily", enabled: true, sort_order: 1 },
+    { id: "all", name: "All models", enabled: true, sort_order: 2 },
+    { id: "class", name: "Category", enabled: false, sort_order: 3 },
+    { id: "company", name: "Company", enabled: false, sort_order: 4 },
+  ]).find((mode) => mode.id === "daily")?.open, true);
+});
+
 test("the middle slot is the selected mode's control", () => {
   assert.deepEqual(boardMiddle("all", modes), { kind: "difficulty" });
   assert.equal(boardMiddle("daily", modes), null);

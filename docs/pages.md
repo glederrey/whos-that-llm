@@ -120,12 +120,12 @@ Requires a session. No session goes to `/login?next=/play`. No username goes to 
 | Region | USA, China, or Europe. |
 | Custom | A custom choice of models. |
 
-- Daily block, later, and only when Daily is enabled: **Today's model is live.** Button **Play today's**. The name is absent. Disabled, with **The game is paused.**, when the game is paused. No session goes to `/login` and then into today's round. An open daily round shows **Continue**. A day already started, including a give-up, shows **You already played today's model.** and does not start another.
+- Daily opens the same way as All models: **Choose difficulty**, then Easy, Medium, Hard, and Impossible, and **Play without hints.** One account gets one Daily round per UTC day. Starting uses that day's attempt. Coming back the same day shows **Continue** and resumes that round. It does not draw a new model. A finished round (`solved`, `miss`, or `given_up`) shows **You already played today's model.** and does not start another until the next UTC day.
 - Weekly top 5, later: rank, name, and score from the All models board for the current week, limited to 5. If the week has no counted round: **No finished games this week.**
-- All models opens. Coming soon modes stay closed: Daily, Class, Company, Region, and Custom keep the **Coming soon** badge and do not show an expand chevron. Inside an open mode, **Choose difficulty** lists Easy, Medium, Hard, and Impossible on one line each: the name, then the short line beside it, and the turned-on model count on the right. The colors match the leaderboard: Easy `#1c7c43`, Medium `#d4a017`, Hard `#c41b15`, Impossible `#a78bfa`, on the name and the left edge. Only All models can start a round. Custom has no difficulty: **The player chooses that pool.**
-- An open All models round shows **Continue** beside the row.
+- Daily and All models open. Coming soon modes stay closed: Class, Company, Region, and Custom keep the **Coming soon** badge and do not show an expand chevron. Inside an open mode, **Choose difficulty** lists Easy, Medium, Hard, and Impossible on one line each: the name, then the short line beside it, and the turned-on model count on the right. The colors match the leaderboard: Easy `#1c7c43`, Medium `#d4a017`, Hard `#c41b15`, Impossible `#a78bfa`, on the name and the left edge. Daily and All models can start a round. Custom has no difficulty: **The player chooses that pool.**
+- An open Daily or All models round shows **Continue** beside that row.
 - A difficulty is disabled when the hour is full, the game is paused, a round is already open, or that pool has fewer than 2 turned-on models.
-- Inside the open All models row, off by default: **Play without hints.** Beside it: **No hints. No match feedback.** On a normal-width page that is one line. On a phone, the checkbox and **Play without hints.** stay on the first line, and **No hints. No match feedback.** moves to the next line. It stays editable until a difficulty is chosen.
+- Inside an open Daily or All models row, off by default: **Play without hints.** Beside it: **No hints. No match feedback.** On a normal-width page that is one line. On a phone, the checkbox and **Play without hints.** stay on the first line, and **No hints. No match feedback.** moves to the next line. It stays editable until a difficulty is chosen. A finished Daily hides the checkbox until the next UTC day.
 
 Company and Region go to `/play/new?category=…` once they are built. Custom is a later choice of models. Hints can be on for that choice, and it has no leaderboard. Class is a card with **Coming soon.** The class game mode is not built. There is no Family card, no Latest card, and no Origin card.
 
@@ -170,7 +170,7 @@ On a phone, feedback and hints sit under the transcript, as in [Phones](#phones)
 Always visible.
 
 - `Message 2 of 10`. Before the first send: `Message 1 of 10` with the input empty, so the cap is there before they type.
-- Pool label: `All models`, `Company · Anthropic`, `Region · USA`, `Daily`, `Custom`
+- Pool label: `All models · Easy`, `Daily · Easy`, `Company · Anthropic`, `Region · USA`, `Custom`
 - **No hints** when the box was checked
 - **Give up**. Asks **End the round? You will see the model. This round stays off the leaderboard.** Buttons **Keep playing** and **Give up**.
 
@@ -271,9 +271,9 @@ Daily stats, later, on a daily result, once at least one daily round has finishe
 
 **Back** returns home. It is a text button with a chevron, larger than a footnote link.
 
-One bar. Game modes sit on the left, in play-page order: Daily, All models, Class, Company. Region and Custom are not on it. All models is the open mode. Daily, Class, and Company stay visible and grayed out, and they cannot be selected while those game modes are closed. A closed mode in the URL falls back to All models.
+One bar. Game modes sit on the left, in play-page order: Daily, All models, Class, Company. Region and Custom are not on it. Daily and All models are open. Class and Company stay visible and grayed out, and they cannot be selected while those game modes are closed. A closed mode in the URL falls back to All models.
 
-The middle is one slot, and it follows the selected mode. All models, and Daily once that mode is open, use the difficulty tabs: **Any difficulty**, **Easy**, **Medium**, **Hard**, and **Impossible**. Those tabs stay hidden while Daily is grayed out. Class uses a dropdown of every class, and that dropdown shows only when Class is selected. Company uses a dropdown of every company, and that dropdown shows only when Company is selected. With All models selected, the bar is the mode tabs, the difficulty tabs, and This week or All time. No class or company dropdown is visible.
+The middle is one slot, and it follows the selected mode. Daily and All models use the difficulty tabs: **Any difficulty**, **Easy**, **Medium**, **Hard**, and **Impossible**. Class uses a dropdown of every class, and that dropdown shows only when Class is selected. Company uses a dropdown of every company, and that dropdown shows only when Company is selected. With Daily or All models selected, the bar is the mode tabs, the difficulty tabs, and This week or All time. No class or company dropdown is visible.
 
 Any difficulty is a score from whichever difficulty was played. That board shows a difficulty chip on the row, in that difficulty's color. The other four do not. A round played with no hints has a **No hints** chip on every one of the five. The opening board is All models, Any difficulty, this week.
 
@@ -318,7 +318,7 @@ First person. The words:
 
 Public. No session. Linked from the header. It does not show prices, spend, or OpenRouter billing. The heading is **Statistics**. Mode buttons are next, then the stats. There is no intro under the heading.
 
-A game counts only when `finished_at` is set. A round that was started and not finished is left out of every figure, the chart, and the lists. The page does not say how many rounds are still open. A game with no account still counts once it is finished. Arrival shows the overall stats. Mode buttons sit under the heading: **All modes**, **Daily**, **All models**, **Class**, **Company**, **Region**, and **Custom**. Only **All modes** and **All models** can be chosen. **All modes** is the arrival view, every game mode together. The others stay visible and gray, the same as a mode that is not open on the leaderboard. Choosing **All models** replaces the overall stats with that mode. The seven buttons share the bar in equal widths. On a phone they sit on two rows, four then three, and each row fills the width. They do not reload the page. Class is not on the overall stats. Family is not a section.
+A game counts only when `finished_at` is set. A round that was started and not finished is left out of every figure, the chart, and the lists. The page does not say how many rounds are still open. A game with no account still counts once it is finished. Arrival shows the overall stats. Mode buttons sit under the heading: **All modes**, **Daily**, **All models**, **Class**, **Company**, **Region**, and **Custom**. **All modes**, **Daily**, and **All models** can be chosen. **All modes** is the arrival view, every game mode together. Category, Company, Region, and Custom stay visible and gray, the same as a mode that is not open on the leaderboard. Choosing **Daily** or **All models** replaces the overall stats with that mode. The seven buttons share the bar in equal widths. On a phone they sit on two rows, four then three, and each row fills the width. They do not reload the page. Class is not on the overall stats. Family is not a section.
 
 - Solve rate, give-ups, correct guesses, messages per game, tokens per game, region found. Give-ups do not mention open rounds
 - Finished games started per UTC day, last 14 days

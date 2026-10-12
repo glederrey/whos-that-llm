@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { canStartMode } from "@/lib/daily";
 import { difficulties, difficultyBlurb, difficultyLabel, type Difficulty } from "@/lib/difficulty";
 
 export type HomeGameMode = {
@@ -74,6 +75,8 @@ export function HomeBoard({
   played,
   cap,
   activeGameId,
+  activeGameMode,
+  dailyDone,
   poolSize,
   difficultyCounts,
   nextAt,
@@ -83,6 +86,8 @@ export function HomeBoard({
   played: number;
   cap: number;
   activeGameId: string | null;
+  activeGameMode: string | null;
+  dailyDone: boolean;
   poolSize: number;
   difficultyCounts: Record<Difficulty, number>;
   nextAt: string | null;
@@ -108,7 +113,7 @@ export function HomeBoard({
   }
 
   async function start(gameMode: string, difficulty: Difficulty) {
-    if (activeGameId && gameMode === "all") {
+    if (activeGameId && activeGameMode === gameMode) {
       router.push(`/play/${activeGameId}`);
       return;
     }
@@ -146,6 +151,10 @@ export function HomeBoard({
       router.push("/welcome?next=/play");
       return;
     }
+    if (body.error === "daily_done") {
+      setNotice("You already played today's model.");
+      return;
+    }
     if (body.error === "not_found") {
       setNotice("That mode is not open yet.");
       return;
@@ -173,8 +182,9 @@ export function HomeBoard({
       </p>
       <div className="card category-list">
         {cards.map((gameMode) => {
-          const playable = gameMode.id === "all" && gameMode.enabled;
-          const continueGame = Boolean(activeGameId) && gameMode.id === "all";
+          const playable = canStartMode(gameMode.id) && gameMode.enabled;
+          const continueGame = Boolean(activeGameId) && activeGameMode === gameMode.id;
+          const finishedToday = gameMode.id === "daily" && dailyDone;
           const opened = gameMode.enabled && openId === gameMode.id;
           const custom = gameMode.id === "custom";
           const label = (
@@ -182,6 +192,12 @@ export function HomeBoard({
               <strong>{gameMode.name}</strong>
               <br />
               <span className="muted">{gameMode.blurb}</span>
+              {finishedToday ? (
+                <>
+                  <br />
+                  <span className="muted">You already played today's model.</span>
+                </>
+              ) : null}
               {playable && poolSize < 2 ? (
                 <>
                   <br />
@@ -227,7 +243,7 @@ export function HomeBoard({
                         {difficulties.map((difficulty) => {
                           const count = difficultyCounts[difficulty];
                           const small = count < 2;
-                          const blocked = !playable || paused || busy || small || full || Boolean(activeGameId);
+                          const blocked = !playable || paused || busy || small || full || Boolean(activeGameId) || finishedToday;
                           const choice = (
                             <>
                               <span className="difficulty-name">
@@ -257,7 +273,7 @@ export function HomeBoard({
                           );
                         })}
                       </div>
-                      {playable && !continueGame ? (
+                      {playable && !continueGame && !finishedToday ? (
                         <label className="check category-check">
                           <input type="checkbox" checked={noHint} onChange={(event) => setNoHint(event.target.checked)} />
                           <span>

@@ -1,6 +1,6 @@
 import { parseDifficulty } from "@/lib/difficulty";
 import { apiError, apiJson } from "@/lib/http";
-import { startAllModels } from "@/lib/rounds";
+import { startAllModels, startDaily } from "@/lib/rounds";
 import { currentUser } from "@/lib/session";
 
 export async function POST(request: Request) {
@@ -12,10 +12,12 @@ export async function POST(request: Request) {
     noHint?: boolean;
     difficulty?: string;
   };
-  if (body.gameMode !== "all") return apiJson({ error: "not_found" }, 404);
+  if (body.gameMode !== "all" && body.gameMode !== "daily") return apiJson({ error: "not_found" }, 404);
   const difficulty = parseDifficulty(body.difficulty);
   if (!difficulty) return apiJson({ error: "difficulty" }, 422);
-  const result = await startAllModels(user.id, Boolean(body.noHint), difficulty);
+  const result = body.gameMode === "daily"
+    ? await startDaily(user.id, Boolean(body.noHint), difficulty)
+    : await startAllModels(user.id, Boolean(body.noHint), difficulty);
   if ("error" in result) return apiError(result);
   return apiJson({ gameId: result.gameId });
 }
