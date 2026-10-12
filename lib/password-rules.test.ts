@@ -50,15 +50,12 @@ test("a weak-password response uses the same missing-rule message", () => {
   assert.equal(weakPasswordNotice("nope", { code: "invalid_credentials", message: "Invalid login credentials" }), null);
 });
 
-test("the strength bar stays red until every rule is met", () => {
+test("a met rule turns green and an unmet rule stays grey", () => {
   const css = fs.readFileSync(path.join(root, "app/globals.css"), "utf8");
-  const block = css.slice(css.indexOf(".strength span {"), css.indexOf(".segmented {"));
-  assert.match(block, /background: var\(--miss\)/);
-  const level4 = block.match(/\.strength\[data-level="4"\] span \{[^}]+\}/);
-  const level5 = block.match(/\.strength\[data-level="5"\] span \{[^}]+\}/);
-  assert.ok(level4);
-  assert.equal(level4[0].includes("background"), false);
-  assert.match(level5?.[0] ?? "", /background: var\(--teal\)/);
+  const block = css.slice(css.indexOf(".must-contain {"), css.indexOf(".sr-only"));
+  assert.match(block, /\.must-contain li \{[^}]*color: var\(--mute\)/);
+  assert.match(block, /\.must-contain li\[data-met="true"\] \{ color: #1c7c43; \}/);
+  assert.equal(css.includes(".strength"), false);
   assert.equal(passwordRulesText, "8+ characters, a lowercase letter, an uppercase letter, a digit, and a symbol.");
 });
 
@@ -71,7 +68,8 @@ test("sign-up checks the rules before the auth call and sign-in stays generic", 
   assert.match(form, /Must contain/);
   assert.match(form, /passwordChecks\(password\)/);
   assert.equal(form.includes("passwordRulesText"), false);
-  assert.match(form, /role="meter"/);
+  assert.equal(form.includes('role="meter"'), false);
+  assert.match(form, /data-met=\{rule\.met \? "true" : "false"\}/);
   assert.match(form, /Show password/);
   assert.match(form, /Hide password/);
   assert.equal(form.includes("Wrong mail"), false);

@@ -10,8 +10,6 @@ export function passwordChecks(password: string): { label: string; met: boolean 
   return checks.map((check) => ({ label: check.label, met: check.met(password) }));
 }
 
-export const passwordRuleCount = checks.length;
-
 export const passwordRulesText = "8+ characters, a lowercase letter, an uppercase letter, a digit, and a symbol.";
 
 export function passwordStrength(password: string): number {

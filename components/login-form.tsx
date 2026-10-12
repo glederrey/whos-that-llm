@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { sendPasswordReset, signInWithEmail, signUpWithEmail, startGoogleSignIn, type AuthNotice } from "@/app/auth/actions";
-import { passwordChecks, passwordProblem, passwordRuleCount, passwordStrength } from "@/lib/password-rules";
+import { passwordChecks, passwordProblem } from "@/lib/password-rules";
 import { safeNext } from "@/lib/paths";
 
 export function LoginForm({
@@ -147,31 +147,18 @@ export function LoginForm({
             </button>
           </div>
           {signingIn ? null : (
-            <>
-              <div
-                className="strength"
-                data-level={passwordStrength(password)}
-                role="meter"
-                aria-label="Password strength"
-                aria-valuemin={0}
-                aria-valuemax={passwordRuleCount}
-                aria-valuenow={passwordStrength(password)}
-              >
-                <span />
-              </div>
-              <div className="must-contain">
-                <p>Must contain</p>
-                <ul>
-                  {passwordChecks(password).map((rule) => (
-                    <li key={rule.label} data-met={rule.met ? "true" : "false"}>
-                      {rule.met ? <CheckIcon /> : <CrossIcon />}
-                      <span className="sr-only">{rule.met ? "Met, " : "Needed, "}</span>
-                      {rule.label}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </>
+            <div className="must-contain">
+              <p>Must contain</p>
+              <ul>
+                {passwordChecks(password).map((rule) => (
+                  <li key={rule.label} data-met={rule.met ? "true" : "false"}>
+                    {rule.met ? <CheckIcon /> : <CrossIcon />}
+                    <span className="sr-only">{rule.met ? "Met, " : "Needed, "}</span>
+                    {rule.label}
+                  </li>
+                ))}
+              </ul>
+            </div>
           )}
         </div>
         {signingIn ? (
