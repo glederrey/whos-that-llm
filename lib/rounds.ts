@@ -8,6 +8,7 @@ import {
   eliminatedRegions,
   filterCandidates,
   categoryAllowsHints,
+  finishedGameStatuses,
   hintOffered,
   playableHints,
   knownValues,
@@ -637,7 +638,11 @@ async function readPublicStats(client: SupabaseClient) {
   const start = new Date(Date.UTC(midnight.getUTCFullYear(), midnight.getUTCMonth(), midnight.getUTCDate())).toISOString();
   const [models, gamesToday, players] = await Promise.all([
     client.from("models").select("id", { count: "exact", head: true }).eq("enabled", true),
-    client.from("games").select("id", { count: "exact", head: true }).gte("started_at", start),
+    client
+      .from("games")
+      .select("id", { count: "exact", head: true })
+      .gte("started_at", start)
+      .in("status", [...finishedGameStatuses]),
     countPlayers(client),
   ]);
   if (models.error) throw new Error(models.error.message);
