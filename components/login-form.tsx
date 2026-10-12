@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { sendPasswordReset, signInWithEmail, signUpWithEmail, startGoogleSignIn, type AuthNotice } from "@/app/auth/actions";
-import { passwordProblem, passwordRuleCount, passwordRulesText, passwordStrength } from "@/lib/password-rules";
+import { passwordChecks, passwordProblem, passwordRuleCount, passwordStrength } from "@/lib/password-rules";
 import { safeNext } from "@/lib/paths";
 
 export function LoginForm({
@@ -148,7 +148,6 @@ export function LoginForm({
           </div>
           {signingIn ? null : (
             <>
-              <p className="muted password-rules">{passwordRulesText}</p>
               <div
                 className="strength"
                 data-level={passwordStrength(password)}
@@ -159,6 +158,18 @@ export function LoginForm({
                 aria-valuenow={passwordStrength(password)}
               >
                 <span />
+              </div>
+              <div className="must-contain">
+                <p>Must contain</p>
+                <ul>
+                  {passwordChecks(password).map((rule) => (
+                    <li key={rule.label} data-met={rule.met ? "true" : "false"}>
+                      {rule.met ? <CheckIcon /> : <CrossIcon />}
+                      <span className="sr-only">{rule.met ? "Met, " : "Needed, "}</span>
+                      {rule.label}
+                    </li>
+                  ))}
+                </ul>
               </div>
             </>
           )}
@@ -205,6 +216,22 @@ export function LoginForm({
       {note ? <p className="muted">{note}</p> : null}
       {error ? <p className="error">{error}</p> : null}
     </div>
+  );
+}
+
+function CheckIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" d="m5 12 5 5L20 7" />
+    </svg>
+  );
+}
+
+function CrossIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" d="M6 6l12 12M18 6 6 18" />
+    </svg>
   );
 }
 

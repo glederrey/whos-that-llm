@@ -407,7 +407,24 @@ textarea { min-height: 76px; resize: vertical; }
 }
 .password-eye:hover { background: var(--soft); color: var(--text); }
 .password-eye svg { width: 18px; height: 18px; }
-.password-rules { font-size: 13px; font-weight: 400; }
+.must-contain { display: grid; gap: 6px; font-size: 13px; font-weight: 400; color: var(--mute); }
+.must-contain p { font-weight: 500; color: var(--text); }
+.must-contain ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 3px; }
+.must-contain li { display: flex; align-items: center; gap: 8px; }
+.must-contain li[data-met="true"] { color: var(--teal-press); }
+html[data-theme="dark"] .must-contain li[data-met="true"] { color: var(--teal); }
+.must-contain svg { width: 14px; height: 14px; flex: none; }
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
 .strength {
   height: 4px;
   border-radius: 999px;
@@ -421,10 +438,11 @@ textarea { min-height: 76px; resize: vertical; }
   background: var(--miss);
   transition: width 0.15s ease, background 0.15s ease;
 }
-.strength[data-level="1"] span { width: 25%; }
-.strength[data-level="2"] span { width: 50%; }
-.strength[data-level="3"] span { width: 75%; }
-.strength[data-level="4"] span { width: 100%; background: var(--teal); }
+.strength[data-level="1"] span { width: 20%; }
+.strength[data-level="2"] span { width: 40%; }
+.strength[data-level="3"] span { width: 60%; }
+.strength[data-level="4"] span { width: 80%; }
+.strength[data-level="5"] span { width: 100%; background: var(--teal); }
 .segmented {
   display: inline-flex;
   gap: 2px;

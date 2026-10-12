@@ -1,13 +1,18 @@
 const checks = [
-  { met: (password: string) => password.length >= 8, missing: "at least 8 characters" },
-  { met: (password: string) => /[a-z]/.test(password), missing: "a lowercase letter" },
-  { met: (password: string) => /[A-Z]/.test(password), missing: "an uppercase letter" },
-  { met: (password: string) => /[^A-Za-z0-9]/.test(password), missing: "a symbol" },
+  { label: "8+ characters", missing: "at least 8 characters", met: (password: string) => password.length >= 8 },
+  { label: "A lowercase letter", missing: "a lowercase letter", met: (password: string) => /[a-z]/.test(password) },
+  { label: "An uppercase letter", missing: "an uppercase letter", met: (password: string) => /[A-Z]/.test(password) },
+  { label: "A digit", missing: "a digit", met: (password: string) => /\d/.test(password) },
+  { label: "A symbol", missing: "a symbol", met: (password: string) => /[^A-Za-z0-9]/.test(password) },
 ] as const;
+
+export function passwordChecks(password: string): { label: string; met: boolean }[] {
+  return checks.map((check) => ({ label: check.label, met: check.met(password) }));
+}
 
 export const passwordRuleCount = checks.length;
 
-export const passwordRulesText = "8+ characters, a lowercase letter, an uppercase letter, and a symbol.";
+export const passwordRulesText = "8+ characters, a lowercase letter, an uppercase letter, a digit, and a symbol.";
 
 export function passwordStrength(password: string): number {
   return checks.reduce((count, check) => count + (check.met(password) ? 1 : 0), 0);
