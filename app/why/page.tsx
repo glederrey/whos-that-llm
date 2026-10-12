@@ -30,7 +30,7 @@ export default function WhyPage() {
         I plan to share this data openly for research later on. Until then, the <a href="/statistics">statistics</a> page
         shows what the data says so far.
       </p>
-      <h2>What I store</h2>
+      <h2>What I store?</h2>
       <p>
         I keep your username and your game data: the messages, token counts, your guesses, which model you were talking
         to, and the other details of each round. That&apos;s it. I don&apos;t collect any other personal information. Sign
@@ -41,7 +41,16 @@ export default function WhyPage() {
         You can delete your account at any time from your <a href="/profile">profile</a>. Your username comes off the
         leaderboard. Finished games stay in the statistics without your username.
       </p>
-      <h2>Who am I</h2>
+      <h2>Want to contribute?</h2>
+      <p>
+        <strong>Who&apos;s that LLM?</strong> is a small side project, and it gets better with help. If you have an idea,
+        want to contribute, or found a bug, you&apos;re very welcome to{" "}
+        <a href="https://github.com/glederrey/whos-that-llm/issues" target="_blank" rel="noreferrer">
+          open an issue on GitHub
+        </a>
+        . Whether it&apos;s a typo or a big suggestion, I&apos;d love to hear about it.
+      </p>
+      <h2>Who am I?</h2>
       <p>
         I&apos;m Gael, a data scientist based in Fribourg, Switzerland, with a PhD from EPFL. Funny enough, my master
         thesis was about beer reviews: do people rate a beer for what it is, or because of what the community already
