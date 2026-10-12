@@ -265,6 +265,7 @@ as $$
       select count(*)::int
       from public.games
       where started_at >= (date_trunc('day', now() at time zone 'utc') at time zone 'utc')
+        and status in ('solved', 'miss', 'given_up')
     ),
     'players', (select count(distinct user_id)::int from public.games)
   );

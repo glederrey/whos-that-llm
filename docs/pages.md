@@ -78,7 +78,7 @@ Two columns. On a narrow screen they stack.
 
 - Left: the logo, large.
 - Right: **Find the model.** Then: a hidden model answers you. You have ten messages. Name it when you want. Find it, and the round is yours. Miss the name, and the company and the region can still count.
-- Under the buttons: three counts. **Models in play** is the enabled roster. **Games today (UTC)** counts games whose `started_at` is on the current UTC day. **Players** is the number of distinct accounts that have started a game.
+- Under the buttons: three counts. **Models in play** is the enabled roster. **Games today (UTC)** counts finished games whose `started_at` is on the current UTC day. Finished is solved, not solved, or given up. An in-progress round does not count. **Players** is the number of distinct accounts that have started a game.
 - Under the counts: **Top 5**, with the same bar as the full leaderboard. It shows that board's rows, stopped at 5. **Full leaderboard** opens `/leaderboard` with the same choice. Changing a control on either page is the same choice on the other.
 - Signed out: **Sign up** goes to `/login?tab=create&next=/play`. **Sign in** goes to `/login?next=/play`.
 - Signed in: **Play** goes to `/play`.
