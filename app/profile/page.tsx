@@ -102,6 +102,8 @@ export default async function ProfilePage({
               logoPath: row.logoPath,
               companyFound: row.companyFound,
               regionFound: row.regionFound,
+              mode: row.mode,
+              difficulty: row.difficulty,
             }))}
           />
           <div className="row pager">
