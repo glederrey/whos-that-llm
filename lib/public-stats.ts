@@ -93,7 +93,7 @@ export type CategoryReport = {
 };
 
 export const statisticModes = [
-  { id: "main", name: "Main", enabled: true },
+  { id: "main", name: "All modes", enabled: true },
   { id: "daily", name: "Daily", enabled: false },
   { id: "all", name: "All models", enabled: true },
   { id: "class", name: "Class", enabled: false },
