@@ -46,7 +46,7 @@ export function RoundBoard({ initial }: { initial: PublicGame }) {
   const inputLocked = busy || game.messageNumber >= game.messageLimit || game.status !== "active";
   const given = new Map(game.given.map((row) => [row.key, row.value]));
   const hintsOpen = game.hintsAllowed && !game.noHint;
-  const showBoard = !game.noHint && game.category !== "origin";
+  const showBoard = !game.noHint && game.gameMode !== "origin";
   const selectedRow = game.candidates.find((row) => row.id === selected) ?? null;
 
   function revealGiven(key: "year" | "size") {

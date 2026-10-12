@@ -39,7 +39,7 @@ export function anonymizePlay(play: StoredPlay, userId: string): StoredPlay {
 export type BoardGame = {
   userId: string | null;
   username: string | null;
-  category: string;
+  gameMode: string;
   onBoard: boolean;
   status: string;
   score: number | null;
@@ -49,11 +49,11 @@ export type BoardGame = {
 
 export type BoardName = { rank: number; name: string; score: number; userId: string };
 
-export function leaderboardNames(games: BoardGame[], category: string, since: string): BoardName[] {
+export function leaderboardNames(games: BoardGame[], gameMode: string, since: string): BoardName[] {
   const best = new Map<string, BoardGame & { userId: string; username: string; score: number; finishedAt: string }>();
   for (const game of games) {
     if (game.userId === null || game.username === null || game.username.trim() === "") continue;
-    if (!game.onBoard || game.category !== category) continue;
+    if (!game.onBoard || game.gameMode !== gameMode) continue;
     if (game.status !== "solved" && game.status !== "miss") continue;
     if (game.score === null || game.finishedAt === null || game.finishedAt < since) continue;
     const row = {

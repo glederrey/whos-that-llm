@@ -16,16 +16,16 @@ const GAVE_UP = "given_up";
 const finishedStatus = new Set([SOLVED, MISSED, GAVE_UP]);
 
 export function modeRows(
-  games: { category: string; status: string }[],
-  categories: { id: string; name: string }[],
+  games: { gameMode: string; status: string }[],
+  gameModes: { id: string; name: string }[],
 ): ModeRow[] {
-  const ids = categories.map((category) => category.id);
+  const ids = gameModes.map((gameMode) => gameMode.id);
   for (const game of games) {
-    if (game.category && !ids.includes(game.category)) ids.push(game.category);
+    if (game.gameMode && !ids.includes(game.gameMode)) ids.push(game.gameMode);
   }
-  const names = new Map(categories.map((category) => [category.id, category.name]));
+  const names = new Map(gameModes.map((gameMode) => [gameMode.id, gameMode.name]));
   return ids.map((id) => {
-    const rows = games.filter((game) => game.category === id);
+    const rows = games.filter((game) => game.gameMode === id);
     const finished = rows.filter((game) => finishedStatus.has(game.status)).length;
     const solved = rows.filter((game) => game.status === SOLVED).length;
     return {

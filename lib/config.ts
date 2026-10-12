@@ -34,7 +34,7 @@ export type Rules = {
   hintsAllowed: boolean;
 };
 
-export function rulesForCategory(hintsAllowed: boolean): Rules {
+export function rulesForGameMode(hintsAllowed: boolean): Rules {
   return {
     messageLimit: config.messageLimit,
     maxUserChars: config.maxUserChars,
@@ -53,5 +53,5 @@ export function rulesForCategory(hintsAllowed: boolean): Rules {
 }
 
 export function currentRules(stored: Rules): Rules {
-  return { ...stored, ...rulesForCategory(stored.hintsAllowed), messageLimit: stored.messageLimit };
+  return { ...stored, ...rulesForGameMode(stored.hintsAllowed), messageLimit: stored.messageLimit };
 }

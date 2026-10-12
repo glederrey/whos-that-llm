@@ -67,7 +67,7 @@ export type PastGuess = {
 
 export type PublicGame = {
   id: string;
-  category: string;
+  gameMode: string;
   poolLabel: string;
   noHint: boolean;
   hintsAllowed: boolean;
@@ -334,9 +334,9 @@ const hintNames: Record<HintKey, string> = {
 
 const hintKeyList: readonly HintKey[] = ["company", "region", "year", "size"];
 
-/** Hints exist only on Daily, All models, and Custom. Every other category, including class and region, has none. */
-export function categoryAllowsHints(category: string): boolean {
-  return category === "daily" || category === "all" || category === "custom";
+/** Hints exist only on Daily, All models, and Custom. Every other game mode, including class and region, has none. */
+export function gameModeAllowsHints(gameMode: string): boolean {
+  return gameMode === "daily" || gameMode === "all" || gameMode === "custom";
 }
 
 export function playableHints(value: readonly string[] | null | undefined): HintKey[] {
@@ -468,20 +468,21 @@ function tokenExplanation(tokens: number, rules: Rules): string {
   return `Tokens: ${formatInt(tokens)}. Token factor ×${shown} (${ratio}).`;
 }
 
-export function poolLabel(category: string, poolKey: string | null, traits: Traits, difficulty?: Difficulty | null): string {
+export function poolLabel(gameMode: string, poolKey: string | null, traits: Traits, difficulty?: Difficulty | null): string {
   const first = Object.values(traits.models)[0];
-  if (category === "all") return difficulty ? `All models · ${difficultyLabel[difficulty]}` : "All models";
-  if (category === "daily") return "Daily";
-  if (category === "origin") return "Origin";
-  if (category === "latest") return "Latest";
-  if (category === "company") {
+  if (gameMode === "all") return difficulty ? `All models · ${difficultyLabel[difficulty]}` : "All models";
+  if (gameMode === "daily") return "Daily";
+  if (gameMode === "class") return "Category";
+  if (gameMode === "origin") return "Origin";
+  if (gameMode === "latest") return "Latest";
+  if (gameMode === "company") {
     const name = Object.values(traits.models).find((model) => model.companyId === poolKey)?.companyName;
     return `Company · ${name ?? first?.companyName ?? poolKey ?? ""}`;
   }
-  if (category === "region" && (poolKey === "us" || poolKey === "cn" || poolKey === "eu")) {
+  if (gameMode === "region" && (poolKey === "us" || poolKey === "cn" || poolKey === "eu")) {
     return `Region · ${regionLabel(poolKey)}`;
   }
-  return category;
+  return gameMode;
 }
 
 export function givenRows(traits: Traits, hidden: FrozenModel): PublicGame["given"] {
@@ -508,7 +509,7 @@ function displayValue(model: FrozenModel, key: TraitKey): string {
 
 export function toPublicGame(input: {
   id: string;
-  category: string;
+  gameMode: string;
   poolKey: string | null;
   difficulty?: Difficulty | null;
   noHint: boolean;
@@ -540,12 +541,12 @@ export function toPublicGame(input: {
   const companyGiven = input.traits.given.includes("company");
   const regionMatched = input.guesses.some((guess) => guess.regionCorrect);
   const companyMatched = input.guesses.some((guess) => guess.companyCorrect);
-  const showFeedback = !input.noHint && input.guesses.length > 0 && input.category !== "origin";
+  const showFeedback = !input.noHint && input.guesses.length > 0 && input.gameMode !== "origin";
 
   const game: PublicGame = {
     id: input.id,
-    category: input.category,
-    poolLabel: poolLabel(input.category, input.poolKey, input.traits, input.difficulty),
+    gameMode: input.gameMode,
+    poolLabel: poolLabel(input.gameMode, input.poolKey, input.traits, input.difficulty),
     difficulty: input.difficulty ?? null,
     noHint: input.noHint,
     hintsAllowed: input.rules.hintsAllowed,

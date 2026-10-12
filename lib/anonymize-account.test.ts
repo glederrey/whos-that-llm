@@ -15,7 +15,7 @@ const since = "1970-01-01T00:00:00.000Z";
 
 function round(partial: Partial<BoardGame> & Pick<BoardGame, "userId" | "username" | "score">): BoardGame {
   return {
-    category: "all",
+    gameMode: "all",
     onBoard: true,
     status: "solved",
     messageCount: 3,

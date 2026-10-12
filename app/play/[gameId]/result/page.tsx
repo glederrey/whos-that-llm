@@ -3,7 +3,7 @@ import { CompanyLogo } from "@/components/company-logo";
 import { MarkdownMessage } from "@/components/markdown-message";
 import { ResultSummary } from "@/components/round-facts";
 import { difficultyText, playedRoundFacts } from "@/lib/round-facts";
-import { listCategories, readPublicGame } from "@/lib/rounds";
+import { listGameModes, readPublicGame } from "@/lib/rounds";
 import { currentProfile } from "@/lib/session";
 
 export const dynamic = "force-dynamic";
@@ -17,17 +17,17 @@ export default async function ResultPage({ params }: { params: Promise<{ gameId:
   const game = await readPublicGame(gameId, user.id);
   if (!game || !game.model) notFound();
   if (game.status === "active") redirect(`/play/${gameId}`);
-  const categories = await listCategories();
-  const mode = categories.find((category) => category.id === game.category);
+  const gameModes = await listGameModes();
+  const mode = gameModes.find((gameMode) => gameMode.id === game.gameMode);
   const facts = playedRoundFacts({
-    categoryId: game.category,
-    categoryName: mode?.name,
+    gameModeId: game.gameMode,
+    gameModeName: mode?.name,
     difficulty: game.difficulty,
   });
   const onBoard = Boolean(mode?.leaderboard);
   const again =
-    game.category === "company" || game.category === "region"
-      ? `/play/new?category=${game.category}`
+    game.gameMode === "company" || game.gameMode === "region"
+      ? `/play/new?gameMode=${game.gameMode}`
       : "/play";
 
   const state = game.status === "solved" ? "solved" : game.status === "miss" ? "miss" : "given-up";
@@ -107,7 +107,7 @@ export default async function ResultPage({ params }: { params: Promise<{ gameId:
           Play again
         </a>
         {onBoard && (game.status === "solved" || game.status === "miss") ? (
-          <a className="button-quiet" href={`/leaderboard?category=${game.category}${game.difficulty ? `&difficulty=${game.difficulty}` : ""}&period=week`}>
+          <a className="button-quiet" href={`/leaderboard?gameMode=${game.gameMode}${game.difficulty ? `&difficulty=${game.difficulty}` : ""}&period=week`}>
             Leaderboard
           </a>
         ) : null}

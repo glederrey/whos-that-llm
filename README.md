@@ -2,16 +2,16 @@
 
 A guessing game in the spirit of Who's that Pokémon. A hidden language model answers in a chat. The player has ten messages. They can name a model after a reply, send another message, or give up. Naming the model is worth a base of 2000. If they never name it, the base is 100 for the right region and 300 for the right company. A wrong name costs 100, and company, region, year, and size are hints that cost 600, 400, 100, and 100. Penalties come off the base, then the token factor (10,000 divided by the tokens used, capped at 10) applies, then 2× for a no-hint round. The score is rounded and never below 0.
 
-The first build is **All models**. The other categories are in the spec and come later.
+The first build is **All models**. The other game modes are in the spec and come later.
 
 The spec is in [`docs/`](docs/README.md). That spec is not a public page on the site.
 
-The first playable build is All models, with six small models enabled: Claude Haiku 4.5, Claude Haiku 5.5, GPT-5.6 Luna, GPT-5.6 Luna Pro, GPT-6 Luna, and DeepSeek V4 Flash. Opus, Sonnet, the larger GPTs, DeepSeek Pro, and Mistral stay off. Other categories come later.
+The first playable build is All models, with six small models enabled: Claude Haiku 4.5, Claude Haiku 5.5, GPT-5.6 Luna, GPT-5.6 Luna Pro, GPT-6 Luna, and DeepSeek V4 Flash. Opus, Sonnet, the larger GPTs, DeepSeek Pro, and Mistral stay off. Other game modes come later.
 
 ## Run it locally
 
 1. `npm install`
-2. In the Supabase SQL editor, run [`supabase/v0.1.sql`](supabase/v0.1.sql) once. That script is the baseline for a fresh database. It already includes the migrations through `0023`. Then run all the migration scripts in [`supabase/migrations/`](supabase/migrations/) starting with `0024`, in filename order.
+2. In the Supabase SQL editor, run [`supabase/v0.2.sql`](supabase/v0.2.sql) once. That script is the baseline for a fresh database. It already includes the migrations through `0027`. Then run all the migration scripts in [`supabase/migrations/`](supabase/migrations/) starting with `0028`, in filename order. [`supabase/v0.1.sql`](supabase/v0.1.sql) stays in the repo as the previous baseline.
 3. Put the keys in `.env.local`. The names are in [`.env.example`](.env.example). Do not commit that file.
 4. In Supabase Auth, set the site URL and the redirect URLs to the site root, including `http://localhost:3000/` for local play. Confirmation and password reset both return to `/`.
 5. `npm run dev`, then open `http://localhost:3000`.

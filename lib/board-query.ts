@@ -3,7 +3,7 @@ import { parseBoardDifficulty, type BoardDifficulty } from "./difficulty";
 export type BoardPeriod = "week" | "month" | "all";
 
 export type BoardChoice = {
-  category: string;
+  gameMode: string;
   period: BoardPeriod;
   difficulty: BoardDifficulty;
 };
@@ -22,19 +22,19 @@ export type BoardMiddle =
 /** Modes that have a leaderboard. Region and Custom do not. */
 const boardModeIds = ["daily", "all", "class", "company"] as const;
 
-/** Daily and All models. Class and Company use a dropdown instead. */
+/** Daily and All models. Category and Company use a dropdown instead. */
 const difficultyModeIds = new Set(["daily", "all"]);
 
 /** The same choice on the home top 5 and the full leaderboard. A mode that is not open cannot be selected. */
 export function boardChoice(
-  params: { category?: string; period?: string; difficulty?: string },
+  params: { gameMode?: string; period?: string; difficulty?: string },
   modes: BoardMode[],
 ): BoardChoice {
   const open = modes.filter((mode) => mode.open).map((mode) => mode.id);
-  const requested = params.category && open.includes(params.category) ? params.category : null;
-  const category = requested ?? (open.includes("all") ? "all" : (open[0] ?? "all"));
+  const requested = params.gameMode && open.includes(params.gameMode) ? params.gameMode : null;
+  const gameMode = requested ?? (open.includes("all") ? "all" : (open[0] ?? "all"));
   const period: BoardPeriod = params.period === "all" || params.period === "month" ? params.period : "week";
-  return { category, period, difficulty: parseBoardDifficulty(params.difficulty) };
+  return { gameMode, period, difficulty: parseBoardDifficulty(params.difficulty) };
 }
 
 /** The cutoff for a board. Week starts Monday. Month is the calendar month. Both use UTC, and all time has no cutoff. */
@@ -47,26 +47,26 @@ export function boardSince(period: BoardPeriod, now = new Date()): string {
 }
 
 export function boardModes(
-  categories: Array<{ id: string; name: string; enabled: boolean; sort_order: number }>,
+  gameModes: Array<{ id: string; name: string; enabled: boolean; sort_order: number }>,
 ): BoardMode[] {
-  return categories
-    .filter((category) => (boardModeIds as readonly string[]).includes(category.id))
+  return gameModes
+    .filter((gameMode) => (boardModeIds as readonly string[]).includes(gameMode.id))
     .sort((a, b) => a.sort_order - b.sort_order)
-    .map((category) => ({ id: category.id, name: category.name, open: category.enabled }));
+    .map((gameMode) => ({ id: gameMode.id, name: gameMode.name, open: gameMode.enabled }));
 }
 
 /** The one middle control for the selected mode. Other modes' controls stay off the bar. */
-export function boardMiddle(category: string, modes: BoardMode[]): BoardMiddle | null {
-  const selected = modes.find((mode) => mode.id === category);
+export function boardMiddle(gameMode: string, modes: BoardMode[]): BoardMiddle | null {
+  const selected = modes.find((mode) => mode.id === gameMode);
   if (!selected) return null;
-  if (difficultyModeIds.has(category)) return selected.open ? { kind: "difficulty" } : null;
-  if (category === "class" || category === "company") return { kind: category, disabled: !selected.open };
+  if (difficultyModeIds.has(gameMode)) return selected.open ? { kind: "difficulty" } : null;
+  if (gameMode === "class" || gameMode === "company") return { kind: gameMode, disabled: !selected.open };
   return null;
 }
 
 export function boardHref(base: "/" | "/leaderboard", choice: BoardChoice, page = 1): string {
   const params = new URLSearchParams({
-    category: choice.category,
+    gameMode: choice.gameMode,
     difficulty: choice.difficulty,
     period: choice.period,
   });

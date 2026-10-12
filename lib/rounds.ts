@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { config, currentRules, rulesForCategory, type Rules } from "./config";
+import { config, currentRules, rulesForGameMode, type Rules } from "./config";
 import { boardSince } from "./board-query";
 import { difficulties, difficultyFromStored, difficultyNumber, inDifficultyPool, type BoardDifficulty, type Difficulty } from "./difficulty";
 import {
@@ -8,7 +8,7 @@ import {
   eliminatedCompanyIds,
   eliminatedRegions,
   filterCandidates,
-  categoryAllowsHints,
+  gameModeAllowsHints,
   hintOffered,
   playableHints,
   knownValues,
@@ -34,7 +34,7 @@ type GameRow = {
   id: string;
   user_id: string;
   username: string;
-  category: string;
+  game_mode: string;
   pool_key: string | null;
   pool_model_ids: string[];
   model_id: string;
@@ -157,10 +157,10 @@ function presentTraits(traits: Traits): Traits {
   };
 }
 
-export async function listCategories() {
+export async function listGameModes() {
   const client = serviceOrThrow();
   const { data, error } = await client
-    .from("categories")
+    .from("game_modes")
     .select("id, name, blurb, enabled, sort_order, leaderboard")
     .order("sort_order");
   if (error) throw new Error(error.message);
@@ -169,14 +169,14 @@ export async function listCategories() {
 
 export async function listBoardOptions() {
   const client = serviceOrThrow();
-  const [classes, companies] = await Promise.all([
-    client.from("classes").select("id, name").order("name"),
+  const [categories, companies] = await Promise.all([
+    client.from("categories").select("id, name").order("name"),
     client.from("companies").select("id, name").order("name"),
   ]);
-  if (classes.error) throw new Error(classes.error.message);
+  if (categories.error) throw new Error(categories.error.message);
   if (companies.error) throw new Error(companies.error.message);
   return {
-    classes: (classes.data ?? []).map((row) => ({ id: row.id as string, name: row.name as string })),
+    categories: (categories.data ?? []).map((row) => ({ id: row.id as string, name: row.name as string })),
     companies: (companies.data ?? []).map((row) => ({ id: row.id as string, name: row.name as string })),
   };
 }
@@ -221,13 +221,13 @@ export async function startAllModels(
   difficulty: Difficulty,
 ): Promise<{ gameId: string } | ApiFailure> {
   const client = serviceOrThrow();
-  const { data: category, error } = await client
-    .from("categories")
+  const { data: gameMode, error } = await client
+    .from("game_modes")
     .select("id, enabled, hints_allowed")
     .eq("id", "all")
     .maybeSingle();
   if (error) throw new Error(error.message);
-  if (!category?.enabled) return fail(404, "not_found");
+  if (!gameMode?.enabled) return fail(404, "not_found");
 
   const catalog = await loadCatalog(client, difficulty);
   if (catalog.length < 2) return fail(422, "pool_too_small");
@@ -237,13 +237,13 @@ export async function startAllModels(
   const result = await rpc(client, "start_game", {
     p_user_id: userId,
     p_hourly_cap: config.hourlyCap,
-    p_category: "all",
+    p_game_mode: "all",
     p_pool_key: null,
     p_no_hint: noHint,
     p_model_id: drawn.id,
     p_pool_model_ids: catalog.map((model) => model.id),
     p_traits: traits,
-    p_rules: rulesForCategory(Boolean(category.hints_allowed) && categoryAllowsHints(category.id)),
+    p_rules: rulesForGameMode(Boolean(gameMode.hints_allowed) && gameModeAllowsHints(gameMode.id)),
     p_difficulty: difficultyNumber[difficulty],
   });
   const failure = fromRpc(result);
@@ -276,7 +276,7 @@ export async function readPublicGame(gameId: string, userId: string): Promise<Pu
     .filter((id): id is string => typeof id === "string" && id.length > 0);
   return toPublicGame({
     id: game.id,
-    category: game.category,
+    gameMode: game.game_mode,
     poolKey: game.pool_key,
     difficulty: difficultyFromStored(game.difficulty),
     noHint: game.no_hint,
@@ -566,17 +566,17 @@ function toBoardRow(entry: BoardEntry, mine: boolean): BoardRow {
 }
 
 export async function leaderboard(
-  category: string,
+  gameMode: string,
   period: string,
   viewerId?: string | null,
   difficulty?: BoardDifficulty | null,
 ) {
   const client = serviceOrThrow();
-  const { data: row } = await client.from("categories").select("leaderboard").eq("id", category).maybeSingle();
+  const { data: row } = await client.from("game_modes").select("leaderboard").eq("id", gameMode).maybeSingle();
   if (!row?.leaderboard) return fail(404, "not_found");
   const since = boardSince(period === "month" || period === "all" ? period : "week");
   const fresh = await client.rpc("leaderboard", {
-    category,
+    game_mode: gameMode,
     since,
     viewer: viewerId ?? null,
     p_difficulty: difficulty && difficulty !== "any" ? difficultyNumber[difficulty] : null,
@@ -585,9 +585,9 @@ export async function leaderboard(
     const rows = ((fresh.data ?? []) as BoardEntry[]).map((entry) => toBoardRow(entry, Boolean(entry.mine)));
     return { rows };
   }
-  const legacy = await client.rpc("leaderboard", { category, since });
+  const legacy = await client.rpc("leaderboard", { game_mode: gameMode, since });
   if (legacy.error) throw new Error(legacy.error.message);
-  const rows = await markLegacyMine(client, (legacy.data ?? []) as BoardEntry[], viewerId, category, since);
+  const rows = await markLegacyMine(client, (legacy.data ?? []) as BoardEntry[], viewerId, gameMode, since);
   return { rows };
 }
 
@@ -595,7 +595,7 @@ async function markLegacyMine(
   client: SupabaseClient,
   data: BoardEntry[],
   viewerId: string | null | undefined,
-  category: string,
+  gameMode: string,
   since: string,
 ): Promise<BoardRow[]> {
   let best: { username: string; score: number } | null = null;
@@ -604,7 +604,7 @@ async function markLegacyMine(
       .from("games")
       .select("username, score")
       .eq("user_id", viewerId)
-      .eq("category", category)
+      .eq("game_mode", gameMode)
       .in("status", ["solved", "miss"])
       .gte("finished_at", since)
       .not("score", "is", null)

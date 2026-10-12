@@ -54,14 +54,14 @@ export async function loadGameMetrics(): Promise<GameMetrics> {
 export async function loadModeStats(): Promise<ModeRow[]> {
   await requireOwner();
   const client = serviceOrThrow();
-  const [games, categories] = await Promise.all([
-    readAll(client, "games", "id, status, category"),
-    client.from("categories").select("id, name").order("sort_order"),
+  const [games, gameModes] = await Promise.all([
+    readAll(client, "games", "id, status, game_mode"),
+    client.from("game_modes").select("id, name").order("sort_order"),
   ]);
-  if (categories.error) throw new Error("Could not read stats.");
+  if (gameModes.error) throw new Error("Could not read stats.");
   return modeRows(
-    games.map((row) => ({ category: String(row.category ?? ""), status: String(row.status ?? "") })),
-    (categories.data ?? []).map((row) => ({ id: row.id as string, name: row.name as string })),
+    games.map((row) => ({ gameMode: String(row.game_mode ?? ""), status: String(row.status ?? "") })),
+    (gameModes.data ?? []).map((row) => ({ id: row.id as string, name: row.name as string })),
   );
 }
 

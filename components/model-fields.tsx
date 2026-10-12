@@ -1,6 +1,6 @@
 import { difficulties, difficultyLabel, type Difficulty } from "@/lib/difficulty";
 
-export type ModelFieldClass = { id: string; name: string };
+export type ModelFieldCategory = { id: string; name: string };
 
 export function ModelFields({
   openrouterId = "",
@@ -13,8 +13,8 @@ export function ModelFields({
   difficulty = "",
   inputPrice = "",
   outputPrice = "",
-  classes = [],
-  classIds = [],
+  categories = [],
+  categoryIds = [],
   omitOpenRouterId = false,
 }: {
   openrouterId?: string;
@@ -27,8 +27,8 @@ export function ModelFields({
   difficulty?: Difficulty | "";
   inputPrice?: string;
   outputPrice?: string;
-  classes?: ModelFieldClass[];
-  classIds?: string[];
+  categories?: ModelFieldCategory[];
+  categoryIds?: string[];
   omitOpenRouterId?: boolean;
 }) {
   return (
@@ -98,15 +98,15 @@ export function ModelFields({
         <input name="outputPrice" defaultValue={outputPrice} inputMode="decimal" autoComplete="off" />
       </label>
       <fieldset className="class-picks">
-        <legend>Classes</legend>
-        {classes.length === 0 ? (
+        <legend>Categories</legend>
+        {categories.length === 0 ? (
           <p className="muted">
-            No classes yet. <a href="/admin/classes">Create one</a> before attaching it here.
+            No categories yet. <a href="/admin/categories">Create one</a> before attaching it here.
           </p>
         ) : (
-          classes.map((item) => (
+          categories.map((item) => (
             <label key={item.id}>
-              <input type="checkbox" name="classId" value={item.id} defaultChecked={classIds.includes(item.id)} />
+              <input type="checkbox" name="categoryId" value={item.id} defaultChecked={categoryIds.includes(item.id)} />
               {item.name}
             </label>
           ))

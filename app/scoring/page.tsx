@@ -1,4 +1,4 @@
-import { config, rulesForCategory } from "@/lib/config";
+import { config, rulesForGameMode } from "@/lib/config";
 import { formatFactor, scoreRound, tokenFactor } from "@/lib/game";
 
 export const dynamic = "force-dynamic";
@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 const n = (value: number) => value.toLocaleString("en-US");
 
 const exampleTokens = 2694;
-const exampleRules = rulesForCategory(true);
+const exampleRules = rulesForGameMode(true);
 const exampleSubtotal = config.modelBase - config.hintCosts.size - config.wrongGuessCost;
 const exampleFactor = tokenFactor(exampleTokens, exampleRules);
 const example = scoreRound({

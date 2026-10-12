@@ -21,10 +21,10 @@ function game(
     messageCount,
     startedAt: "2026-10-10T08:00:00Z",
     finishedAt: status === "solved" || status === "miss" || status === "given_up" ? "2026-10-10T09:00:00Z" : null,
-    category: "all",
+    gameMode: "all",
     size: "small",
     region: "us",
-    classIds: [],
+    categoryIds: [],
     ...extra,
   };
 }
@@ -33,9 +33,9 @@ test("public stats keep outcomes and drop cost", () => {
   const games = [
     game("1", "opus", "solved", 3, { size: "large", region: "us" }),
     game("2", "opus", "miss", 10, { size: "large", region: "us", startedAt: "2026-10-09T08:00:00Z" }),
-    game("3", "haiku", "given_up", 2, { size: "small", region: "eu", category: "daily" }),
+    game("3", "haiku", "given_up", 2, { size: "small", region: "eu", gameMode: "daily" }),
     game("4", "haiku", "solved", 4, { size: "small", region: "cn" }),
-    game("5", "secret", "active", 1, { size: "medium", region: "cn", category: "company" }),
+    game("5", "secret", "active", 1, { size: "medium", region: "cn", gameMode: "company" }),
   ];
   const usage: PublicUsageFact[] = [
     { gameId: "1", modelId: "opus", inputTokens: 80, outputTokens: 20 },
@@ -96,32 +96,33 @@ test("public stats keep outcomes and drop cost", () => {
   assert.equal(stats.regions.find((row) => row.key === "cn")?.games, 1);
 
   assert.deepEqual(
-    stats.categories.map((row) => row.id),
+    stats.gameModes.map((row) => row.id),
     ["daily", "all", "company", "custom"],
   );
-  assert.equal(stats.categories[0].finished, 1);
-  assert.equal(stats.categories[1].outcome?.solveRate, 2 / 3);
-  assert.equal(stats.categories[2].outcome, null);
-  assert.equal(stats.categories[2].open, 0);
-  assert.equal(stats.categories[2].games, 0);
-  assert.equal(stats.categories[2].models.length, 0);
-  assert.equal(stats.categories[3].finished, 0);
-  assert.equal(stats.categories[3].outcome, null);
+  assert.equal(stats.gameModes[0].finished, 1);
+  assert.equal(stats.gameModes[1].outcome?.solveRate, 2 / 3);
+  assert.equal(stats.gameModes[2].outcome, null);
+  assert.equal(stats.gameModes[2].open, 0);
+  assert.equal(stats.gameModes[2].games, 0);
+  assert.equal(stats.gameModes[2].models.length, 0);
+  assert.equal(stats.gameModes[3].finished, 0);
+  assert.equal(stats.gameModes[3].outcome, null);
 });
 
-test("an empty category list does not invent rows", () => {
+test("an empty game mode list does not invent rows", () => {
   const stats = computePublicStats([], [], [], [], [], now);
   assert.equal(stats.outcome.solveRate, null);
   assert.equal(stats.outcome.tokensPerGame, null);
   assert.equal(stats.models.length, 0);
   assert.equal(stats.confusion.length, 0);
+  assert.equal(stats.gameModes.length, 0);
   assert.equal(stats.categories.length, 0);
   assert.equal(stats.sizes.every((row) => row.solveRate === null && row.games === 0), true);
 });
 
-test("a finished category outside the list is still shown", () => {
+test("a finished game mode outside the list is still shown", () => {
   const stats = computePublicStats(
-    [game("1", "opus", "solved", 2, { category: "custom", size: "medium", region: "eu" })],
+    [game("1", "opus", "solved", 2, { gameMode: "custom", size: "medium", region: "eu" })],
     [],
     [],
     [{ id: "all", name: "All models" }],
@@ -129,7 +130,7 @@ test("a finished category outside the list is still shown", () => {
     now,
   );
   assert.deepEqual(
-    stats.categories.map((row) => [row.id, row.finished]),
+    stats.gameModes.map((row) => [row.id, row.finished]),
     [
       ["all", 0],
       ["custom", 1],
@@ -138,12 +139,12 @@ test("a finished category outside the list is still shown", () => {
   assert.equal(stats.sizes.find((row) => row.key === "unknown"), undefined);
 });
 
-test("a round counts in each class, and a model with no class adds no row", () => {
+test("a round counts in each category, and a model with no category adds no row", () => {
   const stats = computePublicStats(
     [
-      game("1", "opus", "solved", 2, { classIds: ["opus", "latest"] }),
-      game("2", "haiku", "miss", 4, { classIds: ["haiku"] }),
-      game("3", "luna", "solved", 1, { classIds: [] }),
+      game("1", "opus", "solved", 2, { categoryIds: ["opus", "latest"] }),
+      game("2", "haiku", "miss", 4, { categoryIds: ["haiku"] }),
+      game("3", "luna", "solved", 1, { categoryIds: [] }),
     ],
     [],
     [],
@@ -157,7 +158,7 @@ test("a round counts in each class, and a model with no class adds no row", () =
     now,
   );
   assert.deepEqual(
-    stats.classes.map((row) => [row.name, row.games, row.solveRate]),
+    stats.categories.map((row) => [row.name, row.games, row.solveRate]),
     [
       ["Empty", 0, null],
       ["Haiku", 1, 0],
@@ -165,14 +166,14 @@ test("a round counts in each class, and a model with no class adds no row", () =
       ["Opus", 1, 1],
     ],
   );
-  assert.equal(stats.classes.some((row) => row.name === "luna" || row.key === "none"), false);
+  assert.equal(stats.categories.some((row) => row.name === "luna" || row.key === "none"), false);
 });
 
 test("a solved round with no finished_at does not count", () => {
   const stats = computePublicStats(
     [
       game("done", "opus", "solved", 2),
-      game("stale", "haiku", "solved", 8, { finishedAt: null, category: "daily" }),
+      game("stale", "haiku", "solved", 8, { finishedAt: null, gameMode: "daily" }),
       game("open", "secret", "active", 5, { finishedAt: null }),
     ],
     [
@@ -200,7 +201,7 @@ test("a solved round with no finished_at does not count", () => {
   assert.equal(stats.outcome.messagesPerGame, 2);
   assert.equal(stats.days.find((day) => day.date === "2026-10-10")?.games, 1);
   assert.equal(stats.models.length, 1);
-  assert.equal(stats.categories.find((row) => row.id === "daily")?.finished, 0);
+  assert.equal(stats.gameModes.find((row) => row.id === "daily")?.finished, 0);
   assert.equal(JSON.stringify(stats).includes("haiku"), false);
   assert.equal(JSON.stringify(stats).includes("secret"), false);
 });
@@ -212,7 +213,7 @@ test("only All modes and All models can be selected", () => {
       ["All modes", true],
       ["Daily", false],
       ["All models", true],
-      ["Class", false],
+      ["Category", false],
       ["Company", false],
       ["Region", false],
       ["Custom", false],
@@ -231,7 +232,7 @@ test("the public stats page does not read prices, billing, or account rows", () 
     assert.equal(board.toLowerCase().includes(banned), false, banned);
   }
   assert.match(why, /Over time I think I could tell an Opus 4.5 from a 4.7 and a 4.8\. Like a wine\.\.\./);
-  assert.match(board, /No finished games in this category yet/);
+  assert.match(board, /No finished games in this game mode yet/);
   assert.match(board, /mode === "class"/);
   assert.doesNotMatch(board, /still open/);
   assert.doesNotMatch(board, /\$\{outcome\.open\}/);
@@ -240,11 +241,11 @@ test("the public stats page does not read prices, billing, or account rows", () 
   assert.match(board, /type="button"/);
   assert.doesNotMatch(board, /href=/);
   assert.doesNotMatch(board, /useRouter|router\.push|window\.location/);
-  assert.match(loader, /readAll\(client, "model_classes", "model_id, class_id", \["model_id", "class_id"\]\)/);
+  assert.match(loader, /readAll\(client, "model_categories", "model_id, category_id", \["model_id", "category_id"\]\)/);
   assert.match(loader, /finished_at/);
   const home = fs.readFileSync(path.join(root, "components/home-board.tsx"), "utf8");
   assert.match(home, /\["daily", "all", "class", "company", "region", "custom"\]/);
-  assert.match(home, /One class of models\. Opus, or GPT vs Claude\./);
+  assert.match(home, /A set we define, not a lab's line\. Only Opus, only the nano models, or obscure ones\./);
   assert.match(home, /id: "class"[\s\S]*enabled: false/);
   assert.doesNotMatch(board, /<h2>Family<\/h2>/);
   assert.doesNotMatch(page, /How the rounds have gone/);

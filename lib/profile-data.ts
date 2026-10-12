@@ -59,19 +59,19 @@ export async function loadHistory(userId: string, page: number) {
   const pageCount = Math.max(1, Math.ceil(total / pageSize));
   const safePage = Number.isFinite(page) && page >= 1 ? Math.min(Math.trunc(page), pageCount) : 1;
   const from = (safePage - 1) * pageSize;
-  const [{ data, error }, { data: categories, error: categoryError }] = await Promise.all([
+  const [{ data, error }, { data: gameModes, error: gameModeError }] = await Promise.all([
     client
       .from("games")
       .select(
-        "id, status, score, message_count, started_at, traits, category, difficulty, no_hint, models(name, company_id, logo_path, companies(name, logo_path))",
+        "id, status, score, message_count, started_at, traits, game_mode, difficulty, no_hint, models(name, company_id, logo_path, companies(name, logo_path))",
       )
       .eq("user_id", userId)
       .order("started_at", { ascending: false })
       .range(from, from + pageSize - 1),
-    client.from("categories").select("id, name"),
+    client.from("game_modes").select("id, name"),
   ]);
-  if (error || categoryError) throw new Error("Could not read profile history.");
-  const categoryNames = new Map((categories ?? []).map((category) => [category.id as string, category.name as string]));
+  if (error || gameModeError) throw new Error("Could not read profile history.");
+  const gameModeNames = new Map((gameModes ?? []).map((gameMode) => [gameMode.id as string, gameMode.name as string]));
 
   const ids = (data ?? []).map((row) => row.id as string);
   const flags = new Map<string, { company: boolean; region: boolean }>();
@@ -113,8 +113,8 @@ export async function loadHistory(userId: string, page: number) {
     const company = model ? first(model.companies) : null;
     const finished = status !== "active";
     const facts = playedRoundFacts({
-      categoryId: row.category as string,
-      categoryName: categoryNames.get(row.category as string),
+      gameModeId: row.game_mode as string,
+      gameModeName: gameModeNames.get(row.game_mode as string),
       difficulty: row.difficulty,
     });
     return {

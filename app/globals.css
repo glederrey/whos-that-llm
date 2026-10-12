@@ -1224,8 +1224,8 @@ html[data-theme="dark"] .history-facts .board-chip.no-hints {
 .roster.models .button-on,
 .roster.models .button-off,
 .roster.models .button-quiet { padding: 6px 10px; }
-.roster.models td, .roster.classes td { vertical-align: middle; }
-.roster.classes th:last-child, .roster.classes td:last-child { text-align: right; width: 1%; }
+.roster.models td, .roster.categories td { vertical-align: middle; }
+.roster.categories th:last-child, .roster.categories td:last-child { text-align: right; width: 1%; }
 .roster-buttons { display: flex; gap: 8px; align-items: center; justify-content: flex-end; flex-wrap: nowrap; }
 .roster-buttons form { margin: 0; }
 .roster-add > summary { cursor: pointer; font-size: 20px; font-weight: 600; list-style: none; }

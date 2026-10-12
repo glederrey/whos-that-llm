@@ -5,22 +5,22 @@ import { boardHref, boardMiddle, type BoardChoice, type BoardMode, type BoardPer
 export function BoardControls({
   base,
   modes,
-  classes,
+  categories,
   companies,
-  category,
+  gameMode,
   period,
   difficulty,
 }: {
   base: "/" | "/leaderboard";
   modes: BoardMode[];
-  classes: Array<{ id: string; name: string }>;
+  categories: Array<{ id: string; name: string }>;
   companies: Array<{ id: string; name: string }>;
-  category: string;
+  gameMode: string;
   period: BoardPeriod;
   difficulty: BoardDifficulty;
 }) {
-  const choice: BoardChoice = { category, period, difficulty };
-  const middle = boardMiddle(category, modes);
+  const choice: BoardChoice = { gameMode, period, difficulty };
+  const middle = boardMiddle(gameMode, modes);
   return (
     <div className="board-controls">
       <div className="segmented board-controls-modes" role="group" aria-label="Mode">
@@ -28,8 +28,8 @@ export function BoardControls({
           mode.open ? (
             <Link
               key={mode.id}
-              aria-pressed={mode.id === category}
-              href={boardHref(base, { ...choice, category: mode.id })}
+              aria-pressed={mode.id === gameMode}
+              href={boardHref(base, { ...choice, gameMode: mode.id })}
               scroll={false}
             >
               {mode.name}
@@ -61,9 +61,9 @@ export function BoardControls({
           </div>
         ) : null}
         {middle?.kind === "class" ? (
-          <select aria-label="Class" disabled={middle.disabled} defaultValue="" title={middle.disabled ? "That mode is not open yet." : undefined}>
-            <option value="">Class</option>
-            {classes.map((item) => (
+          <select aria-label="Category" disabled={middle.disabled} defaultValue="" title={middle.disabled ? "That mode is not open yet." : undefined}>
+            <option value="">Category</option>
+            {categories.map((item) => (
               <option key={item.id} value={item.id}>
                 {item.name}
               </option>

@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { difficulties, difficultyBlurb, difficultyLabel, type Difficulty } from "@/lib/difficulty";
 
-export type HomeCategory = {
+export type HomeGameMode = {
   id: string;
   name: string;
   blurb: string;
@@ -43,13 +43,13 @@ export function capSentence(cap: number): string {
   return `${count} ${cap === 1 ? "game" : "games"} an hour. One more, and the developer goes broke.`;
 }
 
-export function lineup(categories: HomeCategory[]): HomeCategory[] {
-  const byId = new Map(categories.filter((category) => !hidden.has(category.id)).map((category) => [category.id, category]));
+export function lineup(gameModes: HomeGameMode[]): HomeGameMode[] {
+  const byId = new Map(gameModes.filter((gameMode) => !hidden.has(gameMode.id)).map((gameMode) => [gameMode.id, gameMode]));
   if (!byId.has("class")) {
     byId.set("class", {
       id: "class",
-      name: "Class",
-      blurb: "One class of models. Opus, or GPT vs Claude.",
+      name: "Category",
+      blurb: "A set we define, not a lab's line. Only Opus, only the nano models, or obscure ones.",
       enabled: false,
     });
   }
@@ -62,10 +62,10 @@ export function lineup(categories: HomeCategory[]): HomeCategory[] {
     });
   }
   const known = order.flatMap((id) => {
-    const category = byId.get(id);
-    return category ? [category] : [];
+    const gameMode = byId.get(id);
+    return gameMode ? [gameMode] : [];
   });
-  const rest = [...byId.values()].filter((category) => !order.includes(category.id));
+  const rest = [...byId.values()].filter((gameMode) => !order.includes(gameMode.id));
   return [...known, ...rest];
 }
 
@@ -77,7 +77,7 @@ export function HomeBoard({
   poolSize,
   difficultyCounts,
   nextAt,
-  categories,
+  gameModes,
 }: {
   paused: boolean;
   played: number;
@@ -86,14 +86,14 @@ export function HomeBoard({
   poolSize: number;
   difficultyCounts: Record<Difficulty, number>;
   nextAt: string | null;
-  categories: HomeCategory[];
+  gameModes: HomeGameMode[];
 }) {
   const router = useRouter();
   const [openId, setOpenId] = useState<string | null>(null);
   const [noHint, setNoHint] = useState(false);
   const [notice, setNotice] = useState("");
   const [busy, setBusy] = useState(false);
-  const cards = lineup(categories);
+  const cards = lineup(gameModes);
   const left = Math.max(0, cap - played);
   const full = played >= cap;
 
@@ -107,8 +107,8 @@ export function HomeBoard({
     return left === 0 ? `Next one at ${when}` : `Adding a new game to the pool at ${when}`;
   }
 
-  async function start(category: string, difficulty: Difficulty) {
-    if (activeGameId && category === "all") {
+  async function start(gameMode: string, difficulty: Difficulty) {
+    if (activeGameId && gameMode === "all") {
       router.push(`/play/${activeGameId}`);
       return;
     }
@@ -117,7 +117,7 @@ export function HomeBoard({
     const response = await fetch("/api/games", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ category, noHint, difficulty }),
+      body: JSON.stringify({ gameMode, noHint, difficulty }),
     });
     const body = (await response.json().catch(() => ({}))) as { gameId?: string; error?: string; nextAt?: string };
     setBusy(false);
@@ -172,16 +172,16 @@ export function HomeBoard({
         {paused ? null : <span className="hour-note">{capSentence(cap)}</span>}
       </p>
       <div className="card category-list">
-        {cards.map((category) => {
-          const playable = category.id === "all" && category.enabled;
-          const continueGame = Boolean(activeGameId) && category.id === "all";
-          const opened = category.enabled && openId === category.id;
-          const custom = category.id === "custom";
+        {cards.map((gameMode) => {
+          const playable = gameMode.id === "all" && gameMode.enabled;
+          const continueGame = Boolean(activeGameId) && gameMode.id === "all";
+          const opened = gameMode.enabled && openId === gameMode.id;
+          const custom = gameMode.id === "custom";
           const label = (
             <span>
-              <strong>{category.name}</strong>
+              <strong>{gameMode.name}</strong>
               <br />
-              <span className="muted">{category.blurb}</span>
+              <span className="muted">{gameMode.blurb}</span>
               {playable && poolSize < 2 ? (
                 <>
                   <br />
@@ -191,14 +191,14 @@ export function HomeBoard({
             </span>
           );
           return (
-            <div key={category.id} className={category.enabled ? "category-block" : "category-block closed"}>
+            <div key={gameMode.id} className={gameMode.enabled ? "category-block" : "category-block closed"}>
               <div className="category-main">
-                {category.enabled ? (
+                {gameMode.enabled ? (
                   <button
                     type="button"
                     className="category-toggle"
                     aria-expanded={opened}
-                    onClick={() => setOpenId(opened ? null : category.id)}
+                    onClick={() => setOpenId(opened ? null : gameMode.id)}
                   >
                     {label}
                     <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -212,7 +212,7 @@ export function HomeBoard({
                   <button type="button" className="button" onClick={() => router.push(`/play/${activeGameId}`)}>
                     Continue
                   </button>
-                ) : category.enabled ? null : (
+                ) : gameMode.enabled ? null : (
                   <span className="pill">Coming soon</span>
                 )}
               </div>
@@ -246,7 +246,7 @@ export function HomeBoard({
                               type="button"
                               className={`difficulty-choice difficulty-${difficulty}`}
                               disabled={blocked}
-                              onClick={() => void start(category.id, difficulty)}
+                              onClick={() => void start(gameMode.id, difficulty)}
                             >
                               {choice}
                             </button>
