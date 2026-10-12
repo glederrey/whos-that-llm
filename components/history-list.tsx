@@ -44,12 +44,14 @@ export function HistoryList({ items }: { items: HistoryItem[] }) {
             >
               <span className="history-when">{item.when}</span>
               <HistoryFacts item={item} />
-              <span className="history-status" data-state={item.state}>
-                {item.status}
-              </span>
-              <span className="history-score" data-best={item.best ? "true" : undefined}>
-                {item.score}
-                {item.best ? <span className="history-best-note"> (best score)</span> : null}
+              <span className="history-outcome">
+                <span className="history-status" data-state={item.state}>
+                  {item.status}
+                </span>
+                <span className="history-score" data-best={item.best ? "true" : undefined}>
+                  {item.score}
+                  {item.best ? <span className="history-best-note"> (best score)</span> : null}
+                </span>
               </span>
             </button>
             {open ? <HistoryDetail item={item} panel={panel} /> : null}
@@ -63,7 +65,7 @@ export function HistoryList({ items }: { items: HistoryItem[] }) {
 export function HistoryFacts({ item }: { item: HistoryItem }) {
   return (
     <span className="history-facts">
-      <span className="history-mode">{item.mode}</span>
+      <span className="board-chip history-mode">{item.mode}</span>
       {item.difficulty ? (
         <span className={`board-chip difficulty-${item.difficulty}`}>{difficultyText(item.difficulty)}</span>
       ) : null}

@@ -45,6 +45,7 @@ test("a stored category and difficulty become the labels a player sees", () => {
 
 test("the history row shows the mode, the difficulty chip, and a no-hints chip", () => {
   const plain = renderToStaticMarkup(createElement(HistoryList, { items: [item] }));
+  assert.ok(plain.includes("board-chip history-mode"));
   assert.ok(plain.includes("All models"));
   assert.ok(plain.includes("board-chip difficulty-hard"));
   assert.ok(plain.includes(">Hard<"));
