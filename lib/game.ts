@@ -7,6 +7,13 @@ export type TraitKey = "company" | "region" | "year" | "size";
 export type HintKey = "company" | "region" | "year" | "size";
 export type GameStatus = "active" | "solved" | "miss" | "given_up";
 
+/** A round counts as played once it is solved, not solved, or given up. */
+export const finishedGameStatuses = ["solved", "miss", "given_up"] as const satisfies readonly GameStatus[];
+
+export function isFinishedGame(status: string): boolean {
+  return (finishedGameStatuses as readonly string[]).includes(status);
+}
+
 export type FrozenModel = {
   name: string;
   companyId: string;
