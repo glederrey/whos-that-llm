@@ -21,7 +21,7 @@ The brand is three flat colors, taken from the logo. No fourth brand hue, and no
 | Ink | `#141414` | The logo ground. Text on light surfaces |
 | Paper | `#EBEBEB` | The question mark. Text on dark surfaces. Cards in the light theme |
 | Teal | `#00BBC9` | The dot. The one accent: links, the score on the result, a matched trait, the primary button |
-| Teal press | `#008F99` | Hover and pressed, same hue, darker |
+| Teal press | `#007F88` / `#008F99` | Light theme, then dark theme. Same hue, darker than the teal. Links and the quote on a light page, and hover in both themes |
 | Teal wash | `#E6F8F8` / `#062E2E` | A matched trait background, light theme then dark theme |
 | Canvas light | `#E0E0E1` | Page background, light theme |
 | Canvas dark | `#141414` | Page background, dark theme. A step off pure black so a light card can lift |

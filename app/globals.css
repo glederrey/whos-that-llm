@@ -3,7 +3,7 @@
   --ink: #141414;
   --paper: #ebebeb;
   --teal: #00bbc9;
-  --teal-press: #008f99;
+  --teal-press: #007f88;
   --teal-wash: #e6f8f8;
   --canvas: #e0e0e1;
   --card: #ffffff;
@@ -23,6 +23,7 @@
 
 html[data-theme="dark"] {
   color-scheme: dark;
+  --teal-press: #008f99;
   --teal-wash: #062e2e;
   --canvas: #141414;
   --card: #1e1e1e;
