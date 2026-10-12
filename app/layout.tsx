@@ -9,8 +9,9 @@ import { currentProfile } from "@/lib/session";
 import { siteOrigin } from "@/lib/site";
 import "./globals.css";
 
-// Same latin Roboto file next/font/google downloaded, with the same 400/500/700
-// faces. Vendored so the standalone release build never resolves Google Fonts.
+// Latin Roboto, vendored so the standalone release build never resolves Google Fonts.
+// The regular file covers 400, 500, and the site-wide 700 face. A separate bold
+// cut is exposed as --font-bold for text that needs to look heavier.
 const font = localFont({
   src: [
     { path: "./fonts/roboto-latin.woff2", weight: "400", style: "normal" },
@@ -19,6 +20,12 @@ const font = localFont({
   ],
   display: "swap",
   variable: "--font",
+});
+const fontBold = localFont({
+  src: "./fonts/roboto-latin-700.woff2",
+  weight: "700",
+  display: "swap",
+  variable: "--font-bold",
 });
 
 export const metadata: Metadata = {
@@ -40,7 +47,7 @@ export const metadata: Metadata = {
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const [{ user, username, avatarUrl }, owner] = await Promise.all([currentProfile(), sessionIsOwner()]);
   return (
-    <html lang="en" className={font.variable} suppressHydrationWarning>
+    <html lang="en" className={`${font.variable} ${fontBold.variable}`} suppressHydrationWarning>
       <head>
         <ThemeInit />
       </head>

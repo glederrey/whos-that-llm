@@ -17,7 +17,7 @@ test("a password without a digit names the digit", () => {
   assert.deepEqual(
     passwordChecks("Abcdefg!").map((rule) => [rule.label, rule.met]),
     [
-      ["8+ characters", true],
+      ["At least 8 characters", true],
       ["A lowercase letter", true],
       ["An uppercase letter", true],
       ["A digit", false],
@@ -54,9 +54,14 @@ test("a met rule turns green and an unmet rule stays grey", () => {
   const css = fs.readFileSync(path.join(root, "app/globals.css"), "utf8");
   const block = css.slice(css.indexOf(".must-contain {"), css.indexOf(".sr-only"));
   assert.match(block, /\.must-contain li \{[^}]*color: var\(--mute\)/);
-  assert.match(block, /\.must-contain li\[data-met="true"\] \{ color: #1c7c43; \}/);
+  assert.match(block, /\.must-contain li\[data-met="true"\] \{ color: #0b6b2e; font-family: var\(--font-bold\), var\(--font\), "Segoe UI", sans-serif; font-weight: 700; \}/);
+  assert.match(block, /html\[data-theme="dark"\] \.must-contain li\[data-met="true"\] \{ color: #4cce7a; font-family: var\(--font-bold\), var\(--font\), "Segoe UI", sans-serif; font-weight: 700; \}/);
+  const layout = fs.readFileSync(path.join(root, "app/layout.tsx"), "utf8");
+  assert.match(layout, /roboto-latin-700\.woff2/);
+  assert.match(layout, /variable: "--font-bold"/);
+  assert.match(block, /\.must-contain \{[^}]*padding-left: 16px/);
   assert.equal(css.includes(".strength"), false);
-  assert.equal(passwordRulesText, "8+ characters, a lowercase letter, an uppercase letter, a digit, and a symbol.");
+  assert.equal(passwordRulesText, "At least 8 characters, a lowercase letter, an uppercase letter, a digit, and a symbol.");
 });
 
 test("sign-up checks the rules before the auth call and sign-in stays generic", () => {
