@@ -105,7 +105,7 @@ export function LoginForm({
   const signingIn = tab === "sign-in";
 
   return (
-    <div className="auth">
+    <div className="auth auth-screen">
       <h1>{signingIn ? "Sign in" : "Create account"}</h1>
       <div className="segmented" role="group" aria-label="Sign in or create an account">
         <button type="button" aria-pressed={signingIn} onClick={() => showTab("sign-in")}>

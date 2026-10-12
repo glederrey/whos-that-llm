@@ -92,6 +92,8 @@ test("sign-up checks the rules before the auth call and sign-in stays generic", 
   assert.ok(form.indexOf('className="auth-confirm"') > form.indexOf('type="submit"'));
   const css = fs.readFileSync(path.join(root, "app/globals.css"), "utf8");
   assert.match(css, /\.auth-confirm \{ color: var\(--mute\); font-size: 14px; font-weight: 500; text-align: center; \}/);
+  assert.match(css, /@media \(max-width: 560px\) \{[\s\S]*\.auth-screen \{ margin-top: 0; margin-bottom: 0; \}/);
+  assert.match(form, /className="auth auth-screen"/);
   assert.match(form, /passwordChecks\(password\)/);
   assert.equal(form.includes("passwordRulesText"), false);
   assert.equal(form.includes('role="meter"'), false);

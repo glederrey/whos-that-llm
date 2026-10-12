@@ -1356,6 +1356,9 @@ html[data-theme="dark"] .history-facts .board-chip.no-hints {
     text-align: center;
   }
   .header, .page, .footer-inner { width: calc(100% - 24px); }
+  .page:has(.auth-screen) { flex: none; padding-top: 0; padding-bottom: 0; }
+  .auth-screen { margin-top: 0; margin-bottom: 0; }
+  .page:has(.auth-screen) + .footer { margin-top: 0; }
   .header { padding-top: 14px; column-gap: 8px; row-gap: 0; min-height: 64px; flex-wrap: nowrap; align-items: center; }
   .brand { font-size: 16px; gap: 8px; flex: 1 1 auto; min-width: 0; }
   .brand span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
