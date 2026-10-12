@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { anyDifficulty, difficulties, difficultyLabel, type BoardDifficulty } from "@/lib/difficulty";
 import { boardHref, boardMiddle, type BoardChoice, type BoardMode, type BoardPeriod } from "@/lib/board-query";
 
@@ -25,9 +26,14 @@ export function BoardControls({
       <div className="segmented board-controls-modes" role="group" aria-label="Mode">
         {modes.map((mode) =>
           mode.open ? (
-            <a key={mode.id} aria-pressed={mode.id === category} href={boardHref(base, { ...choice, category: mode.id })}>
+            <Link
+              key={mode.id}
+              aria-pressed={mode.id === category}
+              href={boardHref(base, { ...choice, category: mode.id })}
+              scroll={false}
+            >
               {mode.name}
-            </a>
+            </Link>
           ) : (
             <span key={mode.id} aria-disabled="true" title="That mode is not open yet.">
               {mode.name}
@@ -38,18 +44,19 @@ export function BoardControls({
       <div className="board-controls-middle">
         {middle?.kind === "difficulty" ? (
           <div className="segmented" role="group" aria-label="Difficulty">
-            <a aria-pressed={difficulty === anyDifficulty} href={boardHref(base, { ...choice, difficulty: anyDifficulty })}>
+            <Link aria-pressed={difficulty === anyDifficulty} href={boardHref(base, { ...choice, difficulty: anyDifficulty })} scroll={false}>
               Any difficulty
-            </a>
+            </Link>
             {difficulties.map((tab) => (
-              <a
+              <Link
                 key={tab}
                 className={`difficulty-${tab}`}
                 aria-pressed={tab === difficulty}
                 href={boardHref(base, { ...choice, difficulty: tab })}
+                scroll={false}
               >
                 {difficultyLabel[tab]}
-              </a>
+              </Link>
             ))}
           </div>
         ) : null}
@@ -80,12 +87,12 @@ export function BoardControls({
         ) : null}
       </div>
       <div className="segmented board-controls-period" role="group" aria-label="Period">
-        <a aria-pressed={period === "week"} href={boardHref(base, { ...choice, period: "week" })}>
+        <Link aria-pressed={period === "week"} href={boardHref(base, { ...choice, period: "week" })} scroll={false}>
           This week (UTC)
-        </a>
-        <a aria-pressed={period === "all"} href={boardHref(base, { ...choice, period: "all" })}>
+        </Link>
+        <Link aria-pressed={period === "all"} href={boardHref(base, { ...choice, period: "all" })} scroll={false}>
           All time
-        </a>
+        </Link>
       </div>
     </div>
   );

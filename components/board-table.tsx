@@ -13,6 +13,7 @@ export type BoardRow = {
 };
 
 export function BoardTable({ rows, showDifficulty = false }: { rows: BoardRow[]; showDifficulty?: boolean }) {
+  const showMarks = showDifficulty || rows.some((row) => row.noHint);
   return (
     <div className="card board-card">
       <table className="board">
@@ -20,6 +21,7 @@ export function BoardTable({ rows, showDifficulty = false }: { rows: BoardRow[];
           <tr>
             <th>Rank</th>
             <th>Name</th>
+            {showMarks ? <th className="marks" /> : null}
             <th className="num">Score</th>
           </tr>
         </thead>
@@ -37,14 +39,24 @@ export function BoardTable({ rows, showDifficulty = false }: { rows: BoardRow[];
                 <td className="name">
                   <span className="player">
                     <Avatar seed={row.seed || row.name} src={row.avatarUrl} size={28} />
-                    <span>{row.name}</span>
-                    {showDifficulty && row.difficulty ? (
-                      <span className={`board-chip difficulty-${row.difficulty}`}>{difficultyLabel[row.difficulty]}</span>
-                    ) : null}
-                    {row.noHint ? <span className="board-chip no-hints">No hints</span> : null}
+                    <span className="player-name">{row.name}</span>
                     {row.mine ? <span className="you-tag">You</span> : null}
                   </span>
                 </td>
+                {showMarks ? (
+                  <td className="marks">
+                    <span className="player-marks">
+                      {row.noHint ? <span className="board-chip no-hints">No hints</span> : null}
+                      {showDifficulty ? (
+                        row.difficulty ? (
+                          <span className={`board-chip difficulty-${row.difficulty}`}>{difficultyLabel[row.difficulty]}</span>
+                        ) : (
+                          <span className="mark-slot" />
+                        )
+                      ) : null}
+                    </span>
+                  </td>
+                ) : null}
                 <td className="num">{row.score.toLocaleString("en-US")}</td>
               </tr>
             );
