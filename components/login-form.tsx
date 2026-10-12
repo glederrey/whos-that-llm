@@ -25,6 +25,12 @@ export function LoginForm({
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
 
+  function showTab(next: "sign-in" | "create") {
+    setTab(next);
+    setError("");
+    setNote("");
+  }
+
   function noticeError(notice: AuthNotice) {
     if (notice === "exists") return "That email is already registered.";
     if (notice === "confirm") return "Confirm your email, then come back.";
@@ -102,10 +108,10 @@ export function LoginForm({
     <div className="auth">
       <h1>{signingIn ? "Sign in" : "Create account"}</h1>
       <div className="segmented" role="group" aria-label="Sign in or create an account">
-        <button type="button" aria-pressed={signingIn} onClick={() => setTab("sign-in")}>
+        <button type="button" aria-pressed={signingIn} onClick={() => showTab("sign-in")}>
           Sign in
         </button>
-        <button type="button" aria-pressed={!signingIn} onClick={() => setTab("create")}>
+        <button type="button" aria-pressed={!signingIn} onClick={() => showTab("create")}>
           Create account
         </button>
       </div>

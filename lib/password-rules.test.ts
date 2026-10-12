@@ -65,6 +65,11 @@ test("sign-up checks the rules before the auth call and sign-in stays generic", 
   const create = form.slice(form.indexOf('if (tab === "create")'), form.indexOf("await signInWithEmail"));
   assert.ok(create.indexOf("passwordProblem(password)") !== -1);
   assert.ok(create.indexOf("passwordProblem(password)") < create.indexOf("signUpWithEmail"));
+  const tabs = form.slice(form.indexOf("function showTab"), form.indexOf("function noticeError"));
+  assert.match(tabs, /setError\(""\)/);
+  assert.match(tabs, /setNote\(""\)/);
+  assert.match(form, /showTab\("sign-in"\)/);
+  assert.match(form, /showTab\("create"\)/);
   assert.match(form, /Must contain/);
   assert.match(form, /passwordChecks\(password\)/);
   assert.equal(form.includes("passwordRulesText"), false);
