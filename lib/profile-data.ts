@@ -1,3 +1,4 @@
+import type { Difficulty } from "./difficulty";
 import type { GameStatus } from "./game";
 import { avatarPublicUrl, profileStats, publicImageCacheControl, readImage, traitFound, type ProfileStats } from "./profile";
 import { presentLogo, serviceOrThrow } from "./rounds";
@@ -17,7 +18,8 @@ export type HistoryRow = {
   companyFound: boolean;
   regionFound: boolean;
   mode: string;
-  difficulty: string;
+  difficulty: Difficulty | null;
+  noHint: boolean;
 };
 
 const pageSize = 10;
@@ -61,7 +63,7 @@ export async function loadHistory(userId: string, page: number) {
     client
       .from("games")
       .select(
-        "id, status, score, message_count, started_at, traits, category, difficulty, models(name, company_id, logo_path, companies(name, logo_path))",
+        "id, status, score, message_count, started_at, traits, category, difficulty, no_hint, models(name, company_id, logo_path, companies(name, logo_path))",
       )
       .eq("user_id", userId)
       .order("started_at", { ascending: false })
@@ -130,6 +132,7 @@ export async function loadHistory(userId: string, page: number) {
       regionFound: traitFound({ status, given, companyCorrect: seen.company, regionCorrect: seen.region, trait: "region" }),
       mode: facts.mode,
       difficulty: facts.difficulty,
+      noHint: Boolean(row.no_hint),
     };
   });
   return { rows, total, page: safePage };

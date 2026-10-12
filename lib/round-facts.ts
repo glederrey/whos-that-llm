@@ -15,9 +15,9 @@ export function playedRoundFacts(input: {
   categoryId: string;
   categoryName: string | null | undefined;
   difficulty: unknown;
-}): { mode: string; difficulty: string } {
+}): { mode: string; difficulty: Difficulty | null } {
   return {
     mode: modeLabel(input.categoryName, input.categoryId),
-    difficulty: difficultyText(difficultyFromStored(input.difficulty)),
+    difficulty: difficultyFromStored(input.difficulty),
   };
 }

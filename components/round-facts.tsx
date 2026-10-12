@@ -9,10 +9,24 @@ export function RoundFacts({ mode, difficulty }: { mode: string; difficulty: str
   );
 }
 
-export function ResultSummary({ mode, difficulty }: { mode: string; difficulty: string }) {
+export function ResultSummary({
+  mode,
+  difficulty,
+  noHint = false,
+}: {
+  mode: string;
+  difficulty: string;
+  noHint?: boolean;
+}) {
   return (
     <dl className="summary-list">
       <RoundFacts mode={mode} difficulty={difficulty} />
+      {noHint ? (
+        <>
+          <dt>Hints</dt>
+          <dd>No hints</dd>
+        </>
+      ) : null}
     </dl>
   );
 }

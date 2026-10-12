@@ -104,6 +104,7 @@ export default async function ProfilePage({
               regionFound: row.regionFound,
               mode: row.mode,
               difficulty: row.difficulty,
+              noHint: row.noHint,
             }))}
           />
           <div className="row pager">

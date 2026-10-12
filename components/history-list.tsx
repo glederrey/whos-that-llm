@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import type { Difficulty } from "@/lib/difficulty";
+import { difficultyText } from "@/lib/round-facts";
 import { CompanyLogo } from "./company-logo";
 import { RoundFacts } from "./round-facts";
 
@@ -19,7 +21,8 @@ export type HistoryItem = {
   companyFound: boolean;
   regionFound: boolean;
   mode: string;
-  difficulty: string;
+  difficulty: Difficulty | null;
+  noHint: boolean;
 };
 
 export function HistoryList({ items }: { items: HistoryItem[] }) {
@@ -39,7 +42,8 @@ export function HistoryList({ items }: { items: HistoryItem[] }) {
               aria-controls={panel}
               onClick={() => setOpenId(open ? null : item.id)}
             >
-              <span>{item.when}</span>
+              <span className="history-when">{item.when}</span>
+              <HistoryFacts item={item} />
               <span className="history-status" data-state={item.state}>
                 {item.status}
               </span>
@@ -53,6 +57,18 @@ export function HistoryList({ items }: { items: HistoryItem[] }) {
         );
       })}
     </ul>
+  );
+}
+
+export function HistoryFacts({ item }: { item: HistoryItem }) {
+  return (
+    <span className="history-facts">
+      <span className="history-mode">{item.mode}</span>
+      {item.difficulty ? (
+        <span className={`board-chip difficulty-${item.difficulty}`}>{difficultyText(item.difficulty)}</span>
+      ) : null}
+      {item.noHint ? <span className="board-chip no-hints">No hints</span> : null}
+    </span>
   );
 }
 
@@ -76,7 +92,13 @@ export function HistoryDetail({ item, panel }: { item: HistoryItem; panel?: stri
       <dl className="summary-list">
         <dt>Date</dt>
         <dd>{item.when}</dd>
-        <RoundFacts mode={item.mode} difficulty={item.difficulty} />
+        <RoundFacts mode={item.mode} difficulty={difficultyText(item.difficulty)} />
+        {item.noHint ? (
+          <>
+            <dt>Hints</dt>
+            <dd>No hints</dd>
+          </>
+        ) : null}
         <dt>Model</dt>
         <dd>{item.modelName ?? "Hidden until the round ends."}</dd>
         <dt>Status</dt>

@@ -1079,7 +1079,7 @@ html[data-theme="dark"] .md a { color: var(--teal); }
 .history { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
 .history-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 6.5rem 6.5rem;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
   gap: 12px;
   align-items: center;
   width: 100%;
@@ -1092,6 +1092,8 @@ html[data-theme="dark"] .md a { color: var(--teal); }
   text-align: left;
   cursor: pointer;
 }
+.history-when { white-space: nowrap; }
+.history-facts { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; min-width: 0; }
 .history-status { text-align: left; white-space: nowrap; }
 .history-status[data-state="solved"] { color: #1c7c43; font-weight: 600; }
 .history-status[data-state="given_up"] { color: var(--miss-press); font-weight: 600; }
