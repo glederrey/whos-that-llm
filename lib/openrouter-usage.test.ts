@@ -112,6 +112,15 @@ test("today's analytics rows join activity without double counting or collapsing
     "openai/gpt-5.6-luna-pro",
   );
   assert.equal(canonicalModel("openai/gpt-5.6-luna-pro", {}, ["openai/gpt-5.6-luna"]), "openai/gpt-5.6-luna-pro");
+  assert.equal(
+    canonicalModel("deepseek/deepseek-v4-pro", {}, ["deepseek/deepseek-v4-pro-0813", "deepseek/deepseek-v4-flash-0731"]),
+    "deepseek/deepseek-v4-pro-0813",
+  );
+  assert.equal(canonicalModel("deepseek/deepseek-v4-flash", {}, ["deepseek/deepseek-v4-flash-0731"]), "deepseek/deepseek-v4-flash-0731");
+  assert.equal(
+    canonicalModel("deepseek/deepseek-v4-pro", {}, ["deepseek/deepseek-v4-pro-0813", "deepseek/deepseek-v4-pro-0901"]),
+    "deepseek/deepseek-v4-pro",
+  );
   const counted = mergeCurrentDay(
     [{ date: "2026-10-12", model: "x-ai/grok-4.7", requests: 2, promptTokens: 1, completionTokens: 1, reasoningTokens: 0, usd: 0.0073 }],
     [{ date: "2026-10-12", model: "x-ai/grok-4.7-2026-09-21", requests: 2, promptTokens: 9, completionTokens: 9, reasoningTokens: 0, usd: 0.0073 }],

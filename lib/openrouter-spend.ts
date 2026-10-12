@@ -64,9 +64,8 @@ async function loadActivity(
   // 7- and 30-day totals leave out charges the key's all-time total still includes.
   const today = await loadCurrentDay(now, key);
   if (!today.ok) return today;
-  const known = [...new Set([...rows.map((row) => row.model), ...knownModels])];
   const aliases = modelAliases(result.value);
-  const merged = mergeCurrentDay(rows, today.value, (slug) => canonicalModel(slug, aliases, known));
+  const merged = mergeCurrentDay(rows, today.value, (slug) => canonicalModel(slug, aliases, knownModels));
   return { ok: true, value: { week: summarize(merged, 7, now), month: summarize(merged, 30, now) } };
 }
 

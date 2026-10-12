@@ -141,7 +141,11 @@ export function modelAliases(payload: unknown): Record<string, string> {
   return aliases;
 }
 
-/** Map a dated permaslug onto the roster or activity slug. A longer model name is left alone. */
+/**
+ * Map an activity slug onto a roster OpenRouter id.
+ * Activity uses the short slug (`deepseek/deepseek-v4-pro`). The roster stores one dated snapshot
+ * (`deepseek/deepseek-v4-pro-0813`). A longer different name, such as luna-pro beside luna, stays as it is.
+ */
 export function canonicalModel(slug: string, aliases: Record<string, string>, known: readonly string[]): string {
   const aliased = aliases[slug] ?? slug;
   return matchKnown(aliased, known) ?? matchKnown(slug, known) ?? aliased;
@@ -153,7 +157,13 @@ function matchKnown(slug: string, known: readonly string[]): string | null {
     if (!id || !versionOf(slug, id)) continue;
     if (!best || id.length > best.length) best = id;
   }
-  return best;
+  if (best) return best;
+  const snapshots = known.filter((id) => id.startsWith(`${slug}-`) && isSnapshot(id.slice(slug.length + 1)));
+  return snapshots.length === 1 ? snapshots[0] : null;
+}
+
+function isSnapshot(suffix: string): boolean {
+  return /^\d{4}$/.test(suffix) || /^\d{8}$/.test(suffix) || /^\d{4}-\d{2}-\d{2}$/.test(suffix);
 }
 
 function versionOf(slug: string, id: string): boolean {
