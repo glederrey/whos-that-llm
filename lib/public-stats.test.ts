@@ -206,12 +206,12 @@ test("a solved round with no finished_at does not count", () => {
   assert.equal(JSON.stringify(stats).includes("secret"), false);
 });
 
-test("only All modes and All models can be selected", () => {
+test("Daily can be selected, and Category, Company, Region, and Custom stay closed", () => {
   assert.deepEqual(
     statisticModes.map((mode) => [mode.name, mode.enabled]),
     [
       ["All modes", true],
-      ["Daily", false],
+      ["Daily", true],
       ["All models", true],
       ["Category", false],
       ["Company", false],

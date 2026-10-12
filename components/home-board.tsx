@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { canStartMode, presentDailyCard } from "@/lib/daily";
 import { difficulties, difficultyBlurb, difficultyLabel, type Difficulty } from "@/lib/difficulty";
 
 export type HomeGameMode = {
@@ -66,7 +67,7 @@ export function lineup(gameModes: HomeGameMode[]): HomeGameMode[] {
     return gameMode ? [gameMode] : [];
   });
   const rest = [...byId.values()].filter((gameMode) => !order.includes(gameMode.id));
-  return [...known, ...rest];
+  return [...known, ...rest].map((gameMode) => presentDailyCard(gameMode));
 }
 
 export function HomeBoard({
@@ -74,6 +75,9 @@ export function HomeBoard({
   played,
   cap,
   activeGameId,
+  activeGameMode,
+  activeGameDifficulty,
+  dailyFinished,
   poolSize,
   difficultyCounts,
   nextAt,
@@ -83,6 +87,9 @@ export function HomeBoard({
   played: number;
   cap: number;
   activeGameId: string | null;
+  activeGameMode: string | null;
+  activeGameDifficulty: Difficulty | null;
+  dailyFinished: Difficulty[];
   poolSize: number;
   difficultyCounts: Record<Difficulty, number>;
   nextAt: string | null;
@@ -107,8 +114,14 @@ export function HomeBoard({
     return left === 0 ? `Next one at ${when}` : `Adding a new game to the pool at ${when}`;
   }
 
+  function resumes(gameMode: string, difficulty: Difficulty) {
+    if (!activeGameId || activeGameMode !== gameMode) return false;
+    if (gameMode === "daily") return activeGameDifficulty === difficulty;
+    return true;
+  }
+
   async function start(gameMode: string, difficulty: Difficulty) {
-    if (activeGameId && gameMode === "all") {
+    if (resumes(gameMode, difficulty)) {
       router.push(`/play/${activeGameId}`);
       return;
     }
@@ -146,6 +159,10 @@ export function HomeBoard({
       router.push("/welcome?next=/play");
       return;
     }
+    if (body.error === "daily_done") {
+      setNotice("You already played that difficulty today.");
+      return;
+    }
     if (body.error === "not_found") {
       setNotice("That mode is not open yet.");
       return;
@@ -173,8 +190,9 @@ export function HomeBoard({
       </p>
       <div className="card category-list">
         {cards.map((gameMode) => {
-          const playable = gameMode.id === "all" && gameMode.enabled;
-          const continueGame = Boolean(activeGameId) && gameMode.id === "all";
+          const playable = canStartMode(gameMode.id) && gameMode.enabled;
+          const continueGame = Boolean(activeGameId) && activeGameMode === gameMode.id;
+          const daily = gameMode.id === "daily";
           const opened = gameMode.enabled && openId === gameMode.id;
           const custom = gameMode.id === "custom";
           const label = (
@@ -227,7 +245,9 @@ export function HomeBoard({
                         {difficulties.map((difficulty) => {
                           const count = difficultyCounts[difficulty];
                           const small = count < 2;
-                          const blocked = !playable || paused || busy || small || full || Boolean(activeGameId);
+                          const finished = daily && dailyFinished.includes(difficulty);
+                          const resumeThis = resumes(gameMode.id, difficulty);
+                          const blocked = finished || (!resumeThis && (!playable || paused || busy || small || full || (!daily && Boolean(activeGameId))));
                           const choice = (
                             <>
                               <span className="difficulty-name">
@@ -235,6 +255,7 @@ export function HomeBoard({
                                 <span className="muted">
                                   {difficultyBlurb[difficulty]}
                                   {playable && small ? ". Not enough models." : ""}
+                                  {finished ? ". Already played." : ""}
                                 </span>
                               </span>
                               <span className="difficulty-count">{count === 1 ? "1 model" : `${count} models`}</span>
@@ -244,8 +265,9 @@ export function HomeBoard({
                             <button
                               key={difficulty}
                               type="button"
-                              className={`difficulty-choice difficulty-${difficulty}`}
+                              className={`difficulty-choice difficulty-${difficulty}${finished ? " is-done" : ""}`}
                               disabled={blocked}
+                              title={finished ? "Already played today." : undefined}
                               onClick={() => void start(gameMode.id, difficulty)}
                             >
                               {choice}

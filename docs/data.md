@@ -125,7 +125,7 @@ The lobby and the leaderboard read this table. The built-in rows are seeded and 
 | `sort_order` | int | Main page and lobby order |
 | `created_at` | timestamptz | |
 
-Seed `enabled` true only for `all`. The others are seeded false until they are built. Seed `leaderboard` true for `all` and `daily` even while `daily` is disabled, so the column matches the rule. The leaderboard bar still shows Daily, Class, and Company while they are disabled. They are grayed out and cannot be selected. Region and Custom are not on that bar.
+Seed `enabled` true only for `all`. `0030_daily_model.sql` turns `daily` on. The others stay false until they are built. Seed `leaderboard` true for `all` and `daily`. The leaderboard bar shows Daily, All models, Class, and Company. Daily and All models can be selected. Class and Company stay grayed out. Region and Custom are not on that bar.
 
 Every scored round uses the formula in [Rules](rules.md). The category row does not store a multiplier.
 
@@ -173,7 +173,7 @@ One row per round.
 | `score` | int, null | Written once, at the end, when `message_count` is at least 1. Never negative. Null when they give up before any reply |
 | `score_breakdown` | jsonb, null | The integer lines, in order, not including the total |
 | `score_explanation` | text[], null | The short public lines |
-| `daily_key` | date, null | UTC date. Set only for `daily` |
+| `daily_key` | text, null | `2026-10-12:1` for Easy through `:4` for Impossible. Set only for `daily`. The unique `(user_id, daily_key)` pair allows two difficulties the same day and refuses a second round of one difficulty |
 | `started_at` | timestamptz | default `now()`. The hourly cap counts these |
 | `finished_at` | timestamptz, null | |
 | `call_started_at` | timestamptz, null | Set while a model call is in flight. A call older than 3 minutes can be claimed again, so a crashed request does not lock the round. Cleared when the reply is stored, aborted, or the round ends |
@@ -182,8 +182,22 @@ Indexes:
 
 - `(user_id, started_at desc)` for the hourly count and, later, the profile history
 - unique `(user_id)` where `status = 'active'`
-- unique `(user_id, daily_key)` where `daily_key is not null`
+- unique `(user_id, daily_key)` where `daily_key is not null`. One Daily round per account per difficulty per UTC day, because the key includes the difficulty. `start_game` writes `daily_key` only for `daily`
 - `(category, status, finished_at)` for the leaderboard
+
+### `daily_models`
+
+The hidden model for one difficulty on one UTC day. `games.daily_key` records that this account already played that difficulty. It does not record which model everyone else got. Two people starting Medium together could otherwise draw two models. This table is that shared pick. Easy and Medium are separate rows.
+
+| Column | Type | Notes |
+|---|---|---|
+| `played_on` | date, pk | UTC date. Part of the primary key |
+| `difficulty` | smallint, pk | `1` easy through `4` impossible. Part of the primary key |
+| `model_id` | text, fk `models` | The model every Daily round at this difficulty uses today |
+
+The first start of that day and difficulty inserts the row. The inserted model must have `difficulty <=` the chosen level, so Easy cannot store an Impossible model. A concurrent second start hits the primary key, does nothing, and reads the stored id. The next UTC day has no row yet, so each level draws again. anon and authenticated cannot read the table. The model id is the answer.
+
+`0030_daily_model.sql` adds the table and teaches `start_game` to fill `games.daily_key`. It turns Daily on and sets its blurb to **One round per difficulty. Everyone at that level gets the same model. A new puzzle tomorrow.** It does not rewrite games, models, or accounts. `v0.2.sql` stays the baseline and does not include this table. The lobby shows that sentence and leaves Daily open even before this migration is applied.
 
 `0014_delete_games_with_account.sql` put `games_user_id_fkey` back as `on delete cascade`. `0017_anonymize_games_on_account_delete.sql` replaces that with `on delete set null` and makes `games.user_id`, `games.username`, and `usage.user_id` nullable. The server clears `user_id` and `username` on that player's games, and clears `usage.user_id`, before it deletes the auth user. Messages and guesses stay, because they cascade from `games` only when a game row is deleted. `public.leaderboard()` skips games whose `user_id` or `username` is null, so a deleted player is not a blank row and is not pooled with other deleted players. Game, solve, token, and guess counts still include those rounds. Profile history reads `games.user_id`, so it does not. anon and authenticated still cannot delete these tables. The server action uses the service key after it has read the session.
 

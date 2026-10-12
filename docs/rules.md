@@ -417,7 +417,7 @@ The call is the same in every category: 10 messages, 500 characters, 1,000 outpu
 
 | Category | Pool | Hints | Leaderboard | When |
 |---|---|---|---|---|
-| `daily` | One model, the same for every player that UTC day | Yes | Yes | Later |
+| `daily` | Same roster as All models at the chosen difficulty. One hidden model per difficulty per UTC day, the same for every player. One round per account per difficulty per UTC day | Yes | Yes | Built |
 | `all` | Enabled models at or below the chosen difficulty | Yes | Yes | First build |
 | `company` | One company, at least 2 enabled models | No | No | Later |
 | `region` | `us`, `cn`, or `eu`, at least 2 enabled models | No | No | Later |
@@ -432,7 +432,7 @@ A company pool only cares about traits that differ inside the pool. Company is g
 
 Special pools can still be scored. They do not get a leaderboard. A board on a small pool would be easy to game. Region is not on a leaderboard. Custom is not on a leaderboard.
 
-A pool with fewer than 2 enabled models is not listed, except daily, which draws from the whole enabled roster. An empty roster is not playable. Europe will be thin. A row with fewer than 4 models still appears, and it shows the count. A category with `enabled = false` still has its sentence on the main page, with **Coming soon.**
+A pool with fewer than 2 enabled models is not listed. Daily uses that same rule. An empty roster is not playable. Europe will be thin. A row with fewer than 4 models still appears, and it shows the count. A category with `enabled = false` still has its sentence on the main page, with **Coming soon.**
 
 Latest is not a column on the model. `models.is_latest` is gone. A latest group, if Gael wants one, is a class he creates. A latest game mode is not built. If it is built later, it has no hints, because it is not Daily, All models, or Custom. Origin is not a category. Region is that pool, and it has no hints.
 
@@ -448,7 +448,7 @@ Size, also manual, and only as a hint:
 - **medium:** the workhorse
 - **large:** the flagship, and only the large models we are willing to pay for
 
-The first daily start of a UTC day draws one model from the enabled roster and freezes that id, that roster, and those traits on the day. Later starts copy them, so a model turned off at noon is still guessable today and a model turned on at noon is not added. Do not publish the id ahead of time. Starting spends the day, including a give-up before the first message.
+The first Daily start of a UTC day, at a difficulty, draws one model from the roster All models can already draw at that level (difficulty less than or equal to the chosen level) and stores that id on `daily_models`. Easy cannot store an Impossible model. Medium, Hard, and Impossible each store their own id. Later starts that day use the stored id, so two players get the same hidden model. A model turned off after the draw is still included in a later round's list, so it can still be named. Do not publish the id ahead of time. One account gets one Daily round per difficulty that UTC day. Easy and Medium are both allowed. A second Easy is not. Starting spends that difficulty, including a give-up before the first message. Coming back while that difficulty is open resumes it. A finished difficulty is done until tomorrow, which draws again at each level. A difficulty they have not started stays open.
 
 ### Class
 
@@ -460,7 +460,7 @@ Later. The player picks the models before the round. Disabled until that picker 
 
 ### Leaderboards
 
-The leaderboard is one bar: modes on the left, one middle control, and This week or All time on the right. On a narrow screen those three groups stack, full width, in that order, and the buttons in each group share the row evenly. On a phone the scoreboard table is flush to its card, and Previous, the page count, and Next span the width of the board. The modes are Daily, All models, Class, and Company. Region and Custom are not on it. All models is open. Its middle control is five boards: Any difficulty, Easy, Medium, Hard, and Impossible. Any difficulty is a score from whichever difficulty was played, so the four multipliers sit next to each other. That board puts a difficulty chip on the row. The other four do not, because the board is already that difficulty. A round played with no hints has a No hints chip on every board. A round scores on the difficulty it was played at. Daily uses those same difficulty tabs once that mode is open, and the tabs stay hidden while Daily is grayed out. Class and Company stay visible and cannot be selected yet. A class dropdown shows only when Class is selected, and a company dropdown shows only when Company is selected. With All models selected, the middle is the difficulty tabs. Custom has no difficulty and no leaderboard. A round counts when its status is `solved` or `miss` and the category has a leaderboard. `given_up` does not count. Rounds from before difficulties have no difficulty and stay off these five boards.
+The leaderboard is one bar: modes on the left, one middle control, and This week or All time on the right. On a narrow screen those three groups stack, full width, in that order, and the buttons in each group share the row evenly. On a phone the scoreboard table is flush to its card, and Previous, the page count, and Next span the width of the board. The modes are Daily, All models, Class, and Company. Region and Custom are not on it. All models is open. Its middle control is five boards: Any difficulty, Easy, Medium, Hard, and Impossible. Any difficulty is a score from whichever difficulty was played, so the four multipliers sit next to each other. That board puts a difficulty chip on the row. The other four do not, because the board is already that difficulty. A round played with no hints has a No hints chip on every board. A round scores on the difficulty it was played at. Daily is open and uses those same difficulty tabs. Class and Company stay visible and cannot be selected yet. A class dropdown shows only when Class is selected, and a company dropdown shows only when Company is selected. With All models selected, the middle is the difficulty tabs. Custom has no difficulty and no leaderboard. A round counts when its status is `solved` or `miss` and the category has a leaderboard. `given_up` does not count. Rounds from before difficulties have no difficulty and stay off these five boards.
 
 Rank is the player's best score in the period, highest first. Scores are never negative, so a round can score 0. Ties break by fewer messages on that round, then by earlier finish. Weeks start Monday 00:00 UTC.
 

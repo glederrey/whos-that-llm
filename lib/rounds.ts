@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { config, currentRules, rulesForGameMode, type Rules } from "./config";
 import { boardSince } from "./board-query";
+import { dailyRoundKey, startDailyRound, utcDayKey, type DailyRound } from "./daily";
 import { difficulties, difficultyFromStored, difficultyNumber, inDifficultyPool, type BoardDifficulty, type Difficulty } from "./difficulty";
 import {
   buildTraits,
@@ -86,34 +87,55 @@ async function rpc(client: SupabaseClient, fn: string, args: Record<string, unkn
 
 type CatalogModel = FrozenModel & { id: string; openrouterId: string; providerSettings: unknown; difficulty: Difficulty };
 
-async function loadCatalog(client: SupabaseClient, maxDifficulty?: Difficulty): Promise<CatalogModel[]> {
-  let query = client
-    .from("models")
-    .select(
-      "id, name, company_id, size, released_on, enabled, difficulty, logo_path, openrouter_id, provider_settings, companies(name, region, logo_path)",
-    )
-    .eq("enabled", true);
-  if (maxDifficulty) query = query.lte("difficulty", difficultyNumber[maxDifficulty]);
-  const { data, error } = await query;
-  if (error) throw new Error(error.message);
-  return (data ?? []).flatMap((row) => {
-    const difficulty = difficultyFromStored(row.difficulty);
-    if (!difficulty) return [];
-    const company = first(row.companies) as { name: string; region: FrozenModel["region"]; logo_path: string };
+const catalogColumns =
+  "id, name, company_id, size, released_on, enabled, difficulty, logo_path, openrouter_id, provider_settings, companies(name, region, logo_path)";
+
+function mapCatalog(data: readonly object[]): CatalogModel[] {
+  return data.flatMap((row) => {
+    const record = row as {
+      id: string;
+      name: string;
+      company_id: string;
+      size: FrozenModel["size"];
+      released_on: string | null;
+      difficulty: unknown;
+      logo_path: string | null;
+      openrouter_id: string;
+      provider_settings: unknown;
+      companies: { name: string; region: FrozenModel["region"]; logo_path: string } | Array<{ name: string; region: FrozenModel["region"]; logo_path: string }> | null;
+    };
+    const difficulty = difficultyFromStored(record.difficulty);
+    if (!difficulty || typeof record.released_on !== "string") return [];
+    const company = first(record.companies);
+    if (!company) return [];
     return [{
-      id: row.id as string,
-      name: row.name as string,
-      companyId: row.company_id as string,
+      id: record.id,
+      name: record.name,
+      companyId: record.company_id,
       companyName: company.name,
       region: company.region,
-      size: row.size as FrozenModel["size"],
-      year: new Date(`${row.released_on}T00:00:00Z`).getUTCFullYear(),
-      logoPath: presentLogo((row.logo_path as string | null) || company.logo_path, row.company_id as string),
-      openrouterId: row.openrouter_id as string,
-      providerSettings: row.provider_settings,
+      size: record.size,
+      year: new Date(`${record.released_on}T00:00:00Z`).getUTCFullYear(),
+      logoPath: presentLogo(record.logo_path || company.logo_path, record.company_id),
+      openrouterId: record.openrouter_id,
+      providerSettings: record.provider_settings,
       difficulty,
     }];
   });
+}
+
+async function loadCatalog(client: SupabaseClient, maxDifficulty?: Difficulty): Promise<CatalogModel[]> {
+  let query = client.from("models").select(catalogColumns).eq("enabled", true);
+  if (maxDifficulty) query = query.lte("difficulty", difficultyNumber[maxDifficulty]);
+  const { data, error } = await query;
+  if (error) throw new Error(error.message);
+  return mapCatalog(data ?? []);
+}
+
+async function loadModel(client: SupabaseClient, id: string): Promise<CatalogModel | null> {
+  const { data, error } = await client.from("models").select(catalogColumns).eq("id", id).maybeSingle();
+  if (error) throw new Error(error.message);
+  return mapCatalog(data ? [data] : [])[0] ?? null;
 }
 
 export function difficultyCounts(models: Array<{ difficulty: Difficulty }>): Record<Difficulty, number> {
@@ -184,10 +206,12 @@ export async function listBoardOptions() {
 export async function lobbyState(userId: string) {
   const client = serviceOrThrow();
   const since = new Date(Date.now() - 60 * 60 * 1000).toISOString();
-  const [{ data: settings }, { count }, { data: active }, catalog] = await Promise.all([
+  const day = utcDayKey();
+  const [{ data: settings }, { count }, { data: active }, { data: dailyToday }, catalog] = await Promise.all([
     client.from("app_settings").select("paused").eq("id", 1).single(),
     client.from("games").select("id", { count: "exact", head: true }).eq("user_id", userId).gt("started_at", since),
-    client.from("games").select("id").eq("user_id", userId).eq("status", "active").maybeSingle(),
+    client.from("games").select("id, game_mode, difficulty").eq("user_id", userId).eq("status", "active").maybeSingle(),
+    client.from("games").select("status, difficulty").eq("user_id", userId).eq("game_mode", "daily").like("daily_key", `${day}:%`),
     loadCatalog(client),
   ]);
   let nextAt: string | null = null;
@@ -209,14 +233,30 @@ export async function lobbyState(userId: string) {
     played: count ?? 0,
     cap: config.hourlyCap,
     activeGameId: (active?.id as string | undefined) ?? null,
+    activeGameMode: (active?.game_mode as string | undefined) ?? null,
+    activeGameDifficulty: difficultyFromStored(active?.difficulty),
+    dailyFinished: (dailyToday ?? []).flatMap((row) => {
+      if (row.status === "active") return [];
+      const level = difficultyFromStored(row.difficulty);
+      return level ? [level] : [];
+    }),
     poolSize: catalog.length,
     difficultyCounts: difficultyCounts(catalog),
     nextAt,
   };
 }
 
-export async function startAllModels(
+export function startAllModels(userId: string, noHint: boolean, difficulty: Difficulty) {
+  return startRosterRound(userId, "all", noHint, difficulty);
+}
+
+export function startDaily(userId: string, noHint: boolean, difficulty: Difficulty) {
+  return startRosterRound(userId, "daily", noHint, difficulty);
+}
+
+async function startRosterRound(
   userId: string,
+  modeId: "all" | "daily",
   noHint: boolean,
   difficulty: Difficulty,
 ): Promise<{ gameId: string } | ApiFailure> {
@@ -224,25 +264,70 @@ export async function startAllModels(
   const { data: gameMode, error } = await client
     .from("game_modes")
     .select("id, enabled, hints_allowed")
-    .eq("id", "all")
+    .eq("id", modeId)
     .maybeSingle();
   if (error) throw new Error(error.message);
   if (!gameMode?.enabled) return fail(404, "not_found");
 
-  const catalog = await loadCatalog(client, difficulty);
-  if (catalog.length < 2) return fail(422, "pool_too_small");
-  const drawn = catalog[Math.floor(Math.random() * catalog.length)];
-  if (!drawn) return fail(422, "pool_too_small");
-  const traits = buildTraits(catalog);
+  let pool = await loadCatalog(client, difficulty);
+  let modelId = pool[Math.floor(Math.random() * pool.length)]?.id ?? null;
+  if (modeId === "daily") {
+    const day = utcDayKey();
+    const [roundResult, pickResult] = await Promise.all([
+      client
+        .from("games")
+        .select("id, status, model_id, difficulty")
+        .eq("user_id", userId)
+        .eq("game_mode", "daily")
+        .eq("daily_key", dailyRoundKey(day, difficulty))
+        .maybeSingle(),
+      client
+        .from("daily_models")
+        .select("model_id")
+        .eq("played_on", day)
+        .eq("difficulty", difficultyNumber[difficulty])
+        .maybeSingle(),
+    ]);
+    if (roundResult.error) throw new Error(roundResult.error.message);
+    if (pickResult.error) throw new Error(pickResult.error.message);
+    const storedId = (pickResult.data?.model_id as string | undefined) ?? null;
+    const row = roundResult.data;
+    const round: DailyRound | null = row
+      ? {
+          id: row.id as string,
+          day,
+          status: row.status as DailyRound["status"],
+          modelId: row.model_id as string,
+          difficulty: difficultyFromStored(row.difficulty) ?? difficulty,
+        }
+      : null;
+    const decision = startDailyRound({
+      day,
+      difficulty,
+      roster: pool.map((model) => ({ id: model.id, difficulty: model.difficulty })),
+      picks: storedId ? [{ day, difficulty, modelId: storedId }] : [],
+      round,
+      roll: (count) => Math.floor(Math.random() * count),
+    });
+    if (decision.kind === "resume") return { gameId: decision.gameId };
+    if (decision.kind === "done") return fail(409, "daily_done");
+    if (decision.kind === "empty") return fail(422, "pool_too_small");
+    modelId = decision.modelId;
+    if (!pool.some((model) => model.id === modelId)) {
+      const extra = await loadModel(client, modelId);
+      if (extra) pool = [...pool, extra];
+    }
+  }
+  if (pool.length < 2 || !modelId || !pool.some((model) => model.id === modelId)) return fail(422, "pool_too_small");
   const result = await rpc(client, "start_game", {
     p_user_id: userId,
     p_hourly_cap: config.hourlyCap,
-    p_game_mode: "all",
+    p_game_mode: modeId,
     p_pool_key: null,
     p_no_hint: noHint,
-    p_model_id: drawn.id,
-    p_pool_model_ids: catalog.map((model) => model.id),
-    p_traits: traits,
+    p_model_id: modelId,
+    p_pool_model_ids: pool.map((model) => model.id),
+    p_traits: buildTraits(pool),
     p_rules: rulesForGameMode(Boolean(gameMode.hints_allowed) && gameModeAllowsHints(gameMode.id)),
     p_difficulty: difficultyNumber[difficulty],
   });

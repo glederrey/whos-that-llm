@@ -471,7 +471,7 @@ function tokenExplanation(tokens: number, rules: Rules): string {
 export function poolLabel(gameMode: string, poolKey: string | null, traits: Traits, difficulty?: Difficulty | null): string {
   const first = Object.values(traits.models)[0];
   if (gameMode === "all") return difficulty ? `All models · ${difficultyLabel[difficulty]}` : "All models";
-  if (gameMode === "daily") return "Daily";
+  if (gameMode === "daily") return difficulty ? `Daily · ${difficultyLabel[difficulty]}` : "Daily";
   if (gameMode === "class") return "Category";
   if (gameMode === "origin") return "Origin";
   if (gameMode === "latest") return "Latest";

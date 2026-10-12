@@ -21,7 +21,7 @@ type Figure = { label: string; value: string; note?: string };
 export function StatisticsBoard({ stats, names }: { stats: PublicStats; names: Record<string, string> }) {
   const [mode, setMode] = useState<StatisticModeId>("main");
   const nameFor = (id: string) => names[id] ?? id;
-  const allModels = stats.gameModes.find((gameMode) => gameMode.id === "all");
+  const selected = stats.gameModes.find((gameMode) => gameMode.id === mode);
 
   return (
     <div className="stack">
@@ -38,12 +38,12 @@ export function StatisticsBoard({ stats, names }: { stats: PublicStats; names: R
           ),
         )}
       </div>
-      {mode === "all" ? (
-        <ModeStats report={allModels} nameFor={nameFor} />
+      {mode === "main" ? (
+        <MainStats stats={stats} nameFor={nameFor} />
       ) : mode === "class" ? (
         <CategoryMode categories={stats.categories} />
       ) : (
-        <MainStats stats={stats} nameFor={nameFor} />
+        <ModeStats report={selected} nameFor={nameFor} />
       )}
     </div>
   );
