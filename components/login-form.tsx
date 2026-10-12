@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { createBrowserSupabase } from "@/lib/supabase/browser";
+import { sendPasswordReset, signInWithEmail, signUpWithEmail, startGoogleSignIn } from "@/app/auth/actions";
+import { safeNext } from "@/lib/paths";
 
 export function LoginForm({
   next,
@@ -22,26 +23,22 @@ export function LoginForm({
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
 
-  function mapError(message: string) {
-    const text = message.toLowerCase();
-    if (text.includes("already")) return "That email is already registered.";
-    if (text.includes("confirm")) return "Confirm your email, then come back.";
-    if (text.includes("invalid") || text.includes("credential")) return "Wrong email or password.";
+  function noticeError(notice: "invalid" | "exists" | "confirm" | "auth") {
+    if (notice === "exists") return "That email is already registered.";
+    if (notice === "confirm") return "Confirm your email, then come back.";
     return "Wrong email or password.";
   }
 
   async function google() {
     setBusy(true);
     setError("");
-    const supabase = createBrowserSupabase();
-    const { error: authError } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: { redirectTo: `${window.location.origin}/` },
-    });
-    if (authError) {
-      setError("Google sign-in was cancelled.");
-      setBusy(false);
+    const result = await startGoogleSignIn();
+    if ("url" in result) {
+      window.location.assign(result.url);
+      return;
     }
+    setError("Google sign-in was cancelled.");
+    setBusy(false);
   }
 
   async function submit(event: React.FormEvent) {
@@ -49,37 +46,28 @@ export function LoginForm({
     setBusy(true);
     setError("");
     setNote("");
-    const supabase = createBrowserSupabase();
     if (tab === "create") {
-      const { data, error: authError } = await supabase.auth.signUp({
-        email,
-        password,
-        options: { emailRedirectTo: `${window.location.origin}/` },
-      });
+      const result = await signUpWithEmail(email, password);
       setBusy(false);
-      if (authError) {
-        setError(mapError(authError.message));
+      if (result === "confirm") {
+        setNote("Supabase will email you a confirmation link. Check your email.");
         return;
       }
-      if (data.user && data.user.identities && data.user.identities.length === 0) {
-        setError("That email is already registered.");
+      if (result) {
+        setError(noticeError(result));
         return;
       }
-      if (data.session) {
-        router.push(next);
-        router.refresh();
-        return;
-      }
-      setNote("Supabase will email you a confirmation link. Check your email.");
+      router.push(safeNext(next));
+      router.refresh();
       return;
     }
-    const { error: authError } = await supabase.auth.signInWithPassword({ email, password });
+    const result = await signInWithEmail(email, password);
     setBusy(false);
-    if (authError) {
-      setError(mapError(authError.message));
+    if (result) {
+      setError(noticeError(result));
       return;
     }
-    router.push(next);
+    router.push(safeNext(next));
     router.refresh();
   }
 
@@ -91,10 +79,7 @@ export function LoginForm({
       return;
     }
     setBusy(true);
-    const supabase = createBrowserSupabase();
-    await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/?reset=1`,
-    });
+    await sendPasswordReset(email);
     setBusy(false);
     setNote("Check your email.");
   }

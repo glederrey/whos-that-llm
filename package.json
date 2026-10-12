@@ -5,7 +5,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "test": "tsx --test lib/game.test.ts lib/words.test.ts lib/openrouter.test.ts lib/openrouter-draft.test.ts lib/profile.test.ts lib/logos.test.ts lib/list-price.test.ts lib/admin-model.test.ts lib/admin-category.test.ts lib/admin-surface.test.ts lib/anonymize-account.test.ts lib/roster-list.test.ts lib/openrouter-usage.test.ts lib/admin-metrics.test.ts lib/server-env.test.ts lib/strip-sensitive-placeholders.test.ts lib/site.test.ts lib/public-stats.test.ts lib/model-difficulties.test.ts lib/board-query.test.ts lib/landing-count.test.ts lib/round-facts.test.ts",
+    "test": "tsx --test lib/game.test.ts lib/words.test.ts lib/openrouter.test.ts lib/openrouter-draft.test.ts lib/profile.test.ts lib/logos.test.ts lib/list-price.test.ts lib/admin-model.test.ts lib/admin-category.test.ts lib/admin-surface.test.ts lib/anonymize-account.test.ts lib/roster-list.test.ts lib/openrouter-usage.test.ts lib/admin-metrics.test.ts lib/server-env.test.ts lib/strip-sensitive-placeholders.test.ts lib/site.test.ts lib/public-stats.test.ts lib/model-difficulties.test.ts lib/board-query.test.ts lib/landing-count.test.ts lib/round-facts.test.ts lib/paths.test.ts lib/auth-cookies.test.ts lib/bound-sql.test.ts lib/access-migration.test.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

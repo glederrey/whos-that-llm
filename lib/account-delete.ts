@@ -35,12 +35,19 @@ async function anonymizeOwnedRows(client: SupabaseClient, userId: string): Promi
 
 async function removeAvatars(client: SupabaseClient, userId: string): Promise<boolean> {
   try {
-    const listed = await client.storage.from("avatars").list(userId, { limit: 100 });
-    if (listed.error) return false;
-    const names = (listed.data ?? []).map((file) => file.name).filter((name) => name.length > 0 && !name.startsWith("."));
-    if (names.length === 0) return true;
-    const removed = await client.storage.from("avatars").remove(names.map((name) => `${userId}/${name}`));
-    return !removed.error;
+    const paths: string[] = [];
+    for (let offset = 0; offset < 10_000; offset += 100) {
+      const listed = await client.storage.from("avatars").list(userId, { limit: 100, offset });
+      if (listed.error) return false;
+      const names = (listed.data ?? []).map((file) => file.name).filter((name) => name.length > 0);
+      for (const name of names) paths.push(`${userId}/${name}`);
+      if (names.length < 100) break;
+    }
+    for (let start = 0; start < paths.length; start += 100) {
+      const removed = await client.storage.from("avatars").remove(paths.slice(start, start + 100));
+      if (removed.error) return false;
+    }
+    return true;
   } catch {
     return false;
   }

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { createBrowserSupabase } from "@/lib/supabase/browser";
+import { updatePassword } from "@/app/auth/actions";
 
 export function ResetPassword({ hasUsername }: { hasUsername: boolean }) {
   const router = useRouter();
@@ -14,10 +14,9 @@ export function ResetPassword({ hasUsername }: { hasUsername: boolean }) {
     event.preventDefault();
     setBusy(true);
     setError("");
-    const supabase = createBrowserSupabase();
-    const { error: authError } = await supabase.auth.updateUser({ password });
+    const result = await updatePassword(password);
     setBusy(false);
-    if (authError) {
+    if (result) {
       setError("Wrong email or password.");
       return;
     }
