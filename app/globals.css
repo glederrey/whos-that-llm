@@ -1280,9 +1280,18 @@ html[data-theme="dark"] .history-facts .board-chip.no-hints {
 .roster.models .button-off,
 .roster.models .button-quiet { padding: 6px 10px; }
 .roster.models td, .roster.categories td { vertical-align: middle; }
-.roster.categories { min-width: 0; table-layout: fixed; }
-.roster.categories th:last-child, .roster.categories td:last-child { text-align: right; width: 11rem; white-space: nowrap; }
-.roster.categories td:not(:last-child) { overflow-wrap: anywhere; }
+.roster.categories { min-width: 0; }
+.roster.categories th:nth-child(1),
+.roster.categories td:nth-child(1),
+.roster.categories th:nth-child(3),
+.roster.categories td:nth-child(3),
+.roster.categories th:last-child,
+.roster.categories td:last-child { width: 1%; white-space: nowrap; }
+.roster.categories th:nth-child(3),
+.roster.categories td:nth-child(3),
+.roster.categories th:last-child,
+.roster.categories td:last-child { text-align: right; }
+.roster.categories td:nth-child(2) { overflow-wrap: anywhere; }
 .roster.categories .roster-buttons .button-quiet,
 .roster.categories .roster-buttons .button-danger { padding: 6px 10px; }
 .roster-buttons { display: flex; gap: 8px; align-items: center; justify-content: flex-end; flex-wrap: nowrap; }

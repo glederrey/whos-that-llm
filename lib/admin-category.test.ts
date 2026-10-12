@@ -91,7 +91,8 @@ test("the category row deletes that category and keeps the models", () => {
   assert.doesNotMatch(fn, /from\("models"\)/);
   assert.match(schema, /category_id text not null references public\.categories \(id\) on delete cascade/);
 
-  assert.match(css, /\.roster\.categories \{ min-width: 0; table-layout: fixed; \}/);
-  assert.match(css, /\.roster\.categories th:last-child, \.roster\.categories td:last-child \{ text-align: right; width: 11rem; white-space: nowrap; \}/);
+  assert.match(css, /\.roster\.categories \{ min-width: 0; \}/);
+  assert.match(css, /\.roster\.categories th:nth-child\(1\),[\s\S]*width: 1%; white-space: nowrap; \}/);
+  assert.match(css, /\.roster\.categories th:nth-child\(3\),[\s\S]*text-align: right; \}/);
   assert.match(css, /\.category-delete \{ margin: 0; flex: none; width: fit-content; max-width: 100%; \}/);
 });
