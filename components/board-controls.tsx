@@ -88,7 +88,10 @@ export function BoardControls({
       </div>
       <div className="segmented board-controls-period" role="group" aria-label="Period">
         <Link aria-pressed={period === "week"} href={boardHref(base, { ...choice, period: "week" })} scroll={false}>
-          This week (UTC)
+          This week
+        </Link>
+        <Link aria-pressed={period === "month"} href={boardHref(base, { ...choice, period: "month" })} scroll={false}>
+          This month
         </Link>
         <Link aria-pressed={period === "all"} href={boardHref(base, { ...choice, period: "all" })} scroll={false}>
           All time

@@ -1,6 +1,6 @@
 import { parseBoardDifficulty, type BoardDifficulty } from "./difficulty";
 
-export type BoardPeriod = "week" | "all";
+export type BoardPeriod = "week" | "month" | "all";
 
 export type BoardChoice = {
   category: string;
@@ -33,8 +33,17 @@ export function boardChoice(
   const open = modes.filter((mode) => mode.open).map((mode) => mode.id);
   const requested = params.category && open.includes(params.category) ? params.category : null;
   const category = requested ?? (open.includes("all") ? "all" : (open[0] ?? "all"));
-  const period: BoardPeriod = params.period === "all" ? "all" : "week";
+  const period: BoardPeriod = params.period === "all" || params.period === "month" ? params.period : "week";
   return { category, period, difficulty: parseBoardDifficulty(params.difficulty) };
+}
+
+/** The cutoff for a board. Week starts Monday. Month is the calendar month. Both use UTC, and all time has no cutoff. */
+export function boardSince(period: BoardPeriod, now = new Date()): string {
+  if (period === "all") return "1970-01-01T00:00:00.000Z";
+  if (period === "month") return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1)).toISOString();
+  const day = now.getUTCDay();
+  const diff = day === 0 ? 6 : day - 1;
+  return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - diff)).toISOString();
 }
 
 export function boardModes(

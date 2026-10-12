@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { boardChoice, boardHref, boardMiddle, boardModes, type BoardMode } from "./board-query";
+import { boardChoice, boardHref, boardMiddle, boardModes, boardSince, type BoardMode } from "./board-query";
 
 const modes: BoardMode[] = [
   { id: "daily", name: "Daily", open: false },
@@ -46,6 +46,25 @@ test("region and custom stay off the leaderboard bar", () => {
     shown.map((mode) => mode.open),
     [false, true, false, false],
   );
+});
+
+test("this month is the current UTC calendar month", () => {
+  const wednesday = new Date("2026-10-14T15:04:00.000Z");
+  assert.equal(boardSince("month", wednesday), "2026-10-01T00:00:00.000Z");
+  assert.equal(boardSince("week", wednesday), "2026-10-12T00:00:00.000Z");
+  assert.equal(boardSince("all", wednesday), "1970-01-01T00:00:00.000Z");
+  const sunday = new Date("2026-10-11T23:59:00.000Z");
+  assert.equal(boardSince("week", sunday), "2026-10-05T00:00:00.000Z");
+  assert.equal(boardSince("month", new Date("2026-01-01T00:00:00.000Z")), "2026-01-01T00:00:00.000Z");
+});
+
+test("the month filter is one board choice", () => {
+  const month = boardChoice({ category: "all", period: "month", difficulty: "hard" }, modes);
+  assert.deepEqual(month, { category: "all", period: "month", difficulty: "hard" });
+  assert.equal(boardHref("/", month), "/?category=all&difficulty=hard&period=month");
+  assert.equal(boardHref("/leaderboard", month), "/leaderboard?category=all&difficulty=hard&period=month");
+  assert.equal(boardChoice({ period: "year" }, modes).period, "week");
+  assert.equal(boardChoice({}, modes).period, "week");
 });
 
 test("the middle slot is the selected mode's control", () => {
