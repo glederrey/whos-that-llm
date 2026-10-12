@@ -29,21 +29,21 @@ test("stored difficulties are 1 through 4", () => {
   assert.deepEqual(difficultyNumber, { easy: 1, medium: 2, hard: 3, impossible: 4 });
 });
 
-test("the migration and the v1 restore classify the same 144 models", () => {
-  const fromV1 = sqlPairs("supabase/v1.sql", /\('([a-z0-9-]+)'(?:, [^,\n]+){8}, ([1-4])\)/g).map(
+test("the migration and the v0.1 baseline classify the same 144 models", () => {
+  const fromBaseline = sqlPairs("supabase/v0.1.sql", /\('([a-z0-9-]+)'(?:, [^,\n]+){8}, ([1-4])\)/g).map(
     ([id, number]) => [id, nameForNumber[number]] as [string, string],
   );
   const fromMigration = sqlPairs("supabase/migrations/0023_model_difficulty.sql", /\('([a-z0-9-]+)', ([1-4])\)/g).map(
     ([id, number]) => [id, nameForNumber[number]] as [string, string],
   );
-  assert.equal(fromV1.length, 144);
+  assert.equal(fromBaseline.length, 144);
   assert.equal(fromMigration.length, 144);
-  assert.deepEqual(Object.fromEntries(fromV1), modelDifficulties);
+  assert.deepEqual(Object.fromEntries(fromBaseline), modelDifficulties);
   assert.deepEqual(Object.fromEntries(fromMigration), modelDifficulties);
   const counts = { easy: 0, medium: 0, hard: 0, impossible: 0 };
   for (const level of Object.values(modelDifficulties)) counts[level] += 1;
   assert.deepEqual(counts, { easy: 12, medium: 25, hard: 41, impossible: 66 });
-  for (const file of ["supabase/v1.sql", "supabase/migrations/0023_model_difficulty.sql"]) {
+  for (const file of ["supabase/v0.1.sql", "supabase/migrations/0023_model_difficulty.sql"]) {
     const text = fs.readFileSync(path.join(root, file), "utf8");
     assert.match(text, /p_difficulty is null and g\.difficulty is not null/);
     assert.match(text, /difficulty smallint/);
