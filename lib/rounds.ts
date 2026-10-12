@@ -1,7 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { config, currentRules, rulesForGameMode, type Rules } from "./config";
 import { boardSince } from "./board-query";
-import { startDailyRound, utcDayKey, type DailyRound } from "./daily";
+import { dailyRoundKey, startDailyRound, utcDayKey, type DailyRound } from "./daily";
 import { difficulties, difficultyFromStored, difficultyNumber, inDifficultyPool, type BoardDifficulty, type Difficulty } from "./difficulty";
 import {
   buildTraits,
@@ -210,8 +210,8 @@ export async function lobbyState(userId: string) {
   const [{ data: settings }, { count }, { data: active }, { data: dailyToday }, catalog] = await Promise.all([
     client.from("app_settings").select("paused").eq("id", 1).single(),
     client.from("games").select("id", { count: "exact", head: true }).eq("user_id", userId).gt("started_at", since),
-    client.from("games").select("id, game_mode").eq("user_id", userId).eq("status", "active").maybeSingle(),
-    client.from("games").select("status").eq("user_id", userId).eq("game_mode", "daily").eq("daily_key", day).maybeSingle(),
+    client.from("games").select("id, game_mode, difficulty").eq("user_id", userId).eq("status", "active").maybeSingle(),
+    client.from("games").select("status, difficulty").eq("user_id", userId).eq("game_mode", "daily").like("daily_key", `${day}:%`),
     loadCatalog(client),
   ]);
   let nextAt: string | null = null;
@@ -234,7 +234,12 @@ export async function lobbyState(userId: string) {
     cap: config.hourlyCap,
     activeGameId: (active?.id as string | undefined) ?? null,
     activeGameMode: (active?.game_mode as string | undefined) ?? null,
-    dailyDone: Boolean(dailyToday?.status && dailyToday.status !== "active"),
+    activeGameDifficulty: difficultyFromStored(active?.difficulty),
+    dailyFinished: (dailyToday ?? []).flatMap((row) => {
+      if (row.status === "active") return [];
+      const level = difficultyFromStored(row.difficulty);
+      return level ? [level] : [];
+    }),
     poolSize: catalog.length,
     difficultyCounts: difficultyCounts(catalog),
     nextAt,
@@ -274,7 +279,7 @@ async function startRosterRound(
         .select("id, status, model_id, difficulty")
         .eq("user_id", userId)
         .eq("game_mode", "daily")
-        .eq("daily_key", day)
+        .eq("daily_key", dailyRoundKey(day, difficulty))
         .maybeSingle(),
       client
         .from("daily_models")

@@ -173,7 +173,7 @@ One row per round.
 | `score` | int, null | Written once, at the end, when `message_count` is at least 1. Never negative. Null when they give up before any reply |
 | `score_breakdown` | jsonb, null | The integer lines, in order, not including the total |
 | `score_explanation` | text[], null | The short public lines |
-| `daily_key` | date, null | UTC date. Set only for `daily` |
+| `daily_key` | text, null | `2026-10-12:1` for Easy through `:4` for Impossible. Set only for `daily`. The unique `(user_id, daily_key)` pair allows two difficulties the same day and refuses a second round of one difficulty |
 | `started_at` | timestamptz | default `now()`. The hourly cap counts these |
 | `finished_at` | timestamptz, null | |
 | `call_started_at` | timestamptz, null | Set while a model call is in flight. A call older than 3 minutes can be claimed again, so a crashed request does not lock the round. Cleared when the reply is stored, aborted, or the round ends |
@@ -182,12 +182,12 @@ Indexes:
 
 - `(user_id, started_at desc)` for the hourly count and, later, the profile history
 - unique `(user_id)` where `status = 'active'`
-- unique `(user_id, daily_key)` where `daily_key is not null`. One Daily round per account per UTC day. `start_game` writes `daily_key` only for `daily`
+- unique `(user_id, daily_key)` where `daily_key is not null`. One Daily round per account per difficulty per UTC day, because the key includes the difficulty. `start_game` writes `daily_key` only for `daily`
 - `(category, status, finished_at)` for the leaderboard
 
 ### `daily_models`
 
-The hidden model for one difficulty on one UTC day. `games.daily_key` records that this account already played. It does not record which model everyone else got at Medium, or at Hard. Two people starting together could otherwise draw two models. This table is that shared pick.
+The hidden model for one difficulty on one UTC day. `games.daily_key` records that this account already played that difficulty. It does not record which model everyone else got. Two people starting Medium together could otherwise draw two models. This table is that shared pick. Easy and Medium are separate rows.
 
 | Column | Type | Notes |
 |---|---|---|

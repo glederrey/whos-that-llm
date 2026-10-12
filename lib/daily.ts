@@ -68,9 +68,24 @@ export function dailyModel(
 }
 
 /**
- * One Daily round per account per UTC day.
- * An open round resumes, whichever difficulty they click.
- * A finished round stays finished until the next UTC day.
+ * The value stored in `games.daily_key`.
+ * The unique `(user_id, daily_key)` pair then allows Easy and Medium on the same day
+ * and still refuses a second Easy. `1` is easy through `4` impossible.
+ */
+export function dailyRoundKey(day: string, difficulty: Difficulty): string {
+  return `${day}:${difficultyNumber[difficulty]}`;
+}
+
+/** A finished difficulty is closed. Not started, and an unfinished round, stay open. */
+export function dailyLevelClosed(status: DailyRound["status"] | null): boolean {
+  return status !== null && status !== "active";
+}
+
+/**
+ * One Daily round per difficulty per UTC day.
+ * An open round of this difficulty resumes.
+ * A finished round of this difficulty stays finished until tomorrow.
+ * Another difficulty is a different round.
  */
 export function startDailyRound(input: {
   day: string;
@@ -80,7 +95,7 @@ export function startDailyRound(input: {
   round: DailyRound | null;
   roll: (count: number) => number;
 }): DailyStart {
-  if (input.round && input.round.day === input.day) {
+  if (input.round && input.round.day === input.day && input.round.difficulty === input.difficulty) {
     if (input.round.status === "active") {
       return {
         kind: "resume",

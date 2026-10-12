@@ -120,12 +120,12 @@ Requires a session. No session goes to `/login?next=/play`. No username goes to 
 | Region | USA, China, or Europe. |
 | Custom | A custom choice of models. |
 
-- Daily opens the same way as All models: **Choose difficulty**, then Easy, Medium, Hard, and Impossible, and **Play without hints.** One account gets one Daily round per UTC day. Starting uses that day's attempt. Coming back the same day shows **Continue** and resumes that round. It does not draw a new model. A finished round (`solved`, `miss`, or `given_up`) shows **You already played today's model.** and does not start another until the next UTC day.
+- Daily opens the same way as All models: **Choose difficulty**, then Easy, Medium, Hard, and Impossible, and **Play without hints.** Under the sentence: **One round per difficulty. Everyone at that level gets the same model. A new puzzle tomorrow.** A finished difficulty is grayed out, says **Already played.**, and cannot be started again until tomorrow. An unfinished round of that difficulty stays open and resumes. A difficulty they have not started is not grayed out. Easy and Medium on the same day are two rounds.
 - Weekly top 5, later: rank, name, and score from the All models board for the current week, limited to 5. If the week has no counted round: **No finished games this week.**
 - Daily and All models open. Coming soon modes stay closed: Class, Company, Region, and Custom keep the **Coming soon** badge and do not show an expand chevron. Inside an open mode, **Choose difficulty** lists Easy, Medium, Hard, and Impossible on one line each: the name, then the short line beside it, and the turned-on model count on the right. The colors match the leaderboard: Easy `#1c7c43`, Medium `#d4a017`, Hard `#c41b15`, Impossible `#a78bfa`, on the name and the left edge. Daily and All models can start a round. Custom has no difficulty: **The player chooses that pool.**
 - An open Daily or All models round shows **Continue** beside that row.
-- A difficulty is disabled when the hour is full, the game is paused, a round is already open, or that pool has fewer than 2 turned-on models.
-- Inside an open Daily or All models row, off by default: **Play without hints.** Beside it: **No hints. No match feedback.** On a normal-width page that is one line. On a phone, the checkbox and **Play without hints.** stay on the first line, and **No hints. No match feedback.** moves to the next line. It stays editable until a difficulty is chosen. A finished Daily hides the checkbox until the next UTC day.
+- On All models, a difficulty is disabled when the hour is full, the game is paused, a round is already open, or that pool has fewer than 2 turned-on models. On Daily, a finished difficulty is grayed out. A difficulty they have not started stays available. The open round of a difficulty can still be resumed.
+- Inside an open Daily or All models row, off by default: **Play without hints.** Beside it: **No hints. No match feedback.** On a normal-width page that is one line. On a phone, the checkbox and **Play without hints.** stay on the first line, and **No hints. No match feedback.** moves to the next line. It stays editable until a difficulty is chosen.
 
 Company and Region go to `/play/new?category=…` once they are built. Custom is a later choice of models. Hints can be on for that choice, and it has no leaderboard. Class is a card with **Coming soon.** The class game mode is not built. There is no Family card, no Latest card, and no Origin card.
 
@@ -157,7 +157,7 @@ Start calls `POST /api/games` and routes to `/play/[gameId]`. Failures:
 
 - **You already have a game open.** Link: **Continue**
 - **Hourly limit reached. Next game at 14:22.**
-- **You already played today's model.** Only the daily card can produce this.
+- **You already played that difficulty today.** Only the daily card can produce this.
 
 ## Round (`/play/[gameId]`)
 

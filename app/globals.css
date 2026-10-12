@@ -593,7 +593,7 @@ html[data-theme="dark"] .hour-status strong { color: var(--teal); }
 .difficulty-name { display: flex; align-items: baseline; gap: 8px; min-width: 0; }
 .difficulty-count { margin-left: auto; white-space: nowrap; }
 .difficulty-choice strong { color: var(--diff); }
-.difficulty-choice:disabled { opacity: 0.55; cursor: not-allowed; }
+.difficulty-choice:disabled, .difficulty-choice.is-done { opacity: 0.45; cursor: not-allowed; }
 .difficulty-choice.is-soon { cursor: default; }
 .segmented a.difficulty-easy { color: #1c7c43; }
 .segmented a.difficulty-medium { color: #d4a017; }

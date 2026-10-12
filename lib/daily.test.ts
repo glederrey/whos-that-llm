@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
 import test from "node:test";
-import { canStartMode, dailyModel, dailyRoster, startDailyRound, type DailyModel, type DailyPick } from "./daily";
+import { canStartMode, dailyLevelClosed, dailyModel, dailyRoster, dailyRoundKey, startDailyRound, type DailyModel, type DailyPick } from "./daily";
 import { poolLabel, type Traits } from "./game";
 
 const root = path.resolve(import.meta.dirname, "..");
@@ -73,7 +73,11 @@ test("easy cannot draw an impossible model", () => {
   assert.equal(dailyModel([], day, "impossible", roster, last)?.modelId, "secret");
 });
 
-test("a second start the same day returns the same round", () => {
+test("a second start of the same difficulty returns the same round", () => {
+  assert.equal(dailyRoundKey(day, "easy"), "2026-10-12:1");
+  assert.equal(dailyRoundKey(day, "medium"), "2026-10-12:2");
+  assert.notEqual(dailyRoundKey(day, "easy"), dailyRoundKey(day, "medium"));
+
   const first = startDailyRound({
     day,
     difficulty: "easy",
@@ -85,20 +89,32 @@ test("a second start the same day returns the same round", () => {
   assert.equal(first.kind, "start");
   if (first.kind !== "start") return;
 
-  const second = startDailyRound({
+  const secondEasy = startDailyRound({
     day,
-    difficulty: "impossible",
+    difficulty: "easy",
     roster,
     picks: first.picks,
     round: { id: "round-1", day, status: "active", modelId: first.modelId, difficulty: "easy" },
     roll: last,
   });
-  assert.equal(second.kind, "resume");
-  if (second.kind !== "resume") return;
-  assert.equal(second.gameId, "round-1");
-  assert.equal(second.modelId, first.modelId);
-  assert.equal(second.picks.length, first.picks.length);
-  assert.equal(second.picks.some((pick) => pick.difficulty === "impossible"), false);
+  assert.equal(secondEasy.kind, "resume");
+  if (secondEasy.kind !== "resume") return;
+  assert.equal(secondEasy.gameId, "round-1");
+  assert.equal(secondEasy.modelId, first.modelId);
+  assert.equal(secondEasy.picks.length, first.picks.length);
+
+  const medium = startDailyRound({
+    day,
+    difficulty: "medium",
+    roster,
+    picks: first.picks,
+    round: null,
+    roll: last,
+  });
+  assert.equal(medium.kind, "start");
+  if (medium.kind !== "start") return;
+  assert.equal(medium.modelId, "sonnet");
+  assert.notEqual(medium.modelId, first.modelId);
 
   for (const status of ["solved", "miss", "given_up"] as const) {
     const finished = startDailyRound({
@@ -110,7 +126,11 @@ test("a second start the same day returns the same round", () => {
       roll: last,
     });
     assert.equal(finished.kind, "done");
+    assert.equal(dailyLevelClosed(status), true);
   }
+
+  assert.equal(dailyLevelClosed(null), false);
+  assert.equal(dailyLevelClosed("active"), false);
 
   const tomorrow = startDailyRound({
     day: nextDay,
@@ -121,12 +141,23 @@ test("a second start the same day returns the same round", () => {
     roll: () => 0,
   });
   assert.equal(tomorrow.kind, "start");
+  assert.equal(dailyRoundKey(nextDay, "easy"), "2026-10-13:1");
 });
 
 test("daily uses the same header shape as all models", () => {
   const traits: Traits = { given: [], models: {} };
   assert.equal(poolLabel("daily", null, traits, "medium"), "Daily · Medium");
   assert.equal(poolLabel("all", null, traits, "medium"), "All models · Medium");
+});
+
+test("the play page explains one round per difficulty", () => {
+  const home = fs.readFileSync(path.join(root, "components/home-board.tsx"), "utf8");
+  assert.match(home, /One round per difficulty\. Everyone at that level gets the same model\. A new puzzle tomorrow\./);
+  assert.match(home, /dailyFinished\.includes\(difficulty\)/);
+  assert.match(home, /is-done/);
+  assert.match(home, /Already played\./);
+  assert.match(home, /\(!daily && Boolean\(activeGameId\)\)/);
+  assert.doesNotMatch(home, /dailyDone/);
 });
 
 test("only daily and all models can start", () => {
@@ -140,8 +171,11 @@ test("daily stores one model per difficulty and does not reset play data", () =>
   assert.match(sql, /create table public\.daily_models/);
   assert.match(sql, /primary key \(played_on, difficulty\)/);
   assert.match(sql, /m\.difficulty <= p_difficulty/);
-  assert.match(sql, /daily_key/);
+  assert.match(sql, /alter column daily_key type text using daily_key::text/);
+  assert.match(sql, /to_char\(today, 'YYYY-MM-DD'\) \|\| ':' \|\| p_difficulty::text/);
+  assert.match(sql, /and daily_key = day_key/);
   assert.match(sql, /existing_status = 'active'/);
+  assert.doesNotMatch(sql, /daily_key = \(timezone\('utc', now\(\)\)\)::date/);
   assert.match(sql, /'daily_done'/);
   assert.match(sql, /update public\.game_modes set enabled = true where id = 'daily'/);
   assert.match(sql, /revoke all on table public\.daily_models from public, anon, authenticated/);

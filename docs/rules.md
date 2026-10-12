@@ -417,7 +417,7 @@ The call is the same in every category: 10 messages, 500 characters, 1,000 outpu
 
 | Category | Pool | Hints | Leaderboard | When |
 |---|---|---|---|---|
-| `daily` | Same roster as All models at the chosen difficulty. One hidden model per difficulty per UTC day, the same for every player. One round per account per UTC day | Yes | Yes | Built |
+| `daily` | Same roster as All models at the chosen difficulty. One hidden model per difficulty per UTC day, the same for every player. One round per account per difficulty per UTC day | Yes | Yes | Built |
 | `all` | Enabled models at or below the chosen difficulty | Yes | Yes | First build |
 | `company` | One company, at least 2 enabled models | No | No | Later |
 | `region` | `us`, `cn`, or `eu`, at least 2 enabled models | No | No | Later |
@@ -448,7 +448,7 @@ Size, also manual, and only as a hint:
 - **medium:** the workhorse
 - **large:** the flagship, and only the large models we are willing to pay for
 
-The first Daily start of a UTC day, at a difficulty, draws one model from the roster All models can already draw at that level (difficulty less than or equal to the chosen level) and stores that id on `daily_models`. Easy cannot store an Impossible model. Medium, Hard, and Impossible each store their own id. Later starts that day use the stored id, so two players get the same hidden model. A model turned off after the draw is still included in a later round's list, so it can still be named. Do not publish the id ahead of time. One account gets one Daily round that UTC day. Starting spends the day, including a give-up before the first message. Coming back while the round is open resumes it. A finished round is done until the next UTC day, which draws again at each level.
+The first Daily start of a UTC day, at a difficulty, draws one model from the roster All models can already draw at that level (difficulty less than or equal to the chosen level) and stores that id on `daily_models`. Easy cannot store an Impossible model. Medium, Hard, and Impossible each store their own id. Later starts that day use the stored id, so two players get the same hidden model. A model turned off after the draw is still included in a later round's list, so it can still be named. Do not publish the id ahead of time. One account gets one Daily round per difficulty that UTC day. Easy and Medium are both allowed. A second Easy is not. Starting spends that difficulty, including a give-up before the first message. Coming back while that difficulty is open resumes it. A finished difficulty is done until tomorrow, which draws again at each level. A difficulty they have not started stays open.
 
 ### Class
 

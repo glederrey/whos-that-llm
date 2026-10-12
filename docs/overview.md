@@ -10,7 +10,7 @@ The name on the site is **Who's that LLM?**.
 
 The playable roster is six small models: Claude Haiku 4.5, Claude Haiku 5.5, GPT-5.6 Luna, GPT-5.6 Luna Pro, GPT-6 Luna, and DeepSeek V4 Flash. Every other seeded model stays off. OpenRouter lists no other small Anthropic model, so Haiku 4.5 is the only extra Anthropic row. Adding more is an admin job, and admin comes later.
 
-Daily uses the same rules as All models, once per account per UTC day. Company, region, custom, and class are specified in [Rules](rules.md) and come later. The home page lists those cards. Daily and All models can be started. Class is a coming-soon card before Company. Each class will have its own leaderboard. That mode is not built. Hints are possible only on Daily, All models, and Custom. Size is a hint, not a category. The profile page is in this prototype. The home weekly top 5, daily result stats, and the admin screens come later. The pause flag exists from the first build, because a credit error pauses everyone.
+Daily uses the same rules as All models, once per account per difficulty per UTC day. Company, region, custom, and class are specified in [Rules](rules.md) and come later. The home page lists those cards. Daily and All models can be started. Class is a coming-soon card before Company. Each class will have its own leaderboard. That mode is not built. Hints are possible only on Daily, All models, and Custom. Size is a hint, not a category. The profile page is in this prototype. The home weekly top 5, daily result stats, and the admin screens come later. The pause flag exists from the first build, because a credit error pauses everyone.
 
 ## Stack
 
@@ -93,7 +93,7 @@ Also:
 - An empty or whitespace-only user message is rejected and does not spend a turn.
 - An empty or whitespace-only successful model reply still spends the message.
 - One open round per account. The lobby offers Continue.
-- The daily model, when that category exists, is once per account per UTC day, and it counts toward the 10.
+- Daily is once per account per difficulty per UTC day, and each of those rounds counts toward the hourly cap.
 
 The hourly check and the insert run in one transaction. Two tabs cannot both take the last slot. A started round counts, including a give-up before the first message.
 

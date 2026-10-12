@@ -1,9 +1,17 @@
--- Daily is the same round as All models, once per account per UTC day.
+-- Daily is the same round as All models, once per difficulty per account per UTC day.
 -- The hidden model is shared: one row per difficulty per UTC day.
--- games.daily_key and the unique (user_id, daily_key) index were already there.
--- start_game checked them and then inserted without writing daily_key, so the
--- check never fired and two players could be given different models.
+-- games.daily_key was a date, so the unique (user_id, daily_key) pair could not
+-- tell Easy from Medium. It is now text, "YYYY-MM-DD:1" through ":4".
+-- That same unique pair allows Easy and Medium on one day and refuses a second Easy.
+-- start_game used to check daily_key and then insert without writing it.
 -- This does not delete or rewrite games, models, profiles, or accounts.
+-- Existing dates, if any, become their text form. Nulls stay null.
+
+alter table public.games
+  alter column daily_key type text using daily_key::text;
+
+comment on column public.games.daily_key is
+  'UTC date and difficulty, such as 2026-10-12:1. Set only for daily. Null for every other mode. The unique (user_id, daily_key) index still refuses a second round of the same difficulty on the same day.';
 
 create table public.daily_models (
   played_on date not null,
@@ -53,7 +61,8 @@ declare
   no_hint boolean;
   new_id uuid;
   existing_status text;
-  day_key date;
+  today date;
+  day_key text;
   chosen_model text;
 begin
   select username into profile_name from public.profiles where id = p_user_id for update;
@@ -62,10 +71,15 @@ begin
   end if;
 
   if p_game_mode = 'daily' then
+    if p_difficulty is null or p_difficulty < 1 or p_difficulty > 4 then
+      return jsonb_build_object('ok', false, 'error', 'not_found');
+    end if;
+    today := (timezone('utc', now()))::date;
+    day_key := to_char(today, 'YYYY-MM-DD') || ':' || p_difficulty::text;
     select id, status into new_id, existing_status
     from public.games
     where user_id = p_user_id
-      and daily_key = (timezone('utc', now()))::date
+      and daily_key = day_key
     limit 1;
     if new_id is not null then
       if existing_status = 'active' then
@@ -103,10 +117,6 @@ begin
     return jsonb_build_object('ok', false, 'error', 'not_found');
   end if;
 
-  if p_game_mode = 'daily' and p_difficulty is null then
-    return jsonb_build_object('ok', false, 'error', 'not_found');
-  end if;
-
   rules := p_rules || jsonb_build_object('hintsAllowed', game_mode_row.hints_allowed);
   no_hint := p_no_hint;
   if p_game_mode = 'origin' then
@@ -114,12 +124,13 @@ begin
     no_hint := false;
   end if;
 
-  day_key := null;
+  if p_game_mode <> 'daily' then
+    day_key := null;
+  end if;
   chosen_model := p_model_id;
   if p_game_mode = 'daily' then
-    day_key := (timezone('utc', now()))::date;
     insert into public.daily_models (played_on, difficulty, model_id)
-    select day_key, p_difficulty, m.id
+    select today, p_difficulty, m.id
     from public.models m
     where m.id = p_model_id
       and m.difficulty <= p_difficulty
@@ -127,7 +138,7 @@ begin
 
     select model_id into chosen_model
     from public.daily_models
-    where played_on = day_key and difficulty = p_difficulty;
+    where played_on = today and difficulty = p_difficulty;
 
     if chosen_model is null then
       return jsonb_build_object('ok', false, 'error', 'not_found');
@@ -149,7 +160,7 @@ exception
     select id into new_id
     from public.games
     where user_id = p_user_id
-      and daily_key = (timezone('utc', now()))::date
+      and daily_key = day_key
       and status = 'active'
     limit 1;
     if new_id is not null then
@@ -157,7 +168,7 @@ exception
     end if;
     if p_game_mode = 'daily' and exists (
       select 1 from public.games
-      where user_id = p_user_id and daily_key = (timezone('utc', now()))::date
+      where user_id = p_user_id and daily_key = day_key
     ) then
       return jsonb_build_object('ok', false, 'error', 'daily_done');
     end if;
