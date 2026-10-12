@@ -1,4 +1,4 @@
--- v1.0.0 restore for an empty database.
+-- v0.1 baseline for a fresh database.
 -- This is not a patch for a database that already has the migrations.
 
 create table public.companies (
@@ -265,7 +265,7 @@ as $$
       select count(*)::int
       from public.games
       where started_at >= (date_trunc('day', now() at time zone 'utc') at time zone 'utc')
-        and finished_at is not null
+        and status in ('solved', 'miss', 'given_up')
     ),
     'players', (select count(distinct user_id)::int from public.games)
   );

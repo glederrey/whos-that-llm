@@ -23,11 +23,17 @@ test("a round counts as played only after it is solved, missed, or given up", ()
 });
 
 test("games today on the main page ignores a round with no finished_at", () => {
-  for (const file of ["supabase/v1.sql", "supabase/migrations/0025_games_today_finished_at.sql"]) {
+  const latest = gamesTodayWhere(
+    fs.readFileSync(path.join(root, "supabase/migrations/0025_games_today_finished_at.sql"), "utf8"),
+  );
+  assert.match(latest, /started_at >= \(date_trunc\('day', now\(\) at time zone 'utc'\) at time zone 'utc'\)/);
+  assert.match(latest, /finished_at is not null/);
+  assert.doesNotMatch(latest, /status in/);
+  const listed = finishedGameStatuses.map((status) => `'${status}'`).join(", ");
+  for (const file of ["supabase/v0.1.sql", "supabase/migrations/0024_finished_games_today.sql"]) {
     const where = gamesTodayWhere(fs.readFileSync(path.join(root, file), "utf8"));
     assert.match(where, /started_at >= \(date_trunc\('day', now\(\) at time zone 'utc'\) at time zone 'utc'\)/);
-    assert.match(where, /finished_at is not null/);
-    assert.doesNotMatch(where, /status in/);
+    assert.match(where, new RegExp(`status in \\(${listed}\\)`));
   }
   const rounds = fs.readFileSync(path.join(root, "lib/rounds.ts"), "utf8");
   assert.match(rounds, /landingSnapshot\(\)/);
