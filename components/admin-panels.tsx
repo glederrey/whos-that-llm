@@ -1,6 +1,8 @@
+import Link from "next/link";
 import { compact, decimal, percent, usd, type GameMetrics } from "@/lib/admin-metrics";
 import type { OpenRouterSpend } from "@/lib/openrouter-spend";
-import type { ActivityPeriod, ModelActivity } from "@/lib/openrouter-usage";
+import type { ActivityPeriod } from "@/lib/openrouter-usage";
+import { nextSpendSort, periodSide, sortSpendRows, spendHref, spendRows, type SpendSide, type SpendSort, type SpendSortColumn } from "@/lib/spend-table";
 
 export type Figure = { label: string; value: string; note?: string };
 
@@ -66,21 +68,25 @@ export function costFigures(metrics: GameMetrics): Figure[] {
   ];
 }
 
-export function Spend({ spend, nameFor }: { spend: OpenRouterSpend; nameFor: (slug: string) => string }) {
+export function Spend({
+  spend,
+  nameFor,
+  sort,
+}: {
+  spend: OpenRouterSpend;
+  nameFor: (slug: string) => string;
+  sort: SpendSort;
+}) {
   const { totals, activity } = spend;
   const figures: Figure[] = [];
   if (totals.ok) {
-    figures.push(
-      { label: "Paid, all time", value: usd(totals.value.allTime), note: "This API key" },
-      { label: "Paid this UTC week", value: usd(totals.value.week), note: `Today ${usd(totals.value.today)}` },
-      { label: "Paid this UTC month", value: usd(totals.value.month) },
-    );
+    figures.push({ label: "Paid, all time", value: usd(totals.value.allTime), note: "This API key" });
   }
   if (activity.ok) {
     const { week, month } = activity.value;
     figures.push(
-      { label: "Paid, last 7 days", value: usd(week.usd), note: periodNote(week) },
       { label: "Paid, last 30 days", value: usd(month.usd), note: periodNote(month) },
+      { label: "Paid, last 7 days", value: usd(week.usd), note: periodNote(week) },
     );
   }
   return (
@@ -92,7 +98,7 @@ export function Spend({ spend, nameFor }: { spend: OpenRouterSpend; nameFor: (sl
       )}
       {figures.length > 0 ? <Figures items={figures} /> : null}
       {activity.ok ? (
-        <ActivityTable week={activity.value.week} month={activity.value.month} nameFor={nameFor} />
+        <ActivityTable week={activity.value.week} month={activity.value.month} nameFor={nameFor} sort={sort} />
       ) : (
         <p className="error" role="alert">
           OpenRouter per-model usage could not be loaded. {activity.error}
@@ -106,25 +112,33 @@ function periodNote(period: ActivityPeriod): string {
   return `${period.requests.toLocaleString("en-US")} requests, ${compact(period.promptTokens + period.completionTokens)} tokens`;
 }
 
+const metricColumns: { column: SpendSortColumn; label: string; hint: string }[] = [
+  { column: "paid7", label: "Paid", hint: "Last 7 days" },
+  { column: "requests7", label: "Requests", hint: "Last 7 days" },
+  { column: "tokens7", label: "Tokens", hint: "Last 7 days" },
+  { column: "paid30", label: "Paid", hint: "Last 30 days" },
+  { column: "requests30", label: "Requests", hint: "Last 30 days" },
+  { column: "tokens30", label: "Tokens", hint: "Last 30 days" },
+];
+
 function ActivityTable({
   week,
   month,
   nameFor,
+  sort,
 }: {
   week: ActivityPeriod;
   month: ActivityPeriod;
   nameFor: (slug: string) => string;
+  sort: SpendSort;
 }) {
-  const weekBy = new Map(week.models.map((row) => [row.model, row]));
-  const slugs = month.models.map((row) => row.model);
-  for (const row of week.models) if (!slugs.includes(row.model)) slugs.push(row.model);
-  const monthBy = new Map(month.models.map((row) => [row.model, row]));
+  const rows = sortSpendRows(spendRows(week, month, nameFor), sort);
   return (
     <div className="card roster-card">
       <table className="roster compact">
         <thead>
           <tr>
-            <th rowSpan={2}>Model</th>
+            <SortHeader column="model" label="Model" sort={sort} rowSpan={2} />
             <th colSpan={3} className="group">
               Last 7 days
             </th>
@@ -133,16 +147,13 @@ function ActivityTable({
             </th>
           </tr>
           <tr>
-            <th>Paid</th>
-            <th>Requests</th>
-            <th>Tokens</th>
-            <th>Paid</th>
-            <th>Requests</th>
-            <th>Tokens</th>
+            {metricColumns.map((column) => (
+              <SortHeader key={column.column} column={column.column} label={column.label} hint={column.hint} sort={sort} />
+            ))}
           </tr>
         </thead>
         <tbody>
-          {slugs.length === 0 ? (
+          {rows.length === 0 ? (
             <tr>
               <td colSpan={7} className="muted">
                 No OpenRouter activity in the last 30 days.
@@ -152,14 +163,14 @@ function ActivityTable({
             <>
               <tr className="total-row">
                 <td>All models</td>
-                <Cells row={totalRow(week)} />
-                <Cells row={totalRow(month)} />
+                <Cells row={periodSide(week)} />
+                <Cells row={periodSide(month)} />
               </tr>
-              {slugs.map((slug) => (
-                <tr key={slug}>
-                  <td title={slug}>{nameFor(slug)}</td>
-                  <Cells row={weekBy.get(slug)} />
-                  <Cells row={monthBy.get(slug)} />
+              {rows.map((row) => (
+                <tr key={row.slug}>
+                  <td title={row.slug}>{row.name}</td>
+                  <Cells row={row.week} />
+                  <Cells row={row.month} />
                 </tr>
               ))}
             </>
@@ -170,27 +181,32 @@ function ActivityTable({
   );
 }
 
-function totalRow(period: ActivityPeriod): ModelActivity {
-  return {
-    model: "",
-    requests: period.requests,
-    promptTokens: period.promptTokens,
-    completionTokens: period.completionTokens,
-    reasoningTokens: 0,
-    usd: period.usd,
-  };
+function SortHeader({
+  column,
+  label,
+  hint,
+  sort,
+  rowSpan,
+}: {
+  column: SpendSortColumn;
+  label: string;
+  hint?: string;
+  sort: SpendSort;
+  rowSpan?: number;
+}) {
+  const active = sort?.column === column;
+  return (
+    <th rowSpan={rowSpan} aria-sort={active ? (sort.dir === "asc" ? "ascending" : "descending") : "none"}>
+      <Link href={spendHref(nextSpendSort(sort, column))} scroll={false}>
+        {hint ? <span className="sr-only">{hint} </span> : null}
+        {label}
+        {active ? (sort.dir === "asc" ? " ↑" : " ↓") : ""}
+      </Link>
+    </th>
+  );
 }
 
-function Cells({ row }: { row: ModelActivity | undefined }) {
-  if (!row) {
-    return (
-      <>
-        <td>{usd(0)}</td>
-        <td>0</td>
-        <td>0</td>
-      </>
-    );
-  }
+function Cells({ row }: { row: SpendSide }) {
   return (
     <>
       <td>{usd(row.usd)}</td>

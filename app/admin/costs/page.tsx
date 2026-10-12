@@ -5,12 +5,26 @@ import { compact, usd } from "@/lib/admin-metrics";
 import { loadRoster } from "@/lib/admin-roster";
 import { loadGameMetrics } from "@/lib/admin-stats";
 import { loadOpenRouterSpend } from "@/lib/openrouter-spend";
+import { spendSortOf } from "@/lib/spend-table";
 
 export const dynamic = "force-dynamic";
 
-export default async function CostsPage() {
+export default async function CostsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ sort?: string; dir?: string }>;
+}) {
   await requireOwner();
-  const [roster, metrics, spend] = await Promise.all([loadRoster(), loadGameMetrics(), loadOpenRouterSpend()]);
+  const params = await searchParams;
+  const sort = spendSortOf(params.sort, params.dir);
+  const rosterPromise = loadRoster();
+  const metricsPromise = loadGameMetrics();
+  const roster = await rosterPromise;
+  const spend = await loadOpenRouterSpend(
+    new Date(),
+    roster.rows.map((row) => row.openrouterId),
+  );
+  const metrics = await metricsPromise;
   const byId = new Map(roster.rows.map((row) => [row.id, row.name]));
   const byOpenRouterId = new Map(roster.rows.map((row) => [row.openrouterId, row.name]));
   const byCost = [...metrics.models].sort((a, b) => b.costUsd - a.costUsd || a.modelId.localeCompare(b.modelId));
@@ -21,10 +35,10 @@ export default async function CostsPage() {
       <h1>Costs</h1>
       <h2>OpenRouter spend</h2>
       <p className="muted">
-        What OpenRouter billed, read from OpenRouter when this page loads. Totals come from the API key. The per-model
-        breakdown is account activity for the last 30 completed UTC days.
+        What OpenRouter billed, read from OpenRouter when this page loads. Paid all time is this API key. Last 30 days
+        and last 7 days include the current UTC day, and the table counts those same charges.
       </p>
-      <Spend spend={spend} nameFor={(slug) => byOpenRouterId.get(slug) ?? slug} />
+      <Spend spend={spend} nameFor={(slug) => byOpenRouterId.get(slug) ?? byId.get(slug) ?? slug} sort={sort} />
 
       <h2>Our ledger</h2>
       <p className="muted">Cost and tokens saved from each OpenRouter reply. This is not the OpenRouter bill above.</p>

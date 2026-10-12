@@ -1,6 +1,17 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { isoDaysBefore, parseActivity, parseKeyUsage, summarize } from "./openrouter-usage";
+import {
+  analyticsTruncated,
+  canonicalModel,
+  currentDayRange,
+  isoDaysBefore,
+  mergeCurrentDay,
+  modelAliases,
+  parseActivity,
+  parseAnalyticsModels,
+  parseKeyUsage,
+  summarize,
+} from "./openrouter-usage";
 
 test("key usage reads all-time, week, month, and the cap", () => {
   const usage = parseKeyUsage({
@@ -35,4 +46,82 @@ test("activity rows are grouped per model over a window of completed days", () =
   assert.equal(month.usd, 3.75);
   assert.equal(month.requests, 10);
   assert.equal(parseActivity({ data: "nope" }), null);
+});
+
+test("7-day and 30-day windows include the current UTC day", () => {
+  const now = new Date("2026-10-12T18:00:00Z");
+  const completed = [
+    { date: "2026-10-11", model: "anthropic/claude-haiku-4.5", requests: 10, promptTokens: 100, completionTokens: 50, reasoningTokens: 0, usd: 0.17 },
+    { date: "2026-09-01", model: "old/model", requests: 1, promptTokens: 1, completionTokens: 1, reasoningTokens: 0, usd: 1 },
+  ];
+  const today = [
+    {
+      date: "2026-10-12",
+      model: "x-ai/grok-4.7-2026-09-21",
+      requests: 2,
+      promptTokens: 3000,
+      completionTokens: 875,
+      reasoningTokens: 0,
+      usd: 0.0073,
+    },
+  ];
+  const known = ["anthropic/claude-haiku-4.5", "x-ai/grok-4.7", "openai/gpt-5.6-luna", "openai/gpt-5.6-luna-pro"];
+  const merged = mergeCurrentDay(completed, today, (slug) => canonicalModel(slug, {}, known));
+  const week = summarize(merged, 7, now);
+  const month = summarize(merged, 30, now);
+  assert.equal(week.models.some((row) => row.model === "x-ai/grok-4.7"), true);
+  assert.equal(month.models.some((row) => row.model === "x-ai/grok-4.7"), true);
+  assert.equal(month.models.some((row) => row.model === "old/model"), false);
+  assert.equal(week.usd, month.usd);
+  assert.equal(week.usd, 0.1773);
+  assert.equal(week.requests, 12);
+});
+
+test("today's analytics rows join activity without double counting or collapsing a longer model name", () => {
+  const payload = {
+    data: {
+      data: [
+        {
+          date__day: "2026-10-12T00:00:00.000Z",
+          model: "x-ai/grok-4.7-2026-09-21",
+          request_count: "2",
+          tokens_prompt: "3000",
+          tokens_completion: "875",
+          tokens_total: "4000",
+          total_usage: 0.0073,
+        },
+        { request_count: "9", total_usage: 1 },
+      ],
+      metadata: { truncated: false },
+    },
+  };
+  const rows = parseAnalyticsModels(payload, "2026-10-12");
+  assert.equal(rows?.length, 1);
+  assert.equal(rows?.[0].date, "2026-10-12");
+  assert.equal(rows?.[0].requests, 2);
+  assert.equal(rows?.[0].promptTokens, 3000);
+  assert.equal(rows?.[0].completionTokens, 875);
+  assert.equal(parseAnalyticsModels({ data: { data: "nope" } }, "2026-10-12"), null);
+  assert.equal(analyticsTruncated({ data: { metadata: { truncated: true }, data: [] } }), true);
+  const aliases = modelAliases({
+    data: [{ date: "2026-10-11", model: "x-ai/grok-4.7", model_permaslug: "x-ai/grok-4.7-2026-09-21" }],
+  });
+  assert.equal(canonicalModel("x-ai/grok-4.7-2026-09-21", aliases, []), "x-ai/grok-4.7");
+  assert.equal(
+    canonicalModel("openai/gpt-5.6-luna-pro-2026-01-01", {}, ["openai/gpt-5.6-luna", "openai/gpt-5.6-luna-pro"]),
+    "openai/gpt-5.6-luna-pro",
+  );
+  assert.equal(canonicalModel("openai/gpt-5.6-luna-pro", {}, ["openai/gpt-5.6-luna"]), "openai/gpt-5.6-luna-pro");
+  const counted = mergeCurrentDay(
+    [{ date: "2026-10-12", model: "x-ai/grok-4.7", requests: 2, promptTokens: 1, completionTokens: 1, reasoningTokens: 0, usd: 0.0073 }],
+    [{ date: "2026-10-12", model: "x-ai/grok-4.7-2026-09-21", requests: 2, promptTokens: 9, completionTokens: 9, reasoningTokens: 0, usd: 0.0073 }],
+    (slug) => canonicalModel(slug, {}, ["x-ai/grok-4.7"]),
+  );
+  assert.equal(counted.length, 1);
+  assert.equal(counted[0].requests, 2);
+  assert.equal(counted[0].promptTokens, 1);
+  const range = currentDayRange(new Date("2026-10-12T18:04:05.123Z"));
+  assert.equal(range.start, "2026-10-12T00:00:00Z");
+  assert.equal(range.end, "2026-10-12T18:04:05Z");
+  assert.equal(currentDayRange(new Date("2026-10-12T00:00:00.000Z")).end, "2026-10-12T00:00:01Z");
 });

@@ -353,7 +353,7 @@ The copy says this removes the profile and picture, and the name on the leaderbo
 
 `/admin` shows five counts: models in the roster, active models, players, games today (UTC), and total games. Players are distinct accounts that have started a game. Those counts are read with the server key after the check. They are not a public API. Costs, game results, and each mode are on their own pages.
 
-`/admin/costs` reads OpenRouter when the page loads: what the key has paid, and per-model activity for the last 7 and last 30 completed UTC days. It also shows the ledger (cost per game, cost per solved game, ledger spend, failed calls) and spend by hidden model, highest cost first. The key stays on the server.
+`/admin/costs` reads OpenRouter when the page loads: what the key has paid all time, and per-model activity for the last 7 and last 30 days, including the current UTC day. Clicking a column title sorts that table ascending, then descending, then back to the original order. All models stays the summary row. It also shows the ledger (cost per game, cost per solved game, ledger spend, failed calls) and spend by hidden model, highest cost first. The key stays on the server.
 
 `/admin/games` shows solve rate, give-ups, correct guesses, messages, tokens, games per UTC day for the last 14 days, and which models are hardest to find. It does not show cost.
 
