@@ -2,7 +2,7 @@ import { config } from "@/lib/config";
 
 export default function WhyPage() {
   return (
-    <div className="stack">
+    <div className="stack why">
       <a className="back" href="/">
         <svg viewBox="0 0 24 24" aria-hidden="true">
           <path fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M15 6 9 12l6 6" />
@@ -18,7 +18,7 @@ export default function WhyPage() {
       </blockquote>
       <p>
         I laughed, and then I couldn&apos;t stop thinking about it. Can people actually tell models apart from just a few
-        messages? Or do we only think we can?
+        messages? Especially models from the same family? Or do we only think we can?
       </p>
       <p>
         I&apos;m a data scientist, so my first instinct was to collect data. That&apos;s really what this game is for.
@@ -30,7 +30,7 @@ export default function WhyPage() {
         I plan to share this data openly for research later on. Until then, the <a href="/statistics">statistics</a> page
         shows what the data says so far.
       </p>
-      <h2>What I store</h2>
+      <h2>What data do I store?</h2>
       <p>
         I keep your username and your game data: the messages, token counts, your guesses, which model you were talking
         to, and the other details of each round. That&apos;s it. I don&apos;t collect any other personal information. Sign
@@ -41,7 +41,7 @@ export default function WhyPage() {
         You can delete your account at any time from your <a href="/profile">profile</a>. Your username comes off the
         leaderboard. Finished games stay in the statistics without your username.
       </p>
-      <h2>Who am I</h2>
+      <h2>Who am I?</h2>
       <p>
         I&apos;m Gael, a data scientist based in Fribourg, Switzerland, with a PhD from EPFL. Funny enough, my master
         thesis was about beer reviews: do people rate a beer for what it is, or because of what the community already
@@ -49,23 +49,33 @@ export default function WhyPage() {
         question: can we really taste the difference, or do we just think we can?
       </p>
       <p>
-        I built this game on my own time, and I pay for the API calls myself. If you enjoy it and want to help keep it
-        running, you can leave me a small tip on{" "}
-        <a href={config.tipUrl} target="_blank" rel="noreferrer">
-          Ko-fi
-        </a>
-        . It&apos;s completely optional, but it means a lot.
-      </p>
-      <p>
-        You can find me on{" "}
+        By the way, if you want to chat about the game, the data, or anything else, you can find me on{" "}
         <a href="https://www.linkedin.com/in/gael-lederrey" target="_blank" rel="noreferrer">
           LinkedIn
         </a>{" "}
         and{" "}
         <a href="https://github.com/glederrey" target="_blank" rel="noreferrer">
           GitHub
-        </a>{" "}
-        if you want to chat about the game, the data, or anything else.
+        </a>
+        .
+      </p>
+      <h2>Do you want to contribute?</h2>
+      <p>
+        <strong>Who&apos;s that LLM?</strong> is a small side project, and it gets better with help. If you have an idea,
+        want to contribute, or found a bug, you&apos;re very welcome to{" "}
+        <a href="https://github.com/glederrey/whos-that-llm/issues" target="_blank" rel="noreferrer">
+          open an issue on GitHub
+        </a>
+        . Whether it&apos;s a typo or a big suggestion, I&apos;d love to hear about it.
+      </p>
+      <h2>Do you want to support the project?</h2>
+      <p>
+        I built this game on my own time, and I pay for the API calls myself. If you enjoy it and want to help keep it
+        running, you can leave me a small tip on{" "}
+        <a href={config.tipUrl} target="_blank" rel="noreferrer">
+          Ko-fi
+        </a>
+        . It&apos;s completely optional, but it means a lot.
       </p>
     </div>
   );
