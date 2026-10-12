@@ -2,7 +2,14 @@ import "server-only";
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { requireOwner } from "./admin-access";
-import { categoryIdFromName, parseCategoryFields, parseCategoryIds, type CategoryNotice } from "./admin-category";
+import {
+  categoryDeleteMessage,
+  categoryIdFromName,
+  parseCategoryFields,
+  parseCategoryId,
+  parseCategoryIds,
+  type CategoryNotice,
+} from "./admin-category";
 import {
   canTurnOn,
   companyIdFromName,
@@ -319,6 +326,17 @@ export async function updateCategory(raw: {
   if (error?.code === "23503") return "company";
   if (error) return "save";
   return null;
+}
+
+export async function removeCategory(idRaw: string): Promise<string | null> {
+  await requireOwner();
+  const id = parseCategoryId(idRaw);
+  if (!id) return "Could not delete that category.";
+  const client = serviceOrThrow();
+  // model_categories.category_id cascades, so the links go and the models stay.
+  const { error } = await client.from("categories").delete().eq("id", id);
+  if (!error) return null;
+  return categoryDeleteMessage(error.message) ?? "Could not delete that category.";
 }
 
 async function knownCompany(client: SupabaseClient, companyId: string | null): Promise<CategoryNotice | null> {

@@ -19,6 +19,18 @@ export function categoryIdFromName(name: string): string | null {
   return slug;
 }
 
+export function parseCategoryId(value: string): string | null {
+  const id = value.trim();
+  if (!/^[a-z0-9-]{2,48}$/.test(id)) return null;
+  return id;
+}
+
+export function categoryDeleteMessage(message: string | undefined): string | null {
+  const cleaned = message?.replace(/\s+/g, " ").trim() ?? "";
+  if (!cleaned) return null;
+  return cleaned.slice(0, 240);
+}
+
 export function parseCategoryFields(raw: {
   name?: string;
   description?: string;

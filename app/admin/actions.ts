@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { createCategory, createRosterModel, setRosterEnabled, updateCategory, updateRosterModel } from "@/lib/admin-roster";
+import { createCategory, createRosterModel, removeCategory, setRosterEnabled, updateCategory, updateRosterModel } from "@/lib/admin-roster";
 import { modelsReturnPath } from "@/lib/roster-list";
 
 function text(formData: FormData, key: string): string {
@@ -74,4 +74,11 @@ export async function addCategory(formData: FormData) {
 
 export async function saveCategory(formData: FormData) {
   finishCategory(await updateCategory({ id: text(formData, "id"), ...categoryFields(formData) }));
+}
+
+export async function deleteCategory(formData: FormData) {
+  const message = await removeCategory(text(formData, "id"));
+  revalidatePath("/admin/categories");
+  revalidatePath("/admin/models");
+  redirect(message ? `/admin/categories?error=${encodeURIComponent(message)}` : "/admin/categories");
 }
