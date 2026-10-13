@@ -1378,6 +1378,7 @@ html[data-theme="dark"] .history-facts .board-chip.no-hints {
 
 @media (max-width: 560px) {
   .hero-logo { display: none; }
+  .hero { padding-top: 0; }
   .profile-form {
     grid-template-columns: auto minmax(0, 1fr) auto;
     align-items: end;
