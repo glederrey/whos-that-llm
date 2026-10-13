@@ -97,9 +97,10 @@ One narrow card. The heading is **Sign in** or **Create account**. A text link u
 - Link: **Forgot password**. Asks for an email. Supabase sends the reset. The page says **Check your email.** either way, so it does not reveal whether the address exists.
 - The confirmation link and the reset link both open `/`.
 - Errors, under the form, one at a time:
-  - **Wrong email or password.**
+  - **Wrong email or password.** Sign-in, when the email or password does not match.
   - **Confirm your email, then come back.**
-  - **That email is already registered.**
+  - **An account with this email already exists.** Create account, when that email is already registered. A second try while the confirmation is still going out is the same case.
+  - **The confirmation email could not be sent. Try again in a minute.**
   - **Google sign-in was cancelled.**
 
 ## Lobby (`/play`)

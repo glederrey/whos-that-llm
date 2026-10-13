@@ -2,13 +2,14 @@
 
 import { headers } from "next/headers";
 import { allowedAuthUrl, authRedirectOrigin } from "@/lib/auth-cookies";
+import { signUpFailureNotice } from "@/lib/auth-notices";
 import { passwordProblem, weakPasswordNotice } from "@/lib/password-rules";
 import { publicEnv } from "@/lib/supabase/env";
 import { createSessionClient } from "@/lib/supabase/server";
 
 export type AuthNotice = "invalid" | "exists" | "confirm" | "auth";
 
-export type SignUpNotice = AuthNotice | { rules: string };
+export type SignUpNotice = AuthNotice | "rate" | { rules: string };
 
 async function redirectOrigin(): Promise<string> {
   const headerList = await headers();
@@ -40,10 +41,7 @@ export async function signUpWithEmail(email: string, password: string): Promise<
   if (error) {
     const weak = weakPasswordNotice(password, error);
     if (weak) return { rules: weak };
-    const text = error.message.toLowerCase();
-    if (text.includes("already")) return "exists";
-    if (text.includes("confirm")) return "confirm";
-    return "invalid";
+    return signUpFailureNotice(error);
   }
   if (data.user && data.user.identities && data.user.identities.length === 0) return "exists";
   if (!data.session) return "confirm";
