@@ -64,7 +64,7 @@ export function LoginForm({
       const result = await signUpWithEmail(email, password);
       setBusy(false);
       if (result === "confirm") {
-        setNote("Supabase will email you a confirmation link. Check your email.");
+        setNote("The confirmation email has been sent.");
         return;
       }
       if (result && typeof result === "object") {
@@ -103,6 +103,7 @@ export function LoginForm({
   }
 
   const signingIn = tab === "sign-in";
+  const confirmationSent = note === "The confirmation email has been sent.";
 
   return (
     <div className="auth auth-screen">
@@ -202,7 +203,7 @@ export function LoginForm({
         <button type="submit" className="button" disabled={busy}>
           {signingIn ? "Sign in" : "Create account"}
         </button>
-        {signingIn ? null : <p className="auth-confirm">Supabase will email you a confirmation link.</p>}
+        {signingIn || confirmationSent ? null : <p className="auth-confirm">Supabase will email you a confirmation link.</p>}
       </form>
       {note ? <p className="muted">{note}</p> : null}
       {error ? <p className="error">{error}</p> : null}
