@@ -93,8 +93,12 @@ test("sign-up checks the rules before the auth call and sign-in stays generic", 
   assert.match(form, /setNote\("The confirmation email has been sent\."\)/);
   assert.equal(form.includes("Supabase will email you a confirmation link. Check your email."), false);
   assert.match(form, /signingIn \|\| confirmationSent \? null : <p className="auth-confirm">Supabase will email you a confirmation link\.<\/p>/);
+  assert.match(form, /An account with this email already exists\./);
+  assert.equal(form.includes("That email is already registered."), false);
+  assert.match(form, /signingIn \? "error" : "error auth-error"/);
   const css = fs.readFileSync(path.join(root, "app/globals.css"), "utf8");
   assert.match(css, /\.auth-confirm \{ color: var\(--mute\); font-size: 14px; font-weight: 500; text-align: center; \}/);
+  assert.match(css, /\.auth-error \{ text-align: center; \}/);
   assert.match(css, /@media \(max-width: 560px\) \{[\s\S]*\.page:has\(\.auth-screen\) \{ flex: 1 0 auto; display: flex; flex-direction: column; padding-top: 0; padding-bottom: 12px; \}/);
   assert.match(css, /@media \(max-width: 560px\) \{[\s\S]*\.auth-screen \{ margin-top: auto; margin-bottom: auto; \}/);
   assert.match(css, /@media \(max-width: 560px\) \{[\s\S]*\.page:has\(\.auth-screen\) \+ \.footer \{ margin-top: 0; \}/);
@@ -112,8 +116,11 @@ test("sign-up checks the rules before the auth call and sign-in stays generic", 
   const signup = actions.slice(actions.indexOf("function signUpWithEmail"), actions.indexOf("function signInWithEmail"));
   assert.ok(signup.indexOf("passwordProblem(password)") < signup.indexOf("auth.signUp"));
   assert.match(signup, /weakPasswordNotice/);
+  assert.match(signup, /signUpFailureNotice\(error\)/);
+  assert.ok(signup.indexOf("weakPasswordNotice") < signup.indexOf("signUpFailureNotice"));
   const signin = actions.slice(actions.indexOf("function signInWithEmail"), actions.indexOf("function sendPasswordReset"));
   assert.equal(signin.includes("passwordProblem"), false);
   assert.equal(signin.includes("weakPasswordNotice"), false);
+  assert.equal(signin.includes("signUpFailureNotice"), false);
   assert.match(signin, /return "invalid"/);
 });

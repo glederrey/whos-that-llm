@@ -31,9 +31,10 @@ export function LoginForm({
     setNote("");
   }
 
-  function noticeError(notice: AuthNotice) {
-    if (notice === "exists") return "That email is already registered.";
+  function noticeError(notice: AuthNotice | "rate") {
+    if (notice === "exists") return "An account with this email already exists.";
     if (notice === "confirm") return "Confirm your email, then come back.";
+    if (notice === "rate") return "The confirmation email could not be sent. Try again in a minute.";
     return "Wrong email or password.";
   }
 
@@ -206,7 +207,7 @@ export function LoginForm({
         {signingIn || confirmationSent ? null : <p className="auth-confirm">Supabase will email you a confirmation link.</p>}
       </form>
       {note ? <p className="muted">{note}</p> : null}
-      {error ? <p className="error">{error}</p> : null}
+      {error ? <p className={signingIn ? "error" : "error auth-error"}>{error}</p> : null}
     </div>
   );
 }
