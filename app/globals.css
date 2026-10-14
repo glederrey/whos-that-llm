@@ -852,6 +852,29 @@ html[data-theme="dark"] {
 }
 html[data-theme="dark"] .bubble.user { border-color: #0b4545; }
 .bubble.assistant { white-space: normal; justify-self: start; }
+.reply-tip { position: relative; display: grid; justify-self: start; max-width: min(72ch, 88%); }
+.reply-tip .bubble { max-width: none; min-height: 46px; cursor: help; }
+.reply-tooltip {
+  position: absolute;
+  z-index: 3;
+  left: 0;
+  top: 100%;
+  width: max-content;
+  max-width: min(420px, 80vw);
+  margin: 0;
+  padding: 10px 12px;
+  background: var(--card);
+  color: var(--text);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--lift);
+  font-size: 13px;
+}
+.reply-tooltip p { margin: 0; }
+.reply-tooltip p + p { margin-top: 4px; }
+.chat-toolbar { display: flex; gap: 10px; align-items: end; flex-wrap: wrap; }
+.chat-model { flex: 1 1 280px; min-width: 0; }
+.chat-model select { width: 100%; }
 .typing { display: inline-flex; gap: 5px; align-items: center; min-height: 1.4em; }
 .typing i {
   width: 7px;

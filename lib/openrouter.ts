@@ -14,9 +14,56 @@ export type CallUsage = {
   generationId: string | null;
 };
 
+export type CallTokens = {
+  /** Raw prompt tokens for this call, including the system prompt and history. */
+  input: number;
+  /** Raw completion tokens for this call. */
+  output: number;
+  /** Reasoning tokens reported for this call. Display only. */
+  reasoning: number;
+  /** Cache-read tokens reported for this call. Display only. */
+  cacheRead: number;
+};
+
 export type StreamedReply =
-  | { ok: true; text: string; usage: CallUsage }
+  | { ok: true; text: string; usage: CallUsage; tokens: CallTokens }
   | { ok: false; paused: boolean; message: string };
+
+/** OpenRouter totals for one call. Reasoning and cache read stay beside the prompt and completion counts. */
+export function rawCallTokens(
+  sdk: {
+    inputTokens?: number | undefined;
+    outputTokens?: number | undefined;
+    reasoningTokens?: number | undefined;
+    cacheReadTokens?: number | undefined;
+  },
+  openrouterUsage: object | null | undefined,
+): CallTokens {
+  const record =
+    openrouterUsage && typeof openrouterUsage === "object" ? (openrouterUsage as Record<string, unknown>) : {};
+  const completionDetails = detailRecord(record.completionTokensDetails);
+  const promptDetails = detailRecord(record.promptTokensDetails);
+  return {
+    input: optionalCount(record.promptTokens) ?? optionalCount(sdk.inputTokens) ?? 0,
+    output: optionalCount(record.completionTokens) ?? optionalCount(sdk.outputTokens) ?? 0,
+    reasoning: optionalCount(completionDetails?.reasoningTokens) ?? optionalCount(sdk.reasoningTokens) ?? 0,
+    cacheRead: optionalCount(promptDetails?.cachedTokens) ?? optionalCount(sdk.cacheReadTokens) ?? 0,
+  };
+}
+
+function detailRecord(value: unknown): Record<string, unknown> | null {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+  return value as Record<string, unknown>;
+}
+
+function optionalCount(value: unknown): number | null {
+  if (typeof value === "number") return Number.isFinite(value) ? value : null;
+  if (typeof value === "string" && value.trim() !== "") {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+  return null;
+}
 
 function providerSettings(raw: unknown): Record<string, unknown> {
   if (!raw || typeof raw !== "object" || Array.isArray(raw)) return {};
@@ -98,6 +145,15 @@ export async function streamHiddenReply(input: {
   return {
     ok: true,
     text,
+    tokens: rawCallTokens(
+      {
+        inputTokens: usage.inputTokens,
+        outputTokens: usage.outputTokens,
+        reasoningTokens: usage.outputTokenDetails?.reasoningTokens,
+        cacheReadTokens: usage.inputTokenDetails?.cacheReadTokens,
+      },
+      accounted,
+    ),
     usage: {
       inputTokens: usage.inputTokens ?? numberFrom(accounted.promptTokens),
       outputTokens: usage.outputTokens ?? numberFrom(accounted.completionTokens),
@@ -118,4 +174,22 @@ function fail(error: unknown): StreamedReply {
   const status = APICallError.isInstance(error) ? error.statusCode : undefined;
   const body = APICallError.isInstance(error) ? JSON.stringify(error.responseBody ?? "") : "";
   return { ok: false, paused: isCreditError(status, `${message} ${body}`), message };
+}
+
+/** The model call a round uses: the game system prompt, then the transcript plus the new player message. */
+export async function streamPlayedReply(input: {
+  openrouterId: string;
+  providerSettings: unknown;
+  maxOutputTokens: number;
+  transcript: { role: "user" | "assistant"; content: string }[];
+  userText: string;
+  onWord: (word: string) => void;
+}): Promise<StreamedReply> {
+  return streamHiddenReply({
+    openrouterId: input.openrouterId,
+    providerSettings: input.providerSettings,
+    maxOutputTokens: input.maxOutputTokens,
+    messages: buildModelMessages([...input.transcript, { role: "user", content: input.userText }]),
+    onWord: input.onWord,
+  });
 }

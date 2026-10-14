@@ -1,0 +1,31 @@
+import { AdminChat } from "@/components/admin-chat";
+import { SectionNav } from "@/components/section-nav";
+import { requireOwner } from "@/lib/admin-access";
+import { loadRoster } from "@/lib/admin-roster";
+
+export const dynamic = "force-dynamic";
+
+export default async function AdminChatPage() {
+  await requireOwner();
+  const { rows } = await loadRoster();
+  const models = rows
+    .map((row) => ({
+      id: row.id,
+      name: row.name,
+      companyName: row.companyName,
+      enabled: row.enabled,
+    }))
+    .sort((a, b) => a.name.localeCompare(b.name, "en"));
+
+  return (
+    <div className="stack">
+      <SectionNav />
+      <h1>Chat</h1>
+      <p className="muted">
+        Pick a roster model and talk to it the same way a round does. The thread stays on this page. It is not saved,
+        and it does not count as a game. Hover or tap a reply for tokens.
+      </p>
+      <AdminChat models={models} />
+    </div>
+  );
+}

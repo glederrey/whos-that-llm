@@ -4,8 +4,10 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { config } from "@/lib/config";
 import type { HintKey, PublicGame } from "@/lib/game";
+import { readReplyEvents } from "@/lib/reply-events";
+import { ChatComposer } from "./chat-composer";
 import { CompanyLogo } from "./company-logo";
-import { MarkdownMessage } from "./markdown-message";
+import { MessageBubble } from "./message-bubble";
 import { RegionFlag } from "./region-flag";
 
 export function RoundBoard({ initial }: { initial: PublicGame }) {
@@ -120,45 +122,26 @@ export function RoundBoard({ initial }: { initial: PublicGame }) {
         setNotice(body.paused || body.error === "paused" ? "The game is paused. Try again later." : "The reply failed. Send it again.");
         return;
       }
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let buffer = "";
       let failed = false;
       let gotGame = false;
-      while (true) {
-        const chunk = await reader.read();
-        if (chunk.done) break;
-        buffer += decoder.decode(chunk.value, { stream: true });
-        const parts = buffer.split("\n\n");
-        buffer = parts.pop() ?? "";
-        for (const part of parts) {
-          const line = part.split("\n").find((item) => item.startsWith("data: "));
-          if (!line) continue;
-          const event = JSON.parse(line.slice(6)) as {
-            type: string;
-            text?: string;
-            error?: string;
-            paused?: boolean;
-            game?: PublicGame;
-          };
-          if (event.type === "word" && event.text) setLiveAssistant((current) => (current ?? "") + event.text);
-          if (event.type === "error") {
-            failed = true;
-            setDraft(text);
-            setLiveUser(null);
-            setLiveAssistant(null);
-            setNotice(event.paused ? "The game is paused. Try again later." : "The reply failed. Send it again.");
-          }
-          if (event.type === "game" && event.game) {
-            gotGame = true;
-            setGame(event.game);
-            setLiveUser(null);
-            setLiveAssistant(null);
-            setSelected(null);
-            setSearch("");
-          }
+      await readReplyEvents(response, (event) => {
+        if (event.type === "word" && event.text) setLiveAssistant((current) => (current ?? "") + event.text);
+        if (event.type === "error") {
+          failed = true;
+          setDraft(text);
+          setLiveUser(null);
+          setLiveAssistant(null);
+          setNotice(event.paused ? "The game is paused. Try again later." : "The reply failed. Send it again.");
         }
-      }
+        if (event.type === "game" && event.game) {
+          gotGame = true;
+          setGame(event.game);
+          setLiveUser(null);
+          setLiveAssistant(null);
+          setSelected(null);
+          setSearch("");
+        }
+      });
       if (!failed && !gotGame) {
         const fresh = await fetch(`/api/games/${game.id}`);
         const next = fresh.ok ? ((await fresh.json()) as PublicGame) : null;
@@ -246,13 +229,6 @@ export function RoundBoard({ initial }: { initial: PublicGame }) {
     router.refresh();
   }
 
-  function onKeyDown(event: React.KeyboardEvent<HTMLTextAreaElement>) {
-    if (event.key === "Enter" && !event.shiftKey) {
-      event.preventDefault();
-      void sendMessage();
-    }
-  }
-
   return (
     <div className="round">
       <header>
@@ -278,45 +254,20 @@ export function RoundBoard({ initial }: { initial: PublicGame }) {
       </header>
       <div className="transcript">
         {game.transcript.map((message) => (
-          <div key={`${message.turn}-${message.role}`} className={`bubble ${message.role}`}>
-            {message.role === "assistant" ? <MarkdownMessage text={message.content} /> : message.content}
-          </div>
+          <MessageBubble key={`${message.turn}-${message.role}`} role={message.role} content={message.content} />
         ))}
-        {liveUser !== null ? <div className="bubble user">{liveUser}</div> : null}
-        {liveAssistant !== null ? (
-          <div className="bubble assistant" aria-live="polite">
-            {liveAssistant === "" ? (
-              <span className="typing" aria-label="Waiting for the reply">
-                <i />
-                <i />
-                <i />
-              </span>
-            ) : (
-              <MarkdownMessage text={liveAssistant} />
-            )}
-          </div>
-        ) : null}
+        {liveUser !== null ? <MessageBubble role="user" content={liveUser} /> : null}
+        {liveAssistant !== null ? <MessageBubble role="assistant" content={liveAssistant} live /> : null}
         <div ref={endRef} />
       </div>
-      <div className="composer">
-        <textarea
-          value={draft}
-          placeholder="Ask something"
-          maxLength={config.maxUserChars}
-          disabled={inputLocked}
-          onChange={(event) => setDraft(event.target.value)}
-          onKeyDown={onKeyDown}
-        />
-        <div className="meta">
-          <span>
-            {draft.length} / {config.maxUserChars}
-          </span>
-          <button type="button" className="button" disabled={inputLocked || !draft.trim()} onClick={() => void sendMessage()}>
-            Send
-          </button>
-        </div>
-        {notice ? <p className="error">{notice}</p> : null}
-      </div>
+      <ChatComposer
+        draft={draft}
+        onDraft={setDraft}
+        onSend={() => void sendMessage()}
+        disabled={inputLocked}
+        limit={config.maxUserChars}
+        notice={notice}
+      />
       <aside className="side">
         {showBoard ? (
           <section className="card feedback">

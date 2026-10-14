@@ -100,9 +100,12 @@ test("a chat message and a guess are bound on the way in, out, and when saved", 
 
   const messages = fs.readFileSync(path.join(root, "app/api/games/[id]/messages/route.ts"), "utf8");
   const guesses = fs.readFileSync(path.join(root, "app/api/games/[id]/guesses/route.ts"), "utf8");
+  const played = sourceFunction(fs.readFileSync(path.join(root, "lib/openrouter.ts"), "utf8"), "streamPlayedReply");
   assert.equal(messages.includes("${trimmed}"), false);
   assert.equal(messages.includes("${text}"), false);
-  assert.match(messages, /content: trimmed/);
+  assert.match(messages, /userText: trimmed/);
+  assert.match(played, /content: input\.userText/);
+  assert.equal(played.includes("${"), false);
   assert.equal(guesses.includes("${"), false);
   assert.match(guesses, /submitGuess\(id, user\.id, body\.modelId\)/);
 });
