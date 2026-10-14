@@ -6,6 +6,7 @@ import { countGptTokens } from "./gpt-tokens";
 import {
   blacklistReason,
   emitPaced,
+  canonicalProviderSlug,
   openRouterRequestOptions,
   outputAboveCount,
   outputGapPercent,
@@ -74,6 +75,21 @@ test("the blacklist reason keeps the date, model, provider, messages, and token 
     gptTokens: 300,
   });
   assert.match(compared, /subtracting 314 reported reasoning tokens/);
+});
+
+test("a display name becomes the provider slug used in provider.ignore", () => {
+  const directory = [
+    { slug: "amazon-bedrock", name: "Amazon Bedrock" },
+    { slug: "google-vertex", name: "Google" },
+    { slug: "anthropic", name: "Anthropic" },
+  ];
+  assert.equal(canonicalProviderSlug("Amazon Bedrock", directory), "amazon-bedrock");
+  assert.equal(canonicalProviderSlug("amazon-bedrock/global", directory), "amazon-bedrock");
+  assert.equal(canonicalProviderSlug("Google", directory), "google-vertex");
+  assert.equal(canonicalProviderSlug("Anthropic", directory), "anthropic");
+  assert.equal(canonicalProviderSlug("Amazon Bedrock"), "amazon-bedrock");
+  assert.equal(canonicalProviderSlug("Chutes"), "Chutes");
+  assert.equal(canonicalProviderSlug("  "), null);
 });
 
 test("reasoning calls send effort low and skip blacklisted providers", () => {

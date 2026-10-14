@@ -3,6 +3,7 @@ import "server-only";
 import { requireOwner } from "./admin-access";
 import { createServiceClient } from "./supabase/server";
 import { validProviderSlug } from "./provider-check";
+import { readServerEnv } from "./server-env";
 
 export type ProviderBook = {
   trusted: Set<string>;
@@ -43,6 +44,40 @@ function clientOrThrow() {
   const client = createServiceClient();
   if (!client) throw new Error("Supabase server env is missing.");
   return client;
+}
+
+export type ProviderIdentity = { slug: string; name: string };
+
+let providerDirectory: { at: number; rows: ProviderIdentity[] } | null = null;
+
+/** Name and slug for every OpenRouter provider. Cached for an hour. A failed read keeps the last list. */
+export async function loadProviderDirectory(): Promise<ProviderIdentity[]> {
+  if (providerDirectory && Date.now() - providerDirectory.at < 60 * 60 * 1000) return providerDirectory.rows;
+  const key = readServerEnv("OPENROUTER_API_KEY");
+  if (!key) return providerDirectory?.rows ?? [];
+  try {
+    const response = await fetch("https://openrouter.ai/api/v1/providers", {
+      headers: { accept: "application/json", authorization: `Bearer ${key}` },
+      cache: "no-store",
+      signal: AbortSignal.timeout(10_000),
+    });
+    if (!response.ok) return providerDirectory?.rows ?? [];
+    const body = (await response.json()) as { data?: unknown };
+    const rows = Array.isArray(body.data)
+      ? body.data.flatMap((row) => {
+          if (!row || typeof row !== "object") return [];
+          const record = row as { slug?: unknown; name?: unknown };
+          const slug = typeof record.slug === "string" ? record.slug.trim() : "";
+          const name = typeof record.name === "string" ? record.name.trim() : "";
+          return validProviderSlug(slug) ? [{ slug, name }] : [];
+        })
+      : [];
+    if (rows.length === 0) return providerDirectory?.rows ?? [];
+    providerDirectory = { at: Date.now(), rows };
+    return rows;
+  } catch {
+    return providerDirectory?.rows ?? [];
+  }
 }
 
 export async function loadProviderBook(): Promise<ProviderBook> {

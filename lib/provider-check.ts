@@ -116,6 +116,33 @@ export function validProviderSlug(value: string): boolean {
   return slug.length > 0 && slug.length <= 80 && !/[\s]/.test(slug);
 }
 
+/**
+ * The id OpenRouter expects in provider.ignore. The stream often sends the display name
+ * ("Amazon Bedrock"), which is not that id. A name with a space used to be dropped, so the
+ * first provider was never stored.
+ */
+export function canonicalProviderSlug(
+  label: string,
+  directory: readonly { slug: string; name: string }[] = [],
+): string | null {
+  const raw = label.trim();
+  if (!raw || raw.length > 120) return null;
+  const lower = raw.toLowerCase();
+  const known = directory
+    .map((item) => ({ slug: item.slug.trim(), name: item.name.trim() }))
+    .filter((item) => validProviderSlug(item.slug))
+    .sort((a, b) => b.slug.length - a.slug.length);
+  for (const item of known) {
+    const slug = item.slug.toLowerCase();
+    if (lower === slug || lower.startsWith(`${slug}/`)) return item.slug;
+  }
+  const named = known.find((item) => item.name.toLowerCase() === lower);
+  if (named) return named.slug;
+  if (validProviderSlug(raw)) return raw;
+  const guessed = lower.replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+  return validProviderSlug(guessed) ? guessed : null;
+}
+
 function plainObject(value: unknown): Record<string, unknown> {
   if (!value || typeof value !== "object" || Array.isArray(value)) return {};
   return value as Record<string, unknown>;

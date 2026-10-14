@@ -11,6 +11,7 @@ import {
   openRouterRequestOptions,
   outputAboveCount,
   providerSlug,
+  canonicalProviderSlug,
 } from "./provider-check";
 import type { ProviderBook, ProviderVerdict } from "./openrouter-providers";
 import { readServerEnv } from "./server-env";
@@ -129,8 +130,11 @@ export async function streamHiddenReply(input: {
   if (!apiKey) return { ok: false, paused: false, message: "Missing OpenRouter key.", sent };
 
   let book: ProviderBook = { trusted: new Set(), ignored: [] };
+  let directory: { slug: string; name: string }[] = [];
   try {
-    book = await (await import("./openrouter-providers")).loadProviderBook();
+    const providers = await import("./openrouter-providers");
+    book = await providers.loadProviderBook();
+    directory = await providers.loadProviderDirectory();
   } catch {
     book = { trusted: new Set(), ignored: [] };
   }
@@ -150,6 +154,7 @@ export async function streamHiddenReply(input: {
       sent,
       ignore: ignored,
       trusted: book.trusted,
+      directory,
       onWord: input.onWord,
     });
     if (!outcome.ok) return outcome.reply;
@@ -206,6 +211,7 @@ async function oneCall(input: {
   sent: SentTurn[];
   ignore: string[];
   trusted: Set<string>;
+  directory: readonly { slug: string; name: string }[];
   onWord: (word: string) => void;
 }): Promise<Attempt> {
   let streamError: unknown = null;
@@ -233,7 +239,8 @@ async function oneCall(input: {
   function rememberSlug(value: unknown) {
     const found = providerSlug(value);
     if (!found || slug) return;
-    slug = found;
+    const canonical = canonicalProviderSlug(found, input.directory);
+    if (canonical) slug = canonical;
   }
 
   function startLiveIfTrusted() {
