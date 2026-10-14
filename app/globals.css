@@ -1345,10 +1345,15 @@ html[data-theme="dark"] .history-facts .board-chip.no-hints {
 .roster-sync-card .row { margin-top: 16px; }
 .roster-edit.card.roster-sync-card.roster-new-models { width: min(720px, calc(100vw - 48px)); }
 .roster-new-list { display: grid; gap: 12px; margin: 12px 0 0; }
-.roster-new-model { position: relative; display: grid; gap: 6px; padding-right: 44px; }
+.roster-new-model { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) 158px; column-gap: 16px; row-gap: 6px; align-items: start; padding-right: 16px; }
+.roster-new-model h3 { grid-column: 1; }
+.roster-new-model > p { grid-column: 1; }
 .roster-new-model h3,
 .roster-new-model p { margin: 0; }
 .roster-new-model p { overflow-wrap: anywhere; }
+.roster-new-picks { grid-column: 2; grid-row: 1 / span 6; display: grid; gap: 8px; align-content: start; padding-top: 36px; }
+.roster-new-picks label { gap: 4px; font-size: 13px; }
+.roster-new-picks select { padding: 6px 8px; }
 .roster-new-dismiss {
   position: absolute;
   top: 8px;
@@ -1357,6 +1362,10 @@ html[data-theme="dark"] .history-facts .board-chip.no-hints {
   height: 28px;
   padding: 0;
   line-height: 1;
+}
+@media (max-width: 560px) {
+  .roster-new-model { grid-template-columns: 1fr; padding-right: 44px; }
+  .roster-new-picks { grid-column: 1; grid-row: auto; grid-template-columns: 1fr 1fr; padding-top: 8px; }
 }
 .roster-form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 16px; }
 .roster-form .span-2 { grid-column: 1 / -1; }

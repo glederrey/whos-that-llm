@@ -17,10 +17,11 @@ import {
   parseModelFields,
   parseModelId,
   parseReleasedOn,
+  parseSize,
   releasedOnForYear,
   type RosterNotice,
 } from "./admin-model";
-import { difficultyFromStored, difficultyNumber, type Difficulty } from "./difficulty";
+import { difficultyFromStored, difficultyNumber, parseDifficulty, type Difficulty } from "./difficulty";
 import type { Region, Size } from "./game";
 import { readListPrice } from "./list-price";
 import { companyLogoPath } from "./logos";
@@ -278,7 +279,15 @@ export async function disableRosterModels(ids: string[]): Promise<boolean> {
 }
 
 export async function insertDiscoveredModels(
-  models: { id: string; name: string; releasedOn: string | null; inputUsdPerMtok: number | null; outputUsdPerMtok: number | null }[],
+  models: {
+    id: string;
+    name: string;
+    releasedOn: string | null;
+    inputUsdPerMtok: number | null;
+    outputUsdPerMtok: number | null;
+    size: string;
+    difficulty: string;
+  }[],
   companies: CompanyChoice[],
 ): Promise<number | null> {
   await requireOwner();
@@ -291,7 +300,9 @@ export async function insertDiscoveredModels(
     const id = modelIdFromOpenRouter(openrouterId);
     const company = companyForOrg(openrouterId.slice(0, openrouterId.indexOf("/")), companies);
     const name = model.name.trim().slice(0, 80);
-    if (!id || !company || !name) {
+    const size = parseSize(model.size);
+    const difficulty = parseDifficulty(model.difficulty);
+    if (!id || !company || !name || !size || !difficulty) {
       failed += 1;
       continue;
     }
@@ -301,9 +312,8 @@ export async function insertDiscoveredModels(
       openrouter_id: openrouterId,
       name,
       company_id: company.id,
-      // The table requires both. The row stays off until an admin reviews it.
-      size: "small",
-      difficulty: difficultyNumber.medium,
+      size,
+      difficulty: difficultyNumber[difficulty],
       open_weights: false,
       reasoning: false,
       provider_settings: {},

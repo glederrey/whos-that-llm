@@ -2,6 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { parseSize } from "@/lib/admin-model";
+import { parseDifficulty } from "@/lib/difficulty";
 import {
   createCategory,
   createRosterModel,
@@ -140,11 +142,14 @@ export async function searchNewModels(): Promise<NewModelsResult> {
   return { ok: true, models: planNewModels(rows, catalog.models, Math.floor(Date.now() / 1000)) };
 }
 
-export async function addNewRosterModels(handles: string[]): Promise<AddModelsResult> {
-  if (!Array.isArray(handles) || handles.some((handle) => typeof handle !== "string") || handles.length > 200) {
+export async function addNewRosterModels(picks: { id: string; size: string; difficulty: string }[]): Promise<AddModelsResult> {
+  if (!Array.isArray(picks) || picks.length > 200 || picks.some((pick) => !pick || typeof pick !== "object")) {
     return { ok: false, error: "Could not add those models." };
   }
-  if (handles.length === 0) return { ok: true, added: 0 };
+  if (picks.length === 0) return { ok: true, added: 0 };
+  if (picks.some((pick) => typeof pick.id !== "string" || typeof pick.size !== "string" || typeof pick.difficulty !== "string" || !parseSize(pick.size) || !parseDifficulty(pick.difficulty))) {
+    return { ok: false, error: "Choose a size and a difficulty for each model." };
+  }
   const catalog = await loadOpenRouterCatalog();
   if (!catalog.ok) return { ok: false, error: catalog.error };
   const { rows, companies } = await loadRoster();
@@ -152,12 +157,14 @@ export async function addNewRosterModels(handles: string[]): Promise<AddModelsRe
   const byId = new Map(planned.map((model) => [model.id, model]));
   const chosen = [];
   const seen = new Set<string>();
-  for (const handle of handles) {
-    const id = handle.trim();
+  for (const pick of picks) {
+    const id = pick.id.trim();
     if (seen.has(id)) continue;
     seen.add(id);
     const model = byId.get(id);
-    if (model) chosen.push(model);
+    const size = parseSize(pick.size);
+    const difficulty = parseDifficulty(pick.difficulty);
+    if (model && size && difficulty) chosen.push({ ...model, size, difficulty });
   }
   if (chosen.length === 0) return { ok: true, added: 0 };
   const added = await insertDiscoveredModels(
@@ -167,6 +174,8 @@ export async function addNewRosterModels(handles: string[]): Promise<AddModelsRe
       releasedOn: model.releasedOn,
       inputUsdPerMtok: model.inputUsdPerMtok,
       outputUsdPerMtok: model.outputUsdPerMtok,
+      size: model.size,
+      difficulty: model.difficulty,
     })),
     companies,
   );
