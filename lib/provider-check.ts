@@ -42,12 +42,21 @@ export function visibleOutput(output: number, reasoning: number): number {
 }
 
 /**
- * True when the provider's visible output is more than 10% above the gpt-tokenizer count.
- * Exactly 10% is kept. A tokenizer count above the reported output is kept: that is not hidden text.
+ * Extra tokens that are too few to judge. Four tokens on a short greeting is a tokenizer
+ * mismatch, not hidden text. The 10% rule applies once the gap is larger than this.
+ */
+export const outputGapSlack = 16;
+
+/**
+ * True when the provider's visible output is more than 10% above the gpt-tokenizer count
+ * and the gap is more than {@link outputGapSlack} tokens.
+ * Exactly 10% is kept. A gap of 16 tokens or fewer is kept. A tokenizer count above the
+ * reported output is kept: that is not hidden text.
  */
 export function outputAboveCount(gptTokens: number, output: number, reasoning: number): boolean {
   const visible = visibleOutput(output, reasoning);
-  return visible > gptTokens && visible * 10 > gptTokens * 11;
+  const gap = visible - gptTokens;
+  return gap > outputGapSlack && visible * 10 > gptTokens * 11;
 }
 
 export function outputGapPercent(gptTokens: number, output: number, reasoning: number): number {
@@ -74,7 +83,7 @@ export function blacklistReason(input: {
 }): string {
   const visible = visibleOutput(input.outputTokens, input.reasoningTokens);
   const lines = [
-    `Visible output is ${outputGapPercent(input.gptTokens, input.outputTokens, input.reasoningTokens)}% above the gpt-tokenizer count of the reply (threshold 10%).`,
+    `Visible output is ${outputGapPercent(input.gptTokens, input.outputTokens, input.reasoningTokens)}% above the gpt-tokenizer count of the reply (threshold 10%, and more than ${outputGapSlack} tokens).`,
   ];
   if (visible !== input.outputTokens) {
     lines.push(

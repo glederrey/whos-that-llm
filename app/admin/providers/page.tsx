@@ -28,7 +28,8 @@ export default async function ProvidersPage({
       <h1>OpenRouter providers</h1>
       <p className="muted">
         A reasoning reply from a provider we have not seen is held, counted, then stored here. Trusted providers stream
-        on the next call. A provider whose visible output is more than 10% above the gpt-tokenizer count is blacklisted
+        on the next call. A provider whose visible output is more than 10% above the gpt-tokenizer count, and more
+        than 16 tokens above it, is blacklisted
         and skipped. Deblacklist puts it back on trial.
       </p>
       {failed ? (

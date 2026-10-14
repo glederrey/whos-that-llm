@@ -22,15 +22,19 @@ test("visible output drops reported reasoning that sits inside the completion co
   assert.equal(visibleOutput(200, 400), 200);
 });
 
-test("a provider is blacklisted only when visible output is more than 10% above the count", () => {
+test("a provider is blacklisted only when visible output is more than 10% and more than 16 tokens above the count", () => {
   assert.equal(outputAboveCount(100, 110, 0), false);
-  assert.equal(outputAboveCount(100, 111, 0), true);
+  assert.equal(outputAboveCount(100, 111, 0), false);
+  assert.equal(outputAboveCount(100, 116, 0), false);
+  assert.equal(outputAboveCount(100, 117, 0), true);
+  assert.equal(outputAboveCount(28, 32, 0), false);
   assert.equal(outputAboveCount(14, 14, 0), false);
   assert.equal(outputAboveCount(180, 1000, 0), true);
   assert.equal(outputAboveCount(376, 690, 314), false);
   assert.equal(outputAboveCount(300, 690, 314), true);
   assert.equal(outputAboveCount(0, 0, 0), false);
-  assert.equal(outputAboveCount(0, 5, 0), true);
+  assert.equal(outputAboveCount(0, 5, 0), false);
+  assert.equal(outputAboveCount(0, 17, 0), true);
   assert.equal(outputGapPercent(180, 1000, 0), 456);
 });
 
@@ -55,6 +59,7 @@ test("the blacklist reason keeps the date, model, provider, messages, and token 
   assert.match(reason, /Reasoning tokens: 0/);
   assert.match(reason, /Cached tokens: 12/);
   assert.match(reason, /gpt-tokenizer: 180/);
+  assert.match(reason, /threshold 10%, and more than 16 tokens/);
   assert.match(reason, /Input:\nuser\nHello/);
   assert.match(reason, /Output:\nA short story/);
   const compared = blacklistReason({
