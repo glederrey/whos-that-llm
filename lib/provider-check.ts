@@ -43,20 +43,22 @@ export function visibleOutput(output: number, reasoning: number): number {
 
 /**
  * Extra tokens that are too few to judge. Four tokens on a short greeting is a tokenizer
- * mismatch, not hidden text. The 10% rule applies once the gap is larger than this.
+ * mismatch, not hidden text. The 20% rule applies once the gap is larger than this.
  */
 export const outputGapSlack = 16;
 
 /**
- * True when the provider's visible output is more than 10% above the gpt-tokenizer count
- * and the gap is more than {@link outputGapSlack} tokens.
- * Exactly 10% is kept. A gap of 16 tokens or fewer is kept. A tokenizer count above the
+ * True when the provider reported no reasoning and the visible output is more than 20%
+ * above the gpt-tokenizer count, and the gap is more than {@link outputGapSlack} tokens.
+ * A reported reasoning count is trusted: that provider is sending reasoning tokens.
+ * Exactly 20% is kept. A gap of 16 tokens or fewer is kept. A tokenizer count above the
  * reported output is kept: that is not hidden text.
  */
 export function outputAboveCount(gptTokens: number, output: number, reasoning: number): boolean {
+  if (reasoning > 0) return false;
   const visible = visibleOutput(output, reasoning);
   const gap = visible - gptTokens;
-  return gap > outputGapSlack && visible * 10 > gptTokens * 11;
+  return gap > outputGapSlack && visible * 5 > gptTokens * 6;
 }
 
 export function outputGapPercent(gptTokens: number, output: number, reasoning: number): number {
@@ -83,7 +85,7 @@ export function blacklistReason(input: {
 }): string {
   const visible = visibleOutput(input.outputTokens, input.reasoningTokens);
   const lines = [
-    `Visible output is ${outputGapPercent(input.gptTokens, input.outputTokens, input.reasoningTokens)}% above the gpt-tokenizer count of the reply (threshold 10%, and more than ${outputGapSlack} tokens).`,
+    `Visible output is ${outputGapPercent(input.gptTokens, input.outputTokens, input.reasoningTokens)}% above the gpt-tokenizer count of the reply (threshold 20%, and more than ${outputGapSlack} tokens).`,
   ];
   if (visible !== input.outputTokens) {
     lines.push(

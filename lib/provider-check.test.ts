@@ -22,16 +22,15 @@ test("visible output drops reported reasoning that sits inside the completion co
   assert.equal(visibleOutput(200, 400), 200);
 });
 
-test("a provider is blacklisted only when visible output is more than 10% and more than 16 tokens above the count", () => {
-  assert.equal(outputAboveCount(100, 110, 0), false);
-  assert.equal(outputAboveCount(100, 111, 0), false);
-  assert.equal(outputAboveCount(100, 116, 0), false);
-  assert.equal(outputAboveCount(100, 117, 0), true);
+test("a provider is blacklisted only when it reports no reasoning and the gap is more than 20% and more than 16 tokens", () => {
+  assert.equal(outputAboveCount(100, 120, 0), false);
+  assert.equal(outputAboveCount(100, 121, 0), true);
+  assert.equal(outputAboveCount(100, 117, 0), false);
   assert.equal(outputAboveCount(28, 32, 0), false);
   assert.equal(outputAboveCount(14, 14, 0), false);
   assert.equal(outputAboveCount(180, 1000, 0), true);
   assert.equal(outputAboveCount(376, 690, 314), false);
-  assert.equal(outputAboveCount(300, 690, 314), true);
+  assert.equal(outputAboveCount(300, 690, 314), false);
   assert.equal(outputAboveCount(0, 0, 0), false);
   assert.equal(outputAboveCount(0, 5, 0), false);
   assert.equal(outputAboveCount(0, 17, 0), true);
@@ -59,7 +58,7 @@ test("the blacklist reason keeps the date, model, provider, messages, and token 
   assert.match(reason, /Reasoning tokens: 0/);
   assert.match(reason, /Cached tokens: 12/);
   assert.match(reason, /gpt-tokenizer: 180/);
-  assert.match(reason, /threshold 10%, and more than 16 tokens/);
+  assert.match(reason, /threshold 20%, and more than 16 tokens/);
   assert.match(reason, /Input:\nuser\nHello/);
   assert.match(reason, /Output:\nA short story/);
   const compared = blacklistReason({
@@ -124,6 +123,10 @@ test("the provider page lists both tables and can clear a blacklist", () => {
   assert.match(page, /Trusted/);
   assert.match(page, /Deblacklist/);
   assert.match(page, /action=\{clearProvider\}/);
+  assert.match(page, /<th>Output<\/th>\s*<th>gpt-tokenizer<\/th>/);
+  assert.match(page, /visibleOutput/);
+  assert.match(page, /ProviderReason/);
+  assert.match(fs.readFileSync(path.join(root, "components/provider-reason.tsx"), "utf8"), /showModal/);
   assert.match(nav, /href="\/admin\/providers"/);
   assert.match(openrouter, /includeRawChunks: true/);
   assert.match(openrouter, /outputAboveCount/);

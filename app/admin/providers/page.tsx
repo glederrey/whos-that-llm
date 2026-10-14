@@ -1,7 +1,9 @@
 import { clearProvider } from "@/app/admin/actions";
+import { ProviderReason } from "@/components/provider-reason";
 import { SectionNav } from "@/components/section-nav";
 import { requireOwner } from "@/lib/admin-access";
 import { loadProviderRecords, type ProviderRecord } from "@/lib/openrouter-providers";
+import { visibleOutput } from "@/lib/provider-check";
 
 export const dynamic = "force-dynamic";
 
@@ -28,9 +30,9 @@ export default async function ProvidersPage({
       <h1>OpenRouter providers</h1>
       <p className="muted">
         A reasoning reply from a provider we have not seen is held, counted, then stored here. Trusted providers stream
-        on the next call. A provider whose visible output is more than 10% above the gpt-tokenizer count, and more
-        than 16 tokens above it, is blacklisted
-        and skipped. Deblacklist puts it back on trial.
+        on the next call. A provider that reports reasoning tokens is trusted. A provider that reports none is
+        blacklisted when the output, with reasoning removed, is more than 20% above the gpt-tokenizer count and more
+        than 16 tokens above it. Output in this table is that same count. Deblacklist puts a provider back on trial.
       </p>
       {failed ? (
         <p className="error" role="alert">
@@ -61,9 +63,9 @@ function ProviderTable({ rows, empty, blacklisted }: { rows: ProviderRecord[]; e
             <th>Model</th>
             <th>Updated</th>
             <th>Input</th>
-            <th>Output</th>
             <th>Reasoning</th>
             <th>Cached</th>
+            <th>Output</th>
             <th>gpt-tokenizer</th>
             <th>Log</th>
             {blacklisted ? <th></th> : null}
@@ -76,11 +78,11 @@ function ProviderTable({ rows, empty, blacklisted }: { rows: ProviderRecord[]; e
               <td>{row.model ?? "—"}</td>
               <td>{formatWhen(row.updatedAt)}</td>
               <td>{count(row.inputTokens)}</td>
-              <td>{count(row.outputTokens)}</td>
               <td>{count(row.reasoningTokens)}</td>
               <td>{count(row.cachedTokens)}</td>
+              <td>{visibleCount(row.outputTokens, row.reasoningTokens)}</td>
               <td>{count(row.gptTokens)}</td>
-              <td>{row.reason ? <Log reason={row.reason} /> : "—"}</td>
+              <td>{row.reason ? <ProviderReason reason={row.reason} /> : "—"}</td>
               {blacklisted ? (
                 <td>
                   <form action={clearProvider}>
@@ -99,13 +101,9 @@ function ProviderTable({ rows, empty, blacklisted }: { rows: ProviderRecord[]; e
   );
 }
 
-function Log({ reason }: { reason: string }) {
-  return (
-    <details>
-      <summary>Why</summary>
-      <pre className="provider-reason">{reason}</pre>
-    </details>
-  );
+function visibleCount(output: number | null, reasoning: number | null): string {
+  if (output === null) return "—";
+  return count(visibleOutput(output, reasoning ?? 0));
 }
 
 function count(value: number | null): string {
