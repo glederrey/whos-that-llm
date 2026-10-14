@@ -867,6 +867,7 @@ html[data-theme="dark"] .bubble.user { border-color: #0b4545; }
 }
 .token-lines p { margin: 0; }
 .token-lines p + p { margin-top: 4px; }
+.token-gap { height: 10px; }
 .chat-picker { display: grid; gap: 8px; }
 .chat-toolbar { display: flex; gap: 10px; align-items: end; flex-wrap: wrap; }
 .chat-search { display: flex; gap: 8px; align-items: end; flex: 1 1 320px; flex-wrap: wrap; }
@@ -1377,8 +1378,8 @@ html[data-theme="dark"] .history-facts .board-chip.no-hints {
 .roster-add > summary::before { content: "+"; display: inline-block; width: 1.2em; color: var(--mute); }
 .roster-add[open] > summary::before { content: "−"; }
 .roster-add > form { margin-top: 14px; }
-.roster-search { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-.roster-search input { flex: 1 1 260px; max-width: 420px; }
+.roster-search { display: block; }
+.roster-search input { width: 100%; max-width: none; }
 .roster-edit.card {
   margin: auto;
   width: min(920px, calc(100vw - 48px));

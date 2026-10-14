@@ -173,6 +173,15 @@ test("the model page keeps price updates and availability apart", () => {
   const css = fs.readFileSync(path.join(root, "app/globals.css"), "utf8");
 
   assert.match(page, /<RosterSync \/>/);
+  assert.match(page, /loadRoster\(\)/);
+  assert.match(page, /key=\{rosterStamp\(rows\)\}/);
+  const browser = fs.readFileSync(path.join(root, "components/roster-browser.tsx"), "utf8");
+  assert.match(browser, /searchRoster\(rows, query\)/);
+  assert.match(browser, /action=\{saveModel\}/);
+  assert.match(browser, /action=\{setModelEnabled\}/);
+  assert.doesNotMatch(browser, /useState\(rows\)|admin-roster|method="get"/);
+  assert.match(actions, /revalidatePath\("\/admin\/models"\)/);
+  assert.match(actions, /redirect\(/);
   assert.match(buttons, /Update prices/);
   assert.match(buttons, /Check availability/);
   assert.match(buttons, /updateRosterPrices\(\)/);

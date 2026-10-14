@@ -10,6 +10,8 @@ export type ReplyTokens = {
   input: number;
   output: number;
   sinceStart: number;
+  /** Running sum of completion tokens through this reply. */
+  outputTotal: number;
   /** OpenRouter prompt tokens for this call. Used to check the running sum, not as that sum. */
   rawPrompt: number;
   reasoning: number;
@@ -32,6 +34,7 @@ export function resentCompletion(output: number, reasoning: number): number {
 /** Input added by each reply. Reasoning that was not sent again is left out of the subtraction. Cache read is not used. */
 export function replyTokenLines(calls: MeasuredCall[]): ReplyTokens[] {
   let sinceStart = 0;
+  let outputTotal = 0;
   return calls.map((call, index) => {
     const prompt = shownCount(call.promptTokens);
     const output = shownCount(call.completionTokens);
@@ -41,10 +44,12 @@ export function replyTokenLines(calls: MeasuredCall[]): ReplyTokens[] {
       ? prompt - shownCount(previous.promptTokens) - resentCompletion(shownCount(previous.completionTokens), shownCount(previous.reasoningTokens))
       : prompt;
     sinceStart += input;
+    outputTotal += output;
     return {
       input,
       output,
       sinceStart,
+      outputTotal,
       rawPrompt: prompt,
       reasoning,
       cacheRead: shownCount(call.cacheReadTokens),
@@ -65,8 +70,12 @@ export function replyTokenTooltip(tokens: ReplyTokens): string[] {
   return [
     `Input tokens: ${count(tokens.input)}`,
     `Output tokens: ${count(tokens.output)}`,
-    `Input tokens since the start of the conversation: ${count(tokens.sinceStart)}`,
     `Reasoning tokens: ${count(tokens.reasoning)}`,
     `Cache read tokens: ${count(tokens.cacheRead)}`,
+    "",
+    `Prompt tokens: ${count(tokens.rawPrompt)}`,
+    `Total input tokens: ${count(tokens.sinceStart)}`,
+    `Total output tokens: ${count(tokens.outputTotal)}`,
+    `Total tokens: ${count(tokens.sinceStart + tokens.outputTotal)}`,
   ];
 }

@@ -35,7 +35,6 @@ function count(value: unknown): number {
 export function AdminChat({ models }: { models: ChatModelChoice[] }) {
   const [modelId, setModelId] = useState("");
   const [query, setQuery] = useState("");
-  const [applied, setApplied] = useState("");
   const [listOpen, setListOpen] = useState(false);
   const [messages, setMessages] = useState<ThreadMessage[]>([]);
   const [draft, setDraft] = useState("");
@@ -137,7 +136,7 @@ export function AdminChat({ models }: { models: ChatModelChoice[] }) {
   }
 
   let viewIndex = 0;
-  const shown = searchChatModels(models, applied);
+  const shown = searchChatModels(models, query);
   const selected = models.find((model) => model.id === modelId) ?? null;
 
   function openList() {
@@ -170,7 +169,6 @@ export function AdminChat({ models }: { models: ChatModelChoice[] }) {
             className="chat-search"
             onSubmit={(event) => {
               event.preventDefault();
-              setApplied(query);
               setListOpen(true);
             }}
           >
@@ -187,26 +185,12 @@ export function AdminChat({ models }: { models: ChatModelChoice[] }) {
                 disabled={busy}
                 onClick={() => setListOpen(true)}
                 onFocus={() => setListOpen(true)}
-                onChange={(event) => setQuery(event.target.value)}
-              />
-            </label>
-            <button className="button" type="submit" disabled={busy}>
-              Search
-            </button>
-            {applied ? (
-              <button
-                type="button"
-                className="button-quiet"
-                disabled={busy}
-                onClick={() => {
-                  setQuery("");
-                  setApplied("");
+                onChange={(event) => {
+                  setQuery(event.target.value);
                   setListOpen(true);
                 }}
-              >
-                Reset
-              </button>
-            ) : null}
+              />
+            </label>
           </form>
           <button type="button" className="button-quiet" onClick={resetThread} disabled={busy || messages.length === 0}>
             Clear
@@ -307,9 +291,9 @@ function ReplyDetails({ tokens, sent, promptTokens }: { tokens?: ReplyTokens; se
       </div>
       {tokens && tokensOpen ? (
         <div className="token-lines">
-          {replyTokenTooltip(tokens).map((line) => (
-            <p key={line}>{line}</p>
-          ))}
+          {replyTokenTooltip(tokens).map((line, index) =>
+            line ? <p key={line}>{line}</p> : <div key={`gap-${index}`} className="token-gap" />,
+          )}
         </div>
       ) : null}
       {sent && inputOpen ? (

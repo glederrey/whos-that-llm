@@ -19,37 +19,15 @@ import {
   releasedOnForYear,
   type RosterNotice,
 } from "./admin-model";
-import { difficultyFromStored, difficultyNumber, type Difficulty } from "./difficulty";
+import { difficultyFromStored, difficultyNumber } from "./difficulty";
 import type { Region, Size } from "./game";
+import type { CategoryRow, RosterRow } from "./roster-row";
+
+export type { CategoryRow, RosterRow } from "./roster-row";
 import { readListPrice } from "./list-price";
 import { companyLogoPath } from "./logos";
 import { countedPlayerId } from "./anonymize-account";
 import { presentLogo, serviceOrThrow } from "./rounds";
-
-export type RosterRow = {
-  id: string;
-  openrouterId: string;
-  name: string;
-  companyName: string;
-  region: Region;
-  year: string;
-  size: Size;
-  difficulty: Difficulty | null;
-  inputUsdPerMtok: number | null;
-  outputUsdPerMtok: number | null;
-  enabled: boolean;
-  logoUrl: string;
-  categoryIds: string[];
-  categoryNames: string;
-};
-
-export type CategoryRow = {
-  id: string;
-  name: string;
-  description: string;
-  companyId: string | null;
-  companyName: string | null;
-};
 
 export type AdminStats = {
   roster: number;

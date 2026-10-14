@@ -21,6 +21,7 @@ export function SpendActivityTable({ rows, week, month }: { rows: SpendRow[]; we
   const list = pageOf(ordered, page);
   const onSort = (column: SpendSortColumn) => setSort((current) => nextSpendSort(current, column));
   return (
+    <>
     <div className="card roster-card">
       <table className="roster compact">
         <thead>
@@ -60,6 +61,7 @@ export function SpendActivityTable({ rows, week, month }: { rows: SpendRow[]; we
           )}
         </tbody>
       </table>
+    </div>
       {ordered.length > 0 ? (
         <div className="row pager">
           <div className="row">
@@ -83,7 +85,7 @@ export function SpendActivityTable({ rows, week, month }: { rows: SpendRow[]; we
           </div>
         </div>
       ) : null}
-    </div>
+    </>
   );
 }
 

@@ -62,11 +62,14 @@ test("later input is the new player message, and reasoning that was not sent aga
   assert.deepEqual(replyTokenTooltip(views[1]), [
     "Input tokens: 180",
     "Output tokens: 0",
-    "Input tokens since the start of the conversation: 1,180",
     "Reasoning tokens: 8",
     "Cache read tokens: 0",
+    "",
+    "Prompt tokens: 1,200",
+    "Total input tokens: 1,180",
+    "Total output tokens: 50",
+    "Total tokens: 1,230",
   ]);
-  assert.equal(replyTokenTooltip(views[1]).some((line) => line.includes("1,200")), false);
   assert.notEqual(views[1].input, 1200 - 1000 - 50);
 });
 
