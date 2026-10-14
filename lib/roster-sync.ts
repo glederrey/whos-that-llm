@@ -1,6 +1,7 @@
 import { modelIdFromOpenRouter, validOpenRouterId } from "./admin-model";
 import { dollarsPerMillion } from "./list-price";
 import { releasedOnFromCreated } from "./openrouter-draft";
+import { lowReasoningSettings, reasoningSettingsNeeded } from "./provider-check";
 
 export type CatalogModel = {
   id: string;
@@ -200,6 +201,38 @@ export function planUnavailable(roster: SyncModel[], catalog: CatalogModel[]): A
     unavailable: unavailable.map((model) => ({ id: model.id, name: model.name })),
     disableIds: unavailable.filter((model) => model.enabled).map((model) => model.id),
   };
+}
+
+export type ReasoningRow = {
+  id: string;
+  openrouterId: string;
+  reasoning: boolean;
+  providerSettings: unknown;
+};
+
+export type ReasoningUpdate = {
+  id: string;
+  reasoning: boolean;
+  /** Set when a reasoning model still has empty provider settings. Null leaves the stored object alone. */
+  providerSettings: { reasoning: { effort: "low" } } | null;
+};
+
+/** Keep models.reasoning aligned with the catalog. An empty settings object on a reasoning model is filled with effort low. */
+export function planReasoningUpdates(roster: ReasoningRow[], catalog: CatalogModel[]): ReasoningUpdate[] {
+  const byId = catalogById(catalog);
+  const updates: ReasoningUpdate[] = [];
+  for (const row of roster) {
+    const remote = byId.get(row.openrouterId.trim());
+    if (!remote) continue;
+    const fill = reasoningSettingsNeeded(remote.reasoning, row.providerSettings);
+    if (remote.reasoning === row.reasoning && !fill) continue;
+    updates.push({
+      id: row.id,
+      reasoning: remote.reasoning,
+      providerSettings: fill ? lowReasoningSettings() : null,
+    });
+  }
+  return updates;
 }
 
 function catalogById(models: CatalogModel[]): Map<string, CatalogModel> {

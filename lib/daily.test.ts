@@ -195,6 +195,14 @@ test("daily stores one model per difficulty and does not reset play data", () =>
   assert.match(sql, /revoke all on table public\.daily_models from public, anon, authenticated/);
   assert.match(sql, /enable row level security/);
   assert.doesNotMatch(sql, /delete from|truncate|drop table|update public\.games|update public\.models|update public\.profiles/i);
-  const baseline = fs.readFileSync(path.join(root, "supabase/v0.2.sql"), "utf8");
-  assert.doesNotMatch(baseline, /daily_models/);
+  const previous = fs.readFileSync(path.join(root, "supabase/v0.2.sql"), "utf8");
+  assert.doesNotMatch(previous, /daily_models/);
+  const baseline = fs.readFileSync(path.join(root, "supabase/v0.3.sql"), "utf8");
+  assert.match(baseline, /create table public\.daily_models/);
+  assert.match(baseline, /create table public\.openrouter_providers/);
+  assert.match(baseline, /0032_openrouter_providers\.sql/);
+  assert.match(baseline, /Do not run 0028 through 0032 after this script/);
+  assert.match(baseline, /starting with 0033/);
+  assert.match(baseline, /to_char\(today, 'YYYY-MM-DD'\)/);
+  assert.doesNotMatch(baseline, /daily_key date/);
 });

@@ -14,7 +14,7 @@ There is no separate "who played when" table. `games.started_at` and `games.user
 
 Each round is one row in `games`. That row's `id` is the session id. The player's message and the model's reply are rows in `messages`, tied to that id by `game_id`. One turn is two rows with the same `turn`: `role = user` is what they sent, `role = assistant` is what the model answered.
 
-A user message is at most 500 characters. A reply is at most 1,000 tokens, about 4 KB. A full round is about 30 KB. Ten thousand rounds are about 300 MB.
+A user message is at most 500 characters. A reply is at most 2,000 tokens, about 8 KB. A full round is about 50 KB. Ten thousand rounds are about 500 MB.
 
 The text is kept. Later analysis reads `messages` joined to `games` on `game_id`. The admin round page also reads it, because a 1,000-token reply has room to say its own name. Score, guesses, and the leaderboard do not read `messages`, so a point does not depend on the text. Deleting an account clears that player's name from their games and leaves the rounds, messages, and guesses in place. Other players' rounds stay.
 
@@ -110,6 +110,26 @@ Editing `company_id`, `size`, `released_on`, or the company region applies to ne
 
 anon and authenticated cannot insert, update, or delete `models` or `companies`. The server key does that after the owner check. There is no public function for the private roster counts.
 
+### `openrouter_providers`
+
+One row per OpenRouter provider slug the server has judged. A missing slug has not been seen. `blacklisted` true is sent as `provider.ignore` on later calls. `0032_openrouter_providers.sql` adds the table, and `v0.3.sql` includes it. anon and authenticated cannot read or write it.
+
+| Column | Type | Notes |
+|---|---|---|
+| `slug` | text, pk | Provider slug OpenRouter returned, such as `chutes` |
+| `blacklisted` | boolean | True skips the provider. False is trusted and may stream |
+| `reason` | text, null | Written when the row is blacklisted. Date, model, provider, the input and output text, and the token counts |
+| `model` | text, null | OpenRouter model id on the call that wrote the row |
+| `input_text` | text, null | The system prompt and messages sent on that call |
+| `output_text` | text, null | The visible reply |
+| `input_tokens` | int, null | Reported prompt tokens |
+| `output_tokens` | int, null | Reported completion tokens |
+| `reasoning_tokens` | int, null | Reported reasoning tokens |
+| `cached_tokens` | int, null | Reported cache-read tokens |
+| `gpt_tokens` | int, null | gpt-tokenizer count of the visible reply |
+| `created_at` | timestamptz | First time this slug was stored |
+| `updated_at` | timestamptz | Last verdict. Clearing a blacklist updates this and leaves `reason` in place |
+
 ### `categories`
 
 The lobby and the leaderboard read this table. The built-in rows are seeded and cannot be deleted.
@@ -197,7 +217,7 @@ The hidden model for one difficulty on one UTC day. `games.daily_key` records th
 
 The first start of that day and difficulty inserts the row. The inserted model must have `difficulty <=` the chosen level, so Easy cannot store an Impossible model. A concurrent second start hits the primary key, does nothing, and reads the stored id. The next UTC day has no row yet, so each level draws again. anon and authenticated cannot read the table. The model id is the answer.
 
-`0030_daily_model.sql` adds the table and teaches `start_game` to fill `games.daily_key`. It turns Daily on and sets its blurb to **One round per difficulty. Everyone at that level gets the same model. A new puzzle tomorrow.** It does not rewrite games, models, or accounts. `v0.2.sql` stays the baseline and does not include this table. The lobby shows that sentence and leaves Daily open even before this migration is applied.
+`0030_daily_model.sql` adds the table and teaches `start_game` to fill `games.daily_key`. It turns Daily on and sets its blurb to **One round per difficulty. Everyone at that level gets the same model. A new puzzle tomorrow.** It does not rewrite games, models, or accounts. `v0.3.sql` includes this table. `v0.2.sql` does not, so a database created from that baseline still needs this migration. The lobby shows that sentence and leaves Daily open even before this migration is applied.
 
 `0014_delete_games_with_account.sql` put `games_user_id_fkey` back as `on delete cascade`. `0017_anonymize_games_on_account_delete.sql` replaces that with `on delete set null` and makes `games.user_id`, `games.username`, and `usage.user_id` nullable. The server clears `user_id` and `username` on that player's games, and clears `usage.user_id`, before it deletes the auth user. Messages and guesses stay, because they cascade from `games` only when a game row is deleted. `public.leaderboard()` skips games whose `user_id` or `username` is null, so a deleted player is not a blank row and is not pooled with other deleted players. Game, solve, token, and guess counts still include those rounds. Profile history reads `games.user_id`, so it does not. anon and authenticated still cannot delete these tables. The server action uses the service key after it has read the session.
 
@@ -207,7 +227,7 @@ The first start of that day and difficulty inserts the row. The inserted model m
 {
   "messageLimit": 10,
   "maxUserChars": 500,
-  "maxOutputTokens": 1000,
+  "maxOutputTokens": 2000,
   "modelBase": 2000,
   "regionPoints": 100,
   "companyPoints": 300,

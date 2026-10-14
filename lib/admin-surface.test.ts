@@ -80,7 +80,7 @@ test("OpenRouter spend is read at request time on the server", () => {
   assert.match(text, /\/activity`/);
   assert.match(text, /\/analytics\/query`/);
   assert.doesNotMatch(text, /sk-or-/);
-  for (const relative of ["app/admin/page.tsx", "app/admin/costs/page.tsx", "app/admin/games/page.tsx", "app/admin/modes/page.tsx"]) {
+  for (const relative of ["app/admin/page.tsx", "app/admin/costs/page.tsx", "app/admin/games/page.tsx", "app/admin/modes/page.tsx", "app/admin/chat/page.tsx"]) {
     const page = fs.readFileSync(path.join(root, relative), "utf8");
     assert.match(page, /export const dynamic = "force-dynamic"/, relative);
     assert.match(page, /await requireOwner\(\)/, relative);

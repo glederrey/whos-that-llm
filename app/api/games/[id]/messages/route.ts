@@ -1,5 +1,6 @@
 import { apiError, apiJson } from "@/lib/http";
-import { buildModelMessages, streamHiddenReply } from "@/lib/openrouter";
+import { streamPlayedReply } from "@/lib/openrouter";
+import { sseResponse } from "@/lib/reply-events";
 import { abortReply, claimCall, hiddenCall, readPublicGame, saveReply } from "@/lib/rounds";
 import { currentUser } from "@/lib/session";
 
@@ -20,50 +21,34 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
   const claimed = await claimCall(id, user.id);
   if (claimed) return apiError(claimed);
 
-  const encoder = new TextEncoder();
-  const stream = new ReadableStream({
-    async start(controller) {
-      const send = (payload: unknown) => {
-        controller.enqueue(encoder.encode(`data: ${JSON.stringify(payload)}\n\n`));
-      };
-      try {
-        const reply = await streamHiddenReply({
-          openrouterId: hidden.openrouterId,
-          providerSettings: hidden.providerSettings,
-          maxOutputTokens: hidden.game.rules.maxOutputTokens,
-          messages: buildModelMessages([
-            ...hidden.transcript,
-            { role: "user", content: trimmed },
-          ]),
-          onWord(word) {
-            send({ type: "word", text: word });
-          },
-        });
-        if (!reply.ok) {
-          await abortReply(id, user.id, reply.paused);
-          send({ type: "error", error: "upstream", paused: reply.paused });
-          return;
-        }
-        const saved = await saveReply(id, user.id, trimmed, reply.text, reply.usage);
-        if (saved) {
-          send({ type: "error", error: saved.error, paused: false });
-          return;
-        }
-        const game = await readPublicGame(id, user.id);
-        send({ type: "game", game });
-      } catch {
-        await abortReply(id, user.id, false);
-        send({ type: "error", error: "upstream", paused: false });
-      } finally {
-        controller.close();
+  return sseResponse(async (send) => {
+    try {
+      const reply = await streamPlayedReply({
+        openrouterId: hidden.openrouterId,
+        providerSettings: hidden.providerSettings,
+        reasoning: hidden.reasoning,
+        maxOutputTokens: hidden.game.rules.maxOutputTokens,
+        transcript: hidden.transcript,
+        userText: trimmed,
+        onWord(word) {
+          send({ type: "word", text: word });
+        },
+      });
+      if (!reply.ok) {
+        await abortReply(id, user.id, reply.paused);
+        send({ type: "error", error: "upstream", paused: reply.paused });
+        return;
       }
-    },
-  });
-
-  return new Response(stream, {
-    headers: {
-      "Content-Type": "text/event-stream",
-      "Cache-Control": "no-cache, no-transform",
-    },
+      const saved = await saveReply(id, user.id, trimmed, reply.text, reply.usage);
+      if (saved) {
+        send({ type: "error", error: saved.error, paused: false });
+        return;
+      }
+      const game = await readPublicGame(id, user.id);
+      send({ type: "game", game });
+    } catch {
+      await abortReply(id, user.id, false);
+      send({ type: "error", error: "upstream", paused: false });
+    }
   });
 }

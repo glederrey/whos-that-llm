@@ -38,7 +38,7 @@ There is no `rules/page.tsx`. There is no `me/page.tsx` in the first build.
 {
   messageLimit: 10,
   maxUserChars: 500,
-  maxOutputTokens: 1000,
+  maxOutputTokens: 2000,
   modelBase: 2000,
   regionPoints: 100,
   companyPoints: 300,

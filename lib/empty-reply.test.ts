@@ -20,14 +20,15 @@ test("a model reply is empty when it has no visible text", () => {
 
 test("play shows Empty message for a blank model reply only", () => {
   const reply = fs.readFileSync(path.join(root, "components/markdown-message.tsx"), "utf8");
+  const bubble = fs.readFileSync(path.join(root, "components/message-bubble.tsx"), "utf8");
   const board = fs.readFileSync(path.join(root, "components/round-board.tsx"), "utf8");
   const result = fs.readFileSync(path.join(root, "app/play/[gameId]/result/page.tsx"), "utf8");
   assert.match(reply, /if \(isEmptyModelReply\(text\)\) return <span className="empty-message">Empty message<\/span>/);
-  assert.match(board, /message\.role === "assistant" \? <ModelReply text=\{message\.content\} \/> : message\.content/);
-  assert.match(result, /message\.role === "assistant" \? <ModelReply text=\{message\.content\} \/> : message\.content/);
-  assert.match(board, /liveAssistant === ""/);
-  assert.match(board, /<ModelReply text=\{liveAssistant\} \/>/);
-  assert.equal(board.includes("<ModelReply text={liveUser}"), false);
+  assert.match(bubble, /content === ""/);
+  assert.match(bubble, /role === "assistant" \? \(\s*<ModelReply text=\{content\} \/>/);
+  assert.match(board, /<MessageBubble/);
+  assert.match(result, /<MessageBubble/);
+  assert.equal(bubble.includes("<ModelReply text={liveUser}"), false);
   assert.equal(result.includes("Empty message"), false);
 });
 

@@ -14,9 +14,11 @@ import {
   setRosterEnabled,
   updateCategory,
   updateRosterModel,
+  writeReasoningFlags,
   writeRosterPrices,
 } from "@/lib/admin-roster";
 import { loadOpenRouterCatalog } from "@/lib/openrouter-catalog";
+import { clearProviderBlacklist } from "@/lib/openrouter-providers";
 import {
   planNewModels,
   planPriceUpdates,
@@ -106,6 +108,12 @@ export async function deleteCategory(formData: FormData) {
   redirect(message ? `/admin/categories?error=${encodeURIComponent(message)}` : "/admin/categories");
 }
 
+export async function clearProvider(formData: FormData) {
+  const ok = await clearProviderBlacklist(text(formData, "slug"));
+  revalidatePath("/admin/providers");
+  redirect(ok ? "/admin/providers" : "/admin/providers?notice=save");
+}
+
 export async function updateRosterPrices(): Promise<PriceSyncResult> {
   const catalog = await loadOpenRouterCatalog();
   if (!catalog.ok) return { ok: false, error: catalog.error };
@@ -117,6 +125,9 @@ export async function updateRosterPrices(): Promise<PriceSyncResult> {
     revalidatePath("/admin");
     revalidatePath("/admin/models");
   }
+  const reasoning = await writeReasoningFlags(catalog.models);
+  if (!reasoning) return { ok: false, error: "Could not save which models can reason." };
+  revalidatePath("/admin/models");
   return { ok: true, changes: plan.changes, notUpdated: plan.notUpdated };
 }
 
@@ -132,6 +143,9 @@ export async function checkRosterAvailability(): Promise<AvailabilityResult> {
     revalidatePath("/admin");
     revalidatePath("/admin/models");
   }
+  const reasoning = await writeReasoningFlags(catalog.models);
+  if (!reasoning) return { ok: false, error: "Could not save which models can reason." };
+  revalidatePath("/admin/models");
   return { ok: true, unavailable: plan.unavailable };
 }
 
@@ -176,6 +190,7 @@ export async function addNewRosterModels(picks: { id: string; size: string; diff
       outputUsdPerMtok: model.outputUsdPerMtok,
       size: model.size,
       difficulty: model.difficulty,
+      reasoning: model.reasoning,
     })),
     companies,
   );

@@ -1,4 +1,6 @@
 import assert from "node:assert/strict";
+import fs from "node:fs";
+import path from "node:path";
 import test from "node:test";
 import type { ActivityPeriod } from "./openrouter-usage";
 import { nextSpendSort, sortSpendRows, spendRows, spendSortOf, type SpendRow } from "./spend-table";
@@ -43,4 +45,14 @@ test("sorting moves model rows and leaves the original order for the third click
   assert.deepEqual(namesOf(sortSpendRows(rows, { column: "paid7", dir: "desc" })), ["Beta", "Alpha", "Grok 4.7"]);
   assert.deepEqual(namesOf(sortSpendRows(rows, { column: "requests7", dir: "asc" })), ["Grok 4.7", "Beta", "Alpha"]);
   assert.deepEqual(namesOf(sortSpendRows(rows, { column: "tokens30", dir: "desc" })), ["Grok 4.7", "Alpha", "Beta"]);
+});
+
+test("cost paging stays on the page and leaves the sort alone", () => {
+  const source = fs.readFileSync(path.resolve(import.meta.dirname, "../components/spend-activity-table.tsx"), "utf8");
+  assert.match(source, /setPage\(list\.page - 1\)/);
+  assert.match(source, /setPage\(list\.page \+ 1\)/);
+  assert.match(source, /onSort = \(column: SpendSortColumn\) => setSort\(\(current\) => nextSpendSort\(current, column\)\)/);
+  assert.doesNotMatch(source, /<a |href=/);
+  const nav = fs.readFileSync(path.resolve(import.meta.dirname, "../components/section-nav.tsx"), "utf8");
+  assert.ok(nav.indexOf('href="/admin/categories"') < nav.indexOf('href="/admin/models"'));
 });

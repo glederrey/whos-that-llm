@@ -11,6 +11,7 @@ import {
   parseOpenRouterCatalog,
   planNewModels,
   planPriceUpdates,
+  planReasoningUpdates,
   planUnavailable,
   sameRosterModel,
   type CatalogModel,
@@ -167,6 +168,41 @@ test("price updates list changes and leave matching or unpriced models alone", (
   assert.equal(formatSyncPrice(null), "—");
 });
 
+test("a catalog reasoning object marks the model, and a missing one does not", () => {
+  const catalog = parseOpenRouterCatalog({
+    data: [
+      { id: "qwen/think", pricing: { prompt: "0.000001", completion: "0.000002" }, reasoning: { supported: true } },
+      { id: "qwen/present", pricing: {}, reasoning: { default_effort: "low" } },
+      { id: "qwen/off", pricing: {}, reasoning: null },
+      { id: "qwen/plain", pricing: {} },
+    ],
+  });
+  assert.deepEqual(
+    catalog?.map((model) => [model.id, model.reasoning]),
+    [
+      ["qwen/think", true],
+      ["qwen/present", true],
+      ["qwen/off", false],
+      ["qwen/plain", false],
+    ],
+  );
+  const updates = planReasoningUpdates(
+    [
+      { id: "think", openrouterId: "qwen/think", reasoning: false, providerSettings: {} },
+      { id: "present", openrouterId: "qwen/present", reasoning: true, providerSettings: { reasoning: { effort: "xhigh" } } },
+      { id: "off", openrouterId: "qwen/off", reasoning: true, providerSettings: { reasoning: { effort: "low" } } },
+      { id: "plain", openrouterId: "qwen/plain", reasoning: false, providerSettings: {} },
+      { id: "empty", openrouterId: "qwen/think", reasoning: true, providerSettings: {} },
+    ],
+    catalog ?? [],
+  );
+  assert.deepEqual(updates, [
+    { id: "think", reasoning: true, providerSettings: { reasoning: { effort: "low" } } },
+    { id: "off", reasoning: false, providerSettings: null },
+    { id: "empty", reasoning: true, providerSettings: { reasoning: { effort: "low" } } },
+  ]);
+});
+
 test("availability turns off models OpenRouter no longer lists", () => {
   const catalog: CatalogModel[] = [
     listed("openai/still", 1, 2),
@@ -315,6 +351,15 @@ test("the model page keeps price updates and availability apart", () => {
   const css = fs.readFileSync(path.join(root, "app/globals.css"), "utf8");
 
   assert.match(page, /<RosterSync \/>/);
+  assert.match(page, /loadRoster\(\)/);
+  assert.match(page, /key=\{rosterStamp\(rows\)\}/);
+  const browser = fs.readFileSync(path.join(root, "components/roster-browser.tsx"), "utf8");
+  assert.match(browser, /searchRoster\(rows, query\)/);
+  assert.match(browser, /action=\{saveModel\}/);
+  assert.match(browser, /action=\{setModelEnabled\}/);
+  assert.doesNotMatch(browser, /useState\(rows\)|admin-roster|method="get"/);
+  assert.match(actions, /revalidatePath\("\/admin\/models"\)/);
+  assert.match(actions, /redirect\(/);
   assert.match(buttons, /Update prices/);
   assert.match(buttons, /Check availability/);
   assert.match(buttons, /Search for new models/);
@@ -390,6 +435,9 @@ test("the model page keeps price updates and availability apart", () => {
   assert.match(insert, /difficulty: difficultyNumber\[difficulty\]/);
   assert.match(insert, /parseSize\(model\.size\)/);
   assert.match(insert, /parseDifficulty\(model\.difficulty\)/);
+  assert.match(insert, /reasoning: model\.reasoning/);
+  assert.match(insert, /provider_settings: model\.reasoning \? \{ reasoning: \{ effort: "low" \} \} : \{\}/);
+  assert.match(add, /reasoning: model\.reasoning/);
   assert.doesNotMatch(insert, /size: "small"|difficultyNumber\.medium/);
   assert.doesNotMatch(insert, /description|model_categories|resolveCompany|\.delete\(/);
 
