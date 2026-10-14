@@ -10,6 +10,7 @@ import {
   knownValues,
   missedGuesses,
   scoreRound,
+  scoreTokens,
   toPublicGame,
   tokenFactor,
   type FrozenModel,
@@ -72,6 +73,43 @@ test("a round started under the old numbers is scored with the current ones", ()
   assert.equal(current.hintCosts.company, 600);
   assert.equal(current.messageLimit, 12);
   assert.equal(current.hintsAllowed, false);
+});
+
+test("score tokens count the system prompt once, then only the new message", () => {
+  assert.deepEqual(scoreTokens([]), { inputTokens: 0, outputTokens: 0, tokens: 0, turns: [] });
+
+  const first = scoreTokens([{ inputTokens: 1000, outputTokens: 120 }]);
+  assert.deepEqual(first, {
+    inputTokens: 1000,
+    outputTokens: 120,
+    tokens: 1120,
+    turns: [{ inputTokens: 1000, outputTokens: 120 }],
+  });
+
+  const later = scoreTokens([
+    { inputTokens: 1000, outputTokens: 120 },
+    { inputTokens: 1250, outputTokens: 80 },
+    { inputTokens: 1480, outputTokens: 40 },
+  ]);
+  assert.equal(later.turns[1]?.inputTokens, 130);
+  assert.equal(later.turns[2]?.inputTokens, 150);
+  assert.equal(later.inputTokens, 1280);
+  assert.equal(later.outputTokens, 240);
+  assert.equal(later.tokens, 1520);
+  assert.equal(later.tokens, 1480 + 40);
+  assert.ok(later.tokens < 1000 + 120 + 1250 + 80 + 1480 + 40);
+});
+
+test("score tokens ignore reasoning and cache reads, and do not clamp a smaller later prompt", () => {
+  const turns: Array<{ inputTokens: number; outputTokens: number; reasoningTokens: number; cacheReadTokens: number }> = [
+    { inputTokens: 1000, outputTokens: 200, reasoningTokens: 400, cacheReadTokens: 700 },
+    { inputTokens: 1050, outputTokens: 40, reasoningTokens: 10, cacheReadTokens: 900 },
+  ];
+  const counted = scoreTokens(turns);
+  assert.equal(counted.turns[1]?.inputTokens, 1050 - 1000 - 200);
+  assert.equal(counted.outputTokens, 240);
+  assert.equal(counted.tokens, 1050 + 40);
+  assert.equal(scoreTokens([{ inputTokens: Number.NaN, outputTokens: 10 }]).tokens, 10);
 });
 
 test("the token factor is 10,000 divided by tokens, capped at 10", () => {

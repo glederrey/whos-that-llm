@@ -142,7 +142,7 @@ The token factor is 10,000 divided by the tokens the successful replies used, ca
 
 No-hint mode is the harder mode. The 2× applies only when the round was played in it. A round with a bought hint is the other mode.
 
-`tokens` is input tokens plus output tokens on successful calls only. Failed calls are left out. `reasoning_tokens` and `cache_read_tokens` are not added. Some providers already count reasoning inside `output_tokens`. A round with no stored reply has no score.
+`tokens` is the score's input plus each reply's completion tokens, on successful calls only, in the order they were stored. The first call's input is that call's full prompt, so the system prompt is inside it once. Each later call's input is this prompt minus the previous prompt minus the previous reply's output, which is the new player message. Failed calls are left out. `reasoning_tokens` are not added. `cache_read_tokens` are not added and not subtracted. `usage.input_tokens` stays the full prompt count OpenRouter returned. Some providers already count reasoning inside `output_tokens`. A round with no stored reply has no score.
 
 ```
 tokenFactor      = min(10, 10000 / tokens)   // 0 tokens is 10
@@ -158,7 +158,7 @@ score = max(0, round((base − penalties) * tokenFactor * noHintFactor * difficu
 
 `round` goes to the nearest integer. A half rounds up. A total below 0 after rounding is shown as 0.
 
-The numbers in that formula are the ones in `lib/config.ts`: `modelBase` (2000), `regionPoints` (100), `companyPoints` (300), `tokenScale` (10000), `tokenCap` (10), `hintCosts`, `wrongGuessCost` (100), `noHintMultiplier` (2), `difficultyMultipliers` (Easy 0.5, Medium 1, Hard 2, Impossible 3), and `messageLimit` (10, how many replies a round allows). A round scores with the current numbers when it ends, so a round that started under the old formula is scored with the new one. It keeps the `messageLimit` it froze.
+The numbers in that formula are the ones in `lib/config.ts`: `modelBase` (2000), `regionPoints` (100), `companyPoints` (300), `tokenScale` (10000), `tokenCap` (10), `hintCosts`, `wrongGuessCost` (100), `noHintMultiplier` (2), `difficultyMultipliers` (Easy 0.5, Medium 1, Hard 2, Impossible 3), and `messageLimit` (10, how many replies a round allows). A round scores with the current numbers when it ends, so a round that started under the old formula is scored with the new one. It keeps the `messageLimit` it froze. A round that has already finished keeps the score stored on it. That score is not rewritten, and the leaderboard is not rebuilt.
 
 A short reply raises the score, because `10000 / tokens` gets large. The factor stops at 10. Past 10,000 tokens it falls below 1.
 
@@ -182,7 +182,7 @@ On message 1 the player names DeepSeek V4 Pro. Company and region both miss. Tha
 
 On message 2 they name Claude Sonnet 5.5. The round is solved. The base is 2000. The region and the company do not add on top. The correct name is not a wrong guess. The earlier wrong name still is.
 
-The two successful replies used 500 tokens, input and output together. One hint was bought, so the round is not in no-hint mode. 500 is under 1,000, so the token factor is the cap.
+The score counted 500 tokens from the two successful replies. One hint was bought, so the round is not in no-hint mode. 500 is under 1,000, so the token factor is the cap.
 
 ```
 base      = 2000
@@ -308,7 +308,7 @@ The token factor is 10,000 divided by the tokens the successful replies used, ca
 
 No-hint mode is the harder mode. The 2× applies only when the round was played in it. A round with a bought hint is the other mode.
 
-`tokens` is input tokens plus output tokens on successful calls only. Failed calls are left out. `reasoning_tokens` and `cache_read_tokens` are not added. Some providers already count reasoning inside `output_tokens`. A round with no stored reply has no score.
+`tokens` is the score's input plus each reply's completion tokens, on successful calls only, in the order they were stored. The first call's input is that call's full prompt, so the system prompt is inside it once. Each later call's input is this prompt minus the previous prompt minus the previous reply's output, which is the new player message. Failed calls are left out. `reasoning_tokens` are not added. `cache_read_tokens` are not added and not subtracted. `usage.input_tokens` stays the full prompt count OpenRouter returned. Some providers already count reasoning inside `output_tokens`. A round with no stored reply has no score.
 
 ```
 tokenFactor   = min(10, 10000 / tokens)   // 0 tokens is 10

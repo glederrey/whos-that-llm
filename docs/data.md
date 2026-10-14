@@ -289,15 +289,15 @@ One row per OpenRouter call, including failures.
 | `user_id` | uuid, null | Cleared when the account is deleted. The row stays on `game_id` |
 | `model_id` | text | |
 | `openrouter_generation_id` | text, null | |
-| `input_tokens` | int | default 0 |
-| `output_tokens` | int | |
+| `input_tokens` | int | default 0. Full prompt count OpenRouter returned, including the system prompt and resent history. The score does not replace this number |
+| `output_tokens` | int | Completion tokens for that reply |
 | `reasoning_tokens` | int | Admin cost fact. Not added into the score |
-| `cache_read_tokens` | int | Not added into the score |
+| `cache_read_tokens` | int | Not added into the score, and not subtracted from it |
 | `cost_usd` | numeric | 0 when the call failed |
 | `error_code` | text, null | |
 | `created_at` | timestamptz | |
 
-The score sums `input_tokens + output_tokens` where `error_code` is null.
+The score reads successful rows (`error_code` is null) in `created_at` order when a round ends. The count is `scoreTokens` in `lib/game.ts`. The first row counts its full `input_tokens`. Each later row counts `input_tokens` minus the previous row's `input_tokens` minus the previous row's `output_tokens`. Every row's `output_tokens` is added. A finished game keeps `games.score`. Those rows are not rewritten.
 
 ## Profile trigger
 

@@ -60,8 +60,10 @@ export default function ScoringPage() {
           <li>
             <strong>3. Tokens</strong>
             <span>
-              Multiply the subtotal by {n(config.tokenScale)} divided by the tokens the replies used, and cap that factor at ×{config.tokenCap}.
-              Input and output tokens both count. {n(config.tokenScale)} tokens is ×1. {n(capAt)} tokens or fewer, including 0, is ×{config.tokenCap}.
+              Multiply the subtotal by {n(config.tokenScale)} divided by the tokens that count, and cap that factor at ×{config.tokenCap}.
+              The first reply counts its full prompt, so the instructions are in that number once. Each later reply counts only the new
+              message: this prompt, minus the previous prompt, minus the previous reply. The model's reply counts in full every time.
+              Earlier messages are not counted again. {n(config.tokenScale)} tokens is ×1. {n(capAt)} tokens or fewer, including 0, is ×{config.tokenCap}.
               Going past {n(config.tokenScale)} tokens shrinks the score below ×1, so {n(config.tokenScale * 2)} tokens is ×0.5.
             </span>
           </li>
@@ -95,7 +97,7 @@ export default function ScoringPage() {
       </p>
       <h2>One round</h2>
       <p>
-        The replies used {n(exampleTokens)} tokens, counting input and output. You bought the size hint and named one wrong model before the
+        The replies counted as {n(exampleTokens)} tokens. You bought the size hint and named one wrong model before the
         right one. You were not in no-hint mode, because you bought a hint. The round was medium, so the difficulty multiplier is{" "}
         {config.difficultyMultipliers.medium}×.
       </p>

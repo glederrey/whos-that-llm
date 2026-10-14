@@ -14,6 +14,7 @@ import {
   playableHints,
   knownValues,
   scoreRound,
+  scoreTokens,
   toPublicGame,
   type FrozenModel,
   type GameStatus,
@@ -594,11 +595,15 @@ async function scoreFrom(client: SupabaseClient, game: GameRow, guesses: GuessFl
     .from("usage")
     .select("input_tokens, output_tokens")
     .eq("game_id", game.id)
-    .is("error_code", null);
-  const tokens = (data ?? []).reduce(
-    (sum, row) => sum + Number(row.input_tokens ?? 0) + Number(row.output_tokens ?? 0),
-    0,
-  );
+    .is("error_code", null)
+    .order("created_at", { ascending: true })
+    .order("id", { ascending: true });
+  const tokens = scoreTokens(
+    (data ?? []).map((row) => ({
+      inputTokens: Number(row.input_tokens ?? 0),
+      outputTokens: Number(row.output_tokens ?? 0),
+    })),
+  ).tokens;
   return scoreRound({
     rules: game.rules,
     namedModel,
