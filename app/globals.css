@@ -853,13 +853,8 @@ html[data-theme="dark"] {
 html[data-theme="dark"] .bubble.user { border-color: #0b4545; }
 .bubble.assistant { white-space: normal; justify-self: start; }
 .empty-message { color: var(--mute); }
-.reply-tip { position: relative; display: grid; justify-self: start; max-width: min(72ch, 88%); }
-.reply-tip .bubble { max-width: none; min-height: 46px; cursor: help; }
-.reply-tooltip {
-  position: absolute;
-  z-index: 3;
-  left: 0;
-  top: 100%;
+.reply-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.token-lines {
   width: max-content;
   max-width: min(420px, 80vw);
   margin: 0;
@@ -868,11 +863,10 @@ html[data-theme="dark"] .bubble.user { border-color: #0b4545; }
   color: var(--text);
   border: 1px solid var(--line-strong);
   border-radius: var(--radius-sm);
-  box-shadow: var(--lift);
   font-size: 13px;
 }
-.reply-tooltip p { margin: 0; }
-.reply-tooltip p + p { margin-top: 4px; }
+.token-lines p { margin: 0; }
+.token-lines p + p { margin-top: 4px; }
 .chat-picker { display: grid; gap: 8px; }
 .chat-toolbar { display: flex; gap: 10px; align-items: end; flex-wrap: wrap; }
 .chat-search { display: flex; gap: 8px; align-items: end; flex: 1 1 320px; flex-wrap: wrap; }
@@ -889,7 +883,6 @@ html[data-theme="dark"] .bubble.user { border-color: #0b4545; }
 }
 .chat-models .muted { margin: 8px; }
 .reply-block { display: grid; gap: 6px; justify-self: start; max-width: min(72ch, 88%); }
-.reply-block .reply-tip { max-width: none; }
 .sent-input { display: grid; gap: 6px; justify-items: start; }
 .sent-input .button-quiet { padding: 4px 10px; font-size: 13px; }
 .sent-body {

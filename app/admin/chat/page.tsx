@@ -24,7 +24,7 @@ export default async function AdminChatPage() {
       <h1>Chat</h1>
       <p className="muted">
         Pick a roster model and talk to it the same way a round does. The thread stays on this page. It is not saved,
-        and it does not count as a game. Hover or tap a reply for tokens. Show input on a reply to see the text that was sent.
+        and it does not count as a game. Show tokens or Show input on a reply to see the counts or the text that was sent.
       </p>
       <AdminChat models={models} />
     </div>

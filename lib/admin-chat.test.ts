@@ -123,7 +123,8 @@ test("the admin chat reuses the play send path and writes nothing", () => {
   assert.match(page, /export const dynamic = "force-dynamic"/);
   assert.match(chat, /MessageBubble/);
   assert.match(chat, /readReplyEvents/);
-  assert.match(chat, /ReplyTokenTip/);
+  assert.match(chat, /Show tokens/);
+  assert.doesNotMatch(chat, /ReplyTokenTip|reply-tooltip/);
   assert.doesNotMatch(chat, /sessionStorage|localStorage|messageLimit|maxUserChars|admin-access|admin-roster/);
   assert.match(board, /MessageBubble/);
   assert.match(board, /readReplyEvents/);

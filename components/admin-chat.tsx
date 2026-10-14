@@ -3,11 +3,10 @@
 import { useEffect, useRef, useState } from "react";
 import { readSentTurns, searchChatModels, transcriptForCall, type SentTurn } from "@/lib/admin-chat";
 import { readReplyEvents } from "@/lib/reply-events";
-import { replyTokenLines } from "@/lib/reply-tokens";
+import { replyTokenLines, replyTokenTooltip, type ReplyTokens } from "@/lib/reply-tokens";
 import { ChatComposer } from "./chat-composer";
 import { CompanyLogo } from "./company-logo";
 import { MessageBubble } from "./message-bubble";
-import { ReplyTokenTip } from "./reply-token-tip";
 
 export type ChatModelChoice = {
   id: string;
@@ -251,10 +250,8 @@ export function AdminChat({ models }: { models: ChatModelChoice[] }) {
             viewIndex += 1;
             return (
               <div key={message.id} className="reply-block">
-                <ReplyTokenTip tokens={tokens}>
-                  <MessageBubble role="assistant" content={message.content} />
-                </ReplyTokenTip>
-                {message.sent ? <SentInput sent={message.sent} promptTokens={tokens.rawPrompt} /> : null}
+                <MessageBubble role="assistant" content={message.content} />
+                <ReplyDetails tokens={tokens} sent={message.sent} promptTokens={tokens.rawPrompt} />
               </div>
             );
           }
@@ -262,7 +259,7 @@ export function AdminChat({ models }: { models: ChatModelChoice[] }) {
             return (
               <div key={message.id} className="reply-block">
                 <MessageBubble role="assistant" content={message.content} />
-                <SentInput sent={message.sent} />
+                <ReplyDetails sent={message.sent} />
               </div>
             );
           }
@@ -290,14 +287,32 @@ function ModelLabel({ model }: { model: ChatModelChoice }) {
   );
 }
 
-function SentInput({ sent, promptTokens }: { sent: SentTurn[]; promptTokens?: number }) {
-  const [open, setOpen] = useState(false);
+function ReplyDetails({ tokens, sent, promptTokens }: { tokens?: ReplyTokens; sent?: SentTurn[]; promptTokens?: number }) {
+  const [tokensOpen, setTokensOpen] = useState(false);
+  const [inputOpen, setInputOpen] = useState(false);
+  if (!tokens && !sent?.length) return null;
   return (
     <div className="sent-input">
-      <button type="button" className="button-quiet" onClick={() => setOpen((value) => !value)}>
-        {open ? "Hide input" : "Show input"}
-      </button>
-      {open ? (
+      <div className="reply-actions">
+        {tokens ? (
+          <button type="button" className="button-quiet" onClick={() => setTokensOpen((value) => !value)}>
+            {tokensOpen ? "Hide tokens" : "Show tokens"}
+          </button>
+        ) : null}
+        {sent?.length ? (
+          <button type="button" className="button-quiet" onClick={() => setInputOpen((value) => !value)}>
+            {inputOpen ? "Hide input" : "Show input"}
+          </button>
+        ) : null}
+      </div>
+      {tokens && tokensOpen ? (
+        <div className="token-lines">
+          {replyTokenTooltip(tokens).map((line) => (
+            <p key={line}>{line}</p>
+          ))}
+        </div>
+      ) : null}
+      {sent && inputOpen ? (
         <div className="sent-body">
           {promptTokens !== undefined ? <p className="muted">Prompt tokens: {promptTokens.toLocaleString("en-US")}</p> : null}
           {sent.map((turn, index) => (

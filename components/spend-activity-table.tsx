@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { compact, usd } from "@/lib/admin-metrics";
+import { pageOf } from "@/lib/roster-list";
 import { nextSpendSort, sortSpendRows, type SpendRow, type SpendSide, type SpendSort, type SpendSortColumn } from "@/lib/spend-table";
 
 const metricColumns: { column: SpendSortColumn; label: string; hint: string }[] = [
@@ -15,7 +16,9 @@ const metricColumns: { column: SpendSortColumn; label: string; hint: string }[] 
 
 export function SpendActivityTable({ rows, week, month }: { rows: SpendRow[]; week: SpendSide; month: SpendSide }) {
   const [sort, setSort] = useState<SpendSort>(null);
+  const [page, setPage] = useState(1);
   const ordered = sortSpendRows(rows, sort);
+  const list = pageOf(ordered, page);
   const onSort = (column: SpendSortColumn) => setSort((current) => nextSpendSort(current, column));
   return (
     <div className="card roster-card">
@@ -46,7 +49,7 @@ export function SpendActivityTable({ rows, week, month }: { rows: SpendRow[]; we
                 <Cells row={week} />
                 <Cells row={month} />
               </tr>
-              {ordered.map((row) => (
+              {list.rows.map((row) => (
                 <tr key={row.slug}>
                   <td title={row.slug}>{row.name}</td>
                   <Cells row={row.week} />
@@ -57,6 +60,29 @@ export function SpendActivityTable({ rows, week, month }: { rows: SpendRow[]; we
           )}
         </tbody>
       </table>
+      {ordered.length > 0 ? (
+        <div className="row pager">
+          <div className="row">
+            {list.page > 1 ? (
+              <button type="button" className="button-quiet" onClick={() => setPage(list.page - 1)}>
+                Previous
+              </button>
+            ) : (
+              <span className="button-quiet is-disabled">Previous</span>
+            )}
+            <span className="muted">
+              Page {list.page} of {list.pageCount}
+            </span>
+            {list.page < list.pageCount ? (
+              <button type="button" className="button-quiet" onClick={() => setPage(list.page + 1)}>
+                Next
+              </button>
+            ) : (
+              <span className="button-quiet is-disabled">Next</span>
+            )}
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
