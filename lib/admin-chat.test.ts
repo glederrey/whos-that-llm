@@ -67,10 +67,42 @@ test("later input is the new player message, and reasoning that was not sent aga
     "",
     "Prompt tokens: 1,200",
     "Total input tokens: 1,180",
-    "Total output tokens: 50",
-    "Total tokens: 1,230",
+    "Total output tokens: 20",
+    "Total tokens: 1,200",
   ]);
   assert.notEqual(views[1].input, 1200 - 1000 - 50);
+});
+
+test("reasoning inside the completion count is left out of the output lines", () => {
+  const views = replyTokenLines([
+    { promptTokens: 341, completionTokens: 204, reasoningTokens: 193, cacheReadTokens: 256 },
+    { promptTokens: 360, completionTokens: 40, reasoningTokens: 10 },
+  ]);
+  assert.equal(views[0].output, 204);
+  assert.equal(views[0].reasoning, 193);
+  assert.equal(views[0].outputTotal, 11);
+  assert.equal(views[1].outputTotal, 11 + (40 - 10));
+  assert.equal(inputSinceStartMatchesPrompt(views), true);
+  assert.deepEqual(replyTokenTooltip(views[0]), [
+    "Input tokens: 341",
+    "Output tokens: 11",
+    "Reasoning tokens: 193",
+    "Cache read tokens: 256",
+    "",
+    "Prompt tokens: 341",
+    "Total input tokens: 341",
+    "Total output tokens: 11",
+    "Total tokens: 352",
+  ]);
+  assert.equal(replyTokenTooltip(views[1])[1], "Output tokens: 30");
+  assert.equal(replyTokenTooltip(views[1])[7], "Total output tokens: 41");
+});
+
+test("reasoning larger than the completion stays out of the output subtraction", () => {
+  const views = replyTokenLines([{ promptTokens: 1000, completionTokens: 200, reasoningTokens: 400 }]);
+  assert.equal(views[0].outputTotal, 200);
+  assert.equal(replyTokenTooltip(views[0])[1], "Output tokens: 200");
+  assert.equal(replyTokenTooltip(views[0])[2], "Reasoning tokens: 400");
 });
 
 test("a reply whose completion includes reasoning does not make the next input negative", () => {
@@ -142,6 +174,23 @@ test("the admin chat reuses the play send path and writes nothing", () => {
   assert.match(chat, /onFocus=\{\(\) => setListOpen\(true\)\}/);
   assert.match(chat, /\{listOpen \?/);
   assert.match(chat, /selected && !listOpen/);
+});
+
+test("the message box grows with the text on chat and on a round", () => {
+  const composer = fs.readFileSync(path.join(root, "components/chat-composer.tsx"), "utf8");
+  const css = fs.readFileSync(path.join(root, "app/globals.css"), "utf8");
+  const chat = fs.readFileSync(path.join(root, "components/admin-chat.tsx"), "utf8");
+  const board = fs.readFileSync(path.join(root, "components/round-board.tsx"), "utf8");
+  assert.match(composer, /field\.scrollHeight/);
+  assert.match(composer, /overflowY = capped \? "auto" : "hidden"/);
+  assert.match(chat, /<ChatComposer/);
+  assert.match(board, /<ChatComposer/);
+  assert.match(css, /\.composer textarea \{[^}]*resize: none;[^}]*overflow-y: hidden;/);
+  assert.match(css, /\.composer textarea \{[^}]*max-height: 28rem;/);
+  assert.doesNotMatch(css, /\.composer textarea \{[^}]*resize: vertical/);
+  assert.match(css, /\.bubble \{[^}]*width: fit-content;[^}]*max-width: 70%;/);
+  assert.match(css, /\.reply-block \{[^}]*max-width: 70%;/);
+  assert.match(css, /\.bubble, \.reply-block \{ max-width: 94%; \}/);
 });
 
 test("search matches a model name or company and keeps the list in order", () => {

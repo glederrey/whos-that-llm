@@ -8,9 +8,10 @@ export type MeasuredCall = {
 export type ReplyTokens = {
   /** New input for this reply. The first prompt, or this prompt minus the previous prompt and the previous reply text that was sent again. */
   input: number;
+  /** OpenRouter completion count. Reasoning is inside this when it does not exceed it. */
   output: number;
   sinceStart: number;
-  /** Running sum of completion tokens through this reply. */
+  /** Running sum of completion tokens, with reasoning that was inside the count removed. */
   outputTotal: number;
   /** OpenRouter prompt tokens for this call. Used to check the running sum, not as that sum. */
   rawPrompt: number;
@@ -44,7 +45,7 @@ export function replyTokenLines(calls: MeasuredCall[]): ReplyTokens[] {
       ? prompt - shownCount(previous.promptTokens) - resentCompletion(shownCount(previous.completionTokens), shownCount(previous.reasoningTokens))
       : prompt;
     sinceStart += input;
-    outputTotal += output;
+    outputTotal += resentCompletion(output, reasoning);
     return {
       input,
       output,
@@ -69,7 +70,7 @@ export function replyTokenTooltip(tokens: ReplyTokens): string[] {
   const count = (value: number) => value.toLocaleString("en-US");
   return [
     `Input tokens: ${count(tokens.input)}`,
-    `Output tokens: ${count(tokens.output)}`,
+    `Output tokens: ${count(resentCompletion(tokens.output, tokens.reasoning))}`,
     `Reasoning tokens: ${count(tokens.reasoning)}`,
     `Cache read tokens: ${count(tokens.cacheRead)}`,
     "",
