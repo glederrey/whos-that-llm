@@ -39,7 +39,7 @@ export type CallTokens = {
 export type SentTurn = { role: "system" | "user" | "assistant"; content: string };
 
 export type StreamedReply =
-  | { ok: true; text: string; usage: CallUsage; tokens: CallTokens; sent: SentTurn[]; gptTokens: number }
+  | { ok: true; text: string; usage: CallUsage; tokens: CallTokens; sent: SentTurn[]; gptTokens: number; provider: string | null }
   | { ok: false; paused: boolean; message: string; sent: SentTurn[] };
 
 /** The system prompt and messages passed to the model for one call. */
@@ -295,6 +295,7 @@ async function oneCall(input: {
     text,
     tokens,
     gptTokens: countGptTokens(text),
+    provider: slug,
     usage: {
       inputTokens: usage.inputTokens ?? numberFrom(accounted.promptTokens),
       outputTokens: usage.outputTokens ?? numberFrom(accounted.completionTokens),

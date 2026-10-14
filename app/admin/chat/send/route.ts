@@ -50,6 +50,7 @@ export async function POST(request: Request) {
         reasoningTokens: reply.tokens.reasoning,
         cacheReadTokens: reply.tokens.cacheRead,
         gptTokens: reply.gptTokens,
+        provider: reply.provider,
         sent: reply.sent,
       });
     } catch {

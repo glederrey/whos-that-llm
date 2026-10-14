@@ -95,6 +95,7 @@ test("reasoning inside the completion count is left out of the output lines", ()
     "Total tokens: 352",
   ]);
   assert.equal(replyTokenTooltip({ ...views[0], gptTokens: 11 })[2], "gpt-tokenizer: 11");
+  assert.equal(replyTokenTooltip({ ...views[0], gptTokens: 11, provider: "chutes" })[3], "Provider: chutes");
   assert.equal(replyTokenTooltip(views[1])[1], "Output tokens: 30");
   assert.equal(replyTokenTooltip(views[1])[7], "Total output tokens: 41");
 });
@@ -188,8 +189,11 @@ test("the admin chat reuses the play send path and writes nothing", () => {
   assert.match(openrouter, /outputTokens: usage\.outputTokens \?\? numberFrom\(accounted\.completionTokens\)/);
   assert.match(route, /sent: reply\.sent/);
   assert.match(route, /gptTokens: reply\.gptTokens/);
+  assert.match(route, /provider: reply\.provider/);
   assert.match(chat, /gptTokens: count\(event\.gptTokens\)/);
   assert.match(chat, /gptTokens: message\.gptTokens/);
+  assert.match(chat, /provider: event\.provider/);
+  assert.match(chat, /provider: message\.provider/);
   assert.doesNotMatch(game, /reply\.sent/);
   assert.match(chat, /CompanyLogo/);
   assert.match(chat, /Show input/);
