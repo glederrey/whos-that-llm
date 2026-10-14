@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { transcriptForCall } from "@/lib/admin-chat";
+import { readSentTurns, searchChatModels, transcriptForCall, type SentTurn } from "@/lib/admin-chat";
 import { readReplyEvents } from "@/lib/reply-events";
 import { replyTokenLines } from "@/lib/reply-tokens";
 import { ChatComposer } from "./chat-composer";
+import { CompanyLogo } from "./company-logo";
 import { MessageBubble } from "./message-bubble";
 import { ReplyTokenTip } from "./reply-token-tip";
 
@@ -12,6 +13,7 @@ export type ChatModelChoice = {
   id: string;
   name: string;
   companyName: string;
+  logoUrl: string;
   enabled: boolean;
 };
 
@@ -24,6 +26,7 @@ type ThreadMessage = {
   completionTokens?: number;
   reasoningTokens?: number;
   cacheReadTokens?: number;
+  sent?: SentTurn[];
 };
 
 function count(value: unknown): number {
@@ -32,6 +35,8 @@ function count(value: unknown): number {
 
 export function AdminChat({ models }: { models: ChatModelChoice[] }) {
   const [modelId, setModelId] = useState("");
+  const [query, setQuery] = useState("");
+  const [applied, setApplied] = useState("");
   const [messages, setMessages] = useState<ThreadMessage[]>([]);
   const [draft, setDraft] = useState("");
   const [busy, setBusy] = useState(false);
@@ -108,7 +113,7 @@ export function AdminChat({ models }: { models: ChatModelChoice[] }) {
         if (event.type === "word" && event.text) setLiveAssistant((current) => (current ?? "") + event.text);
         if (event.type === "error") {
           failed = true;
-          commit({ content: event.message || "The reply failed.", failed: true });
+          commit({ content: event.message || "The reply failed.", failed: true, sent: readSentTurns(event.sent) ?? undefined });
         }
         if (event.type === "done") {
           finished = true;
@@ -118,6 +123,7 @@ export function AdminChat({ models }: { models: ChatModelChoice[] }) {
             completionTokens: count(event.completionTokens),
             reasoningTokens: count(event.reasoningTokens),
             cacheReadTokens: count(event.cacheReadTokens),
+            sent: readSentTurns(event.sent) ?? undefined,
           });
         }
       });
@@ -130,25 +136,86 @@ export function AdminChat({ models }: { models: ChatModelChoice[] }) {
   }
 
   let viewIndex = 0;
+  const shown = searchChatModels(models, applied);
+  const selected = models.find((model) => model.id === modelId) ?? null;
+  const selectedHidden = selected !== null && !shown.some((model) => model.id === selected.id);
+
+  function chooseModel(id: string) {
+    if (busy || id === modelId) return;
+    setModelId(id);
+    resetThread();
+  }
 
   return (
     <>
-      <div className="chat-toolbar">
-        <label className="chat-model">
-          Model
-          <select value={modelId} disabled={busy} onChange={(event) => { setModelId(event.target.value); resetThread(); }}>
-            <option value="">Choose a model</option>
-            {models.map((model) => (
-              <option key={model.id} value={model.id}>
-                {model.name} · {model.companyName}
-                {model.enabled ? "" : " (off)"}
-              </option>
-            ))}
-          </select>
-        </label>
-        <button type="button" className="button-quiet" onClick={resetThread} disabled={busy || messages.length === 0}>
-          Clear
-        </button>
+      <div className="chat-picker">
+        <div className="chat-toolbar">
+          <form
+            className="chat-search"
+            onSubmit={(event) => {
+              event.preventDefault();
+              setApplied(query);
+            }}
+          >
+            <label className="chat-query">
+              Model
+              <input
+                type="search"
+                value={query}
+                placeholder="Search by name or company"
+                aria-label="Search models"
+                disabled={busy}
+                onChange={(event) => setQuery(event.target.value)}
+              />
+            </label>
+            <button className="button" type="submit" disabled={busy}>
+              Search
+            </button>
+            {applied ? (
+              <button
+                type="button"
+                className="button-quiet"
+                disabled={busy}
+                onClick={() => {
+                  setQuery("");
+                  setApplied("");
+                }}
+              >
+                Reset
+              </button>
+            ) : null}
+          </form>
+          <button type="button" className="button-quiet" onClick={resetThread} disabled={busy || messages.length === 0}>
+            Clear
+          </button>
+        </div>
+        {selectedHidden ? (
+          <div className="picked chat-picked">
+            <CompanyLogo src={selected.logoUrl} />
+            <ModelLabel model={selected} />
+          </div>
+        ) : null}
+        <div className="chat-models" role="listbox" aria-label="Roster models">
+          {shown.length === 0 ? (
+            <p className="muted">No models match that search.</p>
+          ) : (
+            shown.map((model) => (
+              <button
+                key={model.id}
+                type="button"
+                role="option"
+                className="candidate"
+                aria-selected={model.id === modelId}
+                aria-pressed={model.id === modelId}
+                disabled={busy}
+                onClick={() => chooseModel(model.id)}
+              >
+                <CompanyLogo src={model.logoUrl} />
+                <ModelLabel model={model} />
+              </button>
+            ))
+          )}
+        </div>
       </div>
       <div className="transcript">
         {messages.map((message) => {
@@ -156,9 +223,20 @@ export function AdminChat({ models }: { models: ChatModelChoice[] }) {
             const tokens = views[viewIndex];
             viewIndex += 1;
             return (
-              <ReplyTokenTip key={message.id} tokens={tokens}>
+              <div key={message.id} className="reply-block">
+                <ReplyTokenTip tokens={tokens}>
+                  <MessageBubble role="assistant" content={message.content} />
+                </ReplyTokenTip>
+                {message.sent ? <SentInput sent={message.sent} promptTokens={tokens.rawPrompt} /> : null}
+              </div>
+            );
+          }
+          if (message.role === "assistant" && message.sent) {
+            return (
+              <div key={message.id} className="reply-block">
                 <MessageBubble role="assistant" content={message.content} />
-              </ReplyTokenTip>
+                <SentInput sent={message.sent} />
+              </div>
             );
           }
           return <MessageBubble key={message.id} role={message.role} content={message.content} />;
@@ -169,5 +247,40 @@ export function AdminChat({ models }: { models: ChatModelChoice[] }) {
       </div>
       <ChatComposer draft={draft} onDraft={setDraft} onSend={() => void sendMessage()} disabled={busy || !modelId} />
     </>
+  );
+}
+
+function ModelLabel({ model }: { model: ChatModelChoice }) {
+  return (
+    <span>
+      {model.name}
+      <span className="muted">
+        {" "}
+        · {model.companyName}
+        {model.enabled ? "" : " (off)"}
+      </span>
+    </span>
+  );
+}
+
+function SentInput({ sent, promptTokens }: { sent: SentTurn[]; promptTokens?: number }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="sent-input">
+      <button type="button" className="button-quiet" onClick={() => setOpen((value) => !value)}>
+        {open ? "Hide input" : "Show input"}
+      </button>
+      {open ? (
+        <div className="sent-body">
+          {promptTokens !== undefined ? <p className="muted">Prompt tokens: {promptTokens.toLocaleString("en-US")}</p> : null}
+          {sent.map((turn, index) => (
+            <section key={`${turn.role}-${index}`} className="sent-turn">
+              <p className="sent-role">{turn.role}</p>
+              <pre>{turn.content}</pre>
+            </section>
+          ))}
+        </div>
+      ) : null}
+    </div>
   );
 }

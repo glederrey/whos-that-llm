@@ -2,6 +2,8 @@ import { parseModelId } from "./admin-model";
 
 export type ChatTurn = { role: "user" | "assistant"; content: string };
 
+export type SentTurn = { role: "system" | "user" | "assistant"; content: string };
+
 export type VisibleTurn = { role: "user" | "assistant"; content: string; failed?: boolean };
 
 export function parseAdminChat(body: unknown): { modelId: string; text: string; transcript: ChatTurn[] } | null {
@@ -12,6 +14,28 @@ export function parseAdminChat(body: unknown): { modelId: string; text: string; 
   const transcript = parseTranscript(record.transcript);
   if (!transcript) return null;
   return { modelId, text: record.text, transcript };
+}
+
+export function readSentTurns(value: unknown): SentTurn[] | null {
+  if (!Array.isArray(value)) return null;
+  const turns: SentTurn[] = [];
+  for (const item of value) {
+    if (!item || typeof item !== "object") return null;
+    const turn = item as { role?: unknown; content?: unknown };
+    if (turn.role !== "system" && turn.role !== "user" && turn.role !== "assistant") return null;
+    if (typeof turn.content !== "string") return null;
+    turns.push({ role: turn.role, content: turn.content });
+  }
+  return turns;
+}
+
+/** Models whose name or company contains the query. An empty query keeps the full list, in the same order. */
+export function searchChatModels<T extends { name: string; companyName: string }>(models: readonly T[], query: string): T[] {
+  const needle = query.trim().toLowerCase();
+  if (!needle) return models.slice();
+  return models.filter(
+    (model) => model.name.toLowerCase().includes(needle) || model.companyName.toLowerCase().includes(needle),
+  );
 }
 
 export function chatTurns(messages: ChatTurn[]): ChatTurn[] {

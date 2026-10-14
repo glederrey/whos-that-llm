@@ -25,9 +25,33 @@ export type CallTokens = {
   cacheRead: number;
 };
 
+export type SentTurn = { role: "system" | "user" | "assistant"; content: string };
+
 export type StreamedReply =
-  | { ok: true; text: string; usage: CallUsage; tokens: CallTokens }
-  | { ok: false; paused: boolean; message: string };
+  | { ok: true; text: string; usage: CallUsage; tokens: CallTokens; sent: SentTurn[] }
+  | { ok: false; paused: boolean; message: string; sent: SentTurn[] };
+
+/** The system prompt and messages passed to the model for one call. */
+export function callInput(system: string, messages: readonly { role: string; content: unknown }[]): SentTurn[] {
+  const sent: SentTurn[] = [{ role: "system", content: system }];
+  for (const message of messages) {
+    if (message.role !== "user" && message.role !== "assistant") continue;
+    sent.push({ role: message.role, content: messageText(message.content) });
+  }
+  return sent;
+}
+
+function messageText(content: unknown): string {
+  if (typeof content === "string") return content;
+  if (!Array.isArray(content)) return "";
+  return content
+    .map((part) => {
+      if (typeof part === "string") return part;
+      if (part && typeof part === "object" && "text" in part && typeof part.text === "string") return part.text;
+      return "";
+    })
+    .join("");
+}
 
 /** OpenRouter totals for one call. Reasoning and cache read stay beside the prompt and completion counts. */
 export function rawCallTokens(
@@ -91,16 +115,18 @@ export async function streamHiddenReply(input: {
   messages: ModelMessage[];
   onWord: (word: string) => void;
 }): Promise<StreamedReply> {
+  const system = systemPrompt();
+  const messages = input.messages;
+  const sent = callInput(system, messages);
   const apiKey = readServerEnv("OPENROUTER_API_KEY");
-  if (!apiKey) return { ok: false, paused: false, message: "Missing OpenRouter key." };
+  if (!apiKey) return { ok: false, paused: false, message: "Missing OpenRouter key.", sent };
 
   const openrouter = createOpenRouter({ apiKey });
-  const messages = input.messages;
 
   let streamError: unknown = null;
   const result = streamText({
     model: openrouter(input.openrouterId),
-    system: systemPrompt(),
+    system,
     messages,
     temperature: 0.8,
     maxOutputTokens: input.maxOutputTokens,
@@ -131,10 +157,10 @@ export async function streamHiddenReply(input: {
     streamError = error;
   }
 
-  if (streamError) return fail(streamError);
+  if (streamError) return fail(streamError, sent);
 
   const finish = await Promise.resolve(result.finishReason).catch(() => "error" as const);
-  if (finish === "error") return fail(streamError ?? new Error("The reply failed."));
+  if (finish === "error") return fail(streamError ?? new Error("The reply failed."), sent);
 
   const usage = await result.usage;
   const metadata = await Promise.resolve(result.providerMetadata).catch(() => undefined);
@@ -166,14 +192,15 @@ export async function streamHiddenReply(input: {
       costUsd: numberFrom(accounted.cost),
       generationId: response?.id ?? null,
     },
+    sent,
   };
 }
 
-function fail(error: unknown): StreamedReply {
+function fail(error: unknown, sent: SentTurn[]): StreamedReply {
   const message = error instanceof Error ? error.message : "The reply failed.";
   const status = APICallError.isInstance(error) ? error.statusCode : undefined;
   const body = APICallError.isInstance(error) ? JSON.stringify(error.responseBody ?? "") : "";
-  return { ok: false, paused: isCreditError(status, `${message} ${body}`), message };
+  return { ok: false, paused: isCreditError(status, `${message} ${body}`), message, sent };
 }
 
 /** The model call a round uses: the game system prompt, then the transcript plus the new player message. */

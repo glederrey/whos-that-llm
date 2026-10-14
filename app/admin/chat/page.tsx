@@ -13,6 +13,7 @@ export default async function AdminChatPage() {
       id: row.id,
       name: row.name,
       companyName: row.companyName,
+      logoUrl: row.logoUrl,
       enabled: row.enabled,
     }))
     .sort((a, b) => a.name.localeCompare(b.name, "en"));
@@ -23,7 +24,7 @@ export default async function AdminChatPage() {
       <h1>Chat</h1>
       <p className="muted">
         Pick a roster model and talk to it the same way a round does. The thread stays on this page. It is not saved,
-        and it does not count as a game. Hover or tap a reply for tokens.
+        and it does not count as a game. Hover or tap a reply for tokens. Show input on a reply to see the text that was sent.
       </p>
       <AdminChat models={models} />
     </div>

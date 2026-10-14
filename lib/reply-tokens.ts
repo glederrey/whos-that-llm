@@ -1,5 +1,3 @@
-import { scoreTokens } from "./game";
-
 export type MeasuredCall = {
   promptTokens: number;
   completionTokens: number;
@@ -8,7 +6,7 @@ export type MeasuredCall = {
 };
 
 export type ReplyTokens = {
-  /** New input for this reply: the first prompt, or this prompt minus the previous prompt and previous completion. */
+  /** New input for this reply. The first prompt, or this prompt minus the previous prompt and the previous reply text that was sent again. */
   input: number;
   output: number;
   sinceStart: number;
@@ -22,34 +20,43 @@ function shownCount(value: number | undefined): number {
   return typeof value === "number" && Number.isFinite(value) ? value : 0;
 }
 
-/** The same input and output the score counts. Reasoning and cache read stay beside that count. */
+/**
+ * Completion tokens that went back into the next prompt.
+ * Reasoning is inside the completion count when it does not exceed it, and that text is not sent again.
+ */
+export function resentCompletion(output: number, reasoning: number): number {
+  if (reasoning > 0 && reasoning <= output) return output - reasoning;
+  return output;
+}
+
+/** Input added by each reply. Reasoning that was not sent again is left out of the subtraction. Cache read is not used. */
 export function replyTokenLines(calls: MeasuredCall[]): ReplyTokens[] {
-  const scored = scoreTokens(
-    calls.map((call) => ({
-      inputTokens: call.promptTokens,
-      outputTokens: call.completionTokens,
-    })),
-  );
   let sinceStart = 0;
   return calls.map((call, index) => {
-    const turn = scored.turns[index];
-    sinceStart += turn.inputTokens;
+    const prompt = shownCount(call.promptTokens);
+    const output = shownCount(call.completionTokens);
+    const reasoning = shownCount(call.reasoningTokens);
+    const previous = index === 0 ? null : calls[index - 1];
+    const input = previous
+      ? prompt - shownCount(previous.promptTokens) - resentCompletion(shownCount(previous.completionTokens), shownCount(previous.reasoningTokens))
+      : prompt;
+    sinceStart += input;
     return {
-      input: turn.inputTokens,
-      output: turn.outputTokens,
+      input,
+      output,
       sinceStart,
-      rawPrompt: shownCount(call.promptTokens),
-      reasoning: shownCount(call.reasoningTokens),
+      rawPrompt: prompt,
+      reasoning,
       cacheRead: shownCount(call.cacheReadTokens),
     };
   });
 }
 
-/** The running input plus earlier completion tokens equals this call's raw prompt. */
+/** The running input plus earlier resent completions equals this call's raw prompt. */
 export function inputSinceStartMatchesPrompt(views: ReplyTokens[]): boolean {
   return views.every((view, index) => {
-    const earlierOutput = views.slice(0, index).reduce((sum, item) => sum + item.output, 0);
-    return view.sinceStart + earlierOutput === view.rawPrompt;
+    const earlier = views.slice(0, index).reduce((sum, item) => sum + resentCompletion(item.output, item.reasoning), 0);
+    return view.sinceStart + earlier === view.rawPrompt;
   });
 }
 

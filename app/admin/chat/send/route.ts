@@ -38,7 +38,7 @@ export async function POST(request: Request) {
         },
       });
       if (!reply.ok) {
-        send({ type: "error", message: reply.message });
+        send({ type: "error", message: reply.message, sent: reply.sent });
         return;
       }
       send({
@@ -48,6 +48,7 @@ export async function POST(request: Request) {
         completionTokens: reply.tokens.output,
         reasoningTokens: reply.tokens.reasoning,
         cacheReadTokens: reply.tokens.cacheRead,
+        sent: reply.sent,
       });
     } catch {
       send({ type: "error", message: "The reply failed." });

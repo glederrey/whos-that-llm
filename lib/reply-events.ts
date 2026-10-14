@@ -11,6 +11,7 @@ export type ReplyEvent = {
   completionTokens?: number;
   reasoningTokens?: number;
   cacheReadTokens?: number;
+  sent?: { role: string; content: string }[];
 };
 
 export function sseResponse(start: (send: (payload: unknown) => void) => Promise<void>): Response {

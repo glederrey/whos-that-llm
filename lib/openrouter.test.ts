@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { buildModelMessages, rawCallTokens } from "./openrouter";
+import { buildModelMessages, callInput, rawCallTokens } from "./openrouter";
 
 test("each turn sends the earlier user and assistant messages", () => {
   const messages = buildModelMessages([
@@ -12,6 +12,20 @@ test("each turn sends the earlier user and assistant messages", () => {
     { role: "user", content: "What is a prime?" },
     { role: "assistant", content: "A number with no divisors but 1 and itself." },
     { role: "user", content: "Name one under 10." },
+  ]);
+});
+
+test("a call reports the system prompt and every message it sends", () => {
+  const messages = buildModelMessages([
+    { role: "user", content: "Hello" },
+    { role: "assistant", content: "Hi" },
+    { role: "user", content: "Who are you?" },
+  ]);
+  assert.deepEqual(callInput("System", messages), [
+    { role: "system", content: "System" },
+    { role: "user", content: "Hello" },
+    { role: "assistant", content: "Hi" },
+    { role: "user", content: "Who are you?" },
   ]);
 });
 
