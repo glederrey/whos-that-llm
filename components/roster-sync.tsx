@@ -312,40 +312,44 @@ function ModelCard({
         ×
       </button>
       <h3>{model.name}</h3>
-      <div className="roster-new-picks">
-        <label>
-          Size
-          <select aria-label={`Size for ${model.name}`} value={pick.size} onChange={(event) => onPick(model.id, "size", event.target.value)}>
-            <option value="">Choose</option>
-            {sizes.map(([value, label]) => (
-              <option key={value} value={value}>
-                {label}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label>
-          Difficulty
-          <select
-            aria-label={`Difficulty for ${model.name}`}
-            value={pick.difficulty}
-            onChange={(event) => onPick(model.id, "difficulty", event.target.value)}
-          >
-            <option value="">Choose</option>
-            {difficulties.map((value) => (
-              <option key={value} value={value}>
-                {difficultyLabel[value]}
-              </option>
-            ))}
-          </select>
-        </label>
-      </div>
       {model.description ? <p>{model.description}</p> : null}
-      <p>Released {model.releasedOn ?? "—"}</p>
-      <p>
-        Input {formatSyncPrice(model.inputUsdPerMtok)} · Output {formatSyncPrice(model.outputUsdPerMtok)}
-      </p>
-      <p>{href ? <a href={href} target="_blank" rel="noreferrer">{model.id}</a> : model.id}</p>
+      <div className="roster-new-foot">
+        <div className="roster-new-facts">
+          <p>Released {model.releasedOn ?? "—"}</p>
+          <p>
+            Input {formatSyncPrice(model.inputUsdPerMtok)} · Output {formatSyncPrice(model.outputUsdPerMtok)}
+          </p>
+          <p>{href ? <a href={href} target="_blank" rel="noreferrer">{model.id}</a> : model.id}</p>
+        </div>
+        <div className="roster-new-picks">
+          <label>
+            Size
+            <select aria-label={`Size for ${model.name}`} value={pick.size} onChange={(event) => onPick(model.id, "size", event.target.value)}>
+              <option value="">Choose</option>
+              {sizes.map(([value, label]) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            Difficulty
+            <select
+              aria-label={`Difficulty for ${model.name}`}
+              value={pick.difficulty}
+              onChange={(event) => onPick(model.id, "difficulty", event.target.value)}
+            >
+              <option value="">Choose</option>
+              {difficulties.map((value) => (
+                <option key={value} value={value}>
+                  {difficultyLabel[value]}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+      </div>
     </article>
   );
 }
