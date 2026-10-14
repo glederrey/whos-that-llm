@@ -1,3 +1,5 @@
+import { scoreTokens } from "./game";
+
 export type MeasuredCall = {
   promptTokens: number;
   completionTokens: number;
@@ -16,21 +18,29 @@ export type ReplyTokens = {
   cacheRead: number;
 };
 
+function shownCount(value: number | undefined): number {
+  return typeof value === "number" && Number.isFinite(value) ? value : 0;
+}
+
+/** The same input and output the score counts. Reasoning and cache read stay beside that count. */
 export function replyTokenLines(calls: MeasuredCall[]): ReplyTokens[] {
+  const scored = scoreTokens(
+    calls.map((call) => ({
+      inputTokens: call.promptTokens,
+      outputTokens: call.completionTokens,
+    })),
+  );
   let sinceStart = 0;
   return calls.map((call, index) => {
-    const previous = calls[index - 1];
-    const input = previous
-      ? call.promptTokens - previous.promptTokens - previous.completionTokens
-      : call.promptTokens;
-    sinceStart += input;
+    const turn = scored.turns[index];
+    sinceStart += turn.inputTokens;
     return {
-      input,
-      output: call.completionTokens,
+      input: turn.inputTokens,
+      output: turn.outputTokens,
       sinceStart,
-      rawPrompt: call.promptTokens,
-      reasoning: call.reasoningTokens ?? 0,
-      cacheRead: call.cacheReadTokens ?? 0,
+      rawPrompt: shownCount(call.promptTokens),
+      reasoning: shownCount(call.reasoningTokens),
+      cacheRead: shownCount(call.cacheReadTokens),
     };
   });
 }

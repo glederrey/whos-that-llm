@@ -2,7 +2,19 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { createCategory, createRosterModel, removeCategory, setRosterEnabled, updateCategory, updateRosterModel } from "@/lib/admin-roster";
+import {
+  createCategory,
+  createRosterModel,
+  disableRosterModels,
+  loadRoster,
+  removeCategory,
+  setRosterEnabled,
+  updateCategory,
+  updateRosterModel,
+  writeRosterPrices,
+} from "@/lib/admin-roster";
+import { loadOpenRouterCatalog } from "@/lib/openrouter-catalog";
+import { planPriceUpdates, planUnavailable, type AvailabilityResult, type PriceSyncResult } from "@/lib/roster-sync";
 import { modelsReturnPath } from "@/lib/roster-list";
 
 function text(formData: FormData, key: string): string {
@@ -81,4 +93,33 @@ export async function deleteCategory(formData: FormData) {
   revalidatePath("/admin/categories");
   revalidatePath("/admin/models");
   redirect(message ? `/admin/categories?error=${encodeURIComponent(message)}` : "/admin/categories");
+}
+
+export async function updateRosterPrices(): Promise<PriceSyncResult> {
+  const catalog = await loadOpenRouterCatalog();
+  if (!catalog.ok) return { ok: false, error: catalog.error };
+  const { rows } = await loadRoster();
+  const plan = planPriceUpdates(rows, catalog.models);
+  if (plan.updates.length > 0) {
+    const saved = await writeRosterPrices(plan.updates);
+    if (!saved) return { ok: false, error: "Could not save the new prices." };
+    revalidatePath("/admin");
+    revalidatePath("/admin/models");
+  }
+  return { ok: true, changes: plan.changes, notUpdated: plan.notUpdated };
+}
+
+export async function checkRosterAvailability(): Promise<AvailabilityResult> {
+  const catalog = await loadOpenRouterCatalog();
+  if (!catalog.ok) return { ok: false, error: catalog.error };
+  const { rows } = await loadRoster();
+  const plan = planUnavailable(rows, catalog.models);
+  if (!plan) return { ok: false, error: "OpenRouter returned models in a shape this page does not read." };
+  if (plan.disableIds.length > 0) {
+    const saved = await disableRosterModels(plan.disableIds);
+    if (!saved) return { ok: false, error: "Could not turn those models off." };
+    revalidatePath("/admin");
+    revalidatePath("/admin/models");
+  }
+  return { ok: true, unavailable: plan.unavailable };
 }

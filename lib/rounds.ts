@@ -14,6 +14,7 @@ import {
   playableHints,
   knownValues,
   scoreRound,
+  scoreTokens,
   toPublicGame,
   type FrozenModel,
   type GameStatus,
@@ -594,11 +595,15 @@ async function scoreFrom(client: SupabaseClient, game: GameRow, guesses: GuessFl
     .from("usage")
     .select("input_tokens, output_tokens")
     .eq("game_id", game.id)
-    .is("error_code", null);
-  const tokens = (data ?? []).reduce(
-    (sum, row) => sum + Number(row.input_tokens ?? 0) + Number(row.output_tokens ?? 0),
-    0,
-  );
+    .is("error_code", null)
+    .order("created_at", { ascending: true })
+    .order("id", { ascending: true });
+  const tokens = scoreTokens(
+    (data ?? []).map((row) => ({
+      inputTokens: Number(row.input_tokens ?? 0),
+      outputTokens: Number(row.output_tokens ?? 0),
+    })),
+  ).tokens;
   return scoreRound({
     rules: game.rules,
     namedModel,
@@ -720,14 +725,16 @@ async function readPublicStats(client: SupabaseClient) {
     };
   }
   const midnight = new Date();
-  const start = new Date(Date.UTC(midnight.getUTCFullYear(), midnight.getUTCMonth(), midnight.getUTCDate())).toISOString();
+  const startDate = new Date(Date.UTC(midnight.getUTCFullYear(), midnight.getUTCMonth(), midnight.getUTCDate()));
+  const start = startDate.toISOString();
+  const end = new Date(startDate.getTime() + 24 * 60 * 60 * 1000).toISOString();
   const [models, gamesToday, players] = await Promise.all([
     client.from("models").select("id", { count: "exact", head: true }).eq("enabled", true),
     client
       .from("games")
       .select("id", { count: "exact", head: true })
-      .gte("started_at", start)
-      .not("finished_at", "is", null),
+      .gte("finished_at", start)
+      .lt("finished_at", end),
     countPlayers(client),
   ]);
   if (models.error) throw new Error(models.error.message);

@@ -310,6 +310,58 @@ export function tokenFactor(tokens: number, rules: Pick<Rules, "tokenScale" | "t
   return Math.min(rules.tokenCap, rules.tokenScale / tokens);
 }
 
+/** One successful reply, in the order it was played. `inputTokens` is the full prompt count OpenRouter returned. */
+export type ScoreUsageTurn = {
+  inputTokens: number;
+  outputTokens: number;
+};
+
+export type ScoredUsageTurn = {
+  /** Prompt tokens that count on this turn. The first turn is the full prompt. Later turns are the new player message. */
+  inputTokens: number;
+  /** Completion tokens for this reply. */
+  outputTokens: number;
+};
+
+export type ScoreTokenCount = {
+  inputTokens: number;
+  outputTokens: number;
+  /** Input plus output. This is the token total the score uses. */
+  tokens: number;
+  turns: ScoredUsageTurn[];
+};
+
+function finiteTokenCount(value: number): number {
+  return Number.isFinite(value) ? value : 0;
+}
+
+/**
+ * Tokens the score counts, from full prompt counts.
+ *
+ * The first turn counts its full prompt, so the system prompt is included once.
+ * Each later turn counts this prompt minus the previous prompt minus the previous reply's output.
+ * Each reply's completion tokens are added.
+ * Reasoning tokens are not an input. Cache-read tokens are not added or subtracted.
+ * Pass successful turns in play order. Leave failed calls out.
+ */
+export function scoreTokens(turns: readonly ScoreUsageTurn[]): ScoreTokenCount {
+  const scored: ScoredUsageTurn[] = [];
+  let inputTokens = 0;
+  let outputTokens = 0;
+  for (let index = 0; index < turns.length; index += 1) {
+    const prompt = finiteTokenCount(turns[index].inputTokens);
+    const output = finiteTokenCount(turns[index].outputTokens);
+    const previous = index === 0 ? null : turns[index - 1];
+    const input = previous
+      ? prompt - finiteTokenCount(previous.inputTokens) - finiteTokenCount(previous.outputTokens)
+      : prompt;
+    scored.push({ inputTokens: input, outputTokens: output });
+    inputTokens += input;
+    outputTokens += output;
+  }
+  return { inputTokens, outputTokens, tokens: inputTokens + outputTokens, turns: scored };
+}
+
 export type ScoreInput = {
   rules: Rules;
   namedModel: boolean;

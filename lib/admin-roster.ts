@@ -231,6 +231,50 @@ export async function setRosterEnabled(idRaw: string, enabled: boolean): Promise
   return null;
 }
 
+export async function writeRosterPrices(
+  updates: { id: string; inputUsdPerMtok: number; outputUsdPerMtok: number }[],
+): Promise<boolean> {
+  await requireOwner();
+  if (updates.length === 0) return true;
+  const rows: { id: string; inputUsdPerMtok: number; outputUsdPerMtok: number }[] = [];
+  for (const update of updates) {
+    const id = parseModelId(update.id);
+    if (!id || !Number.isFinite(update.inputUsdPerMtok) || !Number.isFinite(update.outputUsdPerMtok)) return false;
+    rows.push({ id, inputUsdPerMtok: update.inputUsdPerMtok, outputUsdPerMtok: update.outputUsdPerMtok });
+  }
+  const client = serviceOrThrow();
+  for (const row of rows) {
+    const { error } = await client
+      .from("models")
+      .update({
+        input_usd_per_mtok: row.inputUsdPerMtok,
+        output_usd_per_mtok: row.outputUsdPerMtok,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", row.id);
+    if (error) return false;
+  }
+  return true;
+}
+
+export async function disableRosterModels(ids: string[]): Promise<boolean> {
+  await requireOwner();
+  if (ids.length === 0) return true;
+  const clean: string[] = [];
+  for (const raw of ids) {
+    const id = parseModelId(raw);
+    if (!id) return false;
+    clean.push(id);
+  }
+  const client = serviceOrThrow();
+  // Off, not deleted, so a game that already drew the model still resolves.
+  const { error } = await client
+    .from("models")
+    .update({ enabled: false, updated_at: new Date().toISOString() })
+    .in("id", clean);
+  return !error;
+}
+
 async function resolveCompany(client: SupabaseClient, name: string, region: Region): Promise<CompanyRow | RosterNotice> {
   const id = companyIdFromName(name);
   if (!id) return "invalid";

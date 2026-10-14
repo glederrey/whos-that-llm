@@ -179,7 +179,7 @@ Call settings, the same for every model except `provider_settings`:
 
 Some APIs count reasoning inside the output budget. A model can then spend the 1,000 tokens thinking and return almost nothing visible. An empty successful reply still spends the message. `usage.reasoning_tokens` is how admin notices the spend. Disable that model, or lower the setting further, before leaving it in the roster.
 
-Record from the result: input tokens, output tokens, reasoning tokens, cache-read tokens, `cost_usd`, and the generation id when OpenRouter returns one. The score uses input plus output on rows whose `error_code` is null.
+Record from the result: input tokens, output tokens, reasoning tokens, cache-read tokens, `cost_usd`, and the generation id when OpenRouter returns one. `input_tokens` stays the full prompt count. The score does not replace it. On rows whose `error_code` is null, in the order they were stored, the score counts the first prompt in full, then only the new player message on later turns (this prompt minus the previous prompt minus the previous output), plus each reply's completion tokens. Reasoning tokens are not added. Cache-read tokens are not added and not subtracted.
 
 The transcript sent back next turn is the system prompt plus the stored user and assistant messages, in turn order. It does not include previous rounds.
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { MarkdownMessage } from "./markdown-message";
+import { ModelReply } from "./markdown-message";
 
 export function MessageBubble({
   role,
@@ -21,7 +21,7 @@ export function MessageBubble({
           <i />
         </span>
       ) : role === "assistant" ? (
-        <MarkdownMessage text={content} />
+        <ModelReply text={content} />
       ) : (
         content
       )}

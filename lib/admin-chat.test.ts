@@ -3,6 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import test from "node:test";
 import { chatTurns, parseAdminChat, transcriptForCall } from "./admin-chat";
+import { scoreTokens } from "./game";
 import { inputSinceStartMatchesPrompt, replyTokenLines, replyTokenTooltip } from "./reply-tokens";
 
 const root = path.resolve(import.meta.dirname, "..");
@@ -65,6 +66,28 @@ test("later input is the new player message, and reasoning is not added to it", 
     "Cache read tokens: 0",
   ]);
   assert.equal(replyTokenTooltip(views[1]).some((line) => line.includes("1,200")), false);
+  const scored = scoreTokens(views.map((view, index) => ({ inputTokens: [1000, 1200, 1400][index], outputTokens: view.output })));
+  assert.equal(views[2].sinceStart, scored.inputTokens);
+  assert.equal(views[2].input, scored.turns[2].inputTokens);
+  assert.equal(scored.tokens, views[2].sinceStart + views.reduce((sum, view) => sum + view.output, 0));
+});
+
+test("a smaller later prompt matches the score and leaves reasoning out", () => {
+  const views = replyTokenLines([
+    { promptTokens: 1000, completionTokens: 200, reasoningTokens: 400, cacheReadTokens: 700 },
+    { promptTokens: 1050, completionTokens: 40, reasoningTokens: 10, cacheReadTokens: 900 },
+  ]);
+  const scored = scoreTokens([
+    { inputTokens: 1000, outputTokens: 200 },
+    { inputTokens: 1050, outputTokens: 40 },
+  ]);
+  assert.equal(views[1].input, scored.turns[1].inputTokens);
+  assert.equal(views[1].input, -150);
+  assert.equal(views[1].sinceStart, scored.inputTokens);
+  assert.equal(scored.tokens, 1050 + 40);
+  assert.equal(views[0].reasoning, 400);
+  assert.equal(views[1].cacheRead, 900);
+  assert.equal(views[1].sinceStart + views[0].output + views[1].output, scored.tokens);
 });
 
 test("the admin chat reuses the play send path and writes nothing", () => {
