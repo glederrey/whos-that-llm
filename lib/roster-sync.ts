@@ -1,10 +1,17 @@
+import { modelIdFromOpenRouter, validOpenRouterId } from "./admin-model";
 import { dollarsPerMillion } from "./list-price";
-import { catalogSupportsReasoning, lowReasoningSettings, reasoningSettingsNeeded } from "./provider-check";
+import { releasedOnFromCreated } from "./openrouter-draft";
+import { lowReasoningSettings, reasoningSettingsNeeded } from "./provider-check";
 
 export type CatalogModel = {
   id: string;
+  name: string;
+  description: string | null;
+  created: number | null;
   inputUsdPerMtok: number | null;
   outputUsdPerMtok: number | null;
+  outputModalities: string[];
+  modality: string | null;
   reasoning: boolean;
 };
 
@@ -92,11 +99,17 @@ export function parseOpenRouterCatalog(body: unknown): CatalogModel[] | null {
       pricing && typeof pricing === "object" && !Array.isArray(pricing)
         ? (pricing as { prompt?: unknown; completion?: unknown })
         : {};
+    const details = catalogDetails(row);
     models.push({
       id: trimmed,
+      name: details.name,
+      description: details.description,
+      created: details.created,
       inputUsdPerMtok: catalogPrice(prices.prompt),
       outputUsdPerMtok: catalogPrice(prices.completion),
-      reasoning: catalogSupportsReasoning(row),
+      outputModalities: details.outputModalities,
+      modality: details.modality,
+      reasoning: details.reasoning,
     });
   }
   return models;
@@ -231,4 +244,165 @@ function catalogById(models: CatalogModel[]): Map<string, CatalogModel> {
 function catalogPrice(value: unknown): number | null {
   if (typeof value !== "string" && typeof value !== "number") return null;
   return dollarsPerMillion(String(value));
+}
+
+const newModelWindowSeconds = 30 * 24 * 60 * 60;
+
+export type NewModelCard = {
+  id: string;
+  name: string;
+  description: string | null;
+  releasedOn: string | null;
+  inputUsdPerMtok: number | null;
+  outputUsdPerMtok: number | null;
+  reasoning: boolean;
+};
+
+export type NewModelsResult =
+  | { ok: true; models: NewModelCard[] }
+  | { ok: false; error: string };
+
+export type AddModelsResult = { ok: true; added: number } | { ok: false; error: string };
+
+/** Text output, and not an embedding or moderation model. Image-only and audio-only stay out. */
+export function isTextGenerationModel(model: CatalogModel): boolean {
+  const outputs = model.outputModalities.map((item) => item.toLowerCase());
+  const blob = [model.id, model.name, model.modality ?? "", ...outputs].join("\n").toLowerCase();
+  if (blob.includes("embedding") || blob.includes("moderation")) return false;
+  return outputs.includes("text");
+}
+
+/**
+ * The same model when the OpenRouter id, the roster id, or the roster OpenRouter slug match,
+ * including one trailing snapshot date (0813, 20260420, 02-23, 2603).
+ */
+export function sameRosterModel(openrouterId: string, roster: { id: string; openrouterId: string }): boolean {
+  const known = identityKeys(roster.openrouterId, roster.id);
+  for (const key of identityKeys(openrouterId)) {
+    if (known.has(key)) return true;
+  }
+  return false;
+}
+
+/** Newest text models from the last 30 days that are not already on the roster. Company is ignored. */
+export function planNewModels(roster: SyncModel[], catalog: CatalogModel[], nowSeconds: number): NewModelCard[] {
+  if (!Number.isFinite(nowSeconds)) return [];
+  const known = new Set(roster.flatMap((model) => [...identityKeys(model.openrouterId, model.id)]));
+  const cutoff = nowSeconds - newModelWindowSeconds;
+  const byId = new Map<string, CatalogModel>();
+  for (const model of catalog) byId.set(model.id, model);
+  const matches = [...byId.values()].filter((model) => {
+    if (!isTextGenerationModel(model) || openRouterModelHref(model.id) === null) return false;
+    if (model.created === null || model.created < cutoff) return false;
+    return ![...identityKeys(model.id)].some((key) => known.has(key));
+  });
+  matches.sort((a, b) => (b.created ?? 0) - (a.created ?? 0) || a.id.localeCompare(b.id));
+  return matches.map((model) => ({
+    id: model.id,
+    name: model.name.trim() || model.id,
+    description: model.description,
+    releasedOn: releasedOnFromCreated(model.created) || null,
+    inputUsdPerMtok: model.inputUsdPerMtok,
+    outputUsdPerMtok: model.outputUsdPerMtok,
+    reasoning: model.reasoning,
+  }));
+}
+
+/** A single OpenRouter handle, with the slash left intact. */
+export function openRouterModelHref(id: string): string | null {
+  const trimmed = id.trim();
+  if (!validOpenRouterId(trimmed) || /[?#\\]|\.\./.test(trimmed)) return null;
+  return `https://openrouter.ai/${trimmed}`;
+}
+
+function catalogDetails(row: object): Pick<CatalogModel, "name" | "description" | "created" | "outputModalities" | "modality" | "reasoning"> {
+  const record = row as { name?: unknown; description?: unknown; created?: unknown; architecture?: unknown; reasoning?: unknown };
+  const name = typeof record.name === "string" ? record.name.trim() : "";
+  const description = typeof record.description === "string" && record.description.trim() ? record.description.trim() : null;
+  const architecture = record.architecture;
+  const arch =
+    architecture && typeof architecture === "object" && !Array.isArray(architecture)
+      ? (architecture as { modality?: unknown; output_modalities?: unknown })
+      : {};
+  const modality = typeof arch.modality === "string" && arch.modality.trim() ? arch.modality.trim().toLowerCase() : null;
+  const listed = Array.isArray(arch.output_modalities)
+    ? arch.output_modalities.flatMap((item) => (typeof item === "string" && item.trim() ? [item.trim().toLowerCase()] : []))
+    : [];
+  return {
+    name,
+    description,
+    created: catalogCreated(record.created),
+    outputModalities: listed.length > 0 ? listed : outputsFromModality(modality),
+    modality,
+    reasoning: catalogReasoning(record.reasoning),
+  };
+}
+
+function catalogReasoning(value: unknown): boolean {
+  return Boolean(value && typeof value === "object" && !Array.isArray(value));
+}
+
+function outputsFromModality(modality: string | null): string[] {
+  if (!modality) return [];
+  const side = modality.split("->")[1] ?? "";
+  return side.split("+").map((part) => part.trim()).filter(Boolean);
+}
+
+function catalogCreated(value: unknown): number | null {
+  const seconds = typeof value === "number" ? value : typeof value === "string" && value.trim() ? Number(value) : NaN;
+  if (!Number.isFinite(seconds) || seconds <= 0) return null;
+  return seconds;
+}
+
+function identityKeys(openrouterId: string, rosterId = ""): Set<string> {
+  const keys = new Set<string>();
+  const handle = openrouterId.trim().toLowerCase();
+  if (handle) keys.add(`handle:${handle}`);
+  for (const value of [openrouterId, rosterId]) {
+    const slug = slugOf(value);
+    if (!slug) continue;
+    keys.add(`slug:${slug}`);
+    keys.add(`slug:${stripSnapshotDate(slug)}`);
+  }
+  return keys;
+}
+
+function slugOf(value: string): string | null {
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  if (trimmed.includes("/")) return modelIdFromOpenRouter(trimmed);
+  const slug = trimmed.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+  return /^[a-z0-9-]{2,64}$/.test(slug) ? slug : null;
+}
+
+/** One trailing snapshot date. Version tails such as 4-1 stay on the slug. */
+function stripSnapshotDate(slug: string): string {
+  const eight = slug.match(/^(.*)-(\d{8})$/);
+  if (eight) {
+    if (eight[1].length >= 2 && isSnapshotDay(eight[2])) return eight[1];
+    return slug;
+  }
+  const monthDay = slug.match(/^(.*)-(\d{2})-(\d{2})$/);
+  if (monthDay) {
+    const month = Number(monthDay[2]);
+    const day = Number(monthDay[3]);
+    if (monthDay[1].length >= 2 && month >= 1 && month <= 12 && day >= 1 && day <= 31) return monthDay[1];
+    return slug;
+  }
+  const four = slug.match(/^(.*)-(\d{4})$/);
+  if (!four || four[1].length < 2) return slug;
+  const head = Number(four[2].slice(0, 2));
+  const tail = Number(four[2].slice(2));
+  if (head >= 1 && head <= 12 && tail >= 1 && tail <= 31) return four[1];
+  if (head >= 20 && head <= 39 && tail >= 1 && tail <= 12) return four[1];
+  return slug;
+}
+
+function isSnapshotDay(digits: string): boolean {
+  const year = Number(digits.slice(0, 4));
+  const month = Number(digits.slice(4, 6));
+  const day = Number(digits.slice(6, 8));
+  if (year < 2000 || year > 2099) return false;
+  const date = new Date(Date.UTC(year, month - 1, day));
+  return date.getUTCFullYear() === year && date.getUTCMonth() === month - 1 && date.getUTCDate() === day;
 }

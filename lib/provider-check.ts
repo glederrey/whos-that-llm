@@ -149,13 +149,6 @@ export function providerSlug(value: unknown): string | null {
   return null;
 }
 
-/** A catalog reasoning object means the model can reason, unless OpenRouter says supported is false. */
-export function catalogSupportsReasoning(row: object): boolean {
-  const reasoning = (row as { reasoning?: unknown }).reasoning;
-  if (!reasoning || typeof reasoning !== "object" || Array.isArray(reasoning)) return false;
-  return (reasoning as { supported?: unknown }).supported !== false;
-}
-
 export function lowReasoningSettings(): { reasoning: { effort: "low" } } {
   return { reasoning: { effort: "low" } };
 }

@@ -6,16 +6,38 @@ import {
   formatSyncPrice,
   mergeCatalogPages,
   nextModelsUrl,
+  openRouterModelHref,
   parseCatalogPage,
   parseOpenRouterCatalog,
+  planNewModels,
   planPriceUpdates,
   planReasoningUpdates,
   planUnavailable,
+  sameRosterModel,
   type CatalogModel,
   type SyncModel,
 } from "./roster-sync";
 
 const root = path.resolve(import.meta.dirname, "..");
+
+function listed(
+  id: string,
+  input: number | null,
+  output: number | null,
+  extra?: Partial<CatalogModel>,
+): CatalogModel {
+  return {
+    id,
+    name: extra?.name ?? "",
+    description: extra?.description ?? null,
+    created: extra?.created ?? null,
+    inputUsdPerMtok: input,
+    outputUsdPerMtok: output,
+    outputModalities: extra?.outputModalities ?? [],
+    modality: extra?.modality ?? null,
+    reasoning: extra?.reasoning ?? false,
+  };
+}
 
 function model(fields: {
   id: string;
@@ -48,11 +70,11 @@ test("a per-token catalog price is the roster list price", () => {
     ],
   });
   assert.deepEqual(catalog, [
-    { id: "anthropic/claude-opus-4.1", inputUsdPerMtok: 15, outputUsdPerMtok: 75, reasoning: false },
-    { id: "free/zero", inputUsdPerMtok: 0, outputUsdPerMtok: 0, reasoning: false },
-    { id: "nousresearch/hermes", inputUsdPerMtok: null, outputUsdPerMtok: null, reasoning: false },
-    { id: "partial/input", inputUsdPerMtok: 1, outputUsdPerMtok: null, reasoning: false },
-    { id: "spaced/id", inputUsdPerMtok: null, outputUsdPerMtok: null, reasoning: false },
+    listed("anthropic/claude-opus-4.1", 15, 75),
+    listed("free/zero", 0, 0),
+    listed("nousresearch/hermes", null, null),
+    listed("partial/input", 1, null),
+    listed("spaced/id", null, null, { name: "ignored" }),
   ]);
   assert.equal(parseOpenRouterCatalog(null), null);
   assert.equal(parseOpenRouterCatalog({}), null);
@@ -98,11 +120,11 @@ test("a catalog page is complete only when every model was returned", () => {
 
 test("price updates list changes and leave matching or unpriced models alone", () => {
   const catalog: CatalogModel[] = [
-    { id: "anthropic/claude-opus-4.1", inputUsdPerMtok: 20, outputUsdPerMtok: 75, reasoning: false },
-    { id: "openai/same", inputUsdPerMtok: 2, outputUsdPerMtok: 10, reasoning: false },
-    { id: "nousresearch/hermes", inputUsdPerMtok: null, outputUsdPerMtok: null, reasoning: false },
-    { id: "partial/input", inputUsdPerMtok: 1, outputUsdPerMtok: null, reasoning: false },
-    { id: "new/price", inputUsdPerMtok: 0, outputUsdPerMtok: 0.2, reasoning: false },
+    listed("anthropic/claude-opus-4.1", 20, 75),
+    listed("openai/same", 2, 10),
+    listed("nousresearch/hermes", null, null),
+    listed("partial/input", 1, null),
+    listed("new/price", 0, 0.2),
   ];
   const plan = planPriceUpdates(
     [
@@ -146,12 +168,12 @@ test("price updates list changes and leave matching or unpriced models alone", (
   assert.equal(formatSyncPrice(null), "—");
 });
 
-test("a catalog reasoning object marks the model, and an explicit false does not", () => {
+test("a catalog reasoning object marks the model, and a missing one does not", () => {
   const catalog = parseOpenRouterCatalog({
     data: [
       { id: "qwen/think", pricing: { prompt: "0.000001", completion: "0.000002" }, reasoning: { supported: true } },
       { id: "qwen/present", pricing: {}, reasoning: { default_effort: "low" } },
-      { id: "qwen/off", pricing: {}, reasoning: { supported: false } },
+      { id: "qwen/off", pricing: {}, reasoning: null },
       { id: "qwen/plain", pricing: {} },
     ],
   });
@@ -183,8 +205,8 @@ test("a catalog reasoning object marks the model, and an explicit false does not
 
 test("availability turns off models OpenRouter no longer lists", () => {
   const catalog: CatalogModel[] = [
-    { id: "openai/still", inputUsdPerMtok: 1, outputUsdPerMtok: 2, reasoning: false },
-    { id: "openai/off-but-listed", inputUsdPerMtok: 1, outputUsdPerMtok: 2, reasoning: false },
+    listed("openai/still", 1, 2),
+    listed("openai/off-but-listed", 1, 2),
   ];
   const plan = planUnavailable(
     [
@@ -198,6 +220,126 @@ test("availability turns off models OpenRouter no longer lists", () => {
   assert.deepEqual(plan?.unavailable.map((row) => row.name), ["Gone", "Old"]);
   assert.deepEqual(plan?.disableIds, ["gone"]);
   assert.equal(planUnavailable([model({ id: "still", openrouterId: "openai/still" })], []), null);
+});
+
+test("a catalog row keeps the name, description, created time, and text outputs", () => {
+  const parsed = parseOpenRouterCatalog({
+    data: [
+      {
+        id: "org/chat",
+        name: " Chat ",
+        description: " A short line ",
+        created: 1_700_000_000,
+        architecture: { modality: "text+image->text", output_modalities: ["Text", "Image"] },
+        pricing: { prompt: "0.000001", completion: "0.000002" },
+      },
+      { id: "org/from-modality", architecture: { modality: "text->text+audio" } },
+      { id: "org/blank-description", description: "  ", created: 0 },
+      { id: "org/thinks", reasoning: { mandatory: true } },
+      { id: "org/optional", reasoning: { mandatory: false } },
+      { id: "org/plain", reasoning: null },
+    ],
+  });
+  assert.equal(parsed?.[0].name, "Chat");
+  assert.equal(parsed?.[0].description, "A short line");
+  assert.equal(parsed?.[0].created, 1_700_000_000);
+  assert.deepEqual(parsed?.[0].outputModalities, ["text", "image"]);
+  assert.deepEqual(parsed?.[1].outputModalities, ["text", "audio"]);
+  assert.equal(parsed?.[1].modality, "text->text+audio");
+  assert.equal(parsed?.[2].description, null);
+  assert.equal(parsed?.[2].created, null);
+  assert.deepEqual(parsed?.[2].outputModalities, []);
+  assert.equal(parsed?.[3].reasoning, true);
+  assert.equal(parsed?.[4].reasoning, true);
+  assert.equal(parsed?.[5].reasoning, false);
+  assert.equal(parsed?.[0].reasoning, false);
+});
+
+test("a dated snapshot is the same roster model", () => {
+  const dated = { id: "deepseek-v4-pro-0813", openrouterId: "deepseek/deepseek-v4-pro-0813" };
+  assert.equal(sameRosterModel("deepseek/deepseek-v4-pro", dated), true);
+  assert.equal(sameRosterModel("deepseek/deepseek-v4-pro-0813", { id: "deepseek-v4-pro", openrouterId: "deepseek/deepseek-v4-pro" }), true);
+  assert.equal(sameRosterModel("moonshotai/kimi-k3", { id: "kimi-k3", openrouterId: "other/saved-handle" }), true);
+  assert.equal(sameRosterModel("DeepSeek/DeepSeek-V4-Pro", dated), true);
+  assert.equal(sameRosterModel("qwen/qwen3.8-max-0902", { id: "qwen3-8-max", openrouterId: "qwen/qwen3.8-max" }), true);
+  assert.equal(sameRosterModel("qwen/qwen3-5-plus-20260420", { id: "qwen3-5-plus", openrouterId: "qwen/qwen3-5-plus" }), true);
+  assert.equal(sameRosterModel("qwen/qwen3-5-flash-02-23", { id: "qwen3-5-flash", openrouterId: "qwen/qwen3-5-flash" }), true);
+  assert.equal(sameRosterModel("mistralai/mistral-small-2603", { id: "mistral-small", openrouterId: "mistralai/mistral-small" }), true);
+  assert.equal(sameRosterModel("deepseek/deepseek-r1-0528", { id: "deepseek-r1", openrouterId: "deepseek/deepseek-r1" }), true);
+  assert.equal(sameRosterModel("deepseek/deepseek-v4-flash", { id: "deepseek-v4-pro", openrouterId: "deepseek/deepseek-v4-pro" }), false);
+  assert.equal(sameRosterModel("anthropic/claude-opus-4.1", { id: "claude-opus-4", openrouterId: "anthropic/claude-opus-4" }), false);
+  assert.equal(sameRosterModel("deepseek/deepseek-v4-1-flash", { id: "deepseek-v4-flash", openrouterId: "deepseek/deepseek-v4-flash" }), false);
+  assert.equal(sameRosterModel("x-ai/grok-4.20", { id: "grok-4", openrouterId: "x-ai/grok-4" }), false);
+  assert.equal(sameRosterModel("openai/gpt-5.4", { id: "gpt-5", openrouterId: "openai/gpt-5" }), false);
+});
+
+test("new models are recent text models that are not already on the roster", () => {
+  const now = 1_800_000_000;
+  const day = 86_400;
+  function remote(id: string, extra: Partial<CatalogModel> = {}): CatalogModel {
+    return {
+      id,
+      name: extra.name ?? id,
+      description: extra.description ?? null,
+      created: extra.created === undefined ? now : extra.created,
+      inputUsdPerMtok: extra.inputUsdPerMtok === undefined ? 1 : extra.inputUsdPerMtok,
+      outputUsdPerMtok: extra.outputUsdPerMtok === undefined ? 2 : extra.outputUsdPerMtok,
+      outputModalities: extra.outputModalities ?? ["text"],
+      modality: extra.modality === undefined ? "text->text" : extra.modality,
+      reasoning: extra.reasoning ?? false,
+    };
+  }
+  const roster = [
+    model({ id: "deepseek-v4-pro-0813", openrouterId: "deepseek/deepseek-v4-pro-0813" }),
+    model({ id: "kimi-k3", openrouterId: "moonshotai/kimi-k3" }),
+  ];
+  const cards = planNewModels(
+    roster,
+    [
+      remote("deepseek/deepseek-v4-pro", { name: "DeepSeek V4 Pro", created: now }),
+      remote("moonshotai/kimi-k3", { created: now }),
+      remote("anthropic/claude-opus-4.1", { name: "Claude Opus 4.1", created: now - 10, description: "A short line" }),
+      remote("deepseek/deepseek-v4-1-flash", { created: now - 5 }),
+      remote("nousresearch/brand-new", { name: "Brand New", created: now - 20, inputUsdPerMtok: 0.4, outputUsdPerMtok: 1.2 }),
+      remote("org/mixed", { created: now - 30, outputModalities: ["text", "image"], modality: "text->text+image" }),
+      remote("org/spoken", { created: now - 40, outputModalities: ["text", "audio"], modality: "text->text+audio" }),
+      remote("org/edge", { created: now - 30 * day }),
+      remote("org/old", { created: now - 30 * day - 1 }),
+      remote("org/undated", { created: null }),
+      remote("org/picture", { created: now, outputModalities: ["image"], modality: "text->image" }),
+      remote("org/sound", { created: now, outputModalities: ["audio"], modality: "text->audio" }),
+      remote("openai/text-embedding-3-small", { name: "Embed", created: now, outputModalities: ["text"] }),
+      remote("openai/text-moderation", { name: "Moderation", created: now }),
+      remote("org/guard", { name: "Llama Guard", created: now - 15 }),
+      remote("not a handle", { created: now }),
+    ],
+    now,
+  );
+  assert.deepEqual(
+    cards.map((card) => card.id),
+    [
+      "deepseek/deepseek-v4-1-flash",
+      "anthropic/claude-opus-4.1",
+      "org/guard",
+      "nousresearch/brand-new",
+      "org/mixed",
+      "org/spoken",
+      "org/edge",
+    ],
+  );
+  const opus = cards.find((card) => card.id === "anthropic/claude-opus-4.1");
+  assert.equal(opus?.name, "Claude Opus 4.1");
+  assert.equal(opus?.description, "A short line");
+  assert.equal(opus?.releasedOn, new Date((now - 10) * 1000).toISOString().slice(0, 10));
+  const brand = cards.find((card) => card.id === "nousresearch/brand-new");
+  assert.equal(brand?.inputUsdPerMtok, 0.4);
+  assert.equal(brand?.outputUsdPerMtok, 1.2);
+  assert.equal(cards.some((card) => card.id === "deepseek/deepseek-v4-pro"), false);
+  assert.equal(openRouterModelHref("moonshotai/kimi-k3"), "https://openrouter.ai/moonshotai/kimi-k3");
+  assert.equal(openRouterModelHref("moonshotai/kimi k3"), null);
+  assert.equal(openRouterModelHref("org/model?x"), null);
+  assert.equal(openRouterModelHref("org/../secret"), null);
+  assert.deepEqual(planNewModels(roster, [remote("org/chat", { created: now })], Number.NaN), []);
 });
 
 test("the model page keeps price updates and availability apart", () => {
@@ -220,10 +362,25 @@ test("the model page keeps price updates and availability apart", () => {
   assert.match(actions, /redirect\(/);
   assert.match(buttons, /Update prices/);
   assert.match(buttons, /Check availability/);
+  assert.match(buttons, /Search for new models/);
   assert.match(buttons, /updateRosterPrices\(\)/);
   assert.match(buttons, /checkRosterAvailability\(\)/);
+  assert.match(buttons, /searchNewModels\(\)/);
+  assert.match(buttons, /Add models/);
+  assert.match(buttons, /Add models[\s\S]{0,700}Close/);
+  assert.match(buttons, /Size for \$\{model\.name\}/);
+  assert.match(buttons, />Reasoning</);
+  assert.match(buttons, /model\.reasoning/);
+  assert.match(buttons, /!ready/);
+  assert.match(buttons, /visible\.length === 0/);
+  assert.match(buttons, /No new text models in the last 30 days\./);
+  assert.match(buttons, /Added 1 model\./);
+  assert.match(buttons, /openRouterModelHref/);
+  assert.match(buttons, /target="_blank"/);
+  assert.match(buttons, /rel="noreferrer"/);
+  assert.match(buttons, /Remove \$\{model\.name\}/);
   assert.match(buttons, /popover="auto"/);
-  assert.match(buttons, /className="roster-edit card roster-sync-card"/);
+  assert.match(buttons, /roster-edit card roster-sync-card/);
   assert.match(buttons, /role="alert"/);
   assert.match(buttons, /No OpenRouter price/);
   assert.match(buttons, /Not updated/);
@@ -234,7 +391,9 @@ test("the model page keeps price updates and availability apart", () => {
   assert.doesNotMatch(buttons, /admin-roster|admin-access|openrouter-spend|showAdmin|isAdmin/);
 
   const prices = between(actions, "export async function updateRosterPrices", "export async function checkRosterAvailability");
-  const availability = actions.slice(actions.indexOf("export async function checkRosterAvailability"));
+  const availability = between(actions, "export async function checkRosterAvailability", "export async function searchNewModels");
+  const search = between(actions, "export async function searchNewModels", "export async function addNewRosterModels");
+  const add = actions.slice(actions.indexOf("export async function addNewRosterModels"));
   assert.match(prices, /loadOpenRouterCatalog\(\)/);
   assert.match(prices, /planPriceUpdates\(rows, catalog\.models\)/);
   assert.match(prices, /writeRosterPrices\(plan\.updates\)/);
@@ -245,9 +404,19 @@ test("the model page keeps price updates and availability apart", () => {
   assert.match(availability, /disableRosterModels\(plan\.disableIds\)/);
   assert.match(availability, /catalog\.error/);
   assert.doesNotMatch(availability, /redirect\(|planPriceUpdates|writeRosterPrices/);
+  assert.match(search, /loadOpenRouterCatalog\(\)/);
+  assert.match(search, /planNewModels\(rows, catalog\.models/);
+  assert.match(search, /catalog\.error/);
+  assert.doesNotMatch(search, /redirect\(|insertDiscoveredModels|writeRosterPrices|disableRosterModels|planPriceUpdates|planUnavailable/);
+  assert.match(add, /planNewModels\(rows, catalog\.models/);
+  assert.match(add, /insertDiscoveredModels\(/);
+  assert.match(add, /catalog\.error/);
+  assert.doesNotMatch(add, /redirect\(|writeRosterPrices|disableRosterModels|planPriceUpdates|planUnavailable/);
+  assert.match(page, /Search for new models/);
 
   const write = between(roster, "export async function writeRosterPrices", "export async function disableRosterModels");
-  const disable = between(roster, "export async function disableRosterModels", "async function resolveCompany");
+  const disable = between(roster, "export async function disableRosterModels", "export async function insertDiscoveredModels");
+  const insert = between(roster, "export async function insertDiscoveredModels", "async function resolveCompany");
   assert.match(write, /await requireOwner\(\)/);
   assert.match(write, /input_usd_per_mtok: row\.inputUsdPerMtok/);
   assert.match(write, /output_usd_per_mtok: row\.outputUsdPerMtok/);
@@ -255,6 +424,22 @@ test("the model page keeps price updates and availability apart", () => {
   assert.match(disable, /await requireOwner\(\)/);
   assert.match(disable, /enabled: false/);
   assert.doesNotMatch(disable, /\.delete\(|input_usd_per_mtok|output_usd_per_mtok/);
+  assert.match(insert, /await requireOwner\(\)/);
+  assert.match(insert, /enabled: false/);
+  assert.match(insert, /openrouter_id: openrouterId/);
+  assert.match(insert, /released_on:/);
+  assert.match(insert, /input_usd_per_mtok:/);
+  assert.match(insert, /output_usd_per_mtok:/);
+  assert.match(insert, /companyForOrg/);
+  assert.match(insert, /size,/);
+  assert.match(insert, /difficulty: difficultyNumber\[difficulty\]/);
+  assert.match(insert, /parseSize\(model\.size\)/);
+  assert.match(insert, /parseDifficulty\(model\.difficulty\)/);
+  assert.match(insert, /reasoning: model\.reasoning/);
+  assert.match(insert, /provider_settings: model\.reasoning \? \{ reasoning: \{ effort: "low" \} \} : \{\}/);
+  assert.match(add, /reasoning: model\.reasoning/);
+  assert.doesNotMatch(insert, /size: "small"|difficultyNumber\.medium/);
+  assert.doesNotMatch(insert, /description|model_categories|resolveCompany|\.delete\(/);
 
   assert.match(catalog, /import "server-only"/);
   assert.match(catalog, /await requireOwner\(\)/);
