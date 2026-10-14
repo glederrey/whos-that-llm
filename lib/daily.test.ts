@@ -201,6 +201,8 @@ test("daily stores one model per difficulty and does not reset play data", () =>
   assert.match(baseline, /create table public\.daily_models/);
   assert.match(baseline, /create table public\.openrouter_providers/);
   assert.match(baseline, /0032_openrouter_providers\.sql/);
+  assert.match(baseline, /Do not run 0028 through 0032 after this script/);
+  assert.match(baseline, /starting with 0033/);
   assert.match(baseline, /to_char\(today, 'YYYY-MM-DD'\)/);
   assert.doesNotMatch(baseline, /daily_key date/);
 });

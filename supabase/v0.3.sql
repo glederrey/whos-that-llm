@@ -6,6 +6,7 @@
 -- be trusted or blacklisted.
 -- This includes the migrations through 0032_openrouter_providers.sql.
 -- Do not run 0028 through 0032 after this script.
+-- Run later migration scripts starting with 0033, in filename order.
 
 create table public.companies (
   id text primary key,
