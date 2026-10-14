@@ -319,6 +319,7 @@ function ModelCard({
           <p>
             Input {formatSyncPrice(model.inputUsdPerMtok)} · Output {formatSyncPrice(model.outputUsdPerMtok)}
           </p>
+          {model.reasoning ? <p><span className="pill">Reasoning</span></p> : null}
           <p>{href ? <a href={href} target="_blank" rel="noreferrer">{model.id}</a> : model.id}</p>
         </div>
         <div className="roster-new-picks">

@@ -34,6 +34,7 @@ function listed(
     outputUsdPerMtok: output,
     outputModalities: extra?.outputModalities ?? [],
     modality: extra?.modality ?? null,
+    reasoning: extra?.reasoning ?? false,
   };
 }
 
@@ -198,6 +199,9 @@ test("a catalog row keeps the name, description, created time, and text outputs"
       },
       { id: "org/from-modality", architecture: { modality: "text->text+audio" } },
       { id: "org/blank-description", description: "  ", created: 0 },
+      { id: "org/thinks", reasoning: { mandatory: true } },
+      { id: "org/optional", reasoning: { mandatory: false } },
+      { id: "org/plain", reasoning: null },
     ],
   });
   assert.equal(parsed?.[0].name, "Chat");
@@ -209,6 +213,10 @@ test("a catalog row keeps the name, description, created time, and text outputs"
   assert.equal(parsed?.[2].description, null);
   assert.equal(parsed?.[2].created, null);
   assert.deepEqual(parsed?.[2].outputModalities, []);
+  assert.equal(parsed?.[3].reasoning, true);
+  assert.equal(parsed?.[4].reasoning, true);
+  assert.equal(parsed?.[5].reasoning, false);
+  assert.equal(parsed?.[0].reasoning, false);
 });
 
 test("a dated snapshot is the same roster model", () => {
@@ -242,6 +250,7 @@ test("new models are recent text models that are not already on the roster", () 
       outputUsdPerMtok: extra.outputUsdPerMtok === undefined ? 2 : extra.outputUsdPerMtok,
       outputModalities: extra.outputModalities ?? ["text"],
       modality: extra.modality === undefined ? "text->text" : extra.modality,
+      reasoning: extra.reasoning ?? false,
     };
   }
   const roster = [
@@ -315,7 +324,8 @@ test("the model page keeps price updates and availability apart", () => {
   assert.match(buttons, /Add models/);
   assert.match(buttons, /Add models[\s\S]{0,700}Close/);
   assert.match(buttons, /Size for \$\{model\.name\}/);
-  assert.match(buttons, /Difficulty for \$\{model\.name\}/);
+  assert.match(buttons, />Reasoning</);
+  assert.match(buttons, /model\.reasoning/);
   assert.match(buttons, /!ready/);
   assert.match(buttons, /visible\.length === 0/);
   assert.match(buttons, /No new text models in the last 30 days\./);

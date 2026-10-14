@@ -11,6 +11,7 @@ export type CatalogModel = {
   outputUsdPerMtok: number | null;
   outputModalities: string[];
   modality: string | null;
+  reasoning: boolean;
 };
 
 export type SyncModel = {
@@ -107,6 +108,7 @@ export function parseOpenRouterCatalog(body: unknown): CatalogModel[] | null {
       outputUsdPerMtok: catalogPrice(prices.completion),
       outputModalities: details.outputModalities,
       modality: details.modality,
+      reasoning: details.reasoning,
     });
   }
   return models;
@@ -220,6 +222,7 @@ export type NewModelCard = {
   releasedOn: string | null;
   inputUsdPerMtok: number | null;
   outputUsdPerMtok: number | null;
+  reasoning: boolean;
 };
 
 export type NewModelsResult =
@@ -268,6 +271,7 @@ export function planNewModels(roster: SyncModel[], catalog: CatalogModel[], nowS
     releasedOn: releasedOnFromCreated(model.created) || null,
     inputUsdPerMtok: model.inputUsdPerMtok,
     outputUsdPerMtok: model.outputUsdPerMtok,
+    reasoning: model.reasoning,
   }));
 }
 
@@ -278,8 +282,8 @@ export function openRouterModelHref(id: string): string | null {
   return `https://openrouter.ai/${trimmed}`;
 }
 
-function catalogDetails(row: object): Pick<CatalogModel, "name" | "description" | "created" | "outputModalities" | "modality"> {
-  const record = row as { name?: unknown; description?: unknown; created?: unknown; architecture?: unknown };
+function catalogDetails(row: object): Pick<CatalogModel, "name" | "description" | "created" | "outputModalities" | "modality" | "reasoning"> {
+  const record = row as { name?: unknown; description?: unknown; created?: unknown; architecture?: unknown; reasoning?: unknown };
   const name = typeof record.name === "string" ? record.name.trim() : "";
   const description = typeof record.description === "string" && record.description.trim() ? record.description.trim() : null;
   const architecture = record.architecture;
@@ -297,7 +301,12 @@ function catalogDetails(row: object): Pick<CatalogModel, "name" | "description" 
     created: catalogCreated(record.created),
     outputModalities: listed.length > 0 ? listed : outputsFromModality(modality),
     modality,
+    reasoning: catalogReasoning(record.reasoning),
   };
+}
+
+function catalogReasoning(value: unknown): boolean {
+  return Boolean(value && typeof value === "object" && !Array.isArray(value));
 }
 
 function outputsFromModality(modality: string | null): string[] {
