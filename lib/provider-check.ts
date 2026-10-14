@@ -67,6 +67,14 @@ export function outputGapPercent(gptTokens: number, output: number, reasoning: n
   return Math.round(((visible - gptTokens) / base) * 100);
 }
 
+/** Signed percent for the providers table. Positive means visible output is above gpt-tokenizer. */
+export function formatOutputGap(gptTokens: number | null, output: number | null, reasoning: number | null): string {
+  if (output === null || gptTokens === null) return "—";
+  const percent = outputGapPercent(gptTokens, output, reasoning ?? 0);
+  const sign = percent > 0 ? "+" : "";
+  return `${sign}${percent.toLocaleString("en-US")}%`;
+}
+
 export function formatSentTranscript(sent: readonly { role: string; content: string }[]): string {
   return sent.map((turn) => `${turn.role}\n${turn.content}`).join("\n\n");
 }

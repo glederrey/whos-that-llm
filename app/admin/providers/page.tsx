@@ -3,7 +3,7 @@ import { ProviderReason } from "@/components/provider-reason";
 import { SectionNav } from "@/components/section-nav";
 import { requireOwner } from "@/lib/admin-access";
 import { loadProviderRecords, type ProviderRecord } from "@/lib/openrouter-providers";
-import { visibleOutput } from "@/lib/provider-check";
+import { formatOutputGap, visibleOutput } from "@/lib/provider-check";
 
 export const dynamic = "force-dynamic";
 
@@ -67,6 +67,7 @@ function ProviderTable({ rows, empty, blacklisted }: { rows: ProviderRecord[]; e
             <th>Cached</th>
             <th>Output</th>
             <th>gpt-tokenizer</th>
+            <th>Gap</th>
             <th>Log</th>
             {blacklisted ? <th></th> : null}
           </tr>
@@ -82,6 +83,7 @@ function ProviderTable({ rows, empty, blacklisted }: { rows: ProviderRecord[]; e
               <td>{count(row.cachedTokens)}</td>
               <td>{visibleCount(row.outputTokens, row.reasoningTokens)}</td>
               <td>{count(row.gptTokens)}</td>
+              <td>{formatOutputGap(row.gptTokens, row.outputTokens, row.reasoningTokens)}</td>
               <td>{row.reason ? <ProviderReason reason={row.reason} /> : "—"}</td>
               {blacklisted ? (
                 <td>

@@ -8,6 +8,7 @@ import {
   emitPaced,
   canonicalProviderSlug,
   openRouterRequestOptions,
+  formatOutputGap,
   outputAboveCount,
   outputGapPercent,
   revealStride,
@@ -36,6 +37,11 @@ test("a provider is blacklisted only when it reports no reasoning and the gap is
   assert.equal(outputAboveCount(0, 5, 0), false);
   assert.equal(outputAboveCount(0, 17, 0), true);
   assert.equal(outputGapPercent(180, 1000, 0), 456);
+  assert.equal(formatOutputGap(254, 450, 153), "+17%");
+  assert.equal(formatOutputGap(100, 80, 0), "-20%");
+  assert.equal(formatOutputGap(100, 100, 0), "0%");
+  assert.equal(formatOutputGap(null, 100, 0), "—");
+  assert.equal(formatOutputGap(100, null, 0), "—");
 });
 
 test("the blacklist reason keeps the date, model, provider, messages, and token counts", () => {
@@ -139,7 +145,8 @@ test("the provider page lists both tables and can clear a blacklist", () => {
   assert.match(page, /Trusted/);
   assert.match(page, /Deblacklist/);
   assert.match(page, /action=\{clearProvider\}/);
-  assert.match(page, /<th>Output<\/th>\s*<th>gpt-tokenizer<\/th>/);
+  assert.match(page, /<th>Output<\/th>\s*<th>gpt-tokenizer<\/th>\s*<th>Gap<\/th>/);
+  assert.match(page, /formatOutputGap/);
   assert.match(page, /visibleOutput/);
   assert.match(page, /ProviderReason/);
   assert.match(fs.readFileSync(path.join(root, "components/provider-reason.tsx"), "utf8"), /showModal/);

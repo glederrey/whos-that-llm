@@ -1311,7 +1311,7 @@ html[data-theme="dark"] .history-facts .board-chip.no-hints {
 .roster-card { padding: 0; overflow-x: auto; }
 .roster { width: 100%; min-width: 1120px; border-collapse: collapse; }
 .roster.compact { min-width: 640px; }
-.roster.providers { min-width: 960px; }
+.roster.providers { min-width: 1040px; }
 .dialog.provider-log {
   width: min(720px, calc(100vw - 32px));
   max-width: min(720px, calc(100vw - 32px));
