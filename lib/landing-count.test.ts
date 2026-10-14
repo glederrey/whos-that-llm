@@ -22,13 +22,22 @@ test("a round counts as played only after it is solved, missed, or given up", ()
   assert.equal(isFinishedGame("active"), false);
 });
 
-test("games today on the main page ignores a round with no finished_at", () => {
+test("games today on the main page counts the UTC day the round finished", () => {
   const latest = gamesTodayWhere(
+    fs.readFileSync(path.join(root, "supabase/migrations/0031_games_today_finished_day.sql"), "utf8"),
+  );
+  assert.match(latest, /finished_at >= \(date_trunc\('day', now\(\) at time zone 'utc'\) at time zone 'utc'\)/);
+  assert.match(
+    latest,
+    /finished_at < \(date_trunc\('day', now\(\) at time zone 'utc'\) at time zone 'utc'\) \+ interval '1 day'/,
+  );
+  assert.doesNotMatch(latest, /started_at/);
+  assert.doesNotMatch(latest, /status in/);
+  const prior = gamesTodayWhere(
     fs.readFileSync(path.join(root, "supabase/migrations/0025_games_today_finished_at.sql"), "utf8"),
   );
-  assert.match(latest, /started_at >= \(date_trunc\('day', now\(\) at time zone 'utc'\) at time zone 'utc'\)/);
-  assert.match(latest, /finished_at is not null/);
-  assert.doesNotMatch(latest, /status in/);
+  assert.match(prior, /started_at >= \(date_trunc\('day', now\(\) at time zone 'utc'\) at time zone 'utc'\)/);
+  assert.match(prior, /finished_at is not null/);
   const listed = finishedGameStatuses.map((status) => `'${status}'`).join(", ");
   for (const file of ["supabase/v0.1.sql", "supabase/migrations/0024_finished_games_today.sql"]) {
     const where = gamesTodayWhere(fs.readFileSync(path.join(root, file), "utf8"));
@@ -37,22 +46,32 @@ test("games today on the main page ignores a round with no finished_at", () => {
   }
   const rounds = fs.readFileSync(path.join(root, "lib/rounds.ts"), "utf8");
   assert.match(rounds, /landingSnapshot\(\)/);
-  assert.match(rounds, /\.gte\("started_at", start\)\s*\.not\("finished_at", "is", null\)/);
+  assert.match(rounds, /\.gte\("finished_at", start\)\s*\.lt\("finished_at", end\)/);
+  assert.doesNotMatch(rounds, /\.gte\("started_at", start\)/);
   const home = fs.readFileSync(path.join(root, "app/page.tsx"), "utf8");
   assert.match(home, /snapshot\.gamesToday/);
 });
 
 test("players on the main page are distinct accounts with a finished game", () => {
-  const sql = fs.readFileSync(path.join(root, "supabase/migrations/0029_finished_players.sql"), "utf8");
-  assert.match(
-    sql,
-    /'players',\s*\(\s*select count\(distinct user_id\)::int\s*from public\.games\s*where finished_at is not null\s*and user_id is not null\s*\)/,
-  );
+  const players =
+    /'players',\s*\(\s*select count\(distinct user_id\)::int\s*from public\.games\s*where finished_at is not null\s*and user_id is not null\s*\)/;
+  const previous = fs.readFileSync(path.join(root, "supabase/migrations/0029_finished_players.sql"), "utf8");
+  const sql = fs.readFileSync(path.join(root, "supabase/migrations/0031_games_today_finished_day.sql"), "utf8");
+  assert.match(previous, players);
+  assert.match(sql, players);
+  assert.match(sql, /'models', \(select count\(\*\)::int from public\.models where enabled\)/);
   assert.doesNotMatch(sql, /from public\.profiles/);
   assert.doesNotMatch(sql, /alter table|delete from|truncate/i);
+  const priorToday = gamesTodayWhere(previous);
+  assert.match(priorToday, /started_at >= \(date_trunc\('day', now\(\) at time zone 'utc'\) at time zone 'utc'\)/);
+  assert.match(priorToday, /finished_at is not null/);
   const today = gamesTodayWhere(sql);
-  assert.match(today, /started_at >= \(date_trunc\('day', now\(\) at time zone 'utc'\) at time zone 'utc'\)/);
-  assert.match(today, /finished_at is not null/);
+  assert.match(today, /finished_at >= \(date_trunc\('day', now\(\) at time zone 'utc'\) at time zone 'utc'\)/);
+  assert.match(
+    today,
+    /finished_at < \(date_trunc\('day', now\(\) at time zone 'utc'\) at time zone 'utc'\) \+ interval '1 day'/,
+  );
+  assert.doesNotMatch(today, /started_at/);
   const rounds = fs.readFileSync(path.join(root, "lib/rounds.ts"), "utf8");
   assert.match(
     rounds,

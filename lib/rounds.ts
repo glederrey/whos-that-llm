@@ -720,14 +720,16 @@ async function readPublicStats(client: SupabaseClient) {
     };
   }
   const midnight = new Date();
-  const start = new Date(Date.UTC(midnight.getUTCFullYear(), midnight.getUTCMonth(), midnight.getUTCDate())).toISOString();
+  const startDate = new Date(Date.UTC(midnight.getUTCFullYear(), midnight.getUTCMonth(), midnight.getUTCDate()));
+  const start = startDate.toISOString();
+  const end = new Date(startDate.getTime() + 24 * 60 * 60 * 1000).toISOString();
   const [models, gamesToday, players] = await Promise.all([
     client.from("models").select("id", { count: "exact", head: true }).eq("enabled", true),
     client
       .from("games")
       .select("id", { count: "exact", head: true })
-      .gte("started_at", start)
-      .not("finished_at", "is", null),
+      .gte("finished_at", start)
+      .lt("finished_at", end),
     countPlayers(client),
   ]);
   if (models.error) throw new Error(models.error.message);
