@@ -98,6 +98,25 @@ test("reasoning inside the completion count is left out of the output lines", ()
   assert.equal(replyTokenTooltip(views[1])[7], "Total output tokens: 41");
 });
 
+test("a provider that omits reasoning cannot push the next input negative", () => {
+  const views = replyTokenLines([
+    { promptTokens: 408, completionTokens: 111, reasoningTokens: 45 },
+    { promptTokens: 497, completionTokens: 1000, reasoningTokens: 0 },
+    { promptTokens: 621, completionTokens: 690, reasoningTokens: 314 },
+  ]);
+  assert.equal(views[1].input, 23);
+  assert.equal(views[1].output, 1000);
+  assert.equal(views[1].reasoning, 876);
+  assert.equal(replyTokenTooltip(views[1])[1], "Output tokens: 124");
+  assert.equal(replyTokenTooltip(views[1])[2], "Reasoning tokens: 876");
+  assert.equal(views[2].input, 0);
+  assert.equal(views[2].rawPrompt, 621);
+  assert.equal(replyTokenTooltip(views[2])[0], "Input tokens: 0");
+  assert.equal(replyTokenTooltip(views[2])[1], "Output tokens: 376");
+  assert.equal(replyTokenTooltip(views[2])[5], "Prompt tokens: 621");
+  assert.equal(inputSinceStartMatchesPrompt(views), true);
+});
+
 test("reasoning larger than the completion stays out of the output subtraction", () => {
   const views = replyTokenLines([{ promptTokens: 1000, completionTokens: 200, reasoningTokens: 400 }]);
   assert.equal(views[0].outputTotal, 200);

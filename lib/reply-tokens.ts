@@ -32,6 +32,18 @@ export function resentCompletion(output: number, reasoning: number): number {
   return output;
 }
 
+/**
+ * Completion tokens a provider left inside the output count without calling them reasoning.
+ * The next prompt is the check: it cannot contain more of that reply than it grew.
+ * A reported reasoning count is trusted, including when it is larger than the completion.
+ */
+export function unlabeledReasoning(output: number, reasoning: number, prompt: number, nextPrompt: number | null): number {
+  if (nextPrompt === null || reasoning > 0) return 0;
+  const room = Math.max(0, nextPrompt - prompt);
+  if (output <= room) return 0;
+  return output - room;
+}
+
 /** Input added by each reply. Reasoning that was not sent again is left out of the subtraction. Cache read is not used. */
 export function replyTokenLines(calls: MeasuredCall[]): ReplyTokens[] {
   let sinceStart = 0;
@@ -39,10 +51,19 @@ export function replyTokenLines(calls: MeasuredCall[]): ReplyTokens[] {
   return calls.map((call, index) => {
     const prompt = shownCount(call.promptTokens);
     const output = shownCount(call.completionTokens);
-    const reasoning = shownCount(call.reasoningTokens);
+    const next = index + 1 < calls.length ? calls[index + 1] : null;
+    const reasoning =
+      shownCount(call.reasoningTokens) +
+      unlabeledReasoning(output, shownCount(call.reasoningTokens), prompt, next ? shownCount(next.promptTokens) : null);
     const previous = index === 0 ? null : calls[index - 1];
+    const previousPrompt = previous ? shownCount(previous.promptTokens) : 0;
+    const previousOutput = previous ? shownCount(previous.completionTokens) : 0;
+    const previousReasoning = previous
+      ? shownCount(previous.reasoningTokens) +
+        unlabeledReasoning(previousOutput, shownCount(previous.reasoningTokens), previousPrompt, prompt)
+      : 0;
     const input = previous
-      ? prompt - shownCount(previous.promptTokens) - resentCompletion(shownCount(previous.completionTokens), shownCount(previous.reasoningTokens))
+      ? prompt - previousPrompt - resentCompletion(previousOutput, previousReasoning)
       : prompt;
     sinceStart += input;
     outputTotal += resentCompletion(output, reasoning);
