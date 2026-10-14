@@ -11,7 +11,7 @@ The first playable build is All models, with six small models enabled: Claude Ha
 ## Run it locally
 
 1. `npm install`
-2. In the Supabase SQL editor, run [`supabase/v0.2.sql`](supabase/v0.2.sql) once. That script is the baseline for a fresh database. It already includes the migrations through `0027`. Then run all the migration scripts in [`supabase/migrations/`](supabase/migrations/) starting with `0028`, in filename order. [`supabase/v0.1.sql`](supabase/v0.1.sql) stays in the repo as the previous baseline.
+2. In the Supabase SQL editor, run [`supabase/v0.3.sql`](supabase/v0.3.sql) once. That script is the baseline for a fresh database. It already includes the migrations through [`0032_openrouter_providers.sql`](supabase/migrations/0032_openrouter_providers.sql). Do not run the migration scripts after it. [`supabase/v0.2.sql`](supabase/v0.2.sql) and [`supabase/v0.1.sql`](supabase/v0.1.sql) stay in the repo as the previous baselines.
 3. Put the keys in `.env.local`. The names are in [`.env.example`](.env.example). Do not commit that file.
 4. In Supabase Auth, set the site URL and the redirect URLs to the site root, including `http://localhost:3000/` for local play. Confirmation and password reset both return to `/`.
 5. `npm run dev`, then open `http://localhost:3000`.

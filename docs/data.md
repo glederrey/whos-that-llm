@@ -112,7 +112,7 @@ anon and authenticated cannot insert, update, or delete `models` or `companies`.
 
 ### `openrouter_providers`
 
-One row per OpenRouter provider slug the server has judged. A missing slug has not been seen. `blacklisted` true is sent as `provider.ignore` on later calls. `0032_openrouter_providers.sql` adds the table. anon and authenticated cannot read or write it.
+One row per OpenRouter provider slug the server has judged. A missing slug has not been seen. `blacklisted` true is sent as `provider.ignore` on later calls. `0032_openrouter_providers.sql` adds the table, and `v0.3.sql` includes it. anon and authenticated cannot read or write it.
 
 | Column | Type | Notes |
 |---|---|---|
@@ -217,7 +217,7 @@ The hidden model for one difficulty on one UTC day. `games.daily_key` records th
 
 The first start of that day and difficulty inserts the row. The inserted model must have `difficulty <=` the chosen level, so Easy cannot store an Impossible model. A concurrent second start hits the primary key, does nothing, and reads the stored id. The next UTC day has no row yet, so each level draws again. anon and authenticated cannot read the table. The model id is the answer.
 
-`0030_daily_model.sql` adds the table and teaches `start_game` to fill `games.daily_key`. It turns Daily on and sets its blurb to **One round per difficulty. Everyone at that level gets the same model. A new puzzle tomorrow.** It does not rewrite games, models, or accounts. `v0.2.sql` stays the baseline and does not include this table. The lobby shows that sentence and leaves Daily open even before this migration is applied.
+`0030_daily_model.sql` adds the table and teaches `start_game` to fill `games.daily_key`. It turns Daily on and sets its blurb to **One round per difficulty. Everyone at that level gets the same model. A new puzzle tomorrow.** It does not rewrite games, models, or accounts. `v0.3.sql` includes this table. `v0.2.sql` does not, so a database created from that baseline still needs this migration. The lobby shows that sentence and leaves Daily open even before this migration is applied.
 
 `0014_delete_games_with_account.sql` put `games_user_id_fkey` back as `on delete cascade`. `0017_anonymize_games_on_account_delete.sql` replaces that with `on delete set null` and makes `games.user_id`, `games.username`, and `usage.user_id` nullable. The server clears `user_id` and `username` on that player's games, and clears `usage.user_id`, before it deletes the auth user. Messages and guesses stay, because they cascade from `games` only when a game row is deleted. `public.leaderboard()` skips games whose `user_id` or `username` is null, so a deleted player is not a blank row and is not pooled with other deleted players. Game, solve, token, and guess counts still include those rounds. Profile history reads `games.user_id`, so it does not. anon and authenticated still cannot delete these tables. The server action uses the service key after it has read the session.
 
