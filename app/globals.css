@@ -1311,6 +1311,14 @@ html[data-theme="dark"] .history-facts .board-chip.no-hints {
 .roster-card { padding: 0; overflow-x: auto; }
 .roster { width: 100%; min-width: 1120px; border-collapse: collapse; }
 .roster.compact { min-width: 640px; }
+.roster.providers { min-width: 960px; }
+.provider-reason {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  max-height: 16rem;
+  overflow: auto;
+  margin: 8px 0 0;
+}
 .roster th {
   text-align: left;
   padding: 12px 14px;

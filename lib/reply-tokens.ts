@@ -3,6 +3,8 @@ export type MeasuredCall = {
   completionTokens: number;
   reasoningTokens?: number;
   cacheReadTokens?: number;
+  /** gpt-tokenizer count of the visible reply. Absent until the call has finished. */
+  gptTokens?: number;
 };
 
 export type ReplyTokens = {
@@ -18,10 +20,16 @@ export type ReplyTokens = {
   /** Reported reasoning, plus completion tokens the next prompt shows were not sent again when the provider reported none. */
   reasoning: number;
   cacheRead: number;
+  /** gpt-tokenizer count of this visible reply, or null when the call did not send one. */
+  gptTokens: number | null;
 };
 
 function shownCount(value: number | undefined): number {
   return typeof value === "number" && Number.isFinite(value) ? value : 0;
+}
+
+function shownGpt(value: number | undefined): number | null {
+  return typeof value === "number" && Number.isFinite(value) ? value : null;
 }
 
 /**
@@ -76,6 +84,7 @@ export function replyTokenLines(calls: MeasuredCall[]): ReplyTokens[] {
       rawPrompt: prompt,
       reasoning,
       cacheRead: shownCount(call.cacheReadTokens),
+      gptTokens: shownGpt(call.gptTokens),
     };
   });
 }
@@ -93,6 +102,7 @@ export function replyTokenTooltip(tokens: ReplyTokens): string[] {
   return [
     `Input tokens: ${count(tokens.input)}`,
     `Output tokens: ${count(resentCompletion(tokens.output, tokens.reasoning))}`,
+    ...(tokens.gptTokens === null ? [] : [`gpt-tokenizer: ${count(tokens.gptTokens)}`]),
     `Reasoning tokens: ${count(tokens.reasoning)}`,
     `Cache read tokens: ${count(tokens.cacheRead)}`,
     "",

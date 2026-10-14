@@ -9,6 +9,7 @@ import {
   parseCatalogPage,
   parseOpenRouterCatalog,
   planPriceUpdates,
+  planReasoningUpdates,
   planUnavailable,
   type CatalogModel,
   type SyncModel,
@@ -47,11 +48,11 @@ test("a per-token catalog price is the roster list price", () => {
     ],
   });
   assert.deepEqual(catalog, [
-    { id: "anthropic/claude-opus-4.1", inputUsdPerMtok: 15, outputUsdPerMtok: 75 },
-    { id: "free/zero", inputUsdPerMtok: 0, outputUsdPerMtok: 0 },
-    { id: "nousresearch/hermes", inputUsdPerMtok: null, outputUsdPerMtok: null },
-    { id: "partial/input", inputUsdPerMtok: 1, outputUsdPerMtok: null },
-    { id: "spaced/id", inputUsdPerMtok: null, outputUsdPerMtok: null },
+    { id: "anthropic/claude-opus-4.1", inputUsdPerMtok: 15, outputUsdPerMtok: 75, reasoning: false },
+    { id: "free/zero", inputUsdPerMtok: 0, outputUsdPerMtok: 0, reasoning: false },
+    { id: "nousresearch/hermes", inputUsdPerMtok: null, outputUsdPerMtok: null, reasoning: false },
+    { id: "partial/input", inputUsdPerMtok: 1, outputUsdPerMtok: null, reasoning: false },
+    { id: "spaced/id", inputUsdPerMtok: null, outputUsdPerMtok: null, reasoning: false },
   ]);
   assert.equal(parseOpenRouterCatalog(null), null);
   assert.equal(parseOpenRouterCatalog({}), null);
@@ -97,11 +98,11 @@ test("a catalog page is complete only when every model was returned", () => {
 
 test("price updates list changes and leave matching or unpriced models alone", () => {
   const catalog: CatalogModel[] = [
-    { id: "anthropic/claude-opus-4.1", inputUsdPerMtok: 20, outputUsdPerMtok: 75 },
-    { id: "openai/same", inputUsdPerMtok: 2, outputUsdPerMtok: 10 },
-    { id: "nousresearch/hermes", inputUsdPerMtok: null, outputUsdPerMtok: null },
-    { id: "partial/input", inputUsdPerMtok: 1, outputUsdPerMtok: null },
-    { id: "new/price", inputUsdPerMtok: 0, outputUsdPerMtok: 0.2 },
+    { id: "anthropic/claude-opus-4.1", inputUsdPerMtok: 20, outputUsdPerMtok: 75, reasoning: false },
+    { id: "openai/same", inputUsdPerMtok: 2, outputUsdPerMtok: 10, reasoning: false },
+    { id: "nousresearch/hermes", inputUsdPerMtok: null, outputUsdPerMtok: null, reasoning: false },
+    { id: "partial/input", inputUsdPerMtok: 1, outputUsdPerMtok: null, reasoning: false },
+    { id: "new/price", inputUsdPerMtok: 0, outputUsdPerMtok: 0.2, reasoning: false },
   ];
   const plan = planPriceUpdates(
     [
@@ -145,10 +146,45 @@ test("price updates list changes and leave matching or unpriced models alone", (
   assert.equal(formatSyncPrice(null), "—");
 });
 
+test("a catalog reasoning object marks the model, and an explicit false does not", () => {
+  const catalog = parseOpenRouterCatalog({
+    data: [
+      { id: "qwen/think", pricing: { prompt: "0.000001", completion: "0.000002" }, reasoning: { supported: true } },
+      { id: "qwen/present", pricing: {}, reasoning: { default_effort: "low" } },
+      { id: "qwen/off", pricing: {}, reasoning: { supported: false } },
+      { id: "qwen/plain", pricing: {} },
+    ],
+  });
+  assert.deepEqual(
+    catalog?.map((model) => [model.id, model.reasoning]),
+    [
+      ["qwen/think", true],
+      ["qwen/present", true],
+      ["qwen/off", false],
+      ["qwen/plain", false],
+    ],
+  );
+  const updates = planReasoningUpdates(
+    [
+      { id: "think", openrouterId: "qwen/think", reasoning: false, providerSettings: {} },
+      { id: "present", openrouterId: "qwen/present", reasoning: true, providerSettings: { reasoning: { effort: "xhigh" } } },
+      { id: "off", openrouterId: "qwen/off", reasoning: true, providerSettings: { reasoning: { effort: "low" } } },
+      { id: "plain", openrouterId: "qwen/plain", reasoning: false, providerSettings: {} },
+      { id: "empty", openrouterId: "qwen/think", reasoning: true, providerSettings: {} },
+    ],
+    catalog ?? [],
+  );
+  assert.deepEqual(updates, [
+    { id: "think", reasoning: true, providerSettings: { reasoning: { effort: "low" } } },
+    { id: "off", reasoning: false, providerSettings: null },
+    { id: "empty", reasoning: true, providerSettings: { reasoning: { effort: "low" } } },
+  ]);
+});
+
 test("availability turns off models OpenRouter no longer lists", () => {
   const catalog: CatalogModel[] = [
-    { id: "openai/still", inputUsdPerMtok: 1, outputUsdPerMtok: 2 },
-    { id: "openai/off-but-listed", inputUsdPerMtok: 1, outputUsdPerMtok: 2 },
+    { id: "openai/still", inputUsdPerMtok: 1, outputUsdPerMtok: 2, reasoning: false },
+    { id: "openai/off-but-listed", inputUsdPerMtok: 1, outputUsdPerMtok: 2, reasoning: false },
   ];
   const plan = planUnavailable(
     [

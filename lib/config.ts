@@ -4,7 +4,7 @@ import type { HintKey } from "./game";
 export const config = {
   messageLimit: 10,
   maxUserChars: 500,
-  maxOutputTokens: 1000,
+  maxOutputTokens: 2000,
   modelBase: 2000,
   regionPoints: 100,
   companyPoints: 300,

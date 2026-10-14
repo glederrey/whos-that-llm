@@ -1,7 +1,18 @@
+import type { JSONObject } from "@ai-sdk/provider";
 import { createOpenRouter } from "@openrouter/ai-sdk-provider";
 import { APICallError, streamText, type ModelMessage } from "ai";
 import { systemPrompt } from "./prompt";
 import { isCreditError } from "./game";
+import { countGptTokens } from "./gpt-tokens";
+import {
+  blacklistReason,
+  emitPaced,
+  formatSentTranscript,
+  openRouterRequestOptions,
+  outputAboveCount,
+  providerSlug,
+} from "./provider-check";
+import type { ProviderBook, ProviderVerdict } from "./openrouter-providers";
 import { readServerEnv } from "./server-env";
 import { takeWords } from "./words";
 
@@ -28,7 +39,7 @@ export type CallTokens = {
 export type SentTurn = { role: "system" | "user" | "assistant"; content: string };
 
 export type StreamedReply =
-  | { ok: true; text: string; usage: CallUsage; tokens: CallTokens; sent: SentTurn[] }
+  | { ok: true; text: string; usage: CallUsage; tokens: CallTokens; sent: SentTurn[]; gptTokens: number }
   | { ok: false; paused: boolean; message: string; sent: SentTurn[] };
 
 /** The system prompt and messages passed to the model for one call. */
@@ -89,11 +100,6 @@ function optionalCount(value: unknown): number | null {
   return null;
 }
 
-function providerSettings(raw: unknown): Record<string, unknown> {
-  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return {};
-  return raw as Record<string, unknown>;
-}
-
 function numberFrom(value: unknown): number {
   const n = typeof value === "number" ? value : Number(value);
   return Number.isFinite(n) ? n : 0;
@@ -111,6 +117,7 @@ export function buildModelMessages(
 export async function streamHiddenReply(input: {
   openrouterId: string;
   providerSettings: unknown;
+  reasoning: boolean;
   maxOutputTokens: number;
   messages: ModelMessage[];
   onWord: (word: string) => void;
@@ -121,65 +128,173 @@ export async function streamHiddenReply(input: {
   const apiKey = readServerEnv("OPENROUTER_API_KEY");
   if (!apiKey) return { ok: false, paused: false, message: "Missing OpenRouter key.", sent };
 
-  const openrouter = createOpenRouter({ apiKey });
+  let book: ProviderBook = { trusted: new Set(), ignored: [] };
+  try {
+    book = await (await import("./openrouter-providers")).loadProviderBook();
+  } catch {
+    book = { trusted: new Set(), ignored: [] };
+  }
 
+  const openrouter = createOpenRouter({ apiKey });
+  const ignored = [...book.ignored];
+
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    const outcome = await oneCall({
+      openrouter,
+      openrouterId: input.openrouterId,
+      providerSettings: input.providerSettings,
+      reasoning: input.reasoning,
+      maxOutputTokens: input.maxOutputTokens,
+      system,
+      messages,
+      sent,
+      ignore: ignored,
+      trusted: book.trusted,
+      onWord: input.onWord,
+    });
+    if (!outcome.ok) return outcome.reply;
+    if (!input.reasoning) {
+      await outcome.done();
+      return outcome.reply;
+    }
+
+    const over = outputAboveCount(outcome.reply.gptTokens, outcome.reply.tokens.output, outcome.reply.tokens.reasoning);
+    if (outcome.streamed) {
+      if (over && outcome.slug) await remember(verdict(input.openrouterId, outcome, true));
+      await outcome.done();
+      return outcome.reply;
+    }
+
+    if (!over) {
+      if (outcome.slug && !book.trusted.has(outcome.slug)) await remember(verdict(input.openrouterId, outcome, false));
+      await outcome.reveal();
+      return outcome.reply;
+    }
+
+    if (outcome.slug) {
+      await remember(verdict(input.openrouterId, outcome, true));
+      if (!ignored.includes(outcome.slug)) ignored.push(outcome.slug);
+    }
+    if (attempt === 1 || !outcome.slug) {
+      await outcome.reveal();
+      return outcome.reply;
+    }
+  }
+
+  return { ok: false, paused: false, message: "The reply failed.", sent };
+}
+
+type Attempt =
+  | { ok: false; reply: StreamedReply }
+  | {
+      ok: true;
+      reply: Extract<StreamedReply, { ok: true }>;
+      slug: string | null;
+      streamed: boolean;
+      done: () => Promise<void>;
+      reveal: () => Promise<void>;
+    };
+
+async function oneCall(input: {
+  openrouter: ReturnType<typeof createOpenRouter>;
+  openrouterId: string;
+  providerSettings: unknown;
+  reasoning: boolean;
+  maxOutputTokens: number;
+  system: string;
+  messages: ModelMessage[];
+  sent: SentTurn[];
+  ignore: string[];
+  trusted: Set<string>;
+  onWord: (word: string) => void;
+}): Promise<Attempt> {
   let streamError: unknown = null;
   const result = streamText({
-    model: openrouter(input.openrouterId),
-    system,
-    messages,
+    model: input.openrouter(input.openrouterId),
+    system: input.system,
+    messages: input.messages,
     temperature: 0.8,
     maxOutputTokens: input.maxOutputTokens,
     maxRetries: 0,
+    includeRawChunks: true,
     providerOptions: {
-      openrouter: {
-        ...providerSettings(input.providerSettings),
-        usage: { include: true },
-      },
+      openrouter: openRouterRequestOptions(input.providerSettings, input.reasoning, input.ignore) as JSONObject,
     },
     onError({ error }) {
       streamError = error;
     },
   });
 
-  let pending = "";
+  const out = createWordOut(input.onWord);
+  let mode: "pending" | "live" | "hold" = input.reasoning ? "pending" : "live";
+  let slug: string | null = null;
   let text = "";
-  try {
-    for await (const chunk of result.textStream) {
-      text += chunk;
-      const next = takeWords(pending, chunk, false);
-      pending = next.rest;
-      for (const word of next.emit) input.onWord(word);
+
+  function rememberSlug(value: unknown) {
+    const found = providerSlug(value);
+    if (!found || slug) return;
+    slug = found;
+  }
+
+  function startLiveIfTrusted() {
+    if (!input.reasoning || mode !== "pending" || !slug) return;
+    if (!input.trusted.has(slug) || input.ignore.includes(slug)) {
+      mode = "hold";
+      return;
     }
-    const flushed = takeWords(pending, "", true);
-    for (const word of flushed.emit) input.onWord(word);
+    mode = "live";
+    if (text) out.push(text, false, true);
+  }
+
+  try {
+    for await (const part of result.fullStream) {
+      if (part.type === "raw") {
+        rememberSlug(part.rawValue);
+        startLiveIfTrusted();
+      } else if (part.type === "finish-step") {
+        rememberSlug(part.providerMetadata);
+      } else if (part.type === "text-delta") {
+        text += part.text;
+        if (mode === "live") out.push(part.text, false, false);
+      } else if (part.type === "error") {
+        streamError = part.error;
+      }
+    }
   } catch (error) {
     streamError = error;
   }
 
-  if (streamError) return fail(streamError, sent);
+  if (streamError) {
+    if (mode === "live") await out.finish();
+    return { ok: false, reply: fail(streamError, input.sent) };
+  }
 
   const finish = await Promise.resolve(result.finishReason).catch(() => "error" as const);
-  if (finish === "error") return fail(streamError ?? new Error("The reply failed."), sent);
+  if (finish === "error") {
+    if (mode === "live") await out.finish();
+    return { ok: false, reply: fail(streamError ?? new Error("The reply failed."), input.sent) };
+  }
 
   const usage = await result.usage;
   const metadata = await Promise.resolve(result.providerMetadata).catch(() => undefined);
   const response = await Promise.resolve(result.response).catch(() => undefined);
+  rememberSlug(metadata);
   const openrouterMeta = metadata?.openrouter as Record<string, unknown> | undefined;
   const accounted = (openrouterMeta?.usage ?? {}) as Record<string, unknown>;
-
-  return {
+  const tokens = rawCallTokens(
+    {
+      inputTokens: usage.inputTokens,
+      outputTokens: usage.outputTokens,
+      reasoningTokens: usage.outputTokenDetails?.reasoningTokens,
+      cacheReadTokens: usage.inputTokenDetails?.cacheReadTokens,
+    },
+    accounted,
+  );
+  const reply: Extract<StreamedReply, { ok: true }> = {
     ok: true,
     text,
-    tokens: rawCallTokens(
-      {
-        inputTokens: usage.inputTokens,
-        outputTokens: usage.outputTokens,
-        reasoningTokens: usage.outputTokenDetails?.reasoningTokens,
-        cacheReadTokens: usage.inputTokenDetails?.cacheReadTokens,
-      },
-      accounted,
-    ),
+    tokens,
+    gptTokens: countGptTokens(text),
     usage: {
       inputTokens: usage.inputTokens ?? numberFrom(accounted.promptTokens),
       outputTokens: usage.outputTokens ?? numberFrom(accounted.completionTokens),
@@ -192,7 +307,84 @@ export async function streamHiddenReply(input: {
       costUsd: numberFrom(accounted.cost),
       generationId: response?.id ?? null,
     },
-    sent,
+    sent: input.sent,
+  };
+
+  if (mode === "live") out.push("", true, false);
+
+  return {
+    ok: true,
+    reply,
+    slug,
+    streamed: mode === "live",
+    done: () => out.finish(),
+    reveal: () => {
+      out.reveal(text);
+      return out.finish();
+    },
+  };
+}
+
+function verdict(model: string, outcome: Extract<Attempt, { ok: true }>, blacklisted: boolean): ProviderVerdict {
+  const slug = outcome.slug ?? "";
+  return {
+    slug,
+    blacklisted,
+    reason: blacklisted
+      ? blacklistReason({
+          at: new Date(),
+          model,
+          provider: slug,
+          inputText: formatSentTranscript(outcome.reply.sent),
+          outputText: outcome.reply.text,
+          inputTokens: outcome.reply.tokens.input,
+          outputTokens: outcome.reply.tokens.output,
+          reasoningTokens: outcome.reply.tokens.reasoning,
+          cachedTokens: outcome.reply.tokens.cacheRead,
+          gptTokens: outcome.reply.gptTokens,
+        })
+      : null,
+    model,
+    inputText: formatSentTranscript(outcome.reply.sent),
+    outputText: outcome.reply.text,
+    inputTokens: outcome.reply.tokens.input,
+    outputTokens: outcome.reply.tokens.output,
+    reasoningTokens: outcome.reply.tokens.reasoning,
+    cachedTokens: outcome.reply.tokens.cacheRead,
+    gptTokens: outcome.reply.gptTokens,
+  };
+}
+
+async function remember(verdictToSave: ProviderVerdict) {
+  try {
+    await (await import("./openrouter-providers")).saveProviderVerdict(verdictToSave);
+  } catch {
+    // The in-memory ignore list still skips this slug for the retry.
+  }
+}
+
+function createWordOut(onWord: (word: string) => void) {
+  let rest = "";
+  let chain = Promise.resolve();
+
+  function enqueue(words: string[], pace: boolean) {
+    if (words.length === 0) return;
+    chain = chain.then(() => emitPaced(words, onWord, pace));
+  }
+
+  return {
+    push(chunk: string, flush: boolean, pace: boolean) {
+      const next = takeWords(rest, chunk, flush);
+      rest = next.rest;
+      enqueue(next.emit, pace);
+    },
+    reveal(text: string) {
+      rest = "";
+      enqueue(takeWords("", text, true).emit, true);
+    },
+    finish() {
+      return chain;
+    },
   };
 }
 
@@ -207,6 +399,7 @@ function fail(error: unknown, sent: SentTurn[]): StreamedReply {
 export async function streamPlayedReply(input: {
   openrouterId: string;
   providerSettings: unknown;
+  reasoning: boolean;
   maxOutputTokens: number;
   transcript: { role: "user" | "assistant"; content: string }[];
   userText: string;
@@ -215,6 +408,7 @@ export async function streamPlayedReply(input: {
   return streamHiddenReply({
     openrouterId: input.openrouterId,
     providerSettings: input.providerSettings,
+    reasoning: input.reasoning,
     maxOutputTokens: input.maxOutputTokens,
     messages: buildModelMessages([...input.transcript, { role: "user", content: input.userText }]),
     onWord: input.onWord,

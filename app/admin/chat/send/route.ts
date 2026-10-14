@@ -17,7 +17,7 @@ export async function POST(request: Request) {
   const client = serviceOrThrow();
   const { data, error } = await client
     .from("models")
-    .select("openrouter_id, provider_settings")
+    .select("openrouter_id, provider_settings, reasoning")
     .eq("id", parsed.modelId)
     .maybeSingle();
   if (error || !data?.openrouter_id) return apiJson({ error: "not_found" }, 404);
@@ -30,6 +30,7 @@ export async function POST(request: Request) {
       const reply = await streamPlayedReply({
         openrouterId,
         providerSettings,
+        reasoning: Boolean(data.reasoning),
         maxOutputTokens: config.maxOutputTokens,
         transcript: chatTurns(parsed.transcript),
         userText: parsed.text.trim(),
@@ -48,6 +49,7 @@ export async function POST(request: Request) {
         completionTokens: reply.tokens.output,
         reasoningTokens: reply.tokens.reasoning,
         cacheReadTokens: reply.tokens.cacheRead,
+        gptTokens: reply.gptTokens,
         sent: reply.sent,
       });
     } catch {

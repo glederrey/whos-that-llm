@@ -11,10 +11,12 @@ import {
   setRosterEnabled,
   updateCategory,
   updateRosterModel,
+  writeReasoningFlags,
   writeRosterPrices,
 } from "@/lib/admin-roster";
 import { loadOpenRouterCatalog } from "@/lib/openrouter-catalog";
 import { planPriceUpdates, planUnavailable, type AvailabilityResult, type PriceSyncResult } from "@/lib/roster-sync";
+import { clearProviderBlacklist } from "@/lib/openrouter-providers";
 import { modelsReturnPath } from "@/lib/roster-list";
 
 function text(formData: FormData, key: string): string {
@@ -95,6 +97,12 @@ export async function deleteCategory(formData: FormData) {
   redirect(message ? `/admin/categories?error=${encodeURIComponent(message)}` : "/admin/categories");
 }
 
+export async function clearProvider(formData: FormData) {
+  const ok = await clearProviderBlacklist(text(formData, "slug"));
+  revalidatePath("/admin/providers");
+  redirect(ok ? "/admin/providers" : "/admin/providers?notice=save");
+}
+
 export async function updateRosterPrices(): Promise<PriceSyncResult> {
   const catalog = await loadOpenRouterCatalog();
   if (!catalog.ok) return { ok: false, error: catalog.error };
@@ -106,6 +114,9 @@ export async function updateRosterPrices(): Promise<PriceSyncResult> {
     revalidatePath("/admin");
     revalidatePath("/admin/models");
   }
+  const reasoning = await writeReasoningFlags(catalog.models);
+  if (!reasoning) return { ok: false, error: "Could not save which models can reason." };
+  revalidatePath("/admin/models");
   return { ok: true, changes: plan.changes, notUpdated: plan.notUpdated };
 }
 
@@ -121,5 +132,8 @@ export async function checkRosterAvailability(): Promise<AvailabilityResult> {
     revalidatePath("/admin");
     revalidatePath("/admin/models");
   }
+  const reasoning = await writeReasoningFlags(catalog.models);
+  if (!reasoning) return { ok: false, error: "Could not save which models can reason." };
+  revalidatePath("/admin/models");
   return { ok: true, unavailable: plan.unavailable };
 }

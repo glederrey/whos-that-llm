@@ -25,6 +25,7 @@ type ThreadMessage = {
   completionTokens?: number;
   reasoningTokens?: number;
   cacheReadTokens?: number;
+  gptTokens?: number;
   sent?: SentTurn[];
 };
 
@@ -63,6 +64,7 @@ export function AdminChat({ models }: { models: ChatModelChoice[] }) {
               completionTokens: message.completionTokens,
               reasoningTokens: message.reasoningTokens ?? 0,
               cacheReadTokens: message.cacheReadTokens ?? 0,
+              gptTokens: message.gptTokens,
             },
           ]
         : [],
@@ -123,6 +125,7 @@ export function AdminChat({ models }: { models: ChatModelChoice[] }) {
             completionTokens: count(event.completionTokens),
             reasoningTokens: count(event.reasoningTokens),
             cacheReadTokens: count(event.cacheReadTokens),
+            gptTokens: count(event.gptTokens),
             sent: readSentTurns(event.sent) ?? undefined,
           });
         }
