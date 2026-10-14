@@ -26,6 +26,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
       const reply = await streamPlayedReply({
         openrouterId: hidden.openrouterId,
         providerSettings: hidden.providerSettings,
+        reasoning: hidden.reasoning,
         maxOutputTokens: hidden.game.rules.maxOutputTokens,
         transcript: hidden.transcript,
         userText: trimmed,

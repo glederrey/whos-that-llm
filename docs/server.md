@@ -162,7 +162,7 @@ Do not state or hint at your own model name, version, provider, company, country
 
 You may talk about other models by name, as long as that does not give away your own identity or your company.
 
-A reply past 1,000 tokens is cut off mid-sentence. Finish the thought before that. This is a ceiling, not a length to aim for.
+A reply past 2,000 tokens is cut off mid-sentence. Finish the thought before that. This is a ceiling, not a length to aim for.
 ```
 
 The prompt stays this English text, apart from the date. Do not tell the model which language to answer in. A reply in French or in English is a clue.
@@ -170,14 +170,14 @@ The prompt stays this English text, apart from the date. Do not tell the model w
 Call settings, the same for every model except `provider_settings`:
 
 - temperature `0.8`
-- `maxOutputTokens` = `rules.maxOutputTokens` (1,000), clamped in code even if a row says otherwise
+- `maxOutputTokens` = `rules.maxOutputTokens` (2,000), clamped in code even if a row says otherwise
 - no tools, no web search
 - `provider_settings` spread into the OpenRouter provider options
-- stream the text word by word
+- stream the text word by word. A reasoning provider that is not trusted yet is held until the token check, then released a few words at a time
 
 `provider_settings` exists because the lowest reasoning effort is not the same string at every vendor. The seed records the value that actually worked. A reasoning model cannot be enabled while this object is empty. That is a cost control. Reasoning is not a trait in the game.
 
-Some APIs count reasoning inside the output budget. A model can then spend the 1,000 tokens thinking and return almost nothing visible. An empty successful reply still spends the message. `usage.reasoning_tokens` is how admin notices the spend. Disable that model, or lower the setting further, before leaving it in the roster.
+A reasoning model is sent `reasoning.effort` `low`, including when the saved settings name a higher effort. A model that cannot reason is sent no reasoning setting. Some APIs count reasoning inside the output budget. A model can then spend the 2,000 tokens thinking and return almost nothing visible. An empty successful reply still spends the message. `usage.reasoning_tokens` is how admin notices the spend. A provider that reports reasoning tokens is trusted. A provider that reports none, and whose visible output is more than 20% above a gpt-tokenizer count of that reply and more than 16 tokens above that count, is stored on `openrouter_providers` and skipped after that. The stored id is the provider slug OpenRouter accepts in `provider.ignore`. A display name such as Amazon Bedrock is stored as `amazon-bedrock`. A smaller gap is kept, so a short greeting is not judged on a handful of tokens. The OpenRouter providers page can clear that flag.
 
 Record from the result: input tokens, output tokens, reasoning tokens, cache-read tokens, `cost_usd`, and the generation id when OpenRouter returns one. `input_tokens` stays the full prompt count. The score does not replace it. On rows whose `error_code` is null, in the order they were stored, the score counts the first prompt in full, then only the new player message on later turns (this prompt minus the previous prompt minus the previous output), plus each reply's completion tokens. Reasoning tokens are not added. Cache-read tokens are not added and not subtracted.
 

@@ -16,16 +16,20 @@ import {
   modelIdFromOpenRouter,
   parseModelFields,
   parseModelId,
+  parseReleasedOn,
+  parseSize,
   releasedOnForYear,
   type RosterNotice,
 } from "./admin-model";
-import { difficultyFromStored, difficultyNumber } from "./difficulty";
+import { difficultyFromStored, difficultyNumber, parseDifficulty } from "./difficulty";
 import type { Region, Size } from "./game";
 import type { CategoryRow, RosterRow } from "./roster-row";
 
 export type { CategoryRow, RosterRow } from "./roster-row";
 import { readListPrice } from "./list-price";
+import { planReasoningUpdates, type CatalogModel } from "./roster-sync";
 import { companyLogoPath } from "./logos";
+import { companyForOrg, type CompanyChoice } from "./openrouter-draft";
 import { countedPlayerId } from "./anonymize-account";
 import { presentLogo, serviceOrThrow } from "./rounds";
 
@@ -235,6 +239,34 @@ export async function writeRosterPrices(
   return true;
 }
 
+export async function writeReasoningFlags(catalog: CatalogModel[]): Promise<boolean> {
+  await requireOwner();
+  const client = serviceOrThrow();
+  const { data, error } = await client.from("models").select("id, openrouter_id, reasoning, provider_settings");
+  if (error) return false;
+  const updates = planReasoningUpdates(
+    (data ?? []).map((row) => ({
+      id: row.id as string,
+      openrouterId: row.openrouter_id as string,
+      reasoning: Boolean(row.reasoning),
+      providerSettings: row.provider_settings,
+    })),
+    catalog,
+  );
+  for (const update of updates) {
+    const id = parseModelId(update.id);
+    if (!id) return false;
+    const patch: Record<string, unknown> = {
+      reasoning: update.reasoning,
+      updated_at: new Date().toISOString(),
+    };
+    if (update.providerSettings) patch.provider_settings = update.providerSettings;
+    const { error: writeError } = await client.from("models").update(patch).eq("id", id);
+    if (writeError) return false;
+  }
+  return true;
+}
+
 export async function disableRosterModels(ids: string[]): Promise<boolean> {
   await requireOwner();
   if (ids.length === 0) return true;
@@ -251,6 +283,65 @@ export async function disableRosterModels(ids: string[]): Promise<boolean> {
     .update({ enabled: false, updated_at: new Date().toISOString() })
     .in("id", clean);
   return !error;
+}
+
+export async function insertDiscoveredModels(
+  models: {
+    id: string;
+    name: string;
+    releasedOn: string | null;
+    inputUsdPerMtok: number | null;
+    outputUsdPerMtok: number | null;
+    size: string;
+    difficulty: string;
+    reasoning: boolean;
+  }[],
+  companies: CompanyChoice[],
+): Promise<number | null> {
+  await requireOwner();
+  if (models.length === 0) return 0;
+  const client = serviceOrThrow();
+  let added = 0;
+  let failed = 0;
+  for (const model of models) {
+    const openrouterId = model.id.trim();
+    const id = modelIdFromOpenRouter(openrouterId);
+    const company = companyForOrg(openrouterId.slice(0, openrouterId.indexOf("/")), companies);
+    const name = model.name.trim().slice(0, 80);
+    const size = parseSize(model.size);
+    const difficulty = parseDifficulty(model.difficulty);
+    if (!id || !company || !name || !size || !difficulty) {
+      failed += 1;
+      continue;
+    }
+    const released = model.releasedOn ? parseReleasedOn(model.releasedOn) : null;
+    const { error } = await client.from("models").insert({
+      id,
+      openrouter_id: openrouterId,
+      name,
+      company_id: company.id,
+      size,
+      difficulty: difficultyNumber[difficulty],
+      open_weights: false,
+      reasoning: model.reasoning,
+      provider_settings: model.reasoning ? { reasoning: { effort: "low" } } : {},
+      released_on: released,
+      input_usd_per_mtok: finitePrice(model.inputUsdPerMtok),
+      output_usd_per_mtok: finitePrice(model.outputUsdPerMtok),
+      enabled: false,
+      logo_path: null,
+      updated_at: new Date().toISOString(),
+    });
+    if (!error) added += 1;
+    else if (error.code === "23505") continue;
+    else failed += 1;
+  }
+  if (added === 0 && failed > 0) return null;
+  return added;
+}
+
+function finitePrice(value: number | null): number | null {
+  return typeof value === "number" && Number.isFinite(value) ? value : null;
 }
 
 async function resolveCompany(client: SupabaseClient, name: string, region: Region): Promise<CompanyRow | RosterNotice> {

@@ -388,7 +388,7 @@ export async function hiddenCall(gameId: string, userId: string) {
   if (!game) return null;
   const { data, error } = await client
     .from("models")
-    .select("openrouter_id, provider_settings")
+    .select("openrouter_id, provider_settings, reasoning")
     .eq("id", game.model_id)
     .single();
   if (error) throw new Error(error.message);
@@ -401,6 +401,7 @@ export async function hiddenCall(gameId: string, userId: string) {
     game,
     openrouterId: data.openrouter_id as string,
     providerSettings: data.provider_settings,
+    reasoning: Boolean(data.reasoning),
     transcript: sortTranscript(messages ?? []).map(({ role, content }) => ({ role, content })),
   };
 }

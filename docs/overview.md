@@ -89,7 +89,7 @@ These three are on the landing page, the lobby, and the round.
 Also:
 
 - A user message is at most **500 characters**. The input shows the counter.
-- The assistant reply is capped at **1,000 output tokens**. The server clamps this. Nothing in the database can raise it.
+- The assistant reply is capped at **2,000 output tokens**. The server clamps this. Nothing in the database can raise it.
 - An empty or whitespace-only user message is rejected and does not spend a turn.
 - An empty or whitespace-only successful model reply still spends the message.
 - One open round per account. The lobby offers Continue.
@@ -99,7 +99,7 @@ The hourly check and the insert run in one transaction. Two tabs cannot both tak
 
 ## What a round costs
 
-Ten replies are 10,000 output tokens, plus the growing transcript on the way in. A thinking model can spend part of that budget before any visible words. That spend is an admin cost fact. It is not a trait the player can score or buy. October 2026 list prices, for a full round:
+Ten replies are 20,000 output tokens, plus the growing transcript on the way in. A thinking model can spend part of that budget before any visible words. That spend is an admin cost fact. It is not a trait the player can score or buy. October 2026 list prices, for a full round:
 
 | Tier | Examples | About one full round |
 |---|---|---|

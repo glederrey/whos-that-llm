@@ -2,19 +2,32 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { parseSize } from "@/lib/admin-model";
+import { parseDifficulty } from "@/lib/difficulty";
 import {
   createCategory,
   createRosterModel,
   disableRosterModels,
+  insertDiscoveredModels,
   loadRoster,
   removeCategory,
   setRosterEnabled,
   updateCategory,
   updateRosterModel,
+  writeReasoningFlags,
   writeRosterPrices,
 } from "@/lib/admin-roster";
 import { loadOpenRouterCatalog } from "@/lib/openrouter-catalog";
-import { planPriceUpdates, planUnavailable, type AvailabilityResult, type PriceSyncResult } from "@/lib/roster-sync";
+import { clearProviderBlacklist } from "@/lib/openrouter-providers";
+import {
+  planNewModels,
+  planPriceUpdates,
+  planUnavailable,
+  type AddModelsResult,
+  type AvailabilityResult,
+  type NewModelsResult,
+  type PriceSyncResult,
+} from "@/lib/roster-sync";
 import { modelsReturnPath } from "@/lib/roster-list";
 
 function text(formData: FormData, key: string): string {
@@ -95,6 +108,12 @@ export async function deleteCategory(formData: FormData) {
   redirect(message ? `/admin/categories?error=${encodeURIComponent(message)}` : "/admin/categories");
 }
 
+export async function clearProvider(formData: FormData) {
+  const ok = await clearProviderBlacklist(text(formData, "slug"));
+  revalidatePath("/admin/providers");
+  redirect(ok ? "/admin/providers" : "/admin/providers?notice=save");
+}
+
 export async function updateRosterPrices(): Promise<PriceSyncResult> {
   const catalog = await loadOpenRouterCatalog();
   if (!catalog.ok) return { ok: false, error: catalog.error };
@@ -106,6 +125,9 @@ export async function updateRosterPrices(): Promise<PriceSyncResult> {
     revalidatePath("/admin");
     revalidatePath("/admin/models");
   }
+  const reasoning = await writeReasoningFlags(catalog.models);
+  if (!reasoning) return { ok: false, error: "Could not save which models can reason." };
+  revalidatePath("/admin/models");
   return { ok: true, changes: plan.changes, notUpdated: plan.notUpdated };
 }
 
@@ -121,5 +143,61 @@ export async function checkRosterAvailability(): Promise<AvailabilityResult> {
     revalidatePath("/admin");
     revalidatePath("/admin/models");
   }
+  const reasoning = await writeReasoningFlags(catalog.models);
+  if (!reasoning) return { ok: false, error: "Could not save which models can reason." };
+  revalidatePath("/admin/models");
   return { ok: true, unavailable: plan.unavailable };
+}
+
+export async function searchNewModels(): Promise<NewModelsResult> {
+  const catalog = await loadOpenRouterCatalog();
+  if (!catalog.ok) return { ok: false, error: catalog.error };
+  const { rows } = await loadRoster();
+  return { ok: true, models: planNewModels(rows, catalog.models, Math.floor(Date.now() / 1000)) };
+}
+
+export async function addNewRosterModels(picks: { id: string; size: string; difficulty: string }[]): Promise<AddModelsResult> {
+  if (!Array.isArray(picks) || picks.length > 200 || picks.some((pick) => !pick || typeof pick !== "object")) {
+    return { ok: false, error: "Could not add those models." };
+  }
+  if (picks.length === 0) return { ok: true, added: 0 };
+  if (picks.some((pick) => typeof pick.id !== "string" || typeof pick.size !== "string" || typeof pick.difficulty !== "string" || !parseSize(pick.size) || !parseDifficulty(pick.difficulty))) {
+    return { ok: false, error: "Choose a size and a difficulty for each model." };
+  }
+  const catalog = await loadOpenRouterCatalog();
+  if (!catalog.ok) return { ok: false, error: catalog.error };
+  const { rows, companies } = await loadRoster();
+  const planned = planNewModels(rows, catalog.models, Math.floor(Date.now() / 1000));
+  const byId = new Map(planned.map((model) => [model.id, model]));
+  const chosen = [];
+  const seen = new Set<string>();
+  for (const pick of picks) {
+    const id = pick.id.trim();
+    if (seen.has(id)) continue;
+    seen.add(id);
+    const model = byId.get(id);
+    const size = parseSize(pick.size);
+    const difficulty = parseDifficulty(pick.difficulty);
+    if (model && size && difficulty) chosen.push({ ...model, size, difficulty });
+  }
+  if (chosen.length === 0) return { ok: true, added: 0 };
+  const added = await insertDiscoveredModels(
+    chosen.map((model) => ({
+      id: model.id,
+      name: model.name,
+      releasedOn: model.releasedOn,
+      inputUsdPerMtok: model.inputUsdPerMtok,
+      outputUsdPerMtok: model.outputUsdPerMtok,
+      size: model.size,
+      difficulty: model.difficulty,
+      reasoning: model.reasoning,
+    })),
+    companies,
+  );
+  if (added === null) return { ok: false, error: "Could not add those models." };
+  if (added > 0) {
+    revalidatePath("/admin");
+    revalidatePath("/admin/models");
+  }
+  return { ok: true, added };
 }

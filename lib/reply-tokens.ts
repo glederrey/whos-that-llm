@@ -3,6 +3,10 @@ export type MeasuredCall = {
   completionTokens: number;
   reasoningTokens?: number;
   cacheReadTokens?: number;
+  /** gpt-tokenizer count of the visible reply. Absent until the call has finished. */
+  gptTokens?: number;
+  /** OpenRouter provider slug for this call, such as chutes. Absent until the call names one. */
+  provider?: string | null;
 };
 
 export type ReplyTokens = {
@@ -18,10 +22,24 @@ export type ReplyTokens = {
   /** Reported reasoning, plus completion tokens the next prompt shows were not sent again when the provider reported none. */
   reasoning: number;
   cacheRead: number;
+  /** gpt-tokenizer count of this visible reply, or null when the call did not send one. */
+  gptTokens: number | null;
+  /** OpenRouter provider slug, or null when the call did not name one. */
+  provider: string | null;
 };
 
 function shownCount(value: number | undefined): number {
   return typeof value === "number" && Number.isFinite(value) ? value : 0;
+}
+
+function shownGpt(value: number | undefined): number | null {
+  return typeof value === "number" && Number.isFinite(value) ? value : null;
+}
+
+function shownProvider(value: string | null | undefined): string | null {
+  if (typeof value !== "string") return null;
+  const slug = value.trim();
+  return slug ? slug : null;
 }
 
 /**
@@ -76,6 +94,8 @@ export function replyTokenLines(calls: MeasuredCall[]): ReplyTokens[] {
       rawPrompt: prompt,
       reasoning,
       cacheRead: shownCount(call.cacheReadTokens),
+      gptTokens: shownGpt(call.gptTokens),
+      provider: shownProvider(call.provider),
     };
   });
 }
@@ -93,6 +113,8 @@ export function replyTokenTooltip(tokens: ReplyTokens): string[] {
   return [
     `Input tokens: ${count(tokens.input)}`,
     `Output tokens: ${count(resentCompletion(tokens.output, tokens.reasoning))}`,
+    ...(tokens.gptTokens === null ? [] : [`gpt-tokenizer: ${count(tokens.gptTokens)}`]),
+    ...(tokens.provider ? [`Provider: ${tokens.provider}`] : []),
     `Reasoning tokens: ${count(tokens.reasoning)}`,
     `Cache read tokens: ${count(tokens.cacheRead)}`,
     "",

@@ -11,6 +11,8 @@ export type ReplyEvent = {
   completionTokens?: number;
   reasoningTokens?: number;
   cacheReadTokens?: number;
+  gptTokens?: number;
+  provider?: string | null;
   sent?: { role: string; content: string }[];
 };
 

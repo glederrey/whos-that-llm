@@ -24,5 +24,5 @@ Do not state or hint at your own model name, version, provider, company, country
 
 You may talk about other models by name, as long as that does not give away your own identity or your company.
 
-A reply past 1,000 tokens is cut off mid-sentence. Finish the thought before that. This is a ceiling, not a length to aim for.`;
+A reply past 2,000 tokens is cut off mid-sentence. Finish the thought before that. This is a ceiling, not a length to aim for.`;
 }
