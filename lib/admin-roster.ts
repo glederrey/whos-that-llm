@@ -16,13 +16,16 @@ import {
   modelIdFromOpenRouter,
   parseModelFields,
   parseModelId,
+  parseReleasedOn,
+  parseSize,
   releasedOnForYear,
   type RosterNotice,
 } from "./admin-model";
-import { difficultyFromStored, difficultyNumber, type Difficulty } from "./difficulty";
+import { difficultyFromStored, difficultyNumber, parseDifficulty, type Difficulty } from "./difficulty";
 import type { Region, Size } from "./game";
 import { readListPrice } from "./list-price";
 import { companyLogoPath } from "./logos";
+import { companyForOrg, type CompanyChoice } from "./openrouter-draft";
 import { countedPlayerId } from "./anonymize-account";
 import { presentLogo, serviceOrThrow } from "./rounds";
 
@@ -273,6 +276,64 @@ export async function disableRosterModels(ids: string[]): Promise<boolean> {
     .update({ enabled: false, updated_at: new Date().toISOString() })
     .in("id", clean);
   return !error;
+}
+
+export async function insertDiscoveredModels(
+  models: {
+    id: string;
+    name: string;
+    releasedOn: string | null;
+    inputUsdPerMtok: number | null;
+    outputUsdPerMtok: number | null;
+    size: string;
+    difficulty: string;
+  }[],
+  companies: CompanyChoice[],
+): Promise<number | null> {
+  await requireOwner();
+  if (models.length === 0) return 0;
+  const client = serviceOrThrow();
+  let added = 0;
+  let failed = 0;
+  for (const model of models) {
+    const openrouterId = model.id.trim();
+    const id = modelIdFromOpenRouter(openrouterId);
+    const company = companyForOrg(openrouterId.slice(0, openrouterId.indexOf("/")), companies);
+    const name = model.name.trim().slice(0, 80);
+    const size = parseSize(model.size);
+    const difficulty = parseDifficulty(model.difficulty);
+    if (!id || !company || !name || !size || !difficulty) {
+      failed += 1;
+      continue;
+    }
+    const released = model.releasedOn ? parseReleasedOn(model.releasedOn) : null;
+    const { error } = await client.from("models").insert({
+      id,
+      openrouter_id: openrouterId,
+      name,
+      company_id: company.id,
+      size,
+      difficulty: difficultyNumber[difficulty],
+      open_weights: false,
+      reasoning: false,
+      provider_settings: {},
+      released_on: released,
+      input_usd_per_mtok: finitePrice(model.inputUsdPerMtok),
+      output_usd_per_mtok: finitePrice(model.outputUsdPerMtok),
+      enabled: false,
+      logo_path: null,
+      updated_at: new Date().toISOString(),
+    });
+    if (!error) added += 1;
+    else if (error.code === "23505") continue;
+    else failed += 1;
+  }
+  if (added === 0 && failed > 0) return null;
+  return added;
+}
+
+function finitePrice(value: number | null): number | null {
+  return typeof value === "number" && Number.isFinite(value) ? value : null;
 }
 
 async function resolveCompany(client: SupabaseClient, name: string, region: Region): Promise<CompanyRow | RosterNotice> {
