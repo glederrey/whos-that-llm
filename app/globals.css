@@ -852,6 +852,7 @@ html[data-theme="dark"] {
 }
 html[data-theme="dark"] .bubble.user { border-color: #0b4545; }
 .bubble.assistant { white-space: normal; justify-self: start; }
+.empty-message { color: var(--mute); }
 .typing { display: inline-flex; gap: 5px; align-items: center; min-height: 1.4em; }
 .typing i {
   width: 7px;

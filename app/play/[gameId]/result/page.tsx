@@ -1,6 +1,6 @@
 import { notFound, redirect } from "next/navigation";
 import { CompanyLogo } from "@/components/company-logo";
-import { MarkdownMessage } from "@/components/markdown-message";
+import { ModelReply } from "@/components/markdown-message";
 import { ResultSummary } from "@/components/round-facts";
 import { difficultyText, playedRoundFacts } from "@/lib/round-facts";
 import { listGameModes, readPublicGame } from "@/lib/rounds";
@@ -98,7 +98,7 @@ export default async function ResultPage({ params }: { params: Promise<{ gameId:
       <div className="transcript">
         {game.transcript.map((message) => (
           <div key={`${message.turn}-${message.role}`} className={`bubble ${message.role}`}>
-            {message.role === "assistant" ? <MarkdownMessage text={message.content} /> : message.content}
+            {message.role === "assistant" ? <ModelReply text={message.content} /> : message.content}
           </div>
         ))}
       </div>
