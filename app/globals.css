@@ -1346,7 +1346,7 @@ html[data-theme="dark"] .history-facts .board-chip.no-hints {
 .roster-edit.card.roster-sync-card.roster-new-models { width: min(720px, calc(100vw - 48px)); }
 .roster-new-list { display: grid; gap: 12px; margin: 12px 0 0; }
 .roster-new-model { position: relative; display: grid; gap: 6px; }
-.roster-new-model h3 { margin: 0; padding-right: 32px; }
+.roster-new-model h3 { margin: 0; padding-right: 32px; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .roster-new-model p { margin: 0; overflow-wrap: anywhere; }
 .roster-new-foot { display: grid; grid-template-columns: minmax(0, 1fr) 248px; column-gap: 16px; align-items: start; margin-top: 4px; }
 .roster-new-facts { display: grid; gap: 6px; min-width: 0; }

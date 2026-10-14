@@ -311,7 +311,10 @@ function ModelCard({
       <button className="button-quiet roster-new-dismiss" type="button" aria-label={`Remove ${model.name}`} onClick={() => onDismiss(model.id)}>
         ×
       </button>
-      <h3>{model.name}</h3>
+      <h3>
+        <span>{model.name}</span>
+        {model.reasoning ? <span className="pill">Reasoning</span> : null}
+      </h3>
       {model.description ? <p>{model.description}</p> : null}
       <div className="roster-new-foot">
         <div className="roster-new-facts">
@@ -319,7 +322,6 @@ function ModelCard({
           <p>
             Input {formatSyncPrice(model.inputUsdPerMtok)} · Output {formatSyncPrice(model.outputUsdPerMtok)}
           </p>
-          {model.reasoning ? <p><span className="pill">Reasoning</span></p> : null}
           <p>{href ? <a href={href} target="_blank" rel="noreferrer">{model.id}</a> : model.id}</p>
         </div>
         <div className="roster-new-picks">
