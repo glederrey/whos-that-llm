@@ -3,6 +3,7 @@ import { AddModelForm } from "@/components/add-model-form";
 import { CompanyLogo } from "@/components/company-logo";
 import { ModelFields } from "@/components/model-fields";
 import { RosterReturnFields } from "@/components/roster-return-fields";
+import { RosterSync } from "@/components/roster-sync";
 import { SectionNav } from "@/components/section-nav";
 import { saveModel, setModelEnabled } from "@/app/admin/actions";
 import { rosterNotice } from "@/lib/admin-model";
@@ -34,13 +35,15 @@ export default async function ModelsPage({
       <h1>Models</h1>
       <p className="muted">
         Turning a model off leaves it out of new rounds. Games already started keep the model they drew. Input and
-        output are the list price in dollars per 1 million tokens.
+        output are the list price in dollars per 1 million tokens. Update prices writes the current OpenRouter list
+        price. Check availability turns off models OpenRouter no longer lists.
       </p>
       {notice ? (
         <p className="error" role="alert">
           {notice}
         </p>
       ) : null}
+      <RosterSync />
       <details className="card roster-add">
         <summary>Add a model</summary>
         <AddModelForm categories={categories} query={query} sort={sort} activePage={active.page} inactivePage={inactive.page} />
