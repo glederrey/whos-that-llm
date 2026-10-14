@@ -6,6 +6,7 @@ import {
   createCategory,
   createRosterModel,
   disableRosterModels,
+  insertDiscoveredModels,
   loadRoster,
   removeCategory,
   setRosterEnabled,
@@ -14,7 +15,15 @@ import {
   writeRosterPrices,
 } from "@/lib/admin-roster";
 import { loadOpenRouterCatalog } from "@/lib/openrouter-catalog";
-import { planPriceUpdates, planUnavailable, type AvailabilityResult, type PriceSyncResult } from "@/lib/roster-sync";
+import {
+  planNewModels,
+  planPriceUpdates,
+  planUnavailable,
+  type AddModelsResult,
+  type AvailabilityResult,
+  type NewModelsResult,
+  type PriceSyncResult,
+} from "@/lib/roster-sync";
 import { modelsReturnPath } from "@/lib/roster-list";
 
 function text(formData: FormData, key: string): string {
@@ -122,4 +131,49 @@ export async function checkRosterAvailability(): Promise<AvailabilityResult> {
     revalidatePath("/admin/models");
   }
   return { ok: true, unavailable: plan.unavailable };
+}
+
+export async function searchNewModels(): Promise<NewModelsResult> {
+  const catalog = await loadOpenRouterCatalog();
+  if (!catalog.ok) return { ok: false, error: catalog.error };
+  const { rows } = await loadRoster();
+  return { ok: true, models: planNewModels(rows, catalog.models, Math.floor(Date.now() / 1000)) };
+}
+
+export async function addNewRosterModels(handles: string[]): Promise<AddModelsResult> {
+  if (!Array.isArray(handles) || handles.some((handle) => typeof handle !== "string") || handles.length > 200) {
+    return { ok: false, error: "Could not add those models." };
+  }
+  if (handles.length === 0) return { ok: true, added: 0 };
+  const catalog = await loadOpenRouterCatalog();
+  if (!catalog.ok) return { ok: false, error: catalog.error };
+  const { rows, companies } = await loadRoster();
+  const planned = planNewModels(rows, catalog.models, Math.floor(Date.now() / 1000));
+  const byId = new Map(planned.map((model) => [model.id, model]));
+  const chosen = [];
+  const seen = new Set<string>();
+  for (const handle of handles) {
+    const id = handle.trim();
+    if (seen.has(id)) continue;
+    seen.add(id);
+    const model = byId.get(id);
+    if (model) chosen.push(model);
+  }
+  if (chosen.length === 0) return { ok: true, added: 0 };
+  const added = await insertDiscoveredModels(
+    chosen.map((model) => ({
+      id: model.id,
+      name: model.name,
+      releasedOn: model.releasedOn,
+      inputUsdPerMtok: model.inputUsdPerMtok,
+      outputUsdPerMtok: model.outputUsdPerMtok,
+    })),
+    companies,
+  );
+  if (added === null) return { ok: false, error: "Could not add those models." };
+  if (added > 0) {
+    revalidatePath("/admin");
+    revalidatePath("/admin/models");
+  }
+  return { ok: true, added };
 }

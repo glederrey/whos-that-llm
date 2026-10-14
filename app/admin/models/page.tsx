@@ -36,7 +36,8 @@ export default async function ModelsPage({
       <p className="muted">
         Turning a model off leaves it out of new rounds. Games already started keep the model they drew. Input and
         output are the list price in dollars per 1 million tokens. Update prices writes the current OpenRouter list
-        price. Check availability turns off models OpenRouter no longer lists.
+        price. Check availability turns off models OpenRouter no longer lists. Search for new models lists text models
+        OpenRouter added in the last 30 days that are not already on the roster.
       </p>
       {notice ? (
         <p className="error" role="alert">

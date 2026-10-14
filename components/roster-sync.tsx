@@ -1,19 +1,26 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { checkRosterAvailability, updateRosterPrices } from "@/app/admin/actions";
+import { addNewRosterModels, checkRosterAvailability, searchNewModels, updateRosterPrices } from "@/app/admin/actions";
 import {
   formatSyncPrice,
+  openRouterModelHref,
+  type AddModelsResult,
   type AvailabilityResult,
+  type NewModelCard,
+  type NewModelsResult,
   type PriceChange,
   type PriceSyncResult,
 } from "@/lib/roster-sync";
 
-type Card = { status: "prices"; result: PriceSyncResult } | { status: "availability"; result: AvailabilityResult };
+type Card =
+  | { status: "prices"; result: PriceSyncResult }
+  | { status: "availability"; result: AvailabilityResult }
+  | { status: "search"; result: NewModelsResult; hidden: string[]; notice: AddModelsResult | null };
 
 export function RosterSync() {
   const cardRef = useRef<HTMLDivElement>(null);
-  const [busy, setBusy] = useState<"prices" | "availability" | null>(null);
+  const [busy, setBusy] = useState<"prices" | "availability" | "search" | "add" | null>(null);
   const [card, setCard] = useState<Card | null>(null);
 
   useEffect(() => {
@@ -36,6 +43,38 @@ export function RosterSync() {
     }
   }
 
+  async function search() {
+    if (busy) return;
+    setBusy("search");
+    try {
+      setCard({ status: "search", result: await searchNewModels(), hidden: [], notice: null });
+    } catch {
+      setCard({ status: "search", result: { ok: false, error: "Could not search for new models." }, hidden: [], notice: null });
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  function dismiss(id: string) {
+    setCard((current) => (current?.status === "search" ? { ...current, hidden: [...current.hidden, id] } : current));
+  }
+
+  async function addVisible(ids: string[]) {
+    if (busy || ids.length === 0) return;
+    setBusy("add");
+    try {
+      const notice = await addNewRosterModels(ids);
+      setCard((current) => (current?.status === "search" ? { ...current, notice } : current));
+    } catch {
+      setCard((current) =>
+        current?.status === "search" ? { ...current, notice: { ok: false, error: "Could not add those models." } } : current,
+      );
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  const searching = card?.status === "search";
   return (
     <>
       <div className="roster-sync">
@@ -45,10 +84,28 @@ export function RosterSync() {
         <button className="button" type="button" onClick={() => run("availability")} disabled={busy !== null}>
           {busy === "availability" ? "Checking availability…" : "Check availability"}
         </button>
+        <button className="button" type="button" onClick={search} disabled={busy !== null}>
+          {busy === "search" ? "Searching…" : "Search for new models"}
+        </button>
       </div>
-      <div ref={cardRef} id="roster-sync-card" popover="auto" className="roster-edit card roster-sync-card">
+      <div
+        ref={cardRef}
+        id="roster-sync-card"
+        popover="auto"
+        className={searching ? "roster-edit card roster-sync-card roster-new-models" : "roster-edit card roster-sync-card"}
+      >
         {card?.status === "prices" ? <PriceCard result={card.result} /> : null}
         {card?.status === "availability" ? <AvailabilityCard result={card.result} /> : null}
+        {card?.status === "search" ? (
+          <SearchCard
+            result={card.result}
+            hidden={card.hidden}
+            notice={card.notice}
+            adding={busy === "add"}
+            onDismiss={dismiss}
+            onAdd={addVisible}
+          />
+        ) : null}
         {card ? (
           <div className="row">
             <button className="button-quiet" type="button" popoverTarget="roster-sync-card" popoverTargetAction="hide">
@@ -142,4 +199,79 @@ function AvailabilityCard({ result }: { result: AvailabilityResult }) {
       )}
     </>
   );
+}
+
+function SearchCard({
+  result,
+  hidden,
+  notice,
+  adding,
+  onDismiss,
+  onAdd,
+}: {
+  result: NewModelsResult;
+  hidden: string[];
+  notice: AddModelsResult | null;
+  adding: boolean;
+  onDismiss: (id: string) => void;
+  onAdd: (ids: string[]) => void;
+}) {
+  const visible = result.ok ? result.models.filter((model) => !hidden.includes(model.id)) : [];
+  const added = notice?.ok ? notice.added : null;
+  return (
+    <>
+      <h2>New models</h2>
+      {!result.ok ? <p className="error" role="alert">{result.error}</p> : null}
+      {notice && !notice.ok ? <p className="error" role="alert">{notice.error}</p> : null}
+      {added !== null ? <p>{addedSentence(added)}</p> : null}
+      {result.ok && added === null ? (
+        result.models.length === 0 ? (
+          <p>No new text models in the last 30 days.</p>
+        ) : (
+          <>
+            <div className="roster-new-list">
+              {visible.map((model) => (
+                <ModelCard key={model.id} model={model} onDismiss={onDismiss} />
+              ))}
+            </div>
+            <div className="row">
+              <button
+                className="button"
+                type="button"
+                disabled={adding || visible.length === 0}
+                onClick={() => {
+                  if (visible.length === 0) return;
+                  onAdd(visible.map((model) => model.id));
+                }}
+              >
+                {adding ? "Adding…" : "Add all the models to the roster"}
+              </button>
+            </div>
+          </>
+        )
+      ) : null}
+    </>
+  );
+}
+
+function ModelCard({ model, onDismiss }: { model: NewModelCard; onDismiss: (id: string) => void }) {
+  const href = openRouterModelHref(model.id);
+  return (
+    <article className="card roster-new-model">
+      <button className="button-quiet roster-new-dismiss" type="button" aria-label={`Remove ${model.name}`} onClick={() => onDismiss(model.id)}>
+        ×
+      </button>
+      <h3>{model.name}</h3>
+      {model.description ? <p>{model.description}</p> : null}
+      <p>Released {model.releasedOn ?? "—"}</p>
+      <p>
+        Input {formatSyncPrice(model.inputUsdPerMtok)} · Output {formatSyncPrice(model.outputUsdPerMtok)}
+      </p>
+      <p>{href ? <a href={href} target="_blank" rel="noreferrer">{model.id}</a> : model.id}</p>
+    </article>
+  );
+}
+
+function addedSentence(count: number): string {
+  return count === 1 ? "Added 1 model." : `Added ${count} models.`;
 }
