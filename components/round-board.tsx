@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { config } from "@/lib/config";
 import type { HintKey, PublicGame } from "@/lib/game";
 import { CompanyLogo } from "./company-logo";
-import { MarkdownMessage } from "./markdown-message";
+import { ModelReply } from "./markdown-message";
 import { RegionFlag } from "./region-flag";
 
 export function RoundBoard({ initial }: { initial: PublicGame }) {
@@ -279,7 +279,7 @@ export function RoundBoard({ initial }: { initial: PublicGame }) {
       <div className="transcript">
         {game.transcript.map((message) => (
           <div key={`${message.turn}-${message.role}`} className={`bubble ${message.role}`}>
-            {message.role === "assistant" ? <MarkdownMessage text={message.content} /> : message.content}
+            {message.role === "assistant" ? <ModelReply text={message.content} /> : message.content}
           </div>
         ))}
         {liveUser !== null ? <div className="bubble user">{liveUser}</div> : null}
@@ -292,7 +292,7 @@ export function RoundBoard({ initial }: { initial: PublicGame }) {
                 <i />
               </span>
             ) : (
-              <MarkdownMessage text={liveAssistant} />
+              <ModelReply text={liveAssistant} />
             )}
           </div>
         ) : null}
