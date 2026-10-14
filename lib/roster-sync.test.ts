@@ -312,7 +312,8 @@ test("the model page keeps price updates and availability apart", () => {
   assert.match(buttons, /updateRosterPrices\(\)/);
   assert.match(buttons, /checkRosterAvailability\(\)/);
   assert.match(buttons, /searchNewModels\(\)/);
-  assert.match(buttons, /Add all the models to the roster/);
+  assert.match(buttons, /Add models/);
+  assert.match(buttons, /Add models[\s\S]{0,500}Close/);
   assert.match(buttons, /visible\.length === 0/);
   assert.match(buttons, /No new text models in the last 30 days\./);
   assert.match(buttons, /Added 1 model\./);
@@ -372,7 +373,9 @@ test("the model page keeps price updates and availability apart", () => {
   assert.match(insert, /input_usd_per_mtok:/);
   assert.match(insert, /output_usd_per_mtok:/);
   assert.match(insert, /companyForOrg/);
-  assert.doesNotMatch(insert, /size|difficulty|description|model_categories|resolveCompany|\.delete\(/);
+  assert.match(insert, /size: "small"/);
+  assert.match(insert, /difficulty: difficultyNumber\.medium/);
+  assert.doesNotMatch(insert, /description|model_categories|resolveCompany|\.delete\(/);
 
   assert.match(catalog, /import "server-only"/);
   assert.match(catalog, /await requireOwner\(\)/);

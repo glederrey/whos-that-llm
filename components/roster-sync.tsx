@@ -106,7 +106,7 @@ export function RosterSync() {
             onAdd={addVisible}
           />
         ) : null}
-        {card ? (
+        {card && !searchAddRow(card) ? (
           <div className="row">
             <button className="button-quiet" type="button" popoverTarget="roster-sync-card" popoverTargetAction="hide">
               Close
@@ -244,7 +244,10 @@ function SearchCard({
                   onAdd(visible.map((model) => model.id));
                 }}
               >
-                {adding ? "Adding…" : "Add all the models to the roster"}
+                {adding ? "Adding…" : "Add models"}
+              </button>
+              <button className="button-quiet" type="button" popoverTarget="roster-sync-card" popoverTargetAction="hide">
+                Close
               </button>
             </div>
           </>
@@ -274,4 +277,8 @@ function ModelCard({ model, onDismiss }: { model: NewModelCard; onDismiss: (id: 
 
 function addedSentence(count: number): string {
   return count === 1 ? "Added 1 model." : `Added ${count} models.`;
+}
+
+function searchAddRow(card: Card): boolean {
+  return card.status === "search" && card.result.ok && card.result.models.length > 0 && card.notice?.ok !== true;
 }

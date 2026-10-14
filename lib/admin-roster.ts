@@ -301,6 +301,9 @@ export async function insertDiscoveredModels(
       openrouter_id: openrouterId,
       name,
       company_id: company.id,
+      // The table requires both. The row stays off until an admin reviews it.
+      size: "small",
+      difficulty: difficultyNumber.medium,
       open_weights: false,
       reasoning: false,
       provider_settings: {},
