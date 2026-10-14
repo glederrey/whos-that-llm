@@ -888,7 +888,6 @@ html[data-theme="dark"] .bubble.user { border-color: #0b4545; }
   border-radius: var(--radius-sm);
 }
 .chat-models .muted { margin: 8px; }
-.chat-picked { pointer-events: none; }
 .reply-block { display: grid; gap: 6px; justify-self: start; max-width: min(72ch, 88%); }
 .reply-block .reply-tip { max-width: none; }
 .sent-input { display: grid; gap: 6px; justify-items: start; }

@@ -135,6 +135,9 @@ test("the admin chat reuses the play send path and writes nothing", () => {
   assert.match(chat, /CompanyLogo/);
   assert.match(chat, /Show input/);
   assert.match(chat, /searchChatModels/);
+  assert.match(chat, /onFocus=\{\(\) => setListOpen\(true\)\}/);
+  assert.match(chat, /\{listOpen \?/);
+  assert.match(chat, /selected && !listOpen/);
 });
 
 test("search matches a model name or company and keeps the list in order", () => {

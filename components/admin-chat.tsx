@@ -37,12 +37,14 @@ export function AdminChat({ models }: { models: ChatModelChoice[] }) {
   const [modelId, setModelId] = useState("");
   const [query, setQuery] = useState("");
   const [applied, setApplied] = useState("");
+  const [listOpen, setListOpen] = useState(false);
   const [messages, setMessages] = useState<ThreadMessage[]>([]);
   const [draft, setDraft] = useState("");
   const [busy, setBusy] = useState(false);
   const [liveUser, setLiveUser] = useState<string | null>(null);
   const [liveAssistant, setLiveAssistant] = useState<string | null>(null);
   const endRef = useRef<HTMLDivElement>(null);
+  const searchRef = useRef<HTMLInputElement>(null);
   const idRef = useRef(0);
 
   useEffect(() => {
@@ -138,33 +140,54 @@ export function AdminChat({ models }: { models: ChatModelChoice[] }) {
   let viewIndex = 0;
   const shown = searchChatModels(models, applied);
   const selected = models.find((model) => model.id === modelId) ?? null;
-  const selectedHidden = selected !== null && !shown.some((model) => model.id === selected.id);
+
+  function openList() {
+    if (busy) return;
+    setListOpen(true);
+    searchRef.current?.focus();
+  }
 
   function chooseModel(id: string) {
-    if (busy || id === modelId) return;
+    if (busy) return;
+    setListOpen(false);
+    searchRef.current?.blur();
+    if (id === modelId) return;
     setModelId(id);
     resetThread();
   }
 
   return (
     <>
-      <div className="chat-picker">
+      <div
+        className="chat-picker"
+        onBlur={(event) => {
+          const next = event.relatedTarget;
+          if (next instanceof Node && event.currentTarget.contains(next)) return;
+          setListOpen(false);
+        }}
+      >
         <div className="chat-toolbar">
           <form
             className="chat-search"
             onSubmit={(event) => {
               event.preventDefault();
               setApplied(query);
+              setListOpen(true);
             }}
           >
             <label className="chat-query">
               Model
               <input
+                ref={searchRef}
                 type="search"
                 value={query}
                 placeholder="Search by name or company"
                 aria-label="Search models"
+                aria-expanded={listOpen}
+                aria-controls="chat-model-list"
                 disabled={busy}
+                onClick={() => setListOpen(true)}
+                onFocus={() => setListOpen(true)}
                 onChange={(event) => setQuery(event.target.value)}
               />
             </label>
@@ -179,6 +202,7 @@ export function AdminChat({ models }: { models: ChatModelChoice[] }) {
                 onClick={() => {
                   setQuery("");
                   setApplied("");
+                  setListOpen(true);
                 }}
               >
                 Reset
@@ -189,33 +213,36 @@ export function AdminChat({ models }: { models: ChatModelChoice[] }) {
             Clear
           </button>
         </div>
-        {selectedHidden ? (
-          <div className="picked chat-picked">
+        {selected && !listOpen ? (
+          <button type="button" className="picked" disabled={busy} onClick={openList}>
             <CompanyLogo src={selected.logoUrl} />
             <ModelLabel model={selected} />
+          </button>
+        ) : null}
+        {listOpen ? (
+          <div id="chat-model-list" className="chat-models" role="listbox" aria-label="Roster models">
+            {shown.length === 0 ? (
+              <p className="muted">No models match that search.</p>
+            ) : (
+              shown.map((model) => (
+                <button
+                  key={model.id}
+                  type="button"
+                  role="option"
+                  className="candidate"
+                  aria-selected={model.id === modelId}
+                  aria-pressed={model.id === modelId}
+                  disabled={busy}
+                  onMouseDown={(event) => event.preventDefault()}
+                  onClick={() => chooseModel(model.id)}
+                >
+                  <CompanyLogo src={model.logoUrl} />
+                  <ModelLabel model={model} />
+                </button>
+              ))
+            )}
           </div>
         ) : null}
-        <div className="chat-models" role="listbox" aria-label="Roster models">
-          {shown.length === 0 ? (
-            <p className="muted">No models match that search.</p>
-          ) : (
-            shown.map((model) => (
-              <button
-                key={model.id}
-                type="button"
-                role="option"
-                className="candidate"
-                aria-selected={model.id === modelId}
-                aria-pressed={model.id === modelId}
-                disabled={busy}
-                onClick={() => chooseModel(model.id)}
-              >
-                <CompanyLogo src={model.logoUrl} />
-                <ModelLabel model={model} />
-              </button>
-            ))
-          )}
-        </div>
       </div>
       <div className="transcript">
         {messages.map((message) => {
