@@ -141,14 +141,18 @@ export function AdminChat({ models }: { models: ChatModelChoice[] }) {
 
   function openList() {
     if (busy) return;
+    setQuery("");
     setListOpen(true);
-    searchRef.current?.focus();
   }
+
+  useEffect(() => {
+    if (listOpen) searchRef.current?.focus();
+  }, [listOpen]);
 
   function chooseModel(id: string) {
     if (busy) return;
+    setQuery("");
     setListOpen(false);
-    searchRef.current?.blur();
     if (id === modelId) return;
     setModelId(id);
     resetThread();
@@ -174,34 +178,35 @@ export function AdminChat({ models }: { models: ChatModelChoice[] }) {
           >
             <label className="chat-query">
               Model
-              <input
-                ref={searchRef}
-                type="search"
-                value={query}
-                placeholder="Search by name or company"
-                aria-label="Search models"
-                aria-expanded={listOpen}
-                aria-controls="chat-model-list"
-                disabled={busy}
-                onClick={() => setListOpen(true)}
-                onFocus={() => setListOpen(true)}
-                onChange={(event) => {
-                  setQuery(event.target.value);
-                  setListOpen(true);
-                }}
-              />
+              {selected && !listOpen ? (
+                <button type="button" className="chat-selected" disabled={busy} onClick={openList}>
+                  <CompanyLogo src={selected.logoUrl} />
+                  <ModelLabel model={selected} />
+                </button>
+              ) : (
+                <input
+                  ref={searchRef}
+                  type="search"
+                  value={query}
+                  placeholder="Search by name or company"
+                  aria-label="Search models"
+                  aria-expanded={listOpen}
+                  aria-controls="chat-model-list"
+                  disabled={busy}
+                  onClick={() => setListOpen(true)}
+                  onFocus={() => setListOpen(true)}
+                  onChange={(event) => {
+                    setQuery(event.target.value);
+                    setListOpen(true);
+                  }}
+                />
+              )}
             </label>
           </form>
           <button type="button" className="button-quiet" onClick={resetThread} disabled={busy || messages.length === 0}>
             Clear
           </button>
         </div>
-        {selected && !listOpen ? (
-          <button type="button" className="picked" disabled={busy} onClick={openList}>
-            <CompanyLogo src={selected.logoUrl} />
-            <ModelLabel model={selected} />
-          </button>
-        ) : null}
         {listOpen ? (
           <div id="chat-model-list" className="chat-models" role="listbox" aria-label="Roster models">
             {shown.length === 0 ? (
