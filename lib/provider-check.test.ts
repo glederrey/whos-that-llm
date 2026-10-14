@@ -77,11 +77,10 @@ test("the blacklist reason keeps the date, model, provider, messages, and token 
   assert.match(compared, /subtracting 314 reported reasoning tokens/);
 });
 
-test("reasoning calls send effort low and skip blacklisted providers", () => {
+test("calls leave reasoning effort unset and skip blacklisted providers", () => {
   assert.deepEqual(openRouterRequestOptions({ reasoning: { effort: "xhigh" }, provider: { order: ["a"] } }, true, ["chutes"]), {
     usage: { include: true },
     provider: { order: ["a"], ignore: ["chutes"] },
-    reasoning: { effort: "low" },
   });
   assert.deepEqual(openRouterRequestOptions({ reasoning: { effort: "low" } }, false, []), {
     usage: { include: true },
@@ -89,7 +88,6 @@ test("reasoning calls send effort low and skip blacklisted providers", () => {
   assert.deepEqual(openRouterRequestOptions({ provider: { ignore: ["old"] } }, true, ["old", "chutes"]), {
     usage: { include: true },
     provider: { ignore: ["old", "chutes"] },
-    reasoning: { effort: "low" },
   });
 });
 

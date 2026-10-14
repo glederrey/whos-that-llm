@@ -124,7 +124,7 @@ function stringList(value: unknown): string[] {
   return value.filter((item): item is string => typeof item === "string" && item.trim() !== "").map((item) => item.trim());
 }
 
-/** OpenRouter options for one call. Reasoning models send effort low. Blacklisted slugs are ignored. */
+/** OpenRouter options for one call. Blacklisted slugs are ignored. */
 export function openRouterRequestOptions(
   settings: unknown,
   reasoning: boolean,
@@ -144,7 +144,8 @@ export function openRouterRequestOptions(
     if (merged.length > 0) provider.ignore = merged;
     next.provider = provider;
   }
-  if (reasoning) next.reasoning = { effort: "low" };
+  // Paused so a call can use the provider default instead of effort low.
+  // if (reasoning) next.reasoning = { effort: "low" };
   return next;
 }
 
