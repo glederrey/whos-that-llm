@@ -15,6 +15,7 @@ export type ReplyTokens = {
   outputTotal: number;
   /** OpenRouter prompt tokens for this call. Used to check the running sum, not as that sum. */
   rawPrompt: number;
+  /** Reported reasoning, plus completion tokens the next prompt shows were not sent again when the provider reported none. */
   reasoning: number;
   cacheRead: number;
 };
