@@ -262,7 +262,9 @@ test("share comes before download, and the networks live in one menu", () => {
   const html = renderToStaticMarkup(
     createElement(ShareActions, { gameId: "11111111-1111-4111-8111-111111111111", text: "Solved" }),
   );
-  assert.match(html, /class="button"[^>]*>Share<svg[\s\S]*button-quiet[^>]*>[\s\S]*Download/);
+  assert.match(html, /class="button"[^>]*>Share<svg[\s\S]*Copy link[\s\S]*Download/);
+  assert.match(html, /The text will be copied\. Paste it into the post\./);
+  assert.match(html, /The text will be copied\. Paste it into Instagram\./);
   assert.match(html, /share-phone[\s\S]*Share/);
   assert.match(html, /share-caret/);
   assert.match(html, /share-network-menu" [^>]*hidden/);

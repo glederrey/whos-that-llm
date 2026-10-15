@@ -73,10 +73,30 @@ export function ShareActions({ gameId, text }: { gameId: string; text: string })
     }
   }
 
+  async function copyLink() {
+    setOpen(false);
+    try {
+      await navigator.clipboard.writeText(pageUrl);
+      setNote("The link is copied.");
+    } catch {
+      setNote("The link could not be copied.");
+    }
+  }
+
   const networks = [
-    { name: "X", href: xShareUrl(pageUrl, text), mark: <XMark />, copy: false },
-    { name: "Facebook", href: facebookShareUrl(pageUrl, text), mark: <FacebookMark />, copy: true },
-    { name: "LinkedIn", href: linkedInShareUrl(pageUrl), mark: <LinkedInMark />, copy: true },
+    { name: "X", href: xShareUrl(pageUrl, text), mark: <XMark />, tip: null },
+    {
+      name: "Facebook",
+      href: facebookShareUrl(pageUrl, text),
+      mark: <FacebookMark />,
+      tip: "The text will be copied. Paste it into the post.",
+    },
+    {
+      name: "LinkedIn",
+      href: linkedInShareUrl(pageUrl),
+      mark: <LinkedInMark />,
+      tip: "The text will be copied. Paste it into the post.",
+    },
   ];
 
   return (
@@ -106,12 +126,13 @@ export function ShareActions({ gameId, text }: { gameId: string; text: string })
               target="_blank"
               rel="noopener noreferrer"
               onClick={() => {
-                if (network.copy) void copyMessage("The message is copied. Paste it into the post.");
+                if (network.tip) void copyMessage("The message is copied. Paste it into the post.");
                 else setOpen(false);
               }}
             >
               {network.mark}
               {network.name}
+              {network.tip ? <span className="share-tip">{network.tip}</span> : null}
             </a>
           ))}
           <button
@@ -122,6 +143,7 @@ export function ShareActions({ gameId, text }: { gameId: string; text: string })
           >
             <InstagramMark />
             Instagram
+            <span className="share-tip">The text will be copied. Paste it into Instagram.</span>
           </button>
         </div>
       </span>
@@ -130,6 +152,9 @@ export function ShareActions({ gameId, text }: { gameId: string; text: string })
           Share
         </button>
       </span>
+      <button className="button-quiet" type="button" onClick={() => void copyLink()}>
+        Copy link
+      </button>
       <a className="button-quiet" href={downloadUrl} download={fileName}>
         Download
       </a>

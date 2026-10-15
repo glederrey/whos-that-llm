@@ -1732,8 +1732,36 @@ html[data-theme="dark"] .share-card-stats strong { color: #141414; }
 .share-desktop .button { display: inline-flex; align-items: center; gap: 6px; }
 .share-caret { width: 12px; height: 12px; display: block; }
 .share-network-menu a,
-.share-network-menu .menu-item { display: flex; align-items: center; gap: 10px; }
+.share-network-menu .menu-item { position: relative; display: flex; align-items: center; gap: 10px; }
 .share-network-menu svg { width: 18px; height: 18px; flex: none; }
+.share-tip {
+  position: absolute;
+  left: calc(100% + 10px);
+  top: 50%;
+  z-index: 2;
+  width: max-content;
+  max-width: 220px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: var(--ink);
+  color: var(--paper);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.35;
+  white-space: normal;
+  pointer-events: none;
+  box-shadow: var(--lift);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-50%);
+}
+.share-network-menu a:hover .share-tip,
+.share-network-menu a:focus-visible .share-tip,
+.share-network-menu .menu-item:hover .share-tip,
+.share-network-menu .menu-item:focus-visible .share-tip {
+  opacity: 1;
+  visibility: visible;
+}
 .share-note { flex-basis: 100%; color: var(--mute); font-size: 14px; margin: 0; }
 @media (hover: none) and (pointer: coarse) {
   .share-desktop { display: none; }
