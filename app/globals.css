@@ -1657,87 +1657,12 @@ html[data-theme="dark"] .history-facts .board-chip.no-hints {
   *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
 }
 
-/* Share card. A light score card in both themes, with a teal frame and rounded corners. */
-.share-card {
+/* The public page shows the same PNG Download saves. The frame is part of the picture. */
+.share-picture {
   width: min(440px, 100%);
-  min-height: calc(min(440px, 100vw - 32px) * 1.25);
-  background: #00bbc9;
-  color: #141414;
+  height: auto;
   border-radius: 22px;
-  padding: 7px;
-  display: flex;
 }
-.share-card-body {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  background: #ebebeb;
-  border-radius: 16px;
-  padding: 14px 22px 18px;
-  min-height: 0;
-}
-.share-card-brand { display: flex; align-items: center; }
-.share-card-brand img { width: 88px; height: 88px; margin: -14px -4px -14px -14px; flex: none; }
-.share-card-brand strong {
-  font-family: var(--font-bold), var(--font), "Segoe UI", sans-serif;
-  font-size: 30px;
-  line-height: 1.02;
-  letter-spacing: -0.03em;
-  font-weight: 700;
-}
-.share-card-mode { display: flex; align-items: baseline; margin: 2px 0 0; font-size: 20px; font-weight: 700; line-height: 1.2; }
-.share-card-dot { color: #141414; padding: 0 0.42em; }
-.share-card-score {
-  margin: 16px 0 0;
-  font-family: var(--font-bold), var(--font), "Segoe UI", sans-serif;
-  font-size: 64px;
-  line-height: 0.9;
-  letter-spacing: -0.045em;
-  font-weight: 700;
-  color: #007f88;
-}
-.share-card-score.is-empty { font-size: 48px; letter-spacing: 0; }
-.share-card-outcome { margin: 8px 0 0; font-size: 26px; font-weight: 700; line-height: 1.1; }
-.share-card-model { margin: 4px 0 0; font-size: 18px; color: #52525b; }
-.share-card-details { display: grid; gap: 3px; margin-top: 14px; }
-.share-card-details div { display: flex; justify-content: space-between; gap: 12px; font-size: 14px; line-height: 1.35; }
-.share-card-details span { color: #52525b; }
-.share-card-details strong { font-weight: 700; color: #141414; }
-.share-card-invite { margin-top: auto; padding-top: 14px; }
-.share-card-invite strong { display: block; font-size: 16px; line-height: 1.2; }
-.share-card-invite span { display: block; margin-top: 2px; font-size: 14px; color: #52525b; }
-.share-card-stats { display: flex; margin-top: 12px; padding-top: 12px; border-top: 3px solid #141414; }
-.share-card-stats div { flex: 1; }
-.share-card-stats span {
-  display: block;
-  font-size: 11px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: #52525b;
-}
-.share-card-stats strong {
-  display: block;
-  margin-top: 2px;
-  font-family: var(--font-bold), var(--font), "Segoe UI", sans-serif;
-  font-size: 28px;
-  font-weight: 700;
-  line-height: 1.1;
-  color: #141414;
-}
-html[data-theme="dark"] .share-card { background: #00bbc9; color: #141414; }
-html[data-theme="dark"] .share-card-body { background: #ebebeb; }
-html[data-theme="dark"] .share-card-score { color: #007f88; }
-html[data-theme="dark"] .share-card-model,
-html[data-theme="dark"] .share-card-details span,
-html[data-theme="dark"] .share-card-invite span,
-html[data-theme="dark"] .share-card-stats span { color: #52525b; }
-html[data-theme="dark"] .share-card-outcome,
-html[data-theme="dark"] .share-card-mode,
-html[data-theme="dark"] .share-card-dot,
-html[data-theme="dark"] .share-card-brand strong,
-html[data-theme="dark"] .share-card-details strong,
-html[data-theme="dark"] .share-card-invite strong,
-html[data-theme="dark"] .share-card-stats strong { color: #141414; }
 .share-block { display: grid; gap: 12px; justify-items: start; }
 .share-actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
 .share-desktop { position: relative; display: inline-flex; }

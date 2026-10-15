@@ -275,13 +275,15 @@ Public. No session. This is the link Share on X and Share on Facebook use.
 
 Only a finished game (`solved`, `miss`, or `given_up`). An open round or an unknown id is the not-found page.
 
-The page shows the card and nothing else. No header, no footer, no transcript, no message text. Daily still does not name the hidden model. Other modes may.
+The page shows the card and nothing else. No header, no footer, no transcript, no message text. The page shows the PNG from `/r/[gameId]/card.png`. Download saves that same picture. Daily still does not name the hidden model, and it does not show that model's logo. Other modes show the model name, its logo, and the company, region, year, and size.
 
-The card has a teal frame and rounded corners. The question-mark logo and **Who's that LLM?** sit at the top. The mode line is **Daily · Easy**, **All models · Hard**, and later **Company ·** the company name or **Category ·** the category name. The dot between those words is black, with the same space on both sides. The difficulty word uses the leaderboard colors: Easy `#1c7c43`, Medium `#d4a017`, Hard `#c41b15`, Impossible `#a78bfa`. Then the score, the outcome (**Solved**, **Not solved**, or **Given up**), the model name when this mode may show it, and the breakdown lines. When the breakdown does not already name a hint, the card adds **Hints · none**. Under that: **Can you beat 1,240?** when there is a score, or **Come try a round** when there is not, then **whos-that-llm.com**. The footer is the messages used and the tokens that count toward the score. A give-up before any reply shows **—** for the score and the tokens. The card does not show the chat.
+The card has a teal frame and rounded corners. The question-mark logo and **Who's that LLM?** sit at the top. Under that, when this mode may show the model: the logo, the name, then the company, region, year, and size. The score sits on the left. On the right: **Solved on message 2.** or **Miss.** or **Given up.**, then **Game mode** and **Difficulty**. A company, category, or region round names that instead of the difficulty. **Messages** is on that side too. When the breakdown does not already name a hint, that side says **Hints** **None**. The difficulty word uses the leaderboard colors: Easy `#1c7c43`, Medium `#d4a017`, Hard `#c41b15`, Impossible `#a78bfa`.
+
+The breakdown is the full score: each line, the change, and **After**, including **Before the multiplier**, then **Total**. Under that: **Can you beat 9,500?** when there is a score, or **Come try a round** when there is not, then **whos-that-llm.com**. A give-up before any reply shows **—** for the score and no breakdown. The card does not show the chat.
 
 The downloaded file is `whos-that-llm-` plus the game id, then `.png`.
 
-The link preview is that same card. It is drawn when X or Facebook requests it, and it is not stored.
+The link preview is that same picture. It is drawn when the page or a share preview requests it, and it is not stored.
 
 ## Leaderboard (`/leaderboard`)
 

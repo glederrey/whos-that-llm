@@ -1,5 +1,14 @@
 import { difficultyFromStored, difficultyLabel, type Difficulty } from "./difficulty";
-import { isFinishedGame, poolLabel, type ScoreLine, type Traits } from "./game";
+import {
+  isFinishedGame,
+  poolLabel,
+  regionLabel,
+  scoreSteps,
+  sizeLabel,
+  type ScoreLine,
+  type ScoreStep,
+  type Traits,
+} from "./game";
 import { siteOrigin } from "./site";
 
 /** Leaderboard difficulty colors. The card uses these on the difficulty word. */
@@ -37,6 +46,12 @@ export type ShareCard = {
   tokens: number | null;
   /** Hidden on Daily. Other modes may name the model. */
   modelName: string | null;
+  /** Company logo path. Hidden on Daily, with the name. */
+  modelLogoPath: string | null;
+  /** Company, region, year, and size. Hidden on Daily. */
+  modelFacts: string[];
+  /** Running total, including Before the multiplier. Empty when there is no score. */
+  steps: ScoreStep[];
   /** The stored breakdown, in order. Empty when this round has no score. */
   details: ShareDetail[];
   /** Set when the breakdown does not already name a hint or no-hint mode. */
@@ -104,9 +119,16 @@ export function shareModeLine(input: {
   return poolLabel(input.gameMode, input.poolKey, input.traits, input.difficulty);
 }
 
-function hiddenModelName(traits: Traits, modelId: string): string | null {
-  const name = traits.models[modelId]?.name?.trim() ?? "";
-  return name.length > 0 ? name : null;
+function shownModel(traits: Traits, modelId: string, daily: boolean) {
+  if (daily) return null;
+  const model = traits.models[modelId];
+  const name = model?.name?.trim() ?? "";
+  if (!model || name.length === 0) return null;
+  const facts = [model.companyName, regionLabel(model.region), String(model.year), sizeLabel(model.size)].filter(
+    (fact) => fact.trim().length > 0,
+  );
+  const logoPath = model.logoPath?.trim() ?? "";
+  return { name, logoPath: logoPath.length > 0 ? logoPath : null, facts };
 }
 
 function outcomeFor(status: string): ShareOutcome {
@@ -120,6 +142,7 @@ export function buildShareCard(input: ShareCardInput): ShareCard | null {
   if (!isFinishedGame(input.status)) return null;
   const difficulty = difficultyFromStored(input.difficulty);
   const daily = input.gameMode === "daily";
+  const model = shownModel(input.traits, input.modelId, daily);
   return {
     id: input.id,
     modeLine: shareModeLine({
@@ -134,7 +157,10 @@ export function buildShareCard(input: ShareCardInput): ShareCard | null {
     score: input.score,
     messages: input.messageCount,
     tokens: tokensFromBreakdown(input.breakdown),
-    modelName: daily ? null : hiddenModelName(input.traits, input.modelId),
+    modelName: model?.name ?? null,
+    modelLogoPath: model?.logoPath ?? null,
+    modelFacts: model?.facts ?? [],
+    steps: input.score === null || !input.breakdown ? [] : scoreSteps(input.breakdown, input.score),
     details: detailsFrom(input.breakdown),
     hints: hintsLine(input.breakdown),
     invite: input.score === null ? "Come try a round" : `Can you beat ${formatShareNumber(input.score)}?`,
@@ -159,6 +185,8 @@ export function formatShareNumber(value: number): string {
   return Math.trunc(value).toLocaleString("en-US");
 }
 
+export type ShareMeta = { label: string; value: string; color: string | null };
+
 export type ShareCardDisplay = {
   title: typeof shareBrand;
   mode: string;
@@ -167,11 +195,16 @@ export type ShareCardDisplay = {
   variantColor: string | null;
   score: string;
   outcome: ShareOutcome;
+  /** Solved on message 2. Miss. Given up. */
+  status: string;
+  meta: ShareMeta[];
   modelName: string | null;
+  modelFacts: string[];
   messagesLabel: "Messages";
   messages: string;
   tokensLabel: "Tokens";
   tokens: string;
+  steps: ScoreStep[];
   details: ShareDetail[];
   hints: string | null;
   invite: string;
@@ -184,6 +217,19 @@ export function shareCardDisplay(card: ShareCard): ShareCardDisplay {
   const variant = splitAt === -1 ? null : card.modeLine.slice(splitAt + 3);
   const colored =
     card.difficulty && variant === difficultyLabel[card.difficulty] ? difficultyColor[card.difficulty] : null;
+  const meta: ShareMeta[] = [{ label: "Game mode", value: mode, color: null }];
+  if (variant) {
+    const isDifficulty = card.difficulty !== null && variant === difficultyLabel[card.difficulty];
+    meta.push({ label: isDifficulty ? "Difficulty" : mode, value: variant, color: isDifficulty ? colored : null });
+  }
+  meta.push({ label: "Messages", value: formatShareNumber(card.messages), color: null });
+  if (card.hints) meta.push({ label: "Hints", value: "None", color: null });
+  const status =
+    card.outcome === "Solved"
+      ? `Solved on message ${formatShareNumber(card.messages)}.`
+      : card.outcome === "Not solved"
+        ? "Miss."
+        : "Given up.";
   return {
     title: shareBrand,
     mode,
@@ -191,16 +237,30 @@ export function shareCardDisplay(card: ShareCard): ShareCardDisplay {
     variantColor: colored,
     score: card.score === null ? "—" : formatShareNumber(card.score),
     outcome: card.outcome,
+    status,
+    meta,
     modelName: card.modelName,
+    modelFacts: card.modelFacts,
     messagesLabel: "Messages",
     messages: formatShareNumber(card.messages),
     tokensLabel: "Tokens",
     tokens: card.tokens === null ? "—" : formatShareNumber(card.tokens),
+    steps: card.steps,
     details: card.details,
     hints: card.hints,
     invite: card.invite,
     site: shareSite,
   };
+}
+
+/** Alt text for the public picture. Daily does not name the model. */
+export function shareCardAlt(card: ShareCard): string {
+  const display = shareCardDisplay(card);
+  const parts = [display.title, display.mode];
+  if (display.variant) parts.push(display.variant);
+  parts.push(display.score, display.status);
+  if (display.modelName) parts.push(display.modelName);
+  return parts.join(", ");
 }
 
 /** The post for X, Facebook, LinkedIn, Instagram, and the phone share sheet. Daily hides the model. */

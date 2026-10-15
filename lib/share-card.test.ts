@@ -5,7 +5,6 @@ import test from "node:test";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { ShareActions } from "../components/share-actions";
-import { ShareCardView } from "../components/share-card";
 import { rulesForGameMode } from "./config";
 import { scoreRound, type Traits } from "./game";
 import {
@@ -14,6 +13,7 @@ import {
   facebookShareUrl,
   linkedInShareUrl,
   isShareGameId,
+  shareCardAlt,
   shareCardDisplay,
   shareFileName,
   sharePageUrl,
@@ -86,6 +86,8 @@ test("a finished round becomes a score card", () => {
   assert.equal(daily.messages, 3);
   assert.equal(daily.tokens, 1420);
   assert.equal(daily.modelName, null);
+  assert.equal(daily.modelLogoPath, null);
+  assert.deepEqual(daily.modelFacts, []);
   assert.equal(JSON.stringify(daily).includes(hidden), false);
   assert.equal(JSON.stringify(daily).includes(decoy), false);
   assert.equal(JSON.stringify(daily).includes(chat), false);
@@ -94,6 +96,8 @@ test("a finished round becomes a score card", () => {
   assert.equal(hard.modeLine, "All models · Hard");
   assert.equal(hard.outcome, "Not solved");
   assert.equal(hard.modelName, hidden);
+  assert.equal(hard.modelLogoPath, "logos/anthropic.png");
+  assert.deepEqual(hard.modelFacts, ["Anthropic", "USA", "2026", "Large"]);
   assert.equal(JSON.stringify(hard).includes(decoy), false);
 
   const company = card({ gameMode: "company", poolKey: "anthropic", difficulty: null });
@@ -108,6 +112,7 @@ test("a finished round becomes a score card", () => {
   assert.equal(card({ gameMode: "custom", difficulty: null }).modeLine, "Custom");
   const givenUp = card({ status: "given_up", score: null, breakdown: null, messageCount: 0 });
   assert.equal(givenUp.outcome, "Given up");
+  assert.deepEqual(givenUp.steps, []);
   assert.deepEqual(givenUp.details, []);
   assert.equal(givenUp.hints, null);
   assert.equal(givenUp.invite, "Come try a round");
@@ -231,36 +236,44 @@ test("X and Facebook get the text and the link to this round", () => {
   assert.equal(isShareGameId("not-a-game"), false);
 });
 
-test("the on-page card and the image leave out the chat and a daily model", () => {
+test("the public picture and the download are the same card", () => {
   const daily = card({ gameMode: "daily", difficulty: "easy", status: "miss", score: 100 });
-  const html = renderToStaticMarkup(createElement(ShareCardView, { card: daily }));
-  assert.match(html, /Who&#x27;s that LLM\?/);
-  assert.match(html, /Daily/);
-  assert.match(html, /Easy/);
-  assert.match(html, /Not solved/);
-  assert.match(html, /#1c7c43/);
-  assert.match(html, /Messages/);
-  assert.match(html, /Tokens/);
-  assert.equal(html.includes(hidden), false);
-  assert.equal(html.includes(decoy), false);
-  assert.equal(html.includes(chat), false);
-  assert.equal(html.includes("transcript"), false);
-
   const image = renderToStaticMarkup(shareCardImage(daily, "data:image/png;base64,aaaa"));
+  assert.match(image, /Who&#x27;s that LLM\?|Who's that LLM\?/);
+  assert.match(image, /Daily/);
+  assert.match(image, /Easy/);
+  assert.match(image, /#1c7c43/);
+  assert.match(image, /Miss\./);
+  assert.match(image, /Messages/);
+  assert.match(image, /None/);
+  assert.match(image, /After/);
+  assert.match(image, /Before the multiplier/);
+  assert.match(image, /Total/);
   assert.equal(image.includes(hidden), false);
+  assert.equal(image.includes(decoy), false);
   assert.equal(image.includes(chat), false);
-  assert.match(image, /Not solved/);
+  assert.equal(image.includes("transcript"), false);
+  assert.equal(image.includes("Anthropic"), false);
   assert.match(image, /border-radius:56px/);
   assert.match(image, /#00BBC9|rgb\(0, 187, 201\)|#00bbc9/);
-  assert.match(image, />·</);
   assert.doesNotMatch(image, /· Easy/);
   assert.match(image, /Can you beat/);
   assert.match(image, /whos-that-llm\.com/);
-  assert.match(image, /Hints · none/);
+  assert.equal(shareCardAlt(daily).includes(hidden), false);
 
-  const named = renderToStaticMarkup(createElement(ShareCardView, { card: card() }));
-  assert.match(named, new RegExp(hidden));
-  assert.equal(named.includes(decoy), false);
+  const named = card();
+  const namedImage = renderToStaticMarkup(shareCardImage(named, "data:image/png;base64,aaaa", "data:image/png;base64,bbbb"));
+  assert.match(namedImage, new RegExp(hidden));
+  assert.match(namedImage, /bbbb/);
+  assert.match(namedImage, /Anthropic/);
+  assert.match(namedImage, /Solved on message/);
+  assert.equal(namedImage.includes(decoy), false);
+  assert.match(shareCardAlt(named), new RegExp(hidden));
+
+  const page = fs.readFileSync(path.join(root, "app/r/[gameId]/page.tsx"), "utf8");
+  assert.match(page, /share-picture/);
+  assert.match(page, /shareCardPath/);
+  assert.doesNotMatch(page, /ShareCardView/);
 });
 
 test("share comes before download, and the networks live in one menu", () => {

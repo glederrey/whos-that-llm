@@ -1,5 +1,5 @@
-import { createElement, type ReactElement } from "react";
-import { shareCardDisplay, type ShareCard, type ShareDetail } from "./share-card";
+import { createElement, type CSSProperties, type ReactElement } from "react";
+import { shareCardDisplay, type ShareCard, type ShareMeta } from "./share-card";
 
 export const shareCardWidth = 1080;
 export const shareCardHeight = 1350;
@@ -7,181 +7,182 @@ export const shareCardHeight = 1350;
 const paper = "#EBEBEB";
 const ink = "#141414";
 const mute = "#52525B";
+const line = "#D4D4D8";
 const scoreTeal = "#007F88";
 const bar = "#00BBC9";
+const solvedWash = "#E6F8F8";
+const missWash = "#FDECEC";
+const missInk = "#C41B15";
 
 /**
- * The 4:5 score card. Satori draws this to a PNG when someone downloads it
- * or when a share preview requests it. Nothing here is the chat.
+ * The 4:5 score card. Satori draws this to a PNG. The public page shows that
+ * same PNG, and Download saves it. Nothing here is the chat.
  * The teal frame and the rounded corners are part of the image.
  */
-export function shareCardImage(card: ShareCard, logoSrc: string): ReactElement {
+export function shareCardImage(card: ShareCard, logoSrc: string, modelLogoSrc: string | null = null): ReactElement {
   const display = shareCardDisplay(card);
-  return createElement(
-    "div",
+  const statusColor = display.outcome === "Not solved" ? missInk : display.outcome === "Solved" ? scoreTeal : ink;
+  const statusWash = display.outcome === "Not solved" ? missWash : display.outcome === "Solved" ? solvedWash : "#F3F3F4";
+  return box(
     {
-      style: {
-        display: "flex",
-        width: "100%",
-        height: "100%",
-        background: bar,
-        borderRadius: 56,
-        padding: 18,
-        color: ink,
-        fontFamily: "Roboto",
-      },
+      width: "100%",
+      height: "100%",
+      background: bar,
+      borderRadius: 56,
+      padding: 18,
+      color: ink,
+      fontFamily: "Roboto",
     },
-    createElement(
-      "div",
+    box(
       {
-        style: {
-          display: "flex",
-          flexDirection: "column",
-          flexGrow: 1,
-          background: paper,
-          borderRadius: 40,
-          padding: "36px 68px 52px",
-        },
+        flexDirection: "column",
+        flexGrow: 1,
+        background: paper,
+        borderRadius: 40,
+        padding: "28px 56px 40px",
       },
-      createElement(
-        "div",
-        { style: { display: "flex", alignItems: "center" } },
+      box(
+        { alignItems: "center" },
         createElement("img", {
           src: logoSrc,
-          width: 220,
-          height: 220,
-          style: { margin: "-32px -10px -32px -32px" },
+          width: 148,
+          height: 148,
+          style: { margin: "-20px -8px -20px -20px" },
         }),
-        createElement(
-          "div",
-          {
-            style: {
-              display: "flex",
-              fontSize: 76,
-              fontWeight: 700,
-              lineHeight: 1.02,
-              letterSpacing: -2,
-              color: ink,
-            },
-          },
-          display.title,
-        ),
-      ),
-      modeLine(display.mode, display.variant, display.variantColor),
-      createElement(
-        "div",
-        {
-          style: {
-            display: "flex",
-            marginTop: 36,
-            fontSize: display.score === "—" ? 88 : 132,
-            fontWeight: 700,
-            lineHeight: 0.9,
-            letterSpacing: display.score === "—" ? 0 : -4,
-            color: scoreTeal,
-          },
-        },
-        display.score,
-      ),
-      createElement(
-        "div",
-        { style: { display: "flex", marginTop: 14, fontSize: 56, fontWeight: 700, color: ink } },
-        display.outcome,
+        text(display.title, { fontSize: 58, fontWeight: 700, lineHeight: 1.02, letterSpacing: -1.5 }),
       ),
       display.modelName
-        ? createElement(
-            "div",
-            { style: { display: "flex", marginTop: 10, fontSize: 36, color: mute } },
-            display.modelName,
+        ? box(
+            { alignItems: "center", marginTop: 8 },
+            modelLogoSrc
+              ? box(
+                  {
+                    width: 96,
+                    height: 96,
+                    flexShrink: 0,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    background: "#FFFFFF",
+                    borderRadius: 22,
+                    marginRight: 18,
+                  },
+                  createElement("img", { src: modelLogoSrc, width: 72, height: 72 }),
+                )
+              : null,
+            box(
+              { flexDirection: "column" },
+              text(display.modelName, { fontSize: 44, fontWeight: 700, lineHeight: 1.1 }),
+              display.modelFacts.length > 0 ? factLine(display.modelFacts) : null,
+            ),
           )
         : null,
-      display.details.length > 0 || display.hints
-        ? createElement(
-            "div",
-            { style: { display: "flex", flexDirection: "column", marginTop: 28 } },
-            ...display.details.map((line) => detailRow(line)),
-            ...(display.hints ? [detailRow({ label: display.hints, value: "" })] : []),
+      box(
+        { alignItems: "center", justifyContent: "space-between", marginTop: 28 },
+        box(
+          { flexDirection: "column" },
+          text("Your score", {
+            fontSize: 22,
+            fontWeight: 500,
+            letterSpacing: 2,
+            textTransform: "uppercase",
+            color: mute,
+          }),
+          text(display.score, {
+            marginTop: 4,
+            fontSize: display.score === "—" ? 84 : 112,
+            fontWeight: 700,
+            lineHeight: 0.9,
+            letterSpacing: display.score === "—" ? 0 : -3,
+            color: scoreTeal,
+          }),
+        ),
+        box(
+          { flexDirection: "column", alignItems: "flex-end" },
+          text(display.status, {
+            fontSize: 26,
+            fontWeight: 500,
+            color: statusColor,
+            background: statusWash,
+            borderRadius: 999,
+            padding: "8px 18px",
+          }),
+          ...display.meta.map((row) => metaRow(row)),
+        ),
+      ),
+      display.steps.length > 0 || display.score !== "—"
+        ? box(
+            { flexDirection: "column", marginTop: 28 },
+            tableHead(),
+            ...display.steps.map((step) => tableRow(step.label, step.change, step.after, step.kind === "subtotal" || step.kind === "floor")),
+            display.score !== "—" ? tableRow("Total", "", display.score, true) : null,
           )
         : null,
-      createElement("div", { style: { display: "flex", flexGrow: 1 } }),
-      createElement(
-        "div",
-        { style: { display: "flex", flexDirection: "column", marginBottom: 28 } },
-        createElement(
-          "div",
-          { style: { display: "flex", fontSize: 36, fontWeight: 700, color: ink } },
-          display.invite,
-        ),
-        createElement(
-          "div",
-          { style: { display: "flex", marginTop: 6, fontSize: 28, color: mute } },
-          display.site,
-        ),
-      ),
-      createElement(
-        "div",
-        {
-          style: {
-            display: "flex",
-            paddingTop: 22,
-            borderTop: `4px solid ${ink}`,
-          },
-        },
-        stat(display.messagesLabel, display.messages),
-        stat(display.tokensLabel, display.tokens),
+      box({ flexGrow: 1 }),
+      box(
+        { flexDirection: "column", marginTop: 24 },
+        text(display.invite, { fontSize: 36, fontWeight: 700 }),
+        text(display.site, { marginTop: 6, fontSize: 28, color: mute }),
       ),
     ),
   );
 }
 
-function modeLine(mode: string, variant: string | null, variantColor: string | null): ReactElement {
-  return createElement(
-    "div",
-    { style: { display: "flex", alignItems: "center", marginTop: 8, fontSize: 46, fontWeight: 700 } },
-    createElement("span", null, mode),
-    variant
-      ? createElement(
-          "span",
-          { style: { color: ink, paddingLeft: 22, paddingRight: 22 } },
-          "·",
-        )
-      : null,
-    variant ? createElement("span", { style: { color: variantColor ?? ink } }, variant) : null,
+function factLine(facts: string[]): ReactElement {
+  const children: ReactElement[] = [];
+  facts.forEach((fact, index) => {
+    if (index > 0) children.push(text("·", { color: mute, paddingLeft: 10, paddingRight: 10, fontSize: 26 }));
+    children.push(text(fact, { fontSize: 26, color: mute }));
+  });
+  return box({ alignItems: "center", marginTop: 4 }, ...children);
+}
+
+function metaRow(row: ShareMeta): ReactElement {
+  return box(
+    { alignItems: "center", marginTop: 8 },
+    text(row.label, { fontSize: 26, color: mute, marginRight: 16 }),
+    text(row.value, { fontSize: 28, fontWeight: 700, color: row.color ?? ink }),
   );
 }
 
-function detailRow(line: ShareDetail): ReactElement {
-  return createElement(
-    "div",
-    { style: { display: "flex", justifyContent: "space-between", marginTop: 8, fontSize: 30 } },
-    createElement("div", { style: { display: "flex", color: mute } }, line.label),
-    line.value
-      ? createElement("div", { style: { display: "flex", fontWeight: 700, color: ink } }, line.value)
-      : null,
+function tableHead(): ReactElement {
+  return box(
+    { justifyContent: "flex-end", paddingBottom: 8 },
+    text("After", {
+      fontSize: 20,
+      fontWeight: 500,
+      letterSpacing: 1.5,
+      textTransform: "uppercase",
+      color: mute,
+    }),
   );
 }
 
-function stat(label: string, value: string): ReactElement {
-  return createElement(
-    "div",
-    { style: { display: "flex", flexDirection: "column", width: "50%" } },
-    createElement(
-      "div",
-      {
-        style: {
-          display: "flex",
-          fontSize: 24,
-          letterSpacing: 3,
-          textTransform: "uppercase",
-          color: mute,
-        },
-      },
-      label,
-    ),
-    createElement(
-      "div",
-      { style: { display: "flex", marginTop: 6, fontSize: 56, fontWeight: 700, color: ink } },
-      value,
+function tableRow(label: string, change: string, after: string, strong: boolean): ReactElement {
+  return box(
+    {
+      alignItems: "center",
+      justifyContent: "space-between",
+      borderTop: `2px solid ${line}`,
+      paddingTop: 12,
+      paddingBottom: 12,
+    },
+    text(label, { fontSize: 28, fontWeight: strong ? 700 : 500, color: ink }),
+    box(
+      { alignItems: "center" },
+      change
+        ? text(change, { width: 160, justifyContent: "flex-end", fontSize: 28, fontWeight: 500, color: mute })
+        : null,
+      after
+        ? text(after, { width: 170, justifyContent: "flex-end", fontSize: 28, fontWeight: 700, color: ink })
+        : null,
     ),
   );
+}
+
+function box(style: CSSProperties, ...children: Array<ReactElement | null>): ReactElement {
+  return createElement("div", { style: { display: "flex", ...style } }, ...children);
+}
+
+function text(value: string, style: CSSProperties): ReactElement {
+  return createElement("div", { style: { display: "flex", ...style } }, value);
 }
