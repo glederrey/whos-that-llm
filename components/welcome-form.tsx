@@ -2,17 +2,22 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { avatarError, avatarFileError } from "@/lib/profile";
+import { avatarError, avatarFileError, cleanUsername } from "@/lib/profile";
 
 export function WelcomeForm({ next }: { next: string }) {
   const router = useRouter();
-  const [username, setUsername] = useState("Human");
+  const [username, setUsername] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
 
   async function submit(event: React.FormEvent) {
     event.preventDefault();
+    const name = cleanUsername(username);
+    if (!name) {
+      setError("3 to 20 characters.");
+      return;
+    }
     setBusy(true);
     setError("");
     if (file) {
@@ -34,7 +39,7 @@ export function WelcomeForm({ next }: { next: string }) {
     const response = await fetch("/api/me", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username }),
+      body: JSON.stringify({ username: name }),
     });
     setBusy(false);
     if (response.status === 401) {

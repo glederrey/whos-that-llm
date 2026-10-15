@@ -135,9 +135,9 @@ Company and Region go to `/play/new?category=…` once they are built. Custom is
 Shown once, when `profiles.username` is null.
 
 - **Pick a username.**
-- Field, placeholder `Human`. The field starts filled with **Human**, so Save keeps that name unless they change it.
+- The username box starts empty. **Human** is the gray hint inside it. The first character they type replaces that hint.
 - Button: **Save**
-- Shape error: **3 to 20 characters.**
+- An empty name, or any name outside 3 to 20 characters, shows **3 to 20 characters.** and is not stored.
 - Capitals and punctuation are allowed. Shared names are allowed. Save stores the name on that profile.
 - Save goes to `/play`, or back to the play URL they were trying to open.
 - **Picture** is optional. A JPEG, PNG, or WebP under 1 MB. Anything else shows **Use a JPEG, PNG, or WebP under 1 MB.** Skipping it leaves the generated mark. They can add one later from the profile.
