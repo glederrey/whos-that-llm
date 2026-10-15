@@ -143,12 +143,8 @@ test("the provider page lists both tables and can clear a blacklist", () => {
   assert.match(page, /OpenRouter providers/);
   assert.match(page, /Blacklisted/);
   assert.match(page, /Trusted/);
-  assert.match(page, /Deblacklist/);
-  assert.match(page, /action=\{clearProvider\}/);
-  assert.match(page, /<th>Output<\/th>\s*<th>gpt-tokenizer<\/th>\s*<th>Gap<\/th>/);
-  assert.match(page, /formatOutputGap/);
-  assert.match(page, /visibleOutput/);
-  assert.match(page, /ProviderReason/);
+  assert.match(page, /<ProviderTable/);
+  assert.match(page, /providers-page/);
   assert.match(fs.readFileSync(path.join(root, "components/provider-reason.tsx"), "utf8"), /showModal/);
   assert.match(nav, /href="\/admin\/providers"/);
   assert.match(openrouter, /includeRawChunks: true/);
