@@ -822,19 +822,20 @@ html[data-theme="dark"] {
   .side {
     grid-column: 2;
     grid-row: 1 / span 4;
-    display: flex;
-    flex-direction: column;
+    align-self: start;
+    position: sticky;
+    top: 16px;
   }
-  /* The message bar and the guess card stay in place until the scroll meets
-     them, then follow the thread. The bar covers the messages underneath. */
+  /* The message bar and the right column stay put until the scroll meets them,
+     then follow the thread together. The bar covers the messages underneath. */
   .thread > header {
     position: sticky;
     top: 16px;
     z-index: 6;
+    padding-bottom: 12px;
     background: var(--canvas);
   }
-  .thread > header::before,
-  .guess-box::before {
+  .thread > header::before {
     content: "";
     position: absolute;
     left: 0;
@@ -843,11 +844,24 @@ html[data-theme="dark"] {
     height: 16px;
     background: var(--canvas);
   }
-  .guess-sticky { flex: 1 0 auto; }
-  .guess-box {
-    position: sticky;
-    top: 16px;
-    z-index: 4;
+}
+@media (max-width: 899px) {
+  .side,
+  .guess-sticky { display: contents; }
+  .guess-box { order: 1; }
+  .feedback { order: 2; }
+  .guess-history { order: 3; }
+}
+@media (min-width: 900px), (max-width: 560px) {
+  .thread > header::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 100%;
+    height: 56px;
+    background: linear-gradient(var(--canvas), transparent);
+    pointer-events: none;
   }
 }
 .meta { display: flex; justify-content: space-between; gap: 8px; color: var(--mute); font-size: 14px; }
