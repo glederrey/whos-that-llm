@@ -48,9 +48,9 @@ export function shareCardImage(card: ShareCard, logoSrc: string, modelLogoSrc: s
           src: logoSrc,
           width: 188,
           height: 188,
-          style: { margin: "-28px -16px -28px -28px" },
+          style: { margin: "-28px 4px -28px -28px" },
         }),
-        text(display.title, { fontSize: 100, fontWeight: 700, lineHeight: 0.92, letterSpacing: -2.5 }),
+        text(display.title, { fontSize: 108, fontWeight: 700, lineHeight: 0.92, letterSpacing: -2.5 }),
       ),
       box(
         { flexDirection: "column", flexGrow: 1, justifyContent: "center" },
@@ -80,7 +80,7 @@ export function shareCardImage(card: ShareCard, logoSrc: string, modelLogoSrc: s
           )
         : null,
       box(
-        { alignItems: "center", justifyContent: "space-between", marginTop: display.modelName ? 52 : 0 },
+        { alignItems: "center", justifyContent: "space-between", marginTop: display.modelName ? 76 : 0 },
         box(
           { flexDirection: "column" },
           text("Your score", {
