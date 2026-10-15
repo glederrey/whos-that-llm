@@ -97,6 +97,19 @@ export function shareCardPath(gameId: string): string {
   return `/r/${gameId}/card.png`;
 }
 
+export type ShareCardTheme = "light" | "dark";
+
+/** Anything other than dark stays the light card. A preview with no theme stays light. */
+export function shareCardTheme(value: string | null | undefined): ShareCardTheme {
+  return value === "dark" ? "dark" : "light";
+}
+
+export function shareCardImagePath(gameId: string, theme: ShareCardTheme, download = false): string {
+  const query = new URLSearchParams({ theme });
+  if (download) query.set("download", "1");
+  return `${shareCardPath(gameId)}?${query}`;
+}
+
 /** The token total stored on the score line, not the raw prompt plus completion sum. */
 export function tokensFromBreakdown(lines: ScoreLine[] | null | undefined): number | null {
   if (!lines) return null;

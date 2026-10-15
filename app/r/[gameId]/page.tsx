@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { SharePicture } from "@/components/share-picture";
 import { shareCardHeight, shareCardWidth } from "@/lib/share-card-image";
 import { readShareCard } from "@/lib/share-card-load";
 import { shareBrand, shareCardAlt, shareCardPath, sharePagePath, shareText } from "@/lib/share-card";
@@ -38,13 +39,7 @@ export default async function SharedResultPage({ params }: { params: Promise<{ g
   if (!card) notFound();
   return (
     <main className="share-page">
-      <img
-        className="share-picture"
-        src={shareCardPath(card.id)}
-        alt={shareCardAlt(card)}
-        width={shareCardWidth}
-        height={shareCardHeight}
-      />
+      <SharePicture gameId={card.id} alt={shareCardAlt(card)} />
     </main>
   );
 }

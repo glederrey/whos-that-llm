@@ -16,6 +16,7 @@ import {
   dailyModelVisible,
   shareCardAlt,
   shareCardDisplay,
+  shareCardTheme,
   shareFileName,
   sharePageUrl,
   shareText,
@@ -248,6 +249,13 @@ test("X and Facebook get the text and the link to this round", () => {
   assert.equal(isShareGameId("not-a-game"), false);
 });
 
+test("a card theme is dark only when the request says dark", () => {
+  assert.equal(shareCardTheme("dark"), "dark");
+  assert.equal(shareCardTheme("light"), "light");
+  assert.equal(shareCardTheme(null), "light");
+  assert.equal(shareCardTheme("nope"), "light");
+});
+
 test("the public picture and the download are the same card", () => {
   const daily = card({ gameMode: "daily", difficulty: "easy", status: "miss", score: 100 });
   const image = renderToStaticMarkup(shareCardImage(daily, "data:image/png;base64,aaaa"));
@@ -272,7 +280,13 @@ test("the public picture and the download are the same card", () => {
   assert.doesNotMatch(image, /· Easy/);
   assert.match(image, /Can you beat my score of/);
   assert.match(image, /https:\/\/whos-that-llm\.com/);
+  assert.match(image, /#EBEBEB/);
+  assert.match(image, /#007F88/i);
   assert.equal(image.includes("www.whos-that-llm.com"), false);
+  const darkImage = renderToStaticMarkup(shareCardImage(daily, "data:image/png;base64,aaaa", null, "dark"));
+  assert.match(darkImage, /#1E1E1E/);
+  assert.match(darkImage, /#EBEBEB/);
+  assert.equal(/#007F88/i.test(darkImage), false);
   assert.equal(shareCardAlt(daily).includes(hidden), false);
 
   const named = card();
@@ -285,8 +299,11 @@ test("the public picture and the download are the same card", () => {
   assert.match(shareCardAlt(named), new RegExp(hidden));
 
   const page = fs.readFileSync(path.join(root, "app/r/[gameId]/page.tsx"), "utf8");
-  assert.match(page, /share-picture/);
+  const picture = fs.readFileSync(path.join(root, "components/share-picture.tsx"), "utf8");
+  assert.match(page, /SharePicture/);
   assert.match(page, /shareCardPath/);
+  assert.match(picture, /share-picture/);
+  assert.match(picture, /data-theme/);
   assert.doesNotMatch(page, /ShareCardView/);
 });
 
@@ -306,7 +323,7 @@ test("share comes before download, and the networks live in one menu", () => {
   assert.match(html, />Instagram</);
   assert.equal(html.includes("Bluesky"), false);
   assert.match(html, /linkedin\.com\/sharing\/share-offsite/);
-  assert.match(html, /card\.png\?download=1/);
+  assert.match(html, /card\.png\?theme=light&amp;download=1/);
   assert.match(html, /whos-that-llm-11111111-1111-4111-8111-111111111111\.png/);
   assert.equal(html.includes("Share on X"), false);
   assert.equal(html.includes("Share on Facebook"), false);

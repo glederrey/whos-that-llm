@@ -1,44 +1,83 @@
 import { createElement, type CSSProperties, type ReactElement } from "react";
-import { shareCardDisplay, type ShareCard, type ShareMeta } from "./share-card";
+import { shareCardDisplay, type ShareCard, type ShareCardTheme, type ShareMeta } from "./share-card";
 
 export const shareCardWidth = 1080;
 export const shareCardHeight = 1350;
 
-const paper = "#EBEBEB";
-const ink = "#141414";
-const mute = "#52525B";
-const line = "#D4D4D8";
-const scoreTeal = "#007F88";
-const bar = "#00BBC9";
 const playLink = "https://whos-that-llm.com";
-const solvedWash = "#E6F8F8";
-const missWash = "#FDECEC";
-const missInk = "#C41B15";
+
+type Tone = {
+  paper: string;
+  ink: string;
+  mute: string;
+  line: string;
+  score: string;
+  frame: string;
+  solvedWash: string;
+  missWash: string;
+  missInk: string;
+  quietWash: string;
+  chip: string;
+};
+
+const light: Tone = {
+  paper: "#EBEBEB",
+  ink: "#141414",
+  mute: "#52525B",
+  line: "#D4D4D8",
+  score: "#007F88",
+  frame: "#00BBC9",
+  solvedWash: "#E6F8F8",
+  missWash: "#FDECEC",
+  missInk: "#C41B15",
+  quietWash: "#F3F3F4",
+  chip: "#FFFFFF",
+};
+
+const dark: Tone = {
+  paper: "#1E1E1E",
+  ink: "#EBEBEB",
+  mute: "#A1A1AA",
+  line: "#2E2E2E",
+  score: "#00BBC9",
+  frame: "#00BBC9",
+  solvedWash: "#062E2E",
+  missWash: "#3A1212",
+  missInk: "#C41B15",
+  quietWash: "#262626",
+  chip: "#FFFFFF",
+};
 
 /**
  * The 4:5 score card. Satori draws this to a PNG. The public page shows that
  * same PNG, and Download saves it. Nothing here is the chat.
  * The teal frame and the rounded corners are part of the image.
  */
-export function shareCardImage(card: ShareCard, logoSrc: string, modelLogoSrc: string | null = null): ReactElement {
+export function shareCardImage(
+  card: ShareCard,
+  logoSrc: string,
+  modelLogoSrc: string | null = null,
+  theme: ShareCardTheme = "light",
+): ReactElement {
+  const tone = theme === "dark" ? dark : light;
   const display = shareCardDisplay(card);
-  const statusColor = display.outcome === "Not solved" ? missInk : display.outcome === "Solved" ? scoreTeal : ink;
-  const statusWash = display.outcome === "Not solved" ? missWash : display.outcome === "Solved" ? solvedWash : "#F3F3F4";
+  const statusColor = display.outcome === "Not solved" ? tone.missInk : display.outcome === "Solved" ? tone.score : tone.ink;
+  const statusWash = display.outcome === "Not solved" ? tone.missWash : display.outcome === "Solved" ? tone.solvedWash : tone.quietWash;
   return box(
     {
       width: "100%",
       height: "100%",
-      background: bar,
+      background: tone.frame,
       borderRadius: 56,
       padding: 18,
-      color: ink,
+      color: tone.ink,
       fontFamily: "Roboto",
     },
     box(
       {
         flexDirection: "column",
         flexGrow: 1,
-        background: paper,
+        background: tone.paper,
         borderRadius: 40,
         padding: "36px 56px 40px",
       },
@@ -65,7 +104,7 @@ export function shareCardImage(card: ShareCard, logoSrc: string, modelLogoSrc: s
                     flexShrink: 0,
                     alignItems: "center",
                     justifyContent: "center",
-                    background: "#FFFFFF",
+                    background: tone.chip,
                     borderRadius: 22,
                     marginRight: 18,
                   },
@@ -75,7 +114,7 @@ export function shareCardImage(card: ShareCard, logoSrc: string, modelLogoSrc: s
             box(
               { flexDirection: "column" },
               text(display.modelName, { fontSize: 44, fontWeight: 700, lineHeight: 1.1 }),
-              display.modelFacts.length > 0 ? factLine(display.modelFacts) : null,
+              display.modelFacts.length > 0 ? factLine(display.modelFacts, tone) : null,
             ),
           )
         : null,
@@ -88,7 +127,7 @@ export function shareCardImage(card: ShareCard, logoSrc: string, modelLogoSrc: s
             fontWeight: 500,
             letterSpacing: 2,
             textTransform: "uppercase",
-            color: mute,
+            color: tone.mute,
           }),
           text(display.score, {
             marginTop: 4,
@@ -96,7 +135,7 @@ export function shareCardImage(card: ShareCard, logoSrc: string, modelLogoSrc: s
             fontWeight: 700,
             lineHeight: 0.9,
             letterSpacing: display.score === "—" ? 0 : -3,
-            color: scoreTeal,
+            color: tone.score,
           }),
         ),
         box(
@@ -109,45 +148,47 @@ export function shareCardImage(card: ShareCard, logoSrc: string, modelLogoSrc: s
             borderRadius: 999,
             padding: "12px 22px",
           }),
-          ...display.meta.map((row) => metaRow(row)),
+          ...display.meta.map((row) => metaRow(row, tone)),
         ),
       ),
       display.steps.length > 0 || display.score !== "—"
         ? box(
             { flexDirection: "column", marginTop: 28 },
-            tableHead(),
-            ...display.steps.map((step) => tableRow(step.label, step.change, step.after, step.kind === "subtotal" || step.kind === "floor")),
-            display.score !== "—" ? tableRow("Total", "", display.score, true) : null,
+            tableHead(tone),
+            ...display.steps.map((step) =>
+              tableRow(step.label, step.change, step.after, step.kind === "subtotal" || step.kind === "floor", tone),
+            ),
+            display.score !== "—" ? tableRow("Total", "", display.score, true, tone) : null,
           )
         : null,
       ),
       box(
         { flexDirection: "column" },
         text(display.invite, { fontSize: 36, fontWeight: 700 }),
-        text(playLink, { marginTop: 8, fontSize: 32, fontWeight: 700, color: scoreTeal }),
+        text(playLink, { marginTop: 8, fontSize: 32, fontWeight: 700, color: tone.score }),
       ),
     ),
   );
 }
 
-function factLine(facts: string[]): ReactElement {
+function factLine(facts: string[], tone: Tone): ReactElement {
   const children: ReactElement[] = [];
   facts.forEach((fact, index) => {
-    if (index > 0) children.push(text("·", { color: mute, paddingLeft: 10, paddingRight: 10, fontSize: 26 }));
-    children.push(text(fact, { fontSize: 26, color: mute }));
+    if (index > 0) children.push(text("·", { color: tone.mute, paddingLeft: 10, paddingRight: 10, fontSize: 26 }));
+    children.push(text(fact, { fontSize: 26, color: tone.mute }));
   });
   return box({ alignItems: "center", marginTop: 4 }, ...children);
 }
 
-function metaRow(row: ShareMeta): ReactElement {
+function metaRow(row: ShareMeta, tone: Tone): ReactElement {
   return box(
     { alignItems: "center", marginTop: 8 },
-    text(row.label, { fontSize: 26, color: mute, marginRight: 16 }),
-    text(row.value, { fontSize: 28, fontWeight: 700, color: row.color ?? ink }),
+    text(row.label, { fontSize: 26, color: tone.mute, marginRight: 16 }),
+    text(row.value, { fontSize: 28, fontWeight: 700, color: row.color ?? tone.ink }),
   );
 }
 
-function tableHead(): ReactElement {
+function tableHead(tone: Tone): ReactElement {
   return box(
     { justifyContent: "flex-end", paddingBottom: 8 },
     text("After", {
@@ -155,28 +196,28 @@ function tableHead(): ReactElement {
       fontWeight: 500,
       letterSpacing: 1.5,
       textTransform: "uppercase",
-      color: mute,
+      color: tone.mute,
     }),
   );
 }
 
-function tableRow(label: string, change: string, after: string, strong: boolean): ReactElement {
+function tableRow(label: string, change: string, after: string, strong: boolean, tone: Tone): ReactElement {
   return box(
     {
       alignItems: "center",
       justifyContent: "space-between",
-      borderTop: `2px solid ${line}`,
+      borderTop: `2px solid ${tone.line}`,
       paddingTop: 12,
       paddingBottom: 12,
     },
-    text(label, { fontSize: 28, fontWeight: strong ? 700 : 500, color: ink }),
+    text(label, { fontSize: 28, fontWeight: strong ? 700 : 500, color: tone.ink }),
     box(
       { alignItems: "center" },
       change
-        ? text(change, { width: 160, justifyContent: "flex-end", fontSize: 28, fontWeight: 500, color: mute })
+        ? text(change, { width: 160, justifyContent: "flex-end", fontSize: 28, fontWeight: 500, color: tone.mute })
         : null,
       after
-        ? text(after, { width: 170, justifyContent: "flex-end", fontSize: 28, fontWeight: 700, color: ink })
+        ? text(after, { width: 170, justifyContent: "flex-end", fontSize: 28, fontWeight: 700, color: tone.ink })
         : null,
     ),
   );

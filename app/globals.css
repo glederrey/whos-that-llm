@@ -1674,6 +1674,7 @@ html[data-theme="dark"] .history-facts .board-chip.no-hints {
   height: auto;
   border-radius: 22px;
 }
+.share-picture-pending { aspect-ratio: 1080 / 1350; }
 .share-block { display: grid; gap: 12px; justify-items: start; }
 .share-actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
 .share-desktop { position: relative; display: inline-flex; }

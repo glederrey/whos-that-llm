@@ -1,25 +1,41 @@
 "use client";
 
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import {
   facebookShareUrl,
   linkedInShareUrl,
-  shareCardPath,
+  shareCardImagePath,
   shareFileName,
   sharePageUrl,
   shareTextForImage,
+  type ShareCardTheme,
   xShareUrl,
 } from "@/lib/share-card";
 
 /** Share first. A phone opens the system sheet. A computer opens one menu. Download stays beside it. */
+function browserTheme(): ShareCardTheme {
+  if (typeof document === "undefined") return "light";
+  return document.documentElement.dataset.theme === "dark" ? "dark" : "light";
+}
+
 export function ShareActions({ gameId, text }: { gameId: string; text: string }) {
   const pageUrl = sharePageUrl(gameId);
   const fileName = shareFileName(gameId);
-  const downloadUrl = `${shareCardPath(gameId)}?download=1`;
+  const [theme, setTheme] = useState<ShareCardTheme>("light");
+  const downloadUrl = shareCardImagePath(gameId, theme, true);
   const menuId = useId();
   const rootRef = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState(false);
   const [note, setNote] = useState<string | null>(null);
+
+  useLayoutEffect(() => {
+    const root = document.documentElement;
+    const apply = () => setTheme(browserTheme());
+    apply();
+    const observer = new MutationObserver(apply);
+    observer.observe(root, { attributes: true, attributeFilter: ["data-theme"] });
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
     if (!open) return;
@@ -40,7 +56,7 @@ export function ShareActions({ gameId, text }: { gameId: string; text: string })
   async function onPhoneShare() {
     setNote(null);
     try {
-      const response = await fetch(shareCardPath(gameId));
+      const response = await fetch(shareCardImagePath(gameId, browserTheme()));
       if (!response.ok) {
         setNote("The card could not be drawn.");
         return;
