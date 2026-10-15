@@ -1725,9 +1725,13 @@ html[data-theme="dark"] .share-card-invite strong,
 html[data-theme="dark"] .share-card-stats strong { color: #141414; }
 .share-block { display: grid; gap: 12px; justify-items: start; }
 .share-actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
-.share-desktop { display: contents; }
+.share-desktop { position: relative; display: inline-flex; }
 .share-phone { display: none; }
-.share-note { flex-basis: 100%; color: var(--mute); font-size: 14px; }
+.share-network-menu { left: 0; right: auto; min-width: 196px; }
+.share-network-menu a,
+.share-network-menu .menu-item { display: flex; align-items: center; gap: 10px; }
+.share-network-menu svg { width: 18px; height: 18px; flex: none; }
+.share-note { flex-basis: 100%; color: var(--mute); font-size: 14px; margin: 0; }
 @media (hover: none) and (pointer: coarse) {
   .share-desktop { display: none; }
   .share-phone { display: contents; }

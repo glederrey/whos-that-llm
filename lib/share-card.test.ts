@@ -11,7 +11,9 @@ import { scoreRound, type Traits } from "./game";
 import {
   buildShareCard,
   difficultyColor,
+  blueskyShareUrl,
   facebookShareUrl,
+  linkedInShareUrl,
   isShareGameId,
   shareCardDisplay,
   shareFileName,
@@ -199,6 +201,12 @@ test("X and Facebook get the text and the link to this round", () => {
   assert.equal(`${facebook.origin}${facebook.pathname}`, "https://www.facebook.com/sharer/sharer.php");
   assert.equal(facebook.searchParams.get("u"), page);
   assert.equal(facebook.searchParams.get("quote"), text);
+  const linkedIn = new URL(linkedInShareUrl(page));
+  assert.equal(`${linkedIn.origin}${linkedIn.pathname}`, "https://www.linkedin.com/sharing/share-offsite/");
+  assert.equal(linkedIn.searchParams.get("url"), page);
+  const bluesky = new URL(blueskyShareUrl(page, text));
+  assert.equal(`${bluesky.origin}${bluesky.pathname}`, "https://bsky.app/intent/compose");
+  assert.equal(bluesky.searchParams.get("text"), `${text} ${page}`);
   assert.equal(isShareGameId(id), true);
   assert.equal(isShareGameId("not-a-game"), false);
 });
@@ -235,17 +243,23 @@ test("the on-page card and the image leave out the chat and a daily model", () =
   assert.equal(named.includes(decoy), false);
 });
 
-test("download is always there, and Instagram is not a desktop button", () => {
+test("share comes before download, and the networks live in one menu", () => {
   const html = renderToStaticMarkup(
     createElement(ShareActions, { gameId: "11111111-1111-4111-8111-111111111111", text: "Solved" }),
   );
-  assert.match(html, /Download/);
-  assert.match(html, /Share on X/);
-  assert.match(html, /Share on Facebook/);
+  assert.match(html, /class="button"[^>]*>Share<\/button>[\s\S]*button-quiet[^>]*>[\s\S]*Download/);
   assert.match(html, /share-phone[\s\S]*Share/);
+  assert.match(html, />X</);
+  assert.match(html, />Facebook</);
+  assert.match(html, />LinkedIn</);
+  assert.match(html, />Bluesky</);
+  assert.match(html, />Instagram</);
+  assert.match(html, /linkedin\.com\/sharing\/share-offsite/);
+  assert.match(html, /bsky\.app\/intent\/compose/);
   assert.match(html, /card\.png\?download=1/);
   assert.match(html, /whos-that-llm-11111111-1111-4111-8111-111111111111\.png/);
-  assert.equal(/instagram/i.test(html), false);
+  assert.equal(html.includes("Share on X"), false);
+  assert.equal(html.includes("Share on Facebook"), false);
 });
 
 test("the public card is drawn from the game row and is not stored", () => {

@@ -233,3 +233,17 @@ export function facebookShareUrl(pageUrl: string, text: string): string {
   url.searchParams.set("quote", text);
   return url.toString();
 }
+
+/** LinkedIn takes the page URL. The preview comes from the card image. */
+export function linkedInShareUrl(pageUrl: string): string {
+  const url = new URL("https://www.linkedin.com/sharing/share-offsite/");
+  url.searchParams.set("url", pageUrl);
+  return url.toString();
+}
+
+/** Bluesky puts the sentence and the link in the draft. */
+export function blueskyShareUrl(pageUrl: string, text: string): string {
+  const url = new URL("https://bsky.app/intent/compose");
+  url.searchParams.set("text", `${text} ${pageUrl}`);
+  return url.toString();
+}
