@@ -203,27 +203,35 @@ export function shareCardDisplay(card: ShareCard): ShareCardDisplay {
   };
 }
 
-/** A sentence for X, Facebook, and the phone share sheet. Daily still hides the model. */
+/** The post for X, Facebook, LinkedIn, Instagram, and the phone share sheet. Daily hides the model. */
 export function shareText(card: ShareCard): string {
-  const place = card.modeLine.replace(" · ", ", ");
   const score = card.score === null ? null : formatShareNumber(card.score);
-  const model = card.modelName ? ` It was ${card.modelName}.` : "";
-  if (card.outcome === "Solved") {
-    if (!score) return `I solved a round of ${shareBrand} ${place}.${model}`;
-    return `I scored ${score} on ${shareBrand} ${place}.${model} Can you beat it?`;
-  }
-  if (card.outcome === "Not solved") {
-    if (!score) return `I missed the model on ${shareBrand} ${place}.${model}`;
-    return `I scored ${score} on ${shareBrand} ${place}, and missed the model.${model}`;
-  }
-  if (!score) return `I gave up on ${shareBrand} ${place}. Come try a round.`;
-  return `I scored ${score} on ${shareBrand} and gave up. ${place}.${model}`;
+  const blocks = [
+    score ? `I just played on ${shareBrand} and scored ${score} points.` : `I just played on ${shareBrand}`,
+    shareFacts(card).join("\n"),
+  ];
+  if (card.modelName) blocks.push(`The model I had to guess was ${card.modelName}.`);
+  if (score) blocks.push("Do you think you can beat my score?");
+  blocks.push(sharePageUrl(card.id));
+  return blocks.join("\n\n");
+}
+
+/** All models and Daily name the difficulty. A company, category, or region names that instead. */
+function shareFacts(card: ShareCard): string[] {
+  const splitAt = card.modeLine.indexOf(" · ");
+  const mode = splitAt === -1 ? card.modeLine : card.modeLine.slice(0, splitAt);
+  const variant = splitAt === -1 ? null : card.modeLine.slice(splitAt + 3);
+  const lines = [`Game mode: ${mode}`];
+  if (!variant) return lines;
+  const isDifficulty = card.difficulty !== null && variant === difficultyLabel[card.difficulty];
+  lines.push(isDifficulty ? `Difficulty: ${variant}.` : `${mode}: ${variant}.`);
+  return lines;
 }
 
 export function xShareUrl(pageUrl: string, text: string): string {
   const url = new URL("https://twitter.com/intent/tweet");
   url.searchParams.set("text", text);
-  url.searchParams.set("url", pageUrl);
+  if (!text.includes(pageUrl)) url.searchParams.set("url", pageUrl);
   return url.toString();
 }
 

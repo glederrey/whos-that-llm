@@ -237,7 +237,22 @@ A page, not a popup. Only for `solved`, `miss`, and `given_up`. An active round 
 - **How scoring works** sits at the bottom right of that card, on the same line as the share buttons, and opens `/scoring` in a new tab. The page does not repeat the formula beside the breakdown.
 - **Share** sits first on that line and is the filled button, with a down mark. The menu stays closed until that button is clicked. **Download** sits beside it, quieter. On a phone the buttons are a little smaller so the link stays beside them. The result page does not show the picture itself. The picture is the download and the public page.
 - On a phone, **Share** opens the system share sheet with that PNG when the browser allows it. That sheet is how the card gets to Instagram.
-- On a computer, **Share** opens one menu: **X**, **Facebook**, **LinkedIn**, and **Instagram**, each with its logo. **X** opens with the sentence and the link filled in. Facebook and LinkedIn do not accept a prefilled sentence, so the message is copied and the site opens for a paste. The note is **The message is copied. Paste it into the post.** Instagram has no share page, so the same message is copied and the note is **The message is copied. Paste it into Instagram.** A solved round with a named model reads **I scored 9,500 on Who's that LLM? All models, Easy. It was Qwen3.8 Max. Can you beat it?** Daily leaves the model out. A miss says the player missed the model. A give-up with no score says **I gave up on Who's that LLM? Daily, Medium. Come try a round.** If the card could not be drawn: **The card could not be drawn.** If the phone has no share sheet: **This browser cannot open the share sheet.** If sharing fails: **The card could not be shared.** If the copy fails: **The message could not be copied.**
+- On a computer, **Share** opens one menu: **X**, **Facebook**, **LinkedIn**, and **Instagram**, each with its logo. **X** opens with the message filled in. Facebook and LinkedIn do not accept a prefilled message, so it is copied and the site opens for a paste. The note is **The message is copied. Paste it into the post.** Instagram has no share page, so the same message is copied and the note is **The message is copied. Paste it into Instagram.** A solved All models round reads:
+
+  ```
+  I just played on Who's that LLM? and scored 9,500 points.
+
+  Game mode: All models
+  Difficulty: Easy.
+
+  The model I had to guess was Qwen3.8 Max.
+
+  Do you think you can beat my score?
+
+  https://www.whos-that-llm.com/r/…
+  ```
+
+  Daily leaves out the model paragraph. A company, category, or region round replaces the difficulty line with that name, such as **Company: Anthropic.** A round with no score leaves out the points and the challenge. If the card could not be drawn: **The card could not be drawn.** If the phone has no share sheet: **This browser cannot open the share sheet.** If sharing fails: **The card could not be shared.** If the copy fails: **The message could not be copied.**
 - The transcript
 - **Play again** and **Leaderboard** sit at the top right, level with the model name. **Play again** returns to the lobby. It does not start a round. A company or region round returns to that category's pool picker. Latest returns to the lobby. **Leaderboard** is shown when this category has a leaderboard and the status is `solved` or `miss`. On a phone those two buttons stay under the chat.
 

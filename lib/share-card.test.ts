@@ -147,23 +147,42 @@ test("difficulty words use the leaderboard colors", () => {
 });
 
 test("share text names the round and hides a daily model", () => {
+  const link = "https://www.whos-that-llm.com/r/11111111-1111-4111-8111-111111111111";
   const daily = card({ gameMode: "daily", difficulty: "easy" });
   const text = shareText(daily);
-  assert.equal(text, "I scored 1,240 on Who's that LLM? Daily, Easy. Can you beat it?");
+  assert.equal(
+    text,
+    [
+      "I just played on Who's that LLM? and scored 1,240 points.",
+      "Game mode: Daily\nDifficulty: Easy.",
+      "Do you think you can beat my score?",
+      link,
+    ].join("\n\n"),
+  );
   assert.equal(text.includes(hidden), false);
   assert.equal(text.includes(chat), false);
   const named = card({ gameMode: "all", difficulty: "hard" });
   assert.equal(
     shareText(named),
-    `I scored 1,240 on Who's that LLM? All models, Hard. It was ${hidden}. Can you beat it?`,
+    [
+      "I just played on Who's that LLM? and scored 1,240 points.",
+      "Game mode: All models\nDifficulty: Hard.",
+      `The model I had to guess was ${hidden}.`,
+      "Do you think you can beat my score?",
+      link,
+    ].join("\n\n"),
   );
+  const company = card({ gameMode: "company", poolKey: "anthropic", difficulty: null });
+  assert.match(shareText(company), /Game mode: Company\nCompany: Anthropic\./);
+  assert.equal(shareText(company).includes("Difficulty"), false);
   const missed = card({ gameMode: "all", difficulty: "hard", status: "miss", score: 400 });
-  assert.equal(
-    shareText(missed),
-    `I scored 400 on Who's that LLM? All models, Hard, and missed the model. It was ${hidden}.`,
-  );
+  assert.match(shareText(missed), /scored 400 points/);
+  assert.match(shareText(missed), new RegExp(`The model I had to guess was ${hidden}\\.`));
   const quiet = card({ status: "given_up", score: null, breakdown: null, gameMode: "daily", difficulty: "medium" });
-  assert.equal(shareText(quiet), "I gave up on Who's that LLM? Daily, Medium. Come try a round.");
+  assert.equal(
+    shareText(quiet),
+    ["I just played on Who's that LLM?", "Game mode: Daily\nDifficulty: Medium.", link].join("\n\n"),
+  );
   assert.equal(shareCardDisplay(quiet).score, "—");
   assert.equal(shareCardDisplay(quiet).tokens, "—");
   assert.equal(shareCardDisplay(card()).invite, "Can you beat 1,240?");

@@ -51,17 +51,17 @@ export function ShareActions({ gameId, text }: { gameId: string; text: string })
         return;
       }
       if (navigator.canShare?.({ files: [file] })) {
-        await navigator.share({ files: [file], text, url: pageUrl });
+        await navigator.share({ files: [file], text });
         return;
       }
-      await navigator.share({ text, url: pageUrl });
+      await navigator.share({ text });
     } catch (error) {
       if (error instanceof DOMException && error.name === "AbortError") return;
       setNote("The card could not be shared.");
     }
   }
 
-  const message = `${text} ${pageUrl}`;
+  const message = text;
 
   async function copyMessage(done: string) {
     setOpen(false);
