@@ -254,7 +254,7 @@ A page, not a popup. Only for `solved`, `miss`, and `given_up`. An active round 
 
   Daily leaves out the model paragraph. A company, category, or region round replaces the difficulty line with that name, such as **Company: Anthropic.** A round with no score leaves out the points and the challenge. If the card could not be drawn: **The card could not be drawn.** If the phone has no share sheet: **This browser cannot open the share sheet.** If sharing fails: **The card could not be shared.** If the copy fails: **The message could not be copied.**
 - The transcript
-- **Play again** and **Leaderboard** sit at the top right, level with the model name. **Play again** returns to the lobby. It does not start a round. A company or region round returns to that category's pool picker. Latest returns to the lobby. **Leaderboard** is shown when this category has a leaderboard and the status is `solved` or `miss`. On a phone those two buttons sit just under the score card, and each one fills the width.
+- **Play again** and **Leaderboard** sit at the top right, level with the model name. **Play again** returns to the lobby. It does not start a round. A company or region round returns to that category's pool picker. Latest returns to the lobby. **Leaderboard** is shown when this category has a leaderboard and the status is `solved` or `miss`. On a phone those two buttons sit side by side just under the score card, and together they fill the width.
 
 The score is the integer from [Rules](rules.md), never below 0. When the total comes to less than 0 before the floor, a **Floor at 0** line brings it to 0.
 

@@ -1633,11 +1633,11 @@ html[data-theme="dark"] .history-facts .board-chip.no-hints {
     order: 3;
     justify-self: stretch;
     width: 100%;
-    flex-direction: column;
-    align-items: stretch;
+    flex-wrap: nowrap;
   }
   .result > .result-actions > a {
-    width: 100%;
+    flex: 1 1 0;
+    width: auto;
     text-align: center;
   }
   .result > .chat-head { order: 4; }
