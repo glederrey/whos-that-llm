@@ -1728,6 +1728,9 @@ html[data-theme="dark"] .share-card-stats strong { color: #141414; }
 .share-desktop { position: relative; display: inline-flex; }
 .share-phone { display: none; }
 .share-network-menu { left: 0; right: auto; min-width: 196px; }
+.menu.share-network-menu[hidden] { display: none; }
+.share-desktop .button { display: inline-flex; align-items: center; gap: 6px; }
+.share-caret { width: 12px; height: 12px; display: block; }
 .share-network-menu a,
 .share-network-menu .menu-item { display: flex; align-items: center; gap: 10px; }
 .share-network-menu svg { width: 18px; height: 18px; flex: none; }

@@ -11,7 +11,6 @@ import { scoreRound, type Traits } from "./game";
 import {
   buildShareCard,
   difficultyColor,
-  blueskyShareUrl,
   facebookShareUrl,
   linkedInShareUrl,
   isShareGameId,
@@ -204,9 +203,6 @@ test("X and Facebook get the text and the link to this round", () => {
   const linkedIn = new URL(linkedInShareUrl(page));
   assert.equal(`${linkedIn.origin}${linkedIn.pathname}`, "https://www.linkedin.com/sharing/share-offsite/");
   assert.equal(linkedIn.searchParams.get("url"), page);
-  const bluesky = new URL(blueskyShareUrl(page, text));
-  assert.equal(`${bluesky.origin}${bluesky.pathname}`, "https://bsky.app/intent/compose");
-  assert.equal(bluesky.searchParams.get("text"), `${text} ${page}`);
   assert.equal(isShareGameId(id), true);
   assert.equal(isShareGameId("not-a-game"), false);
 });
@@ -247,15 +243,16 @@ test("share comes before download, and the networks live in one menu", () => {
   const html = renderToStaticMarkup(
     createElement(ShareActions, { gameId: "11111111-1111-4111-8111-111111111111", text: "Solved" }),
   );
-  assert.match(html, /class="button"[^>]*>Share<\/button>[\s\S]*button-quiet[^>]*>[\s\S]*Download/);
+  assert.match(html, /class="button"[^>]*>Share<svg[\s\S]*button-quiet[^>]*>[\s\S]*Download/);
   assert.match(html, /share-phone[\s\S]*Share/);
+  assert.match(html, /share-caret/);
+  assert.match(html, /share-network-menu" [^>]*hidden/);
   assert.match(html, />X</);
   assert.match(html, />Facebook</);
   assert.match(html, />LinkedIn</);
-  assert.match(html, />Bluesky</);
   assert.match(html, />Instagram</);
+  assert.equal(html.includes("Bluesky"), false);
   assert.match(html, /linkedin\.com\/sharing\/share-offsite/);
-  assert.match(html, /bsky\.app\/intent\/compose/);
   assert.match(html, /card\.png\?download=1/);
   assert.match(html, /whos-that-llm-11111111-1111-4111-8111-111111111111\.png/);
   assert.equal(html.includes("Share on X"), false);
