@@ -1296,6 +1296,17 @@ html[data-theme="dark"] .history-facts .board-chip.no-hints {
   border-radius: 0 0 var(--radius) var(--radius);
   background: var(--card);
 }
+.history-detail.is-score {
+  gap: 16px;
+  padding: 16px 0 4px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+.history li:has(.history-detail.is-score) > .history-row[aria-expanded="true"] {
+  border-bottom-left-radius: var(--radius);
+  border-bottom-right-radius: var(--radius);
+}
 .history-detail p { margin: 0; }
 .history-model { display: flex; align-items: center; gap: 12px; font-weight: 600; }
 .history-model img { width: 56px; height: 56px; border-radius: 12px; border: 1px solid var(--line-strong); flex: none; }

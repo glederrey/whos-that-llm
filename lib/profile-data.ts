@@ -1,8 +1,9 @@
 import type { Difficulty } from "./difficulty";
-import type { GameStatus } from "./game";
+import { regionLabel, sizeLabel, type FrozenModel, type GameStatus, type ScoreLine, type Traits } from "./game";
 import { avatarPublicUrl, profileStats, publicImageCacheControl, readImage, traitFound, type ProfileStats } from "./profile";
 import { presentLogo, serviceOrThrow } from "./rounds";
 import { playedRoundFacts } from "./round-facts";
+import { buildShareCard, shareText } from "./share-card";
 import { publicEnv } from "./supabase/env";
 
 export type HistoryRow = {
@@ -20,6 +21,9 @@ export type HistoryRow = {
   mode: string;
   difficulty: Difficulty | null;
   noHint: boolean;
+  modelFacts: string[];
+  breakdown: ScoreLine[] | null;
+  shareText: string | null;
 };
 
 const pageSize = 10;
@@ -45,7 +49,9 @@ type ModelRef = {
   name: string;
   company_id: string;
   logo_path: string | null;
-  companies: { name: string; logo_path: string } | { name: string; logo_path: string }[] | null;
+  size: FrozenModel["size"] | null;
+  released_on: string | null;
+  companies: { name: string; region: FrozenModel["region"]; logo_path: string } | { name: string; region: FrozenModel["region"]; logo_path: string }[] | null;
 };
 
 export async function loadHistory(userId: string, page: number) {
@@ -63,7 +69,7 @@ export async function loadHistory(userId: string, page: number) {
     client
       .from("games")
       .select(
-        "id, status, score, message_count, started_at, traits, game_mode, difficulty, no_hint, models(name, company_id, logo_path, companies(name, logo_path))",
+        "id, status, score, message_count, started_at, traits, game_mode, pool_key, difficulty, no_hint, model_id, daily_key, score_breakdown, models(name, company_id, logo_path, size, released_on, companies(name, region, logo_path))",
       )
       .eq("user_id", userId)
       .order("started_at", { ascending: false })
@@ -72,6 +78,21 @@ export async function loadHistory(userId: string, page: number) {
   ]);
   if (error || gameModeError) throw new Error("Could not read profile history.");
   const gameModeNames = new Map((gameModes ?? []).map((gameMode) => [gameMode.id as string, gameMode.name as string]));
+  const classIds = [
+    ...new Set(
+      (data ?? [])
+        .filter((row) => row.game_mode === "class" && typeof row.pool_key === "string" && row.pool_key.length > 0)
+        .map((row) => row.pool_key as string),
+    ),
+  ];
+  const categoryNames = new Map<string, string>();
+  if (classIds.length > 0) {
+    const { data: categories, error: categoryError } = await client.from("categories").select("id, name").in("id", classIds);
+    if (categoryError) throw new Error("Could not read profile history.");
+    for (const category of categories ?? []) {
+      if (typeof category.name === "string") categoryNames.set(category.id as string, category.name);
+    }
+  }
 
   const ids = (data ?? []).map((row) => row.id as string);
   const flags = new Map<string, { company: boolean; region: boolean }>();
@@ -112,6 +133,25 @@ export async function loadHistory(userId: string, page: number) {
     const model = first(row.models as ModelRef | ModelRef[] | null);
     const company = model ? first(model.companies) : null;
     const finished = status !== "active";
+    const frozen = playedModel(row.traits, typeof row.model_id === "string" ? row.model_id : "");
+    const breakdown = asBreakdown(row.score_breakdown);
+    const traits = asTraits(row.traits);
+    const card = finished
+      ? buildShareCard({
+          id: row.id as string,
+          gameMode: row.game_mode as string,
+          poolKey: typeof row.pool_key === "string" ? row.pool_key : null,
+          difficulty: row.difficulty,
+          status,
+          messageCount: Number(row.message_count ?? 0),
+          score: row.score as number | null,
+          breakdown,
+          modelId: typeof row.model_id === "string" ? row.model_id : "",
+          traits: traits ?? { given: [], models: {} },
+          categoryName: typeof row.pool_key === "string" ? (categoryNames.get(row.pool_key) ?? null) : null,
+          dailyKey: typeof row.daily_key === "string" ? row.daily_key : null,
+        })
+      : null;
     const facts = playedRoundFacts({
       gameModeId: row.game_mode as string,
       gameModeName: gameModeNames.get(row.game_mode as string),
@@ -124,10 +164,19 @@ export async function loadHistory(userId: string, page: number) {
       score: row.score as number | null,
       messageCount: Number(row.message_count ?? 0),
       tokens: tokens.get(row.id as string) ?? 0,
-      modelName: finished ? (model?.name ?? "Unknown model") : null,
-      companyName: finished ? (company?.name ?? null) : null,
-      logoPath:
-        finished && model ? presentLogo(model.logo_path || company?.logo_path || "", model.company_id) : null,
+      modelName: finished ? (frozen?.name ?? model?.name ?? "Unknown model") : null,
+      companyName: finished ? (frozen?.companyName ?? company?.name ?? null) : null,
+      logoPath: finished
+        ? presentLogo(
+            frozen?.logoPath || model?.logo_path || company?.logo_path || "",
+            frozen?.companyId || model?.company_id || "",
+          )
+        : null,
+      modelFacts: finished
+        ? modelFacts(frozen, company?.name ?? null, company?.region ?? null, model?.size ?? null, model?.released_on ?? null)
+        : [],
+      breakdown: finished ? breakdown : null,
+      shareText: card ? shareText(card) : null,
       companyFound: traitFound({ status, given, companyCorrect: seen.company, regionCorrect: seen.region, trait: "company" }),
       regionFound: traitFound({ status, given, companyCorrect: seen.company, regionCorrect: seen.region, trait: "region" }),
       mode: facts.mode,
@@ -163,6 +212,56 @@ export function currentAvatarUrl(path: string | null): string | null {
   const env = publicEnv();
   if (!env) return null;
   return avatarPublicUrl(env.url, path);
+}
+
+function playedModel(traits: unknown, modelId: string): FrozenModel | null {
+  if (!modelId || !traits || typeof traits !== "object") return null;
+  const model = (traits as Traits).models?.[modelId];
+  if (!model || typeof model.name !== "string" || model.name.trim().length === 0) return null;
+  return model;
+}
+
+function asTraits(value: unknown): Traits | null {
+  if (!value || typeof value !== "object") return null;
+  const record = value as { given?: unknown; models?: unknown };
+  if (!Array.isArray(record.given) || !record.models || typeof record.models !== "object") return null;
+  return record as Traits;
+}
+
+function asBreakdown(value: unknown): ScoreLine[] | null {
+  if (!Array.isArray(value)) return null;
+  const lines: ScoreLine[] = [];
+  for (const line of value) {
+    if (!line || typeof line !== "object") continue;
+    const label = (line as { label?: unknown }).label;
+    if (typeof label !== "string") continue;
+    const points = (line as { points?: unknown }).points;
+    const multiplier = (line as { multiplier?: unknown }).multiplier;
+    lines.push({
+      label,
+      points: typeof points === "number" ? points : null,
+      multiplier: typeof multiplier === "string" ? multiplier : undefined,
+    });
+  }
+  return lines;
+}
+
+function modelFacts(
+  frozen: FrozenModel | null,
+  companyName: string | null,
+  region: FrozenModel["region"] | null,
+  size: FrozenModel["size"] | null,
+  releasedOn: string | null,
+): string[] {
+  if (frozen) {
+    return [frozen.companyName, regionLabel(frozen.region), String(frozen.year), sizeLabel(frozen.size)].filter(
+      (fact) => fact.trim().length > 0,
+    );
+  }
+  const year = releasedOn ? new Date(`${releasedOn}T00:00:00Z`).getUTCFullYear() : null;
+  return [companyName ?? "", region ? regionLabel(region) : "", year ? String(year) : "", size ? sizeLabel(size) : ""].filter(
+    (fact) => fact.trim().length > 0,
+  );
 }
 
 function first<T>(value: T | T[] | null): T | null {

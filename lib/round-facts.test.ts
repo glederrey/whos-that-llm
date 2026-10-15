@@ -23,6 +23,10 @@ const item = {
   mode: "All models",
   difficulty: "hard" as const,
   noHint: false,
+  scoreValue: 1200,
+  modelFacts: ["Anthropic", "USA", "2026", "Large"],
+  breakdown: [{ label: "Named the model", points: 1200 }],
+  shareText: "I just played on Who's that LLM?",
 };
 
 test("a stored game mode and difficulty become the labels a player sees", () => {
@@ -69,6 +73,18 @@ test("the history dropdown names the mode and the difficulty", () => {
   assert.ok(difficultyAt > modeAt);
   assert.ok(html.includes("All models"));
   assert.ok(html.includes("Hard"));
+  assert.ok(html.includes("Claude Haiku"));
+  assert.ok(html.includes("Your score"));
+  assert.ok(html.includes("1,200"));
+  assert.ok(html.includes("Solved on message 3."));
+  assert.ok(html.includes("Share"));
+  assert.ok(html.includes("Copy link"));
+  assert.ok(html.includes("Download"));
+  assert.ok(html.includes("How scoring works"));
+  assert.equal(html.includes("Play again"), false);
+  assert.equal(html.includes("Leaderboard"), false);
+  assert.equal(html.includes("Messages used"), false);
+  assert.equal(html.includes("The chat"), false);
   assert.equal(html.includes("No hints"), false);
   assert.equal(html.includes("Continue"), false);
   const quiet = renderToStaticMarkup(createElement(HistoryDetail, { item: { ...item, noHint: true } }));
