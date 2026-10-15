@@ -9,7 +9,7 @@ export const config = {
   regionPoints: 100,
   companyPoints: 300,
   tokenScale: 10000,
-  tokenCap: 10,
+  tokenCap: 20,
   hintCosts: { year: 100, size: 100, region: 400, company: 600 },
   wrongGuessCost: 100,
   noHintMultiplier: 2,

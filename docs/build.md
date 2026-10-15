@@ -43,7 +43,7 @@ There is no `rules/page.tsx`. There is no `me/page.tsx` in the first build.
   regionPoints: 100,
   companyPoints: 300,
   tokenScale: 10000,
-  tokenCap: 10,
+  tokenCap: 20,
   hintCosts: { year: 100, size: 100, region: 400, company: 600 },
   wrongGuessCost: 100,
   noHintMultiplier: 2,
@@ -52,7 +52,7 @@ There is no `rules/page.tsx`. There is no `me/page.tsx` in the first build.
 }
 ```
 
-`tokenScale` is the 10,000 in `min(tokenCap, tokenScale / tokens)`. `tokenCap` is 10, so 1,000 tokens or fewer, including 0, is ×10, and 10,000 tokens is ×1. Past that the factor is below 1. `modelBase` is the 2000 for naming the model. Do not add another cap in code. `tipUrl` is the Ko-fi page. Empty hides the footer link. The Cursor credit is not config. It is the footer specified in [Pages](pages.md).
+`tokenScale` is the 10,000 in `min(tokenCap, tokenScale / tokens)`. `tokenCap` is 20, so 500 tokens or fewer, including 0, is ×20, and 10,000 tokens is ×1. Past that the factor is below 1. `modelBase` is the 2000 for naming the model. Do not add another cap in code. `tipUrl` is the Ko-fi page. Empty hides the footer link. The Cursor credit is not config. It is the footer specified in [Pages](pages.md).
 
 ## Env
 

@@ -138,14 +138,14 @@ The base is **2000** if the player named the model, on any reply. That replaces 
 
 Penalties: **100** for each wrong guess, and the hint prices (year 100, size 100, region 400, company 600). They come off the base before the multiplier. Naming the model does not itself count as a wrong guess. Earlier wrong names still do, even in a round that is later solved.
 
-The token factor is 10,000 divided by the tokens the successful replies used, capped at 10. 1,000 tokens or fewer, including 0, is ×10. 10,000 tokens is ×1. Past 10,000 tokens the factor drops below 1, so 20,000 tokens is ×0.5. There is no separate token floor and no "0 tokens means factor 1" rule.
+The token factor is 10,000 divided by the tokens the successful replies used, capped at 20. 500 tokens or fewer, including 0, is ×20. 10,000 tokens is ×1. Past 10,000 tokens the factor drops below 1, so 20,000 tokens is ×0.5. There is no separate token floor and no "0 tokens means factor 1" rule.
 
 No-hint mode is the harder mode. The 2× applies only when the round was played in it. A round with a bought hint is the other mode.
 
 `tokens` is the score's input plus each reply's completion tokens, on successful calls only, in the order they were stored. The first call's input is that call's full prompt, so the system prompt is inside it once. Each later call's input is this prompt minus the previous prompt minus the previous reply's output, which is the new player message. Failed calls are left out. `reasoning_tokens` are not added. `cache_read_tokens` are not added and not subtracted. `usage.input_tokens` stays the full prompt count OpenRouter returned. Some providers already count reasoning inside `output_tokens`. A round with no stored reply has no score.
 
 ```
-tokenFactor      = min(10, 10000 / tokens)   // 0 tokens is 10
+tokenFactor      = min(20, 10000 / tokens)   // 0 tokens is 20
 noHintFactor     = 2 when the round is no-hint and no hint was bought, otherwise 1
 difficultyFactor = 0.5, 1, 2, or 3 for the difficulty the round was played at, otherwise 1
 
@@ -158,9 +158,9 @@ score = max(0, round((base − penalties) * tokenFactor * noHintFactor * difficu
 
 `round` goes to the nearest integer. A half rounds up. A total below 0 after rounding is shown as 0.
 
-The numbers in that formula are the ones in `lib/config.ts`: `modelBase` (2000), `regionPoints` (100), `companyPoints` (300), `tokenScale` (10000), `tokenCap` (10), `hintCosts`, `wrongGuessCost` (100), `noHintMultiplier` (2), `difficultyMultipliers` (Easy 0.5, Medium 1, Hard 2, Impossible 3), and `messageLimit` (10, how many replies a round allows). A round scores with the current numbers when it ends, so a round that started under the old formula is scored with the new one. It keeps the `messageLimit` it froze. A round that has already finished keeps the score stored on it. That score is not rewritten, and the leaderboard is not rebuilt.
+The numbers in that formula are the ones in `lib/config.ts`: `modelBase` (2000), `regionPoints` (100), `companyPoints` (300), `tokenScale` (10000), `tokenCap` (20), `hintCosts`, `wrongGuessCost` (100), `noHintMultiplier` (2), `difficultyMultipliers` (Easy 0.5, Medium 1, Hard 2, Impossible 3), and `messageLimit` (10, how many replies a round allows). A round scores with the current numbers when it ends, so a round that started under the old formula is scored with the new one. It keeps the `messageLimit` it froze. A round that has already finished keeps the score stored on it. That score is not rewritten, and the leaderboard is not rebuilt.
 
-A short reply raises the score, because `10000 / tokens` gets large. The factor stops at 10. Past 10,000 tokens it falls below 1.
+A short reply raises the score, because `10000 / tokens` gets large. The factor stops at 20. Past 10,000 tokens it falls below 1.
 
 ### Comment left on the formula
 
@@ -182,18 +182,18 @@ On message 1 the player names DeepSeek V4 Pro. Company and region both miss. Tha
 
 On message 2 they name Claude Sonnet 5.5. The round is solved. The base is 2000. The region and the company do not add on top. The correct name is not a wrong guess. The earlier wrong name still is.
 
-The score counted 500 tokens from the two successful replies. One hint was bought, so the round is not in no-hint mode. 500 is under 1,000, so the token factor is the cap.
+The score counted 500 tokens from the two successful replies. One hint was bought, so the round is not in no-hint mode. 500 tokens is where ×20 starts, so the token factor is the cap.
 
 ```
 base      = 2000
 penalties = 100 + 100 = 200
 subtotal  = 1800
-factor    = min(10, 10000 / 500) = 10
-score     = round(1800 * 10)
-          = 18000
+factor    = min(20, 10000 / 500) = 20
+score     = round(1800 * 20)
+          = 36000
 ```
 
-The same solve in no-hint mode, with no hint and no wrong guess, would be `round(2000 * 10 * 2) = 40000`. No-hint mode would also have hidden the misses on message 1.
+The same solve in no-hint mode, with no hint and no wrong guess, would be `round(2000 * 20 * 2) = 80000`. No-hint mode would also have hidden the misses on message 1.
 
 A round that never names the model still has a score. Region and company both matched, 2,000 tokens, no hints, no wrong guesses:
 
@@ -221,7 +221,7 @@ score    = max(0, round(subtotal * tokenFactor * noHintFactor * difficultyFactor
 | `Base` | The base is 0 | 0 |
 | `<Trait> hint` | That hint was bought. Company, Region, Year, or Size | its price, negative |
 | `Wrong guesses · N` | At least one wrong model name. One line for the count | −100 each |
-| `Tokens · N tokens` | Always. The value is the factor, such as `×10` or `×3.712`. 0 tokens is `×10` | `×` factor, not a point delta |
+| `Tokens · N tokens` | Always. The value is the factor, such as `×20` or `×3.712`. 0 tokens is `×20` | `×` factor, not a point delta |
 | `No-hint` | Only when the round is no-hint and no hint was bought | `×2` |
 | `Difficulty · Easy` | The round was played at a difficulty. The label names that difficulty | `×0.5`, `×1`, `×2`, or `×3` |
 | `Floor at 0` | The rounded total is below 0 | the amount that brings it to 0 |
@@ -235,8 +235,8 @@ The worked example's lines are:
 | Named the model | 2000 |
 | Year hint | −100 |
 | Wrong guesses · 1 | −100 |
-| Tokens · 500 tokens | ×10 |
-| **Total** | **18000** |
+| Tokens · 500 tokens | ×20 |
+| **Total** | **36000** |
 
 Beside that list, the result page shows the short player-facing explanation from [Pages](pages.md). The public page [How scoring works](../app/scoring/page.tsx) states the same formula in plain language. This document stays private.
 
@@ -304,14 +304,14 @@ The base is **2000** if the player named the model, on any reply. That replaces 
 
 Penalties: **100** for each wrong guess, and the hint prices (year 100, size 100, region 400, company 600). They come off the base before the multiplier. Naming the model does not itself count as a wrong guess. Earlier wrong names still do, even in a round that is later solved.
 
-The token factor is 10,000 divided by the tokens the successful replies used, capped at 10. 1,000 tokens or fewer, including 0, is ×10. 10,000 tokens is ×1. Past 10,000 tokens the factor drops below 1, so 20,000 tokens is ×0.5. There is no separate token floor and no "0 tokens means factor 1" rule.
+The token factor is 10,000 divided by the tokens the successful replies used, capped at 20. 500 tokens or fewer, including 0, is ×20. 10,000 tokens is ×1. Past 10,000 tokens the factor drops below 1, so 20,000 tokens is ×0.5. There is no separate token floor and no "0 tokens means factor 1" rule.
 
 No-hint mode is the harder mode. The 2× applies only when the round was played in it. A round with a bought hint is the other mode.
 
 `tokens` is the score's input plus each reply's completion tokens, on successful calls only, in the order they were stored. The first call's input is that call's full prompt, so the system prompt is inside it once. Each later call's input is this prompt minus the previous prompt minus the previous reply's output, which is the new player message. Failed calls are left out. `reasoning_tokens` are not added. `cache_read_tokens` are not added and not subtracted. `usage.input_tokens` stays the full prompt count OpenRouter returned. Some providers already count reasoning inside `output_tokens`. A round with no stored reply has no score.
 
 ```
-tokenFactor   = min(10, 10000 / tokens)   // 0 tokens is 10
+tokenFactor   = min(20, 10000 / tokens)   // 0 tokens is 20
 noHintFactor  = 2 when the round is no-hint and no hint was bought, otherwise 1
 
 base      = 2000 if the model was named
@@ -323,9 +323,9 @@ score = max(0, round((base − penalties) * tokenFactor * noHintFactor))
 
 `round` goes to the nearest integer. A half rounds up. A total below 0 after rounding is shown as 0.
 
-The numbers in that formula are the ones in `lib/config.ts`: `modelBase` (2000), `regionPoints` (100), `companyPoints` (300), `tokenScale` (10000), `tokenCap` (10), `hintCosts`, `wrongGuessCost` (100), `noHintMultiplier` (2), and `messageLimit` (10, how many replies a round allows). A round scores with the current numbers when it ends, so a round that started under the old formula is scored with the new one. It keeps the `messageLimit` it froze.
+The numbers in that formula are the ones in `lib/config.ts`: `modelBase` (2000), `regionPoints` (100), `companyPoints` (300), `tokenScale` (10000), `tokenCap` (20), `hintCosts`, `wrongGuessCost` (100), `noHintMultiplier` (2), and `messageLimit` (10, how many replies a round allows). A round scores with the current numbers when it ends, so a round that started under the old formula is scored with the new one. It keeps the `messageLimit` it froze.
 
-A short reply raises the score, because `10000 / tokens` gets large. The factor stops at 10. Past 10,000 tokens it falls below 1.
+A short reply raises the score, because `10000 / tokens` gets large. The factor stops at 20. Past 10,000 tokens it falls below 1.
 
 ### Comment left on the formula
 

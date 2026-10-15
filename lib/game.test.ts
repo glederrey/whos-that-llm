@@ -55,7 +55,7 @@ test("the scoring numbers are the agreed ones", () => {
   assert.equal(rules.companyPoints, 300);
   assert.equal(rules.wrongGuessCost, 100);
   assert.equal(rules.tokenScale, 10000);
-  assert.equal(rules.tokenCap, 10);
+  assert.equal(rules.tokenCap, 20);
   assert.equal(rules.noHintMultiplier, 2);
   assert.deepEqual(rules.hintCosts, { year: 100, size: 100, region: 400, company: 600 });
 });
@@ -69,7 +69,7 @@ test("a round started under the old numbers is scored with the current ones", ()
   assert.equal(current.modelBase, 2000);
   assert.equal(current.wrongGuessCost, 100);
   assert.equal(current.tokenScale, 10000);
-  assert.equal(current.tokenCap, 10);
+  assert.equal(current.tokenCap, 20);
   assert.equal(current.hintCosts.company, 600);
   assert.equal(current.messageLimit, 12);
   assert.equal(current.hintsAllowed, false);
@@ -112,14 +112,16 @@ test("score tokens ignore reasoning and cache reads, and do not clamp a smaller 
   assert.equal(scoreTokens([{ inputTokens: Number.NaN, outputTokens: 10 }]).tokens, 10);
 });
 
-test("the token factor is 10,000 divided by tokens, capped at 10", () => {
-  assert.equal(tokenFactor(0, rules), 10);
-  assert.equal(tokenFactor(1, rules), 10);
+test("the token factor is 10,000 divided by tokens, capped at 20", () => {
+  assert.equal(tokenFactor(0, rules), 20);
+  assert.equal(tokenFactor(1, rules), 20);
+  assert.equal(tokenFactor(500, rules), 20);
   assert.equal(tokenFactor(1000, rules), 10);
   assert.equal(tokenFactor(2000, rules), 5);
   assert.equal(tokenFactor(10000, rules), 1);
   assert.equal(tokenFactor(20000, rules), 0.5);
   assert.equal(tokenFactor(2694, rules), 10000 / 2694);
+  assert.equal(scoreRound({ rules, ...none, namedModel: true, tokens: 500 }).score, 40000);
   assert.equal(scoreRound({ rules, ...none, namedModel: true, tokens: 2000 }).score, 10000);
   assert.equal(scoreRound({ rules, ...none, namedModel: true, tokens: 10000 }).score, 2000);
   assert.equal(scoreRound({ rules, ...none, namedModel: true, tokens: 20000 }).score, 1000);
@@ -127,13 +129,13 @@ test("the token factor is 10,000 divided by tokens, capped at 10", () => {
 
 test("naming the model starts at 2000 and penalties stay minus lines", () => {
   const result = scoreRound({ rules, ...none, namedModel: true, tokens: 500, hints: ["year"] });
-  assert.equal(result.score, 19000);
+  assert.equal(result.score, 38000);
   assert.deepEqual(pointValues(result.breakdown), [2000, -100, null]);
-  assert.equal(result.breakdown.at(-1)?.multiplier, "×10");
+  assert.equal(result.breakdown.at(-1)?.multiplier, "×20");
   assert.equal(result.breakdown.at(-1)?.label, "Tokens · 500 tokens");
   assert.match(result.explanation[1] ?? "", /2,000 for naming the model/);
   assert.match(result.explanation.join("\n"), /Year −100/);
-  assert.match(result.explanation.join("\n"), /Token factor ×10 \(10,000\/500, capped at 10\)/);
+  assert.match(result.explanation.join("\n"), /Token factor ×20 \(10,000\/500\)\./);
   assert.match(result.explanation.join("\n"), /Wrong guesses: none/);
   assert.doesNotMatch(result.explanation.join("\n"), /Message/);
   assert.doesNotMatch(result.explanation.join("\n"), /counted as/);
@@ -142,15 +144,15 @@ test("naming the model starts at 2000 and penalties stay minus lines", () => {
 test("naming the model pays the same on a late reply as on an early one", () => {
   const early = scoreRound({ rules, ...none, namedModel: true, tokens: 500 });
   const late = scoreRound({ rules, ...none, namedModel: true, tokens: 500, regionMatched: true, companyMatched: true });
-  assert.equal(early.score, 20000);
-  assert.equal(late.score, 20000);
+  assert.equal(early.score, 40000);
+  assert.equal(late.score, 40000);
 });
 
 test("penalties come off the base before the token factor", () => {
   const result = scoreRound({ rules, ...none, namedModel: true, tokens: 250, wrongGuesses: 2 });
-  assert.equal(result.score, 18000);
+  assert.equal(result.score, 36000);
   assert.deepEqual(pointValues(result.breakdown), [2000, -200, null]);
-  assert.equal(result.breakdown.at(-1)?.multiplier, "×10");
+  assert.equal(result.breakdown.at(-1)?.multiplier, "×20");
   assert.match(result.explanation.join("\n"), /Wrong guesses: 2 × −100/);
 });
 
@@ -168,23 +170,23 @@ test("every hint has its own price", () => {
 
 test("the no-hint multiplier applies only to a round with no hint", () => {
   const blind = scoreRound({ rules, ...none, namedModel: true, tokens: 500, noHint: true });
-  assert.equal(blind.score, 40000);
+  assert.equal(blind.score, 80000);
   assert.deepEqual(pointValues(blind.breakdown), [2000, null, null]);
   assert.deepEqual(
     blind.breakdown.slice(1).map((line) => [line.label, line.multiplier]),
     [
-      ["Tokens · 500 tokens", "×10"],
+      ["Tokens · 500 tokens", "×20"],
       ["No-hint", "×2"],
     ],
   );
   assert.match(blind.explanation[0] ?? "", /then by 2× if you played with no hints/);
   assert.match(blind.explanation.join("\n"), /No-hint: ×2\./);
   const hinted = scoreRound({ rules, ...none, namedModel: true, tokens: 500, noHint: true, hints: ["year"] });
-  assert.equal(hinted.score, 19000);
+  assert.equal(hinted.score, 38000);
   assert.equal(hinted.breakdown.some((line) => line.label === "No-hint"), false);
   assert.doesNotMatch(hinted.explanation.join("\n"), /No-hint/);
   const open = scoreRound({ rules, ...none, namedModel: true, tokens: 500 });
-  assert.equal(open.score, 20000);
+  assert.equal(open.score, 40000);
   assert.equal(open.breakdown.some((line) => line.label === "No-hint"), false);
 });
 
@@ -238,16 +240,21 @@ test("a trait the player revealed does not pay base points", () => {
   assert.equal(regionOnly.breakdown.at(-1)?.label, "Floor at 0");
 });
 
-test("1,000 tokens or fewer is 10×, including 0", () => {
-  for (const tokens of [0, 1, 999, 1000]) {
+test("500 tokens or fewer is 20×, and 1,000 tokens is still 10×", () => {
+  for (const tokens of [0, 1, 499, 500]) {
     const result = scoreRound({ rules, ...none, namedModel: true, tokens });
-    assert.equal(result.score, 20000, String(tokens));
-    assert.equal(result.breakdown.find((line) => line.label.startsWith("Tokens"))?.multiplier, "×10", String(tokens));
+    assert.equal(result.score, 40000, String(tokens));
+    assert.equal(result.breakdown.find((line) => line.label.startsWith("Tokens"))?.multiplier, "×20", String(tokens));
   }
+  const under = scoreRound({ rules, ...none, namedModel: true, tokens: 499 });
+  assert.match(under.explanation.join("\n"), /Token factor ×20 \(10,000\/499, capped at 20\)/);
+  const thousand = scoreRound({ rules, ...none, namedModel: true, tokens: 1000 });
+  assert.equal(thousand.score, 20000);
+  assert.equal(thousand.breakdown.find((line) => line.label.startsWith("Tokens"))?.multiplier, "×10");
   const zero = scoreRound({ rules, ...none, namedModel: true, tokens: 0 });
   assert.equal(zero.breakdown.find((line) => line.label.startsWith("Tokens"))?.label, "Tokens · 0 tokens");
   assert.equal(zero.breakdown.find((line) => line.label.startsWith("Tokens"))?.points, null);
-  assert.match(zero.explanation.join("\n"), /Tokens: 0\. Token factor ×10\./);
+  assert.match(zero.explanation.join("\n"), /Tokens: 0\. Token factor ×20\./);
   assert.doesNotMatch(zero.explanation.join("\n"), /counted as/);
   assert.doesNotMatch(zero.explanation.join("\n"), /factor 1\./i);
   assert.equal(scoreRound({ rules, ...none, namedModel: true, tokens: 1001 }).score, 19980);
@@ -255,23 +262,23 @@ test("1,000 tokens or fewer is 10×, including 0", () => {
 
 test("difficulty multiplies after the token factor and the no-hint multiplier", () => {
   const easy = scoreRound({ rules, ...none, namedModel: true, tokens: 500, difficulty: "easy" });
-  assert.equal(easy.score, 10000);
+  assert.equal(easy.score, 20000);
   assert.equal(easy.breakdown.at(-1)?.label, "Difficulty · Easy");
   assert.equal(easy.breakdown.at(-1)?.points, null);
   assert.equal(easy.breakdown.at(-1)?.multiplier, "×0.5");
   assert.match(easy.explanation.join("\n"), /Difficulty: Easy ×0\.5\./);
   const medium = scoreRound({ rules, ...none, namedModel: true, tokens: 500, difficulty: "medium" });
-  assert.equal(medium.score, 20000);
+  assert.equal(medium.score, 40000);
   assert.equal(medium.breakdown.at(-1)?.multiplier, "×1");
   const hard = scoreRound({ rules, ...none, namedModel: true, tokens: 500, difficulty: "hard" });
-  assert.equal(hard.score, 40000);
+  assert.equal(hard.score, 80000);
   assert.equal(hard.breakdown.at(-1)?.multiplier, "×2");
   const stacked = scoreRound({ rules, ...none, namedModel: true, tokens: 500, noHint: true, difficulty: "impossible" });
-  assert.equal(stacked.score, 120000);
+  assert.equal(stacked.score, 240000);
   assert.deepEqual(
     stacked.breakdown.slice(-3).map((line) => [line.label, line.points, line.multiplier]),
     [
-      ["Tokens · 500 tokens", null, "×10"],
+      ["Tokens · 500 tokens", null, "×20"],
       ["No-hint", null, "×2"],
       ["Difficulty · Impossible", null, "×3"],
     ],
@@ -294,8 +301,8 @@ test("the total never goes below 0", () => {
   assert.equal(result.score, 0);
   assert.equal(Object.is(result.score, 0), true);
   assert.equal(result.breakdown.at(-1)?.label, "Floor at 0");
-  assert.equal(result.breakdown.at(-1)?.points, 8000);
-  assert.equal(result.breakdown.find((line) => line.label.startsWith("Tokens"))?.multiplier, "×10");
+  assert.equal(result.breakdown.at(-1)?.points, 16000);
+  assert.equal(result.breakdown.find((line) => line.label.startsWith("Tokens"))?.multiplier, "×20");
   assert.match(result.explanation.join("\n"), /shown as 0/);
   const small = scoreRound({ rules, ...none, regionMatched: true, wrongGuesses: 1, tokens: 1000 });
   assert.equal(small.score, 0);
