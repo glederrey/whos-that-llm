@@ -6,6 +6,7 @@ import { anyDifficulty } from "@/lib/difficulty";
 import { boardChoice, boardHref, boardModes } from "@/lib/board-query";
 import { landingSnapshot, leaderboard, listBoardOptions, listGameModes } from "@/lib/rounds";
 import { currentProfile } from "@/lib/session";
+import { organizationJsonLd } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
 
@@ -28,6 +29,7 @@ export default async function HomePage({
 
   return (
     <div className="stack landing">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }} />
       {resetting && user ? <ResetPassword hasUsername={Boolean(username)} /> : null}
       <section className="hero">
         <img className="hero-logo for-light" src="/brand/logo-tail-right-light.png" alt="" />
