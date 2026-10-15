@@ -153,7 +153,7 @@ export function ShareActions({ gameId, text }: { gameId: string; text: string })
           Share
         </button>
       </span>
-      <button className="button-quiet" type="button" onClick={() => void copyLink()}>
+      <button className="button-quiet share-copy" type="button" onClick={() => void copyLink()}>
         Copy link
       </button>
       <a className="button-quiet" href={downloadUrl} download={fileName}>

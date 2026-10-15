@@ -1625,8 +1625,23 @@ html[data-theme="dark"] .history-facts .board-chip.no-hints {
   .score-card .share-actions .button,
   .score-card .share-actions .button-quiet { padding: 8px 12px; font-size: 14px; }
   .score-link { font-size: 14px; white-space: nowrap; }
+  .share-copy { display: none; }
   .result { grid-template-columns: 1fr; }
-  .result > .result-actions { order: 5; justify-self: start; }
+  .result > .model-lockup { order: 1; }
+  .result > .score-card { order: 2; }
+  .result > .result-actions {
+    order: 3;
+    justify-self: stretch;
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .result > .result-actions > a {
+    width: 100%;
+    text-align: center;
+  }
+  .result > .chat-head { order: 4; }
+  .result > .transcript { order: 5; }
   .model-lockup { align-items: flex-start; }
   .dialog { width: calc(100vw - 32px); }
 }
