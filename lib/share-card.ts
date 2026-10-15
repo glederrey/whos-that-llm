@@ -9,6 +9,7 @@ import {
   type ScoreStep,
   type Traits,
 } from "./game";
+import { utcDayKey } from "./daily";
 import { siteOrigin } from "./site";
 
 /** Leaderboard difficulty colors. The card uses these on the difficulty word. */
@@ -44,11 +45,11 @@ export type ShareCard = {
   messages: number;
   /** Tokens the score counted. Null when this round has no score line. */
   tokens: number | null;
-  /** Hidden on Daily. Other modes may name the model. */
+  /** Hidden on a Daily until the UTC day after that puzzle. Other modes may name the model. */
   modelName: string | null;
-  /** Company logo path. Hidden on Daily, with the name. */
+  /** Company logo path. Hidden with the name. */
   modelLogoPath: string | null;
-  /** Company, region, year, and size. Hidden on Daily. */
+  /** Company, region, year, and size. Hidden with the name. */
   modelFacts: string[];
   /** Running total, including Before the multiplier. Empty when there is no score. */
   steps: ScoreStep[];
@@ -72,6 +73,10 @@ export type ShareCardInput = {
   traits: Traits;
   /** Display name for a category round. The id in `poolKey` is the fallback. */
   categoryName?: string | null;
+  /** `2026-10-12:1` for a Daily. Null for every other mode. */
+  dailyKey?: string | null;
+  /** Used to decide whether today's Daily may name the model. */
+  now?: Date;
 };
 
 const gameIdPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -119,8 +124,22 @@ export function shareModeLine(input: {
   return poolLabel(input.gameMode, input.poolKey, input.traits, input.difficulty);
 }
 
-function shownModel(traits: Traits, modelId: string, daily: boolean) {
-  if (daily) return null;
+/** The UTC day stored on a Daily round, such as `2026-10-12` from `2026-10-12:1`. */
+export function dailyPuzzleDay(dailyKey: string | null | undefined): string | null {
+  if (!dailyKey) return null;
+  const match = /^(\d{4}-\d{2}-\d{2})(?::[1-4])?$/.exec(dailyKey.trim());
+  return match?.[1] ?? null;
+}
+
+/** A Daily model stays hidden through the UTC day of that puzzle. The next day it can be named. */
+export function dailyModelVisible(dailyKey: string | null | undefined, now = new Date()): boolean {
+  const day = dailyPuzzleDay(dailyKey);
+  if (!day) return false;
+  return day < utcDayKey(now);
+}
+
+function shownModel(traits: Traits, modelId: string, hidden: boolean) {
+  if (hidden) return null;
   const model = traits.models[modelId];
   const name = model?.name?.trim() ?? "";
   if (!model || name.length === 0) return null;
@@ -137,12 +156,12 @@ function outcomeFor(status: string): ShareOutcome {
   return "Given up";
 }
 
-/** A finished round's public card. Daily never carries the hidden model name. An open round has no card. */
+/** A finished round's public card. Today's Daily does not carry the model. An open round has no card. */
 export function buildShareCard(input: ShareCardInput): ShareCard | null {
   if (!isFinishedGame(input.status)) return null;
   const difficulty = difficultyFromStored(input.difficulty);
-  const daily = input.gameMode === "daily";
-  const model = shownModel(input.traits, input.modelId, daily);
+  const hideModel = input.gameMode === "daily" && !dailyModelVisible(input.dailyKey, input.now ?? new Date());
+  const model = shownModel(input.traits, input.modelId, hideModel);
   return {
     id: input.id,
     modeLine: shareModeLine({
@@ -163,7 +182,7 @@ export function buildShareCard(input: ShareCardInput): ShareCard | null {
     steps: input.score === null || !input.breakdown ? [] : scoreSteps(input.breakdown, input.score),
     details: detailsFrom(input.breakdown),
     hints: hintsLine(input.breakdown),
-    invite: input.score === null ? "Come try a round" : `Can you beat ${formatShareNumber(input.score)}?`,
+    invite: input.score === null ? "Come try a round" : `Can you beat my score of ${formatShareNumber(input.score)}?`,
   };
 }
 
@@ -222,8 +241,6 @@ export function shareCardDisplay(card: ShareCard): ShareCardDisplay {
     const isDifficulty = card.difficulty !== null && variant === difficultyLabel[card.difficulty];
     meta.push({ label: isDifficulty ? "Difficulty" : mode, value: variant, color: isDifficulty ? colored : null });
   }
-  meta.push({ label: "Messages", value: formatShareNumber(card.messages), color: null });
-  if (card.hints) meta.push({ label: "Hints", value: "None", color: null });
   const status =
     card.outcome === "Solved"
       ? `Solved on message ${formatShareNumber(card.messages)}.`
@@ -253,7 +270,7 @@ export function shareCardDisplay(card: ShareCard): ShareCardDisplay {
   };
 }
 
-/** Alt text for the public picture. Daily does not name the model. */
+/** Alt text for the public picture. Today's Daily does not name the model. */
 export function shareCardAlt(card: ShareCard): string {
   const display = shareCardDisplay(card);
   const parts = [display.title, display.mode];
@@ -263,7 +280,7 @@ export function shareCardAlt(card: ShareCard): string {
   return parts.join(", ");
 }
 
-/** The post for X, Facebook, LinkedIn, Instagram, and the phone share sheet. Daily hides the model. */
+/** The post for X, Facebook, LinkedIn, Instagram, and the phone share sheet. Today's Daily hides the model. */
 export function shareText(card: ShareCard): string {
   const score = card.score === null ? null : formatShareNumber(card.score);
   const blocks = [

@@ -13,6 +13,7 @@ import {
   facebookShareUrl,
   linkedInShareUrl,
   isShareGameId,
+  dailyModelVisible,
   shareCardAlt,
   shareCardDisplay,
   shareFileName,
@@ -195,7 +196,18 @@ test("share text names the round and hides a daily model", () => {
   );
   assert.equal(shareCardDisplay(quiet).score, "—");
   assert.equal(shareCardDisplay(quiet).tokens, "—");
-  assert.equal(shareCardDisplay(card()).invite, "Can you beat 1,240?");
+  assert.equal(shareCardDisplay(card()).invite, "Can you beat my score of 1,240?");
+  const played = new Date("2026-10-15T18:00:00.000Z");
+  const today = card({ gameMode: "daily", difficulty: "easy", dailyKey: "2026-10-15:1", now: played });
+  assert.equal(today.modelName, null);
+  assert.equal(dailyModelVisible("2026-10-15:1", played), false);
+  const later = card({ gameMode: "daily", difficulty: "easy", dailyKey: "2026-10-14:2", now: played });
+  assert.equal(later.modelName, hidden);
+  assert.equal(later.modelLogoPath, "logos/anthropic.png");
+  assert.equal(shareText(later).includes(`The model I had to guess was ${hidden}.`), true);
+  assert.equal(dailyModelVisible("2026-10-14:2", played), true);
+  assert.equal(dailyModelVisible(null, played), false);
+  assert.equal(dailyModelVisible("not-a-day", played), false);
   assert.equal(shareCardDisplay(card()).site, "whos-that-llm.com");
   assert.equal(card().hints, "Hints · none");
   const hinted = card({
@@ -244,8 +256,9 @@ test("the public picture and the download are the same card", () => {
   assert.match(image, /Easy/);
   assert.match(image, /#1c7c43/);
   assert.match(image, /Miss\./);
-  assert.match(image, /Messages/);
-  assert.match(image, /None/);
+  assert.equal(image.includes("Messages"), false);
+  assert.equal(image.includes("Hints"), false);
+  assert.equal(image.includes(">None<"), false);
   assert.match(image, /After/);
   assert.match(image, /Before the multiplier/);
   assert.match(image, /Total/);
@@ -257,8 +270,9 @@ test("the public picture and the download are the same card", () => {
   assert.match(image, /border-radius:56px/);
   assert.match(image, /#00BBC9|rgb\(0, 187, 201\)|#00bbc9/);
   assert.doesNotMatch(image, /· Easy/);
-  assert.match(image, /Can you beat/);
-  assert.match(image, /whos-that-llm\.com/);
+  assert.match(image, /Can you beat my score of/);
+  assert.match(image, /https:\/\/whos-that-llm\.com/);
+  assert.equal(image.includes("www.whos-that-llm.com"), false);
   assert.equal(shareCardAlt(daily).includes(hidden), false);
 
   const named = card();
@@ -302,7 +316,7 @@ test("the public card is drawn from the game row and is not stored", () => {
   const load = fs.readFileSync(path.join(root, "lib/share-card-load.ts"), "utf8");
   const route = fs.readFileSync(path.join(root, "app/r/[gameId]/card.png/route.tsx"), "utf8");
   const page = fs.readFileSync(path.join(root, "app/r/[gameId]/page.tsx"), "utf8");
-  assert.match(load, /id, status, game_mode, pool_key, difficulty, message_count, score, score_breakdown, model_id, traits/);
+  assert.match(load, /id, status, game_mode, pool_key, difficulty, message_count, score, score_breakdown, model_id, traits, daily_key/);
   assert.doesNotMatch(load, /from\("messages"\)/);
   assert.doesNotMatch(load, /from\("usage"\)/);
   assert.doesNotMatch(load, /from\("guesses"\)/);

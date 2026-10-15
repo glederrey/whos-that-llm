@@ -7,7 +7,7 @@ import { serviceOrThrow } from "./rounds";
 
 /** Columns the card needs. Messages, guesses, and usage are not in this list. */
 export const shareCardColumns =
-  "id, status, game_mode, pool_key, difficulty, message_count, score, score_breakdown, model_id, traits";
+  "id, status, game_mode, pool_key, difficulty, message_count, score, score_breakdown, model_id, traits, daily_key";
 
 function asTraits(value: unknown): Traits | null {
   if (!value || typeof value !== "object") return null;
@@ -67,5 +67,6 @@ export const readShareCard = cache(async (gameId: string): Promise<ShareCard | n
     modelId: data.model_id,
     traits,
     categoryName,
+    dailyKey: typeof data.daily_key === "string" ? data.daily_key : null,
   });
 });

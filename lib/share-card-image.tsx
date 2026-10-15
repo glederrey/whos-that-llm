@@ -10,6 +10,7 @@ const mute = "#52525B";
 const line = "#D4D4D8";
 const scoreTeal = "#007F88";
 const bar = "#00BBC9";
+const playLink = "https://whos-that-llm.com";
 const solvedWash = "#E6F8F8";
 const missWash = "#FDECEC";
 const missInk = "#C41B15";
@@ -37,23 +38,24 @@ export function shareCardImage(card: ShareCard, logoSrc: string, modelLogoSrc: s
       {
         flexDirection: "column",
         flexGrow: 1,
+        justifyContent: "center",
         background: paper,
         borderRadius: 40,
-        padding: "28px 56px 40px",
+        padding: "48px 56px",
       },
       box(
         { alignItems: "center" },
         createElement("img", {
           src: logoSrc,
-          width: 148,
-          height: 148,
-          style: { margin: "-20px -8px -20px -20px" },
+          width: 188,
+          height: 188,
+          style: { margin: "-28px -16px -28px -28px" },
         }),
-        text(display.title, { fontSize: 58, fontWeight: 700, lineHeight: 1.02, letterSpacing: -1.5 }),
+        text(display.title, { fontSize: 92, fontWeight: 700, lineHeight: 0.92, letterSpacing: -2.5 }),
       ),
       display.modelName
         ? box(
-            { alignItems: "center", marginTop: 8 },
+            { alignItems: "center", marginTop: 36 },
             modelLogoSrc
               ? box(
                   {
@@ -99,12 +101,12 @@ export function shareCardImage(card: ShareCard, logoSrc: string, modelLogoSrc: s
         box(
           { flexDirection: "column", alignItems: "flex-end" },
           text(display.status, {
-            fontSize: 26,
-            fontWeight: 500,
+            fontSize: 36,
+            fontWeight: 700,
             color: statusColor,
             background: statusWash,
             borderRadius: 999,
-            padding: "8px 18px",
+            padding: "12px 22px",
           }),
           ...display.meta.map((row) => metaRow(row)),
         ),
@@ -117,11 +119,10 @@ export function shareCardImage(card: ShareCard, logoSrc: string, modelLogoSrc: s
             display.score !== "—" ? tableRow("Total", "", display.score, true) : null,
           )
         : null,
-      box({ flexGrow: 1 }),
       box(
-        { flexDirection: "column", marginTop: 24 },
+        { flexDirection: "column", marginTop: 36 },
         text(display.invite, { fontSize: 36, fontWeight: 700 }),
-        text(display.site, { marginTop: 6, fontSize: 28, color: mute }),
+        text(playLink, { marginTop: 8, fontSize: 32, fontWeight: 700, color: scoreTeal }),
       ),
     ),
   );
