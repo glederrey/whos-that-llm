@@ -60,7 +60,7 @@ Admin is usable on a phone and comfortable on a computer. Playing a round is the
 
 ## Footer
 
-On every page, including the round and admin.
+On every page, including the round and admin. The shared result page is the exception: it shows only the card.
 
 - A line separates the footer from the page.
 - **The API bill is winning, a little help?**, with the Ko-fi cup, opens `tipUrl` in `lib/config.ts` in a new tab. An empty string keeps the sentence as a placeholder: **The models invoice the developer. A Ko-fi will sit here when you feel like covering a round.**
@@ -236,6 +236,10 @@ A page, not a popup. Only for `solved`, `miss`, and `given_up`. An active round 
 - Status line: **Solved on message 2.** or **Miss.** or **Given up. This round is not on the leaderboard.**
 - Summary: **Game mode** is the category name, and **Difficulty** is Easy, Medium, Hard, or Impossible. A round stored with no difficulty says **—**. A round played without hints says **No hints**.
 - The score, then the breakdown, then the short explanation. A give-up before any reply has no score and no breakdown. The status line is enough.
+- A score card above the chat. It is a finished card, about 4:5, not a copy of this page. The question-mark logo and **Who's that LLM?** sit at the top, large enough to read in a feed. The mode line is **Daily · Easy**, **All models · Hard**, and later **Company ·** the company name or **Category ·** the category name. The difficulty word uses the leaderboard colors: Easy `#1c7c43`, Medium `#d4a017`, Hard `#c41b15`, Impossible `#a78bfa`. Then the outcome (**Solved**, **Not solved**, or **Given up**), the score, the messages used, and the tokens that count toward the score. A give-up before any reply shows **—** for the score and the tokens. The card does not show the chat. Daily does not name the hidden model. Other modes may.
+- **Download**, on a computer and on a phone. The PNG is drawn when it is clicked, from the game row. It is not saved.
+- On a phone, **Share** opens the system share sheet with that PNG when the browser allows it. That sheet is how the card gets to Instagram. There is no Instagram button.
+- On a computer, **Share on X** and **Share on Facebook** open those sites with the text filled in and a link to this round. If the card cannot be drawn: **The card could not be drawn.** If the phone has no share sheet: **This browser cannot open the share sheet.** If sharing fails: **The card could not be shared.**
 - The transcript
 - **Play again** returns to the lobby. It does not start a round. A company or region round returns to that category's pool picker. Latest returns to the lobby.
 - **Leaderboard**, shown when this category has a leaderboard and the status is `solved` or `miss`
@@ -267,6 +271,16 @@ Daily stats, later, on a daily result, once at least one daily round has finishe
 - **Messages: 3 used 1 reply · 10 used 2 · …**
 - **55% got the company.**
 - **Average tokens: 1,420.**
+
+## Shared result (`/r/[gameId]`)
+
+Public. No session. This is the link Share on X and Share on Facebook use.
+
+Only a finished game (`solved`, `miss`, or `given_up`). An open round or an unknown id is the not-found page.
+
+The page shows the card and nothing else. No header, no footer, no transcript, no message text. Daily still does not name the hidden model. Other modes may.
+
+The link preview is that same card. It is drawn when X or Facebook requests it, and it is not stored.
 
 ## Leaderboard (`/leaderboard`)
 

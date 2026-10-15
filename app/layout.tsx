@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
+import { headers } from "next/headers";
 import { Analytics } from "@vercel/analytics/next";
 import { AccountMenu } from "@/components/account-menu";
 import { SiteFooter } from "@/components/site-footer";
@@ -46,6 +47,20 @@ export const metadata: Metadata = {
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const path = (await headers()).get("x-pathname") ?? "";
+  if (path.startsWith("/r/")) {
+    return (
+      <html lang="en" className={`${font.variable} ${fontBold.variable}`} suppressHydrationWarning>
+        <head>
+          <ThemeInit />
+        </head>
+        <body suppressHydrationWarning>
+          {children}
+          <Analytics />
+        </body>
+      </html>
+    );
+  }
   const [{ user, username, avatarUrl }, owner] = await Promise.all([currentProfile(), sessionIsOwner()]);
   return (
     <html lang="en" className={`${font.variable} ${fontBold.variable}`} suppressHydrationWarning>

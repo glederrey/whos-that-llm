@@ -17,7 +17,7 @@ test("sitemap lists the public pages on the www origin", () => {
   ]);
   for (const url of urls) assert.equal(url.startsWith(`${siteOrigin}/`), true);
   const listed = urls.join(" ");
-  for (const blocked of ["/admin", "/api/", "/login", "/play", "/profile", "/welcome", "/account", "/auth"]) {
+  for (const blocked of ["/admin", "/api/", "/login", "/play", "/r/", "/profile", "/welcome", "/account", "/auth"]) {
     assert.equal(listed.includes(`${siteOrigin}${blocked}`), false, blocked);
   }
 });

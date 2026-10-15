@@ -2,9 +2,13 @@ import { notFound, redirect } from "next/navigation";
 import { CompanyLogo } from "@/components/company-logo";
 import { MessageBubble } from "@/components/message-bubble";
 import { ResultSummary } from "@/components/round-facts";
+import { ShareActions } from "@/components/share-actions";
+import { ShareCardView } from "@/components/share-card";
 import { difficultyText, playedRoundFacts } from "@/lib/round-facts";
 import { listGameModes, readPublicGame } from "@/lib/rounds";
 import { currentProfile } from "@/lib/session";
+import { readShareCard } from "@/lib/share-card-load";
+import { shareText } from "@/lib/share-card";
 
 export const dynamic = "force-dynamic";
 
@@ -14,7 +18,7 @@ export default async function ResultPage({ params }: { params: Promise<{ gameId:
   const next = `/play/${gameId}/result`;
   if (!user) redirect(`/login?next=${encodeURIComponent(next)}`);
   if (!username) redirect(`/welcome?next=${encodeURIComponent(next)}`);
-  const game = await readPublicGame(gameId, user.id);
+  const [game, card] = await Promise.all([readPublicGame(gameId, user.id), readShareCard(gameId)]);
   if (!game || !game.model) notFound();
   if (game.status === "active") redirect(`/play/${gameId}`);
   const gameModes = await listGameModes();
@@ -92,6 +96,12 @@ export default async function ResultPage({ params }: { params: Promise<{ gameId:
           <a href="/scoring">How scoring works</a>
         </p>
       )}
+      {card ? (
+        <div className="share-block">
+          <ShareCardView card={card} />
+          <ShareActions gameId={card.id} text={shareText(card)} />
+        </div>
+      ) : null}
       <div className="chat-head">
         <h2>The chat</h2>
       </div>

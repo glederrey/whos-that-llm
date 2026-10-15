@@ -1606,3 +1606,87 @@ html[data-theme="dark"] .history-facts .board-chip.no-hints {
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
 }
+
+/* Share card. A fixed light score card, about 4:5, in both themes. */
+.share-card {
+  width: min(420px, 100%);
+  aspect-ratio: 4 / 5;
+  background: #ebebeb;
+  color: #141414;
+  border-radius: 18px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.share-card-bar { height: 7px; background: #00bbc9; flex: none; }
+.share-card-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 18px 26px 24px;
+  min-height: 0;
+}
+.share-card-brand { display: flex; align-items: center; }
+.share-card-brand img { width: 88px; height: 88px; margin: -14px -4px -14px -14px; flex: none; }
+.share-card-brand strong {
+  font-family: var(--font-bold), var(--font), "Segoe UI", sans-serif;
+  font-size: 30px;
+  line-height: 1.02;
+  letter-spacing: -0.03em;
+  font-weight: 700;
+}
+.share-card-mode { margin: 8px 0 0; font-size: 20px; font-weight: 700; line-height: 1.2; }
+.share-card-score {
+  margin-top: auto;
+  font-family: var(--font-bold), var(--font), "Segoe UI", sans-serif;
+  font-size: 72px;
+  line-height: 0.9;
+  letter-spacing: -0.045em;
+  font-weight: 700;
+  color: #007f88;
+}
+.share-card-score.is-empty { font-size: 48px; letter-spacing: 0; }
+.share-card-outcome { margin: 8px 0 0; font-size: 26px; font-weight: 700; line-height: 1.1; }
+.share-card-model { margin: 6px 0 0; font-size: 18px; color: #52525b; }
+.share-card-stats { display: flex; margin-top: auto; padding-top: 12px; border-top: 3px solid #141414; }
+.share-card-stats div { flex: 1; }
+.share-card-stats span {
+  display: block;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #52525b;
+}
+.share-card-stats strong {
+  display: block;
+  margin-top: 2px;
+  font-family: var(--font-bold), var(--font), "Segoe UI", sans-serif;
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1.1;
+  color: #141414;
+}
+html[data-theme="dark"] .share-card { background: #ebebeb; color: #141414; }
+html[data-theme="dark"] .share-card-score { color: #007f88; }
+html[data-theme="dark"] .share-card-model,
+html[data-theme="dark"] .share-card-stats span { color: #52525b; }
+html[data-theme="dark"] .share-card-outcome,
+html[data-theme="dark"] .share-card-mode,
+html[data-theme="dark"] .share-card-brand strong,
+html[data-theme="dark"] .share-card-stats strong { color: #141414; }
+.share-block { display: grid; gap: 12px; justify-items: start; }
+.share-actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.share-desktop { display: contents; }
+.share-phone { display: none; }
+.share-note { flex-basis: 100%; color: var(--mute); font-size: 14px; }
+@media (hover: none) and (pointer: coarse) {
+  .share-desktop { display: none; }
+  .share-phone { display: contents; }
+}
+.share-page {
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+}
