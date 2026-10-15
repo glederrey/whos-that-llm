@@ -216,6 +216,12 @@ export function shareText(card: ShareCard): string {
   return blocks.join("\n\n");
 }
 
+/** Phone share already attaches the card image, so the post can point at the game. */
+export function shareTextForImage(text: string, pageUrl: string): string {
+  if (!text.endsWith(pageUrl)) return text;
+  return `${text.slice(0, -pageUrl.length)}Play here: ${siteOrigin}`;
+}
+
 /** All models and Daily name the difficulty. A company, category, or region names that instead. */
 function shareFacts(card: ShareCard): string[] {
   const splitAt = card.modeLine.indexOf(" · ");

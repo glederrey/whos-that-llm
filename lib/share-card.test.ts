@@ -18,6 +18,7 @@ import {
   shareFileName,
   sharePageUrl,
   shareText,
+  shareTextForImage,
   tokensFromBreakdown,
   xShareUrl,
   type ShareCardInput,
@@ -160,6 +161,10 @@ test("share text names the round and hides a daily model", () => {
     ].join("\n\n"),
   );
   assert.equal(text.includes(hidden), false);
+  assert.equal(
+    shareTextForImage(text, link),
+    text.replace(link, "Play here: https://www.whos-that-llm.com"),
+  );
   assert.equal(text.includes(chat), false);
   const named = card({ gameMode: "all", difficulty: "hard" });
   assert.equal(

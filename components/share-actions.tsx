@@ -7,6 +7,7 @@ import {
   shareCardPath,
   shareFileName,
   sharePageUrl,
+  shareTextForImage,
   xShareUrl,
 } from "@/lib/share-card";
 
@@ -51,7 +52,7 @@ export function ShareActions({ gameId, text }: { gameId: string; text: string })
         return;
       }
       if (navigator.canShare?.({ files: [file] })) {
-        await navigator.share({ files: [file], text });
+        await navigator.share({ files: [file], text: shareTextForImage(text, pageUrl) });
         return;
       }
       await navigator.share({ text });
