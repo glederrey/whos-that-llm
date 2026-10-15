@@ -304,6 +304,7 @@ input, textarea, select {
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 input:focus, textarea:focus, select:focus { outline: none; border-color: var(--teal); box-shadow: 0 0 0 3px var(--teal-wash); }
+input::placeholder, textarea::placeholder { color: var(--mute); opacity: 1; }
 html[data-theme="dark"] input:focus, html[data-theme="dark"] textarea:focus, html[data-theme="dark"] select:focus { box-shadow: 0 0 0 3px rgba(0, 187, 201, 0.25); }
 textarea { min-height: 76px; resize: vertical; }
 .error { color: var(--miss-press); margin: 8px 0 0; font-size: 14px; }
