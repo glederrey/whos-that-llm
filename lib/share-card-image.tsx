@@ -38,10 +38,9 @@ export function shareCardImage(card: ShareCard, logoSrc: string, modelLogoSrc: s
       {
         flexDirection: "column",
         flexGrow: 1,
-        justifyContent: "center",
         background: paper,
         borderRadius: 40,
-        padding: "48px 56px",
+        padding: "36px 56px 40px",
       },
       box(
         { alignItems: "center" },
@@ -51,11 +50,13 @@ export function shareCardImage(card: ShareCard, logoSrc: string, modelLogoSrc: s
           height: 188,
           style: { margin: "-28px -16px -28px -28px" },
         }),
-        text(display.title, { fontSize: 92, fontWeight: 700, lineHeight: 0.92, letterSpacing: -2.5 }),
+        text(display.title, { fontSize: 100, fontWeight: 700, lineHeight: 0.92, letterSpacing: -2.5 }),
       ),
-      display.modelName
+      box(
+        { flexDirection: "column", flexGrow: 1, justifyContent: "center" },
+        display.modelName
         ? box(
-            { alignItems: "center", marginTop: 36 },
+            { alignItems: "center" },
             modelLogoSrc
               ? box(
                   {
@@ -79,7 +80,7 @@ export function shareCardImage(card: ShareCard, logoSrc: string, modelLogoSrc: s
           )
         : null,
       box(
-        { alignItems: "center", justifyContent: "space-between", marginTop: 28 },
+        { alignItems: "center", justifyContent: "space-between", marginTop: display.modelName ? 52 : 0 },
         box(
           { flexDirection: "column" },
           text("Your score", {
@@ -119,8 +120,9 @@ export function shareCardImage(card: ShareCard, logoSrc: string, modelLogoSrc: s
             display.score !== "—" ? tableRow("Total", "", display.score, true) : null,
           )
         : null,
+      ),
       box(
-        { flexDirection: "column", marginTop: 36 },
+        { flexDirection: "column" },
         text(display.invite, { fontSize: 36, fontWeight: 700 }),
         text(playLink, { marginTop: 8, fontSize: 32, fontWeight: 700, color: scoreTeal }),
       ),

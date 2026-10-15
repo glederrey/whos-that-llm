@@ -279,7 +279,7 @@ The page shows the card and nothing else. No header, no footer, no transcript, n
 
 The card has a teal frame and rounded corners. The question-mark logo and **Who's that LLM?** sit at the top, at the same height. Under that, when this card may show the model: the logo, the name, then the company, region, year, and size. The score sits on the left. On the right: **Solved on message 2.** or **Miss.** or **Given up.**, then **Game mode** and **Difficulty**. A company, category, or region round names that instead of the difficulty. The difficulty word uses the leaderboard colors: Easy `#1c7c43`, Medium `#d4a017`, Hard `#c41b15`, Impossible `#a78bfa`.
 
-The breakdown is the full score: each line, the change, and **After**, including **Before the multiplier**, then **Total**. Under that: **Can you beat my score of 9,500?** when there is a score, or **Come try a round** when there is not, then **https://whos-that-llm.com** in teal. The space above the logo matches the space below that link. A give-up before any reply shows **—** for the score and no breakdown. The card does not show the chat.
+The breakdown is the full score: each line, the change, and **After**, including **Before the multiplier**, then **Total**. Under that: **Can you beat my score of 9,500?** when there is a score, or **Come try a round** when there is not, then **https://whos-that-llm.com** in teal. The title stays at the top and that line stays at the bottom. The model and the score sit in the space between them. A give-up before any reply shows **—** for the score and no breakdown. The card does not show the chat.
 
 The downloaded file is `whos-that-llm-` plus the game id, then `.png`.
 
