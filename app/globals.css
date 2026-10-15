@@ -1516,7 +1516,10 @@ html[data-theme="dark"] .history-facts .board-chip.no-hints {
   .hero { grid-template-columns: 1fr; }
   .hero-logo { width: min(180px, 56%); }
   .hero h1 { font-size: 42px; }
-  .stats, .steps, .profile-stats { grid-template-columns: 1fr; }
+  .stats, .steps { grid-template-columns: 1fr; }
+  .profile-stats { grid-template-columns: 1fr 1fr; }
+  .profile-stats div { padding: 16px 12px; }
+  .profile-stats dt { letter-spacing: 0.04em; }
   .daybars { gap: 3px; }
   .daybar-count { font-size: 10px; }
   .daybar-date { display: none; }
