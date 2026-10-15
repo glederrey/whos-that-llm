@@ -2,7 +2,7 @@
 
 Play routes redirect to `/login` when there is no session, then to `/welcome` when `profiles.username` is null. The landing page and `/login` are the exceptions. Transcripts of other people are never shown.
 
-There is no `/rules` page. The design doc stays private. The main page has a short explanation of each category. The only public scoring text is the short block on the result page.
+There is no `/rules` page. The design doc stays private. The main page has a short explanation of each category. The public scoring text is the breakdown on the result page and [How scoring works](/scoring).
 
 The words below are the copy. Change them here before changing them in components.
 
@@ -60,7 +60,7 @@ Admin is usable on a phone and comfortable on a computer. Playing a round is the
 
 ## Footer
 
-On every page, including the round and admin.
+On every page, including the round and admin. The shared result page is the exception: it shows only the card.
 
 - A line separates the footer from the page.
 - **The API bill is winning, a little help?**, with the Ko-fi cup, opens `tipUrl` in `lib/config.ts` in a new tab. An empty string keeps the sentence as a placeholder: **The models invoice the developer. A Ko-fi will sit here when you feel like covering a round.**
@@ -233,33 +233,34 @@ One click. The button disables until the response returns. A revealed year shows
 A page, not a popup. Only for `solved`, `miss`, and `given_up`. An active round redirects to the round page. Refresh is safe.
 
 - Logo, model name, company, region, year, and size. Origin names the model here. The round never did.
-- Status line: **Solved on message 2.** or **Miss.** or **Given up. This round is not on the leaderboard.**
-- Summary: **Game mode** is the category name, and **Difficulty** is Easy, Medium, Hard, or Impossible. A round stored with no difficulty says **—**. A round played without hints says **No hints**.
-- The score, then the breakdown, then the short explanation. A give-up before any reply has no score and no breakdown. The status line is enough.
+- One score card. **Your score** and the number sit on the left. On the right: the status line (**Solved on message 2.** or **Miss.** or **Given up. This round is not on the leaderboard.**), then **Game mode** and **Difficulty**. A round stored with no difficulty says **—**. A round played without hints says **No hints**. On a phone that right-hand group stays on the right, a little smaller, so the score can sit beside it.
+- **How scoring works** sits at the bottom right of that card, on the same line as the share buttons, and opens `/scoring` in a new tab. The page does not repeat the formula beside the breakdown.
+- **Share** sits first on that line and is the filled button, with a down mark. The menu stays closed until that button is clicked. **Copy link** sits next and copies the public result link. The button flashes teal twice, quickly. It does not add a line. If the copy fails: **The link could not be copied.** **Download** sits beside it, quieter. On a phone **Copy link** is hidden, and **Share** and **Download** are a little smaller so **How scoring works** stays beside them. The result page does not show the picture itself. The picture is the download and the public page.
+- On a phone, **Share** opens the system share sheet with that PNG when the browser allows it. That sheet is how the card gets to Instagram. The message then ends with **Play here: https://www.whos-that-llm.com** instead of the round link, because the picture is the card. If the phone cannot attach the picture, the round link stays.
+- On a computer, **Share** opens one menu: **X**, **Facebook**, **LinkedIn**, and **Instagram**, each with its logo. **X** opens with the message filled in. Facebook and LinkedIn do not accept a prefilled message. Hovering either one says **The text will be copied. Paste it into the post.** The click copies the message and opens the site. Instagram has no share page. Its tooltip says **The text will be copied. Paste it into Instagram.** The click copies the message. A solved All models round reads:
+
+  ```
+  I just played on Who's that LLM? and scored 9,500 points.
+
+  Game mode: All models
+  Difficulty: Easy.
+
+  The model I had to guess was Qwen3.8 Max.
+
+  Do you think you can beat my score?
+
+  https://www.whos-that-llm.com/r/…
+  ```
+
+  Daily leaves out the model paragraph. A company, category, or region round replaces the difficulty line with that name, such as **Company: Anthropic.** A round with no score leaves out the points and the challenge. If the card could not be drawn: **The card could not be drawn.** If the phone has no share sheet: **This browser cannot open the share sheet.** If sharing fails: **The card could not be shared.** If the copy fails: **The message could not be copied.**
 - The transcript
-- **Play again** returns to the lobby. It does not start a round. A company or region round returns to that category's pool picker. Latest returns to the lobby.
-- **Leaderboard**, shown when this category has a leaderboard and the status is `solved` or `miss`
+- **Play again** and **Leaderboard** sit at the top right, level with the model name. **Play again** returns to the lobby. It does not start a round. A company or region round returns to that category's pool picker. Latest returns to the lobby. **Leaderboard** is shown when this category has a leaderboard and the status is `solved` or `miss`. On a phone those two buttons sit side by side just under the score card, and together they fill the width.
 
 The score is the integer from [Rules](rules.md), never below 0. When the total comes to less than 0 before the floor, a **Floor at 0** line brings it to 0.
 
-The breakdown is the lines from [Rules](rules.md), in that order, then **Total**. Penalty lines are minus points. The token line and the no-hint line are multiplier rows: token count and the × factor, not points removed. The total is the multiplied result.
+The breakdown is the lines from [Rules](rules.md), in that order. Each line has the change and an **After** column, the score once that line is applied. Point lines add. The row **Before the multiplier** is the subtotal those points reach. Each later row multiplies that subtotal, and **After** shows the result. **Total** repeats the stored score. Penalty lines are minus points. The token line and the no-hint line are multiplier rows: token count and the × factor, not points removed. A finished game keeps the factor it was scored with. The scoring page states the current cap, ×20. A give-up before any reply has no score and no breakdown.
 
-Next to the breakdown, heading **How this score works**, these lines and no others. Fill them with this round's numbers.
-
-> Your score starts from the base and subtracts penalties. That subtotal is multiplied by 10,000 divided by the tokens used, capped at 20, then by 2× if you played with no hints. It is rounded and never goes below 0.
-
-- Base: **2,000** for naming the model.
-- Or, when the model was not named: **Base: 400** — region 100, company 300. Drop a trait that did not match, was given, or was revealed, so a region-only base reads **Base: 100** for the region, a company-only base reads **Base: 300** for the company, and nothing matched reads **Base: 0**.
-- **Hints: Year −100. Size −100.** When none were bought: **Hints: none.**
-- **Wrong guesses: 1 × −100.** When none were made: **Wrong guesses: none.**
-- **Before the multiplier: 2,000 − 200 = 1,800.**
-- **Tokens: 500.** Token factor **×20** (10,000/500). At 2,694 tokens: **Tokens: 2,694.** Token factor **×3.712** (10,000/2,694). At 0 tokens: **Tokens: 0.** Token factor **×20.**
-- When no-hint mode was on and no hint was bought: **No-hint: ×2.**
-- When the total came to less than 0: **The total came to less than 0, so it is shown as 0.**
-
-**How scoring works** links to `/scoring`, including when the round has no score. The public page states the formula once, with one worked example. This result block stays this round's own lines.
-
-That block, plus the public scoring page, is the scoring explanation on the site.
+**How scoring works** opens `/scoring` in a new tab, including when the round has no score. The public page states the formula once, with one worked example.
 
 Daily stats, later, on a daily result, once at least one daily round has finished:
 
@@ -267,6 +268,22 @@ Daily stats, later, on a daily result, once at least one daily round has finishe
 - **Messages: 3 used 1 reply · 10 used 2 · …**
 - **55% got the company.**
 - **Average tokens: 1,420.**
+
+## Shared result (`/r/[gameId]`)
+
+Public. No session. This is the link Share on X and Share on Facebook use.
+
+Only a finished game (`solved`, `miss`, or `given_up`). An open round or an unknown id is the not-found page.
+
+The page shows the card and nothing else. No header, no footer, no transcript, no message text. The page shows the PNG from `/r/[gameId]/card.png`. Download saves that same picture. The picture uses the theme already chosen in the browser: dark mode gets the dark logo and a dark card, light mode gets the light logo and a light card. Switching the theme redraws it. A share preview that asks for the picture without a theme gets the light card. A Daily hides the model, its logo, and the company, region, year, and size through the UTC day of that puzzle. The next UTC day, the card names them. Other modes show them as soon as the round is finished.
+
+The card has a teal frame and rounded corners. The question-mark logo and **Who's that LLM?** sit at the top, at the same height. Under that, when this card may show the model: the logo, the name, then the company, region, year, and size. The score sits on the left. On the right: **Solved on message 2.** or **Miss.** or **Given up.**, then **Game mode** and **Difficulty**. A company, category, or region round names that instead of the difficulty. The difficulty word uses the leaderboard colors: Easy `#1c7c43`, Medium `#d4a017`, Hard `#c41b15`, Impossible `#a78bfa`.
+
+The breakdown is the full score: each line, the change, and **After**, including **Before the multiplier**, then **Total**. Under that: **Can you beat my score of 9,500?** when there is a score, or **Come try a round** when there is not, then **https://whos-that-llm.com** in teal. The title stays at the top and that line stays at the bottom. The model and the score sit in the space between them. A give-up before any reply shows **—** for the score and no breakdown. The card does not show the chat.
+
+The downloaded file is `whos-that-llm-` plus the game id, then `.png`.
+
+The link preview is that same picture. It is drawn when the page or a share preview requests it, and it is not stored.
 
 ## Leaderboard (`/leaderboard`)
 
@@ -338,8 +355,8 @@ Private. The account menu shows **Profile** once the player has a username. No s
 
 - Username field, same rules as welcome. **Save** updates the profile and every game row for that user id. The leaderboard follows. An empty name is rejected.
 - **Picture.** Optional upload, JPEG, PNG, or WebP, at most 1 MB. A larger file or any other type shows **Use a JPEG, PNG, or WebP under 1 MB.** It replaces the generated mark in the header. People who skipped it on welcome add it here.
-- Stats: games played, solved, missed, given up, solve rate, best score, average score, average messages on a solved game.
-- Games: 10 per page, **Previous** and **Next**. The closed row shows the date, then a chip for the game mode, a difficulty chip, and a **No hints** chip when that round was played without hints, then the status and the score. On a phone the date is on its own line, and the status stays beside the score. The chip uses the same colours as the leaderboard. A round stored with no difficulty has no difficulty chip. Clicking a row opens its summary in place, directly under that row, and clicking it again closes it. One row is open at a time. The summary shows the company logo and model name, date, game mode, difficulty, whether it was played with no hints, status, score, messages used, and whether company and region were found. Game mode is the category name. Difficulty is Easy, Medium, Hard, or Impossible, or **—** when the round stored none. No transcript. A logo that fails to load is hidden. An open round hides the model and logo and links to **Continue**.
+- Stats: games played, solved, missed, given up, solve rate, best score, average score, average messages on a solved game. On a phone these sit two across.
+- Games: 10 per page, **Previous** and **Next**. The closed row shows the date, then a chip for the game mode, a difficulty chip, and a **No hints** chip when that round was played without hints, then the status and the score. On a phone the date is on its own line, and the status stays beside the score. The chip uses the same colours as the leaderboard. A round stored with no difficulty has no difficulty chip. Clicking a row opens it in place, directly under that row, and clicking it again closes it. One row is open at a time. A finished round opens the same score card as the result page: the model, the score, the status, the game mode, the difficulty, the breakdown, **Share**, **Copy link**, **Download**, and **How scoring works**. The title’s outline continues down both sides and across the bottom, at the same thickness, so the open row is one box. The model sits inside that line, in line with the date. It does not show **Play again** or **Leaderboard**, and it does not show the chat. The model stays on this card, including a Daily played today. **Share** uses the same message as the result page, so that Daily leaves the model out of the message until the next UTC day. Game mode is the category name. Difficulty is Easy, Medium, Hard, or Impossible, or **—** when the round stored none. A logo that fails to load is hidden. An open round hides the model and logo and links to **Continue**.
 - **Delete account.** Under the games. The player checks **I want to delete my account.** and submits **Delete account**. Clicking the button before that box is checked does not submit, does not reload, and does not move the page. The delete runs only after the box is checked. The same form is on `/account/delete`.
 
 ## Delete account (`/account/delete` and `/profile`)

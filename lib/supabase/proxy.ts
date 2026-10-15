@@ -15,9 +15,15 @@ function hide(request: NextRequest) {
   return NextResponse.rewrite(url, { status: 404 });
 }
 
+function withPath(request: NextRequest) {
+  const headers = new Headers(request.headers);
+  headers.set("x-pathname", request.nextUrl.pathname);
+  return NextResponse.next({ request: { headers } });
+}
+
 export async function updateSession(request: NextRequest) {
   const hidden = isPrivatePath(request.nextUrl.pathname);
-  let response = NextResponse.next({ request });
+  let response = withPath(request);
   const env = publicEnv();
   if (!env) return hidden ? hide(request) : response;
 
@@ -30,7 +36,7 @@ export async function updateSession(request: NextRequest) {
       },
       setAll(cookiesToSet) {
         for (const { name, value } of cookiesToSet) request.cookies.set(name, value);
-        response = NextResponse.next({ request });
+        response = withPath(request);
         for (const { name, value, options } of cookiesToSet) {
           response.cookies.set(name, value, { ...options, ...authCookieOptions(secure) });
         }

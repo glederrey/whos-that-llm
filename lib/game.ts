@@ -43,6 +43,15 @@ export type ScoreLine = {
   multiplier?: string;
 };
 
+export type ScoreStep = {
+  label: string;
+  /** The points added, or the × factor. Blank on the subtotal and the floor. */
+  change: string;
+  /** The score after this line. */
+  after: string;
+  kind: "points" | "subtotal" | "factor" | "floor";
+};
+
 export type PublicCandidate = {
   id: string;
   name: string;
@@ -297,6 +306,53 @@ export function isCreditError(status: number | undefined, message: string): bool
 
 function formatInt(value: number): string {
   return Math.trunc(value).toLocaleString("en-US");
+}
+
+function formatStepNumber(value: number): string {
+  return Math.trunc(value).toLocaleString("en-US");
+}
+
+/**
+ * The breakdown plus a running total. Point lines add up. The first multiplier
+ * is preceded by the score before any factor. Later factors multiply that
+ * subtotal. The last factor matches the stored score when rounding drifts.
+ */
+export function scoreSteps(lines: ScoreLine[], score: number): ScoreStep[] {
+  const steps: ScoreStep[] = [];
+  let sum = 0;
+  let product = 1;
+  let multiplying = false;
+  for (const line of lines) {
+    if (line.label === "Floor at 0") {
+      steps.push({ label: line.label, change: "", after: formatStepNumber(Math.max(0, score)), kind: "floor" });
+      continue;
+    }
+    if (line.multiplier) {
+      if (!multiplying) {
+        steps.push({ label: "Before the multiplier", change: "", after: formatStepNumber(sum), kind: "subtotal" });
+        multiplying = true;
+      }
+      const factor = Number(line.multiplier.replace(/^×/, ""));
+      if (Number.isFinite(factor)) product *= factor;
+      steps.push({
+        label: line.label,
+        change: line.multiplier,
+        after: formatStepNumber(roundHalfUp(sum * product)),
+        kind: "factor",
+      });
+      continue;
+    }
+    sum += line.points ?? 0;
+    steps.push({
+      label: line.label,
+      change: formatStepNumber(line.points ?? 0),
+      after: formatStepNumber(sum),
+      kind: "points",
+    });
+  }
+  const lastFactor = [...steps].reverse().find((step) => step.kind === "factor");
+  if (lastFactor && !steps.some((step) => step.kind === "floor")) lastFactor.after = formatStepNumber(score);
+  return steps;
 }
 
 export function formatFactor(value: number): string {

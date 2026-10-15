@@ -105,6 +105,10 @@ export default async function ProfilePage({
               mode: row.mode,
               difficulty: row.difficulty,
               noHint: row.noHint,
+              scoreValue: row.score,
+              modelFacts: row.modelFacts,
+              breakdown: row.breakdown,
+              shareText: row.shareText,
             }))}
           />
           <div className="row pager">

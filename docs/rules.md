@@ -1,6 +1,6 @@
 # Rules
 
-Scoring numbers live in `lib/config.ts` and are copied onto the game when it starts. This page is the meaning of those numbers. It is not a public page. The player sees the short explanation on the result page, specified in [Pages](pages.md).
+Scoring numbers live in `lib/config.ts` and are copied onto the game when it starts. This page is the meaning of those numbers. It is not a public page. The player sees the breakdown on the result page and the formula on How scoring works, specified in [Pages](pages.md).
 
 **All models** is the first build. The other categories below are specified and come later.
 
@@ -238,7 +238,7 @@ The worked example's lines are:
 | Tokens · 500 tokens | ×20 |
 | **Total** | **36000** |
 
-Beside that list, the result page shows the short player-facing explanation from [Pages](pages.md). The public page [How scoring works](../app/scoring/page.tsx) states the same formula in plain language. This document stays private.
+The result page shows that list and links to [How scoring works](../app/scoring/page.tsx), which states the formula in plain language. This document stays private.
 
 ## Given values
 
@@ -409,7 +409,7 @@ The worked example's lines are:
 | Wrong guesses · 1 | −50 |
 | **Total** | **9850** |
 
-Beside that list, the result page shows the short player-facing explanation from [Pages](pages.md). The public page [How scoring works](../app/scoring/page.tsx) states the same formula in plain language. This document stays private.
+The result page shows that list and links to [How scoring works](../app/scoring/page.tsx), which states the formula in plain language. This document stays private.
 
 ## Categories
 

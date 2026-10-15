@@ -10,6 +10,7 @@ import {
   knownValues,
   missedGuesses,
   scoreRound,
+  scoreSteps,
   scoreTokens,
   toPublicGame,
   tokenFactor,
@@ -208,6 +209,16 @@ test("a 2,694-token hint round scores 6682", () => {
   assert.equal(result.breakdown.some((line) => line.label === "No-hint"), false);
   assert.match(result.explanation.join("\n"), /Before the multiplier: 2,000 − 200 = 1,800/);
   assert.match(result.explanation.join("\n"), /Token factor ×3\.712 \(10,000\/2,694\)/);
+  assert.deepEqual(
+    scoreSteps(result.breakdown, result.score).map((step) => [step.label, step.change, step.after]),
+    [
+      ["Named the model", "2,000", "2,000"],
+      ["Size hint", "-100", "1,900"],
+      ["Wrong guesses · 1", "-100", "1,800"],
+      ["Before the multiplier", "", "1,800"],
+      ["Tokens · 2,694 tokens", "×3.712", "6,682"],
+    ],
+  );
 });
 
 test("a miss scores the region and company it matched", () => {
@@ -266,6 +277,9 @@ test("difficulty multiplies after the token factor and the no-hint multiplier", 
   assert.equal(easy.breakdown.at(-1)?.label, "Difficulty · Easy");
   assert.equal(easy.breakdown.at(-1)?.points, null);
   assert.equal(easy.breakdown.at(-1)?.multiplier, "×0.5");
+  const easySteps = scoreSteps(easy.breakdown, easy.score);
+  assert.equal(easySteps.find((step) => step.kind === "subtotal")?.after, "2,000");
+  assert.equal(easySteps.at(-1)?.after, "20,000");
   assert.match(easy.explanation.join("\n"), /Difficulty: Easy ×0\.5\./);
   const medium = scoreRound({ rules, ...none, namedModel: true, tokens: 500, difficulty: "medium" });
   assert.equal(medium.score, 40000);

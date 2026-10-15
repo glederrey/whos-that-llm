@@ -2,8 +2,10 @@
 
 import { useState } from "react";
 import type { Difficulty } from "@/lib/difficulty";
+import type { ScoreLine } from "@/lib/game";
 import { difficultyText } from "@/lib/round-facts";
 import { CompanyLogo } from "./company-logo";
+import { ScoreCard } from "./score-card";
 import { RoundFacts } from "./round-facts";
 
 export type HistoryItem = {
@@ -23,6 +25,11 @@ export type HistoryItem = {
   mode: string;
   difficulty: Difficulty | null;
   noHint: boolean;
+  /** The stored score. The closed row uses the formatted `score` string. */
+  scoreValue: number | null;
+  modelFacts: string[];
+  breakdown: ScoreLine[] | null;
+  shareText: string | null;
 };
 
 export function HistoryList({ items }: { items: HistoryItem[] }) {
@@ -75,6 +82,27 @@ export function HistoryFacts({ item }: { item: HistoryItem }) {
 }
 
 export function HistoryDetail({ item, panel }: { item: HistoryItem; panel?: string }) {
+  if (item.state !== "active") {
+    return (
+      <div id={panel} className="history-detail is-score">
+        <ScoreCard
+          model={
+            item.modelName
+              ? { name: item.modelName, logoPath: item.logoPath ?? "", facts: item.modelFacts }
+              : null
+          }
+          score={item.scoreValue}
+          messages={item.messages}
+          state={item.state}
+          mode={item.mode}
+          difficulty={item.difficulty}
+          noHint={item.noHint}
+          breakdown={item.breakdown}
+          share={item.shareText ? { gameId: item.id, text: item.shareText } : null}
+        />
+      </div>
+    );
+  }
   return (
     <div id={panel} className="history-detail">
       {item.logoPath && item.modelName ? (

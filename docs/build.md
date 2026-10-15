@@ -115,7 +115,7 @@ The first build is a playable All models round. Gael plays it locally, then the 
 1. Migration from [Data](data.md). Seed the roster. Enable Haiku 4.5, Haiku 5.5, GPT-5.6 Luna, GPT-5.6 Luna Pro, GPT-6 Luna, and DeepSeek V4 Flash. Leave every other company disabled. Seed All models enabled as a category, and the other categories disabled.
 2. App shell: landing page, login, welcome, footer, theme. Email links return to `/`. A session is required before `/play`.
 3. `lib/openrouter.ts` and `lib/prompt.ts`. Stream the reply word by word. Play one round on Haiku. Read `reasoning_tokens` and the transcript. Confirm it does not name itself. Confirm an empty successful reply still spends the message.
-4. `lib/game.ts`: frozen traits, server-filtered guess list, compare, hints, no-hint mode, score. All models, ten messages, a guess the player can skip, give up. The result page shows the breakdown and the short explanation. The total is never below 0. Play across the enabled models.
+4. `lib/game.ts`: frozen traits, server-filtered guess list, compare, hints, no-hint mode, score. All models, ten messages, a guess the player can skip, give up. The result page shows the breakdown and links to How scoring works. The total is never below 0. Play across the enabled models.
 5. The hourly cap and one active round. A credit error sets `app_settings.paused` for everyone.
 6. Leaderboard for All models: rank, name, best score.
 7. Later: daily, company, region, custom, and class. They are pool filters plus the given-trait rule. Custom is a choice of models, hints can be on, and it has no leaderboard. Class is not built. Hints are only on Daily, All models, and Custom. There is no Latest category and no Origin category. `models.is_latest` is dropped.
