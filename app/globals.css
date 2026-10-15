@@ -1295,6 +1295,7 @@ html[data-theme="dark"] .history-facts .board-chip.no-hints {
   border-top: 0;
   border-radius: 0 0 var(--radius) var(--radius);
   background: var(--card);
+  box-shadow: inset 1px 0 0 var(--teal), inset -1px 0 0 var(--teal), inset 0 -1px 0 var(--teal);
 }
 .history-detail.is-score {
   gap: 16px;
@@ -1715,6 +1716,8 @@ html[data-theme="dark"] .history-facts .board-chip.no-hints {
   visibility: visible;
 }
 .share-note { flex-basis: 100%; color: var(--mute); font-size: 14px; margin: 0; }
+.share-copy.is-copied { background: var(--teal); border-color: var(--teal); color: #062e2e; }
+.share-live { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 @media (hover: none) and (pointer: coarse) {
   .share-desktop { display: none; }
   .share-phone { display: contents; }

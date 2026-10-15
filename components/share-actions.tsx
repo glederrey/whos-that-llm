@@ -27,6 +27,8 @@ export function ShareActions({ gameId, text }: { gameId: string; text: string })
   const rootRef = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState(false);
   const [note, setNote] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+  const copiedTimer = useRef<number | null>(null);
 
   useLayoutEffect(() => {
     const root = document.documentElement;
@@ -35,6 +37,12 @@ export function ShareActions({ gameId, text }: { gameId: string; text: string })
     const observer = new MutationObserver(apply);
     observer.observe(root, { attributes: true, attributeFilter: ["data-theme"] });
     return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (copiedTimer.current) window.clearTimeout(copiedTimer.current);
+    };
   }, []);
 
   useEffect(() => {
@@ -90,12 +98,20 @@ export function ShareActions({ gameId, text }: { gameId: string; text: string })
     }
   }
 
+  function flashCopy() {
+    setNote(null);
+    setCopied(true);
+    if (copiedTimer.current) window.clearTimeout(copiedTimer.current);
+    copiedTimer.current = window.setTimeout(() => setCopied(false), 700);
+  }
+
   async function copyLink() {
     setOpen(false);
     try {
       await navigator.clipboard.writeText(pageUrl);
-      setNote("The link is copied.");
+      flashCopy();
     } catch {
+      setCopied(false);
       setNote("The link could not be copied.");
     }
   }
@@ -169,12 +185,13 @@ export function ShareActions({ gameId, text }: { gameId: string; text: string })
           Share
         </button>
       </span>
-      <button className="button-quiet share-copy" type="button" onClick={() => void copyLink()}>
+      <button className={`button-quiet share-copy${copied ? " is-copied" : ""}`} type="button" onClick={() => void copyLink()}>
         Copy link
       </button>
       <a className="button-quiet" href={downloadUrl} download={fileName}>
         Download
       </a>
+      <span className="share-live" role="status">{copied ? "The link is copied." : ""}</span>
       {note ? <p className="share-note">{note}</p> : null}
     </div>
   );
