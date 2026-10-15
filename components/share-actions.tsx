@@ -28,7 +28,7 @@ export function ShareActions({ gameId, text }: { gameId: string; text: string })
   const [open, setOpen] = useState(false);
   const [note, setNote] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
-  const copiedTimer = useRef<number | null>(null);
+  const copiedTimers = useRef<number[]>([]);
 
   useLayoutEffect(() => {
     const root = document.documentElement;
@@ -41,7 +41,7 @@ export function ShareActions({ gameId, text }: { gameId: string; text: string })
 
   useEffect(() => {
     return () => {
-      if (copiedTimer.current) window.clearTimeout(copiedTimer.current);
+      for (const id of copiedTimers.current) window.clearTimeout(id);
     };
   }, []);
 
@@ -100,9 +100,17 @@ export function ShareActions({ gameId, text }: { gameId: string; text: string })
 
   function flashCopy() {
     setNote(null);
-    setCopied(true);
-    if (copiedTimer.current) window.clearTimeout(copiedTimer.current);
-    copiedTimer.current = window.setTimeout(() => setCopied(false), 700);
+    for (const id of copiedTimers.current) window.clearTimeout(id);
+    copiedTimers.current = [];
+    const frames = [
+      [0, true],
+      [120, false],
+      [200, true],
+      [320, false],
+    ] as const;
+    for (const [delay, on] of frames) {
+      copiedTimers.current.push(window.setTimeout(() => setCopied(on), delay));
+    }
   }
 
   async function copyLink() {
