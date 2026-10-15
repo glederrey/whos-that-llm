@@ -3,11 +3,10 @@ import { join } from "node:path";
 import { ImageResponse } from "next/og";
 import { shareCardHeight, shareCardImage, shareCardWidth } from "@/lib/share-card-image";
 import { readShareCard } from "@/lib/share-card-load";
+import { shareFileName } from "@/lib/share-card";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
-
-const downloadName = "whos-that-llm.png";
 
 let assets: Promise<{ logo: string; regular: Buffer; bold: Buffer }> | undefined;
 
@@ -45,7 +44,7 @@ export async function GET(request: Request, context: { params: Promise<{ gameId:
     ],
     headers: {
       "Cache-Control": "no-store",
-      "Content-Disposition": download ? `attachment; filename="${downloadName}"` : "inline",
+      "Content-Disposition": download ? `attachment; filename="${shareFileName(card.id)}"` : "inline",
     },
   });
 }

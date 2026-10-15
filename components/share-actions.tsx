@@ -1,13 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { facebookShareUrl, shareCardPath, sharePageUrl, xShareUrl } from "@/lib/share-card";
-
-const fileName = "whos-that-llm.png";
+import { facebookShareUrl, shareCardPath, shareFileName, sharePageUrl, xShareUrl } from "@/lib/share-card";
 
 /** Download on every screen. A phone shares the PNG. A computer opens X and Facebook. */
 export function ShareActions({ gameId, text }: { gameId: string; text: string }) {
   const pageUrl = sharePageUrl(gameId);
+  const fileName = shareFileName(gameId);
   const downloadUrl = `${shareCardPath(gameId)}?download=1`;
   const [note, setNote] = useState<string | null>(null);
 

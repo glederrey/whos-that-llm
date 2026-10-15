@@ -12,6 +12,15 @@ export const difficultyColor: Record<Difficulty, string> = {
 
 export const shareBrand = "Who's that LLM?";
 
+export const shareSite = "whos-that-llm.com";
+
+export type ShareDetail = { label: string; value: string };
+
+/** Unique download name, so two rounds do not overwrite one file. */
+export function shareFileName(gameId: string): string {
+  return `whos-that-llm-${gameId}.png`;
+}
+
 export const shareOutcomes = ["Solved", "Not solved", "Given up"] as const;
 
 export type ShareOutcome = (typeof shareOutcomes)[number];
@@ -28,6 +37,11 @@ export type ShareCard = {
   tokens: number | null;
   /** Hidden on Daily. Other modes may name the model. */
   modelName: string | null;
+  /** The stored breakdown, in order. Empty when this round has no score. */
+  details: ShareDetail[];
+  /** Set when the breakdown does not already name a hint or no-hint mode. */
+  hints: string | null;
+  invite: string;
 };
 
 export type ShareCardInput = {
@@ -121,7 +135,24 @@ export function buildShareCard(input: ShareCardInput): ShareCard | null {
     messages: input.messageCount,
     tokens: tokensFromBreakdown(input.breakdown),
     modelName: daily ? null : hiddenModelName(input.traits, input.modelId),
+    details: detailsFrom(input.breakdown),
+    hints: hintsLine(input.breakdown),
+    invite: input.score === null ? "Come try a round" : `Can you beat ${formatShareNumber(input.score)}?`,
   };
+}
+
+function detailsFrom(lines: ScoreLine[] | null): ShareDetail[] {
+  if (!lines) return [];
+  return lines.map((line) => ({
+    label: line.label,
+    value: line.multiplier && line.multiplier.length > 0 ? line.multiplier : formatShareNumber(line.points ?? 0),
+  }));
+}
+
+function hintsLine(lines: ScoreLine[] | null): string | null {
+  if (!lines) return null;
+  const named = lines.some((line) => line.label === "No-hint" || line.label.endsWith(" hint"));
+  return named ? null : "Hints · none";
 }
 
 export function formatShareNumber(value: number): string {
@@ -141,6 +172,10 @@ export type ShareCardDisplay = {
   messages: string;
   tokensLabel: "Tokens";
   tokens: string;
+  details: ShareDetail[];
+  hints: string | null;
+  invite: string;
+  site: typeof shareSite;
 };
 
 export function shareCardDisplay(card: ShareCard): ShareCardDisplay {
@@ -161,6 +196,10 @@ export function shareCardDisplay(card: ShareCard): ShareCardDisplay {
     messages: formatShareNumber(card.messages),
     tokensLabel: "Tokens",
     tokens: card.tokens === null ? "—" : formatShareNumber(card.tokens),
+    details: card.details,
+    hints: card.hints,
+    invite: card.invite,
+    site: shareSite,
   };
 }
 

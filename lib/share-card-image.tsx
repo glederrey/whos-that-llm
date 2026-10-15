@@ -1,5 +1,5 @@
 import { createElement, type ReactElement } from "react";
-import { shareCardDisplay, type ShareCard } from "./share-card";
+import { shareCardDisplay, type ShareCard, type ShareDetail } from "./share-card";
 
 export const shareCardWidth = 1080;
 export const shareCardHeight = 1350;
@@ -13,6 +13,7 @@ const bar = "#00BBC9";
 /**
  * The 4:5 score card. Satori draws this to a PNG when someone downloads it
  * or when a share preview requests it. Nothing here is the chat.
+ * The teal frame and the rounded corners are part of the image.
  */
 export function shareCardImage(card: ShareCard, logoSrc: string): ReactElement {
   const display = shareCardDisplay(card);
@@ -21,15 +22,15 @@ export function shareCardImage(card: ShareCard, logoSrc: string): ReactElement {
     {
       style: {
         display: "flex",
-        flexDirection: "column",
         width: "100%",
         height: "100%",
-        background: paper,
+        background: bar,
+        borderRadius: 56,
+        padding: 18,
         color: ink,
         fontFamily: "Roboto",
       },
     },
-    createElement("div", { style: { display: "flex", height: 18, background: bar } }),
     createElement(
       "div",
       {
@@ -37,19 +38,26 @@ export function shareCardImage(card: ShareCard, logoSrc: string): ReactElement {
           display: "flex",
           flexDirection: "column",
           flexGrow: 1,
-          padding: "56px 76px 68px",
+          background: paper,
+          borderRadius: 40,
+          padding: "36px 68px 52px",
         },
       },
       createElement(
         "div",
         { style: { display: "flex", alignItems: "center" } },
-        createElement("img", { src: logoSrc, width: 210, height: 210, style: { marginRight: -18 } }),
+        createElement("img", {
+          src: logoSrc,
+          width: 220,
+          height: 220,
+          style: { margin: "-32px -10px -32px -32px" },
+        }),
         createElement(
           "div",
           {
             style: {
               display: "flex",
-              fontSize: 78,
+              fontSize: 76,
               fontWeight: 700,
               lineHeight: 1.02,
               letterSpacing: -2,
@@ -59,28 +67,17 @@ export function shareCardImage(card: ShareCard, logoSrc: string): ReactElement {
           display.title,
         ),
       ),
-      createElement(
-        "div",
-        { style: { display: "flex", alignItems: "baseline", marginTop: 28, fontSize: 48, fontWeight: 700 } },
-        createElement("span", null, display.mode),
-        display.variant
-          ? createElement(
-              "span",
-              { style: { color: display.variantColor ?? ink } },
-              ` · ${display.variant}`,
-            )
-          : null,
-      ),
-      createElement("div", { style: { display: "flex", flexGrow: 1 } }),
+      modeLine(display.mode, display.variant, display.variantColor),
       createElement(
         "div",
         {
           style: {
             display: "flex",
-            fontSize: display.score === "—" ? 96 : 168,
+            marginTop: 36,
+            fontSize: display.score === "—" ? 88 : 132,
             fontWeight: 700,
             lineHeight: 0.9,
-            letterSpacing: display.score === "—" ? 0 : -5,
+            letterSpacing: display.score === "—" ? 0 : -4,
             color: scoreTeal,
           },
         },
@@ -88,23 +85,45 @@ export function shareCardImage(card: ShareCard, logoSrc: string): ReactElement {
       ),
       createElement(
         "div",
-        { style: { display: "flex", marginTop: 18, fontSize: 64, fontWeight: 700, color: ink } },
+        { style: { display: "flex", marginTop: 14, fontSize: 56, fontWeight: 700, color: ink } },
         display.outcome,
       ),
       display.modelName
         ? createElement(
             "div",
-            { style: { display: "flex", marginTop: 16, fontSize: 42, color: mute } },
+            { style: { display: "flex", marginTop: 10, fontSize: 36, color: mute } },
             display.modelName,
+          )
+        : null,
+      display.details.length > 0 || display.hints
+        ? createElement(
+            "div",
+            { style: { display: "flex", flexDirection: "column", marginTop: 28 } },
+            ...display.details.map((line) => detailRow(line)),
+            ...(display.hints ? [detailRow({ label: display.hints, value: "" })] : []),
           )
         : null,
       createElement("div", { style: { display: "flex", flexGrow: 1 } }),
       createElement(
         "div",
+        { style: { display: "flex", flexDirection: "column", marginBottom: 28 } },
+        createElement(
+          "div",
+          { style: { display: "flex", fontSize: 36, fontWeight: 700, color: ink } },
+          display.invite,
+        ),
+        createElement(
+          "div",
+          { style: { display: "flex", marginTop: 6, fontSize: 28, color: mute } },
+          display.site,
+        ),
+      ),
+      createElement(
+        "div",
         {
           style: {
             display: "flex",
-            paddingTop: 28,
+            paddingTop: 22,
             borderTop: `4px solid ${ink}`,
           },
         },
@@ -112,6 +131,33 @@ export function shareCardImage(card: ShareCard, logoSrc: string): ReactElement {
         stat(display.tokensLabel, display.tokens),
       ),
     ),
+  );
+}
+
+function modeLine(mode: string, variant: string | null, variantColor: string | null): ReactElement {
+  return createElement(
+    "div",
+    { style: { display: "flex", alignItems: "center", marginTop: 8, fontSize: 46, fontWeight: 700 } },
+    createElement("span", null, mode),
+    variant
+      ? createElement(
+          "span",
+          { style: { color: ink, paddingLeft: 22, paddingRight: 22 } },
+          "·",
+        )
+      : null,
+    variant ? createElement("span", { style: { color: variantColor ?? ink } }, variant) : null,
+  );
+}
+
+function detailRow(line: ShareDetail): ReactElement {
+  return createElement(
+    "div",
+    { style: { display: "flex", justifyContent: "space-between", marginTop: 8, fontSize: 30 } },
+    createElement("div", { style: { display: "flex", color: mute } }, line.label),
+    line.value
+      ? createElement("div", { style: { display: "flex", fontWeight: 700, color: ink } }, line.value)
+      : null,
   );
 }
 
@@ -124,7 +170,7 @@ function stat(label: string, value: string): ReactElement {
       {
         style: {
           display: "flex",
-          fontSize: 26,
+          fontSize: 24,
           letterSpacing: 3,
           textTransform: "uppercase",
           color: mute,
@@ -134,7 +180,7 @@ function stat(label: string, value: string): ReactElement {
     ),
     createElement(
       "div",
-      { style: { display: "flex", marginTop: 8, fontSize: 64, fontWeight: 700, color: ink } },
+      { style: { display: "flex", marginTop: 6, fontSize: 56, fontWeight: 700, color: ink } },
       value,
     ),
   );

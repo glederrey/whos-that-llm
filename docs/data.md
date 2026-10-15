@@ -198,7 +198,7 @@ One row per round.
 | `finished_at` | timestamptz, null | |
 | `call_started_at` | timestamptz, null | Set while a model call is in flight. A call older than 3 minutes can be claimed again, so a crashed request does not lock the round. Cleared when the reply is stored, aborted, or the round ends |
 
-The share card at `/r/{id}` reads this row: mode, pool, difficulty, status, message count, score, and the token line inside `score_breakdown`. The model name comes from `traits`. Daily leaves that name off the card. The card does not read `messages`. The PNG is drawn when someone downloads it or when a share preview asks for it. It is not stored.
+The share card at `/r/{id}` reads this row: mode, pool, difficulty, status, message count, score, and every line inside `score_breakdown`. The model name comes from `traits`. Daily leaves that name off the card. The card does not read `messages`. The PNG is drawn when someone downloads it or when a share preview asks for it. It is not stored. The download name is `whos-that-llm-` plus the game id.
 
 Indexes:
 

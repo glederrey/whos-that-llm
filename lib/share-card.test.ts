@@ -14,6 +14,7 @@ import {
   facebookShareUrl,
   isShareGameId,
   shareCardDisplay,
+  shareFileName,
   sharePageUrl,
   shareText,
   tokensFromBreakdown,
@@ -103,7 +104,11 @@ test("a finished round becomes a score card", () => {
 
   assert.equal(card({ gameMode: "region", poolKey: "us", difficulty: null }).modeLine, "Region · USA");
   assert.equal(card({ gameMode: "custom", difficulty: null }).modeLine, "Custom");
-  assert.equal(card({ status: "given_up", score: null, breakdown: null, messageCount: 0 }).outcome, "Given up");
+  const givenUp = card({ status: "given_up", score: null, breakdown: null, messageCount: 0 });
+  assert.equal(givenUp.outcome, "Given up");
+  assert.deepEqual(givenUp.details, []);
+  assert.equal(givenUp.hints, null);
+  assert.equal(givenUp.invite, "Come try a round");
   assert.equal(buildShareCard(input({ status: "active" })), null);
 });
 
@@ -152,7 +157,26 @@ test("share text names the round and hides a daily model", () => {
   assert.equal(shareText(quiet), "Given up · Daily · Medium — Who's that LLM?");
   assert.equal(shareCardDisplay(quiet).score, "—");
   assert.equal(shareCardDisplay(quiet).tokens, "—");
+  assert.equal(shareCardDisplay(card()).invite, "Can you beat 1,240?");
+  assert.equal(shareCardDisplay(card()).site, "whos-that-llm.com");
+  assert.equal(card().hints, "Hints · none");
+  const hinted = card({
+    breakdown: [
+      { label: "Year hint", points: -100 },
+      { label: "No-hint", points: null, multiplier: "×2" },
+    ],
+  });
+  assert.equal(hinted.hints, null);
+  assert.deepEqual(hinted.details, [
+    { label: "Year hint", value: "-100" },
+    { label: "No-hint", value: "×2" },
+  ]);
+  assert.equal(shareFileName(idFromCard()), `whos-that-llm-${idFromCard()}.png`);
 });
+
+function idFromCard(): string {
+  return "11111111-1111-4111-8111-111111111111";
+}
 
 test("X and Facebook get the text and the link to this round", () => {
   const id = "11111111-1111-4111-8111-111111111111";
@@ -190,6 +214,13 @@ test("the on-page card and the image leave out the chat and a daily model", () =
   assert.equal(image.includes(hidden), false);
   assert.equal(image.includes(chat), false);
   assert.match(image, /Not solved/);
+  assert.match(image, /border-radius:56px/);
+  assert.match(image, /#00BBC9|rgb\(0, 187, 201\)|#00bbc9/);
+  assert.match(image, />·</);
+  assert.doesNotMatch(image, /· Easy/);
+  assert.match(image, /Can you beat/);
+  assert.match(image, /whos-that-llm\.com/);
+  assert.match(image, /Hints · none/);
 
   const named = renderToStaticMarkup(createElement(ShareCardView, { card: card() }));
   assert.match(named, new RegExp(hidden));
@@ -205,6 +236,7 @@ test("download is always there, and Instagram is not a desktop button", () => {
   assert.match(html, /Share on Facebook/);
   assert.match(html, /share-phone[\s\S]*Share/);
   assert.match(html, /card\.png\?download=1/);
+  assert.match(html, /whos-that-llm-11111111-1111-4111-8111-111111111111\.png/);
   assert.equal(/instagram/i.test(html), false);
 });
 

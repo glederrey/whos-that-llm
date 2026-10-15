@@ -2,7 +2,7 @@
 
 Play routes redirect to `/login` when there is no session, then to `/welcome` when `profiles.username` is null. The landing page and `/login` are the exceptions. Transcripts of other people are never shown.
 
-There is no `/rules` page. The design doc stays private. The main page has a short explanation of each category. The only public scoring text is the short block on the result page.
+There is no `/rules` page. The design doc stays private. The main page has a short explanation of each category. The public scoring text is the breakdown on the result page and [How scoring works](/scoring).
 
 The words below are the copy. Change them here before changing them in components.
 
@@ -233,11 +233,9 @@ One click. The button disables until the response returns. A revealed year shows
 A page, not a popup. Only for `solved`, `miss`, and `given_up`. An active round redirects to the round page. Refresh is safe.
 
 - Logo, model name, company, region, year, and size. Origin names the model here. The round never did.
-- Status line: **Solved on message 2.** or **Miss.** or **Given up. This round is not on the leaderboard.**
-- Summary: **Game mode** is the category name, and **Difficulty** is Easy, Medium, Hard, or Impossible. A round stored with no difficulty says **—**. A round played without hints says **No hints**.
-- The score, then the breakdown, then the short explanation. A give-up before any reply has no score and no breakdown. The status line is enough.
-- A score card above the chat. It is a finished card, about 4:5, not a copy of this page. The question-mark logo and **Who's that LLM?** sit at the top, large enough to read in a feed. The mode line is **Daily · Easy**, **All models · Hard**, and later **Company ·** the company name or **Category ·** the category name. The difficulty word uses the leaderboard colors: Easy `#1c7c43`, Medium `#d4a017`, Hard `#c41b15`, Impossible `#a78bfa`. Then the outcome (**Solved**, **Not solved**, or **Given up**), the score, the messages used, and the tokens that count toward the score. A give-up before any reply shows **—** for the score and the tokens. The card does not show the chat. Daily does not name the hidden model. Other modes may.
-- **Download**, on a computer and on a phone. The PNG is drawn when it is clicked, from the game row. It is not saved.
+- One score card. Inside it: the status line (**Solved on message 2.** or **Miss.** or **Given up. This round is not on the leaderboard.**), then **Game mode** and **Difficulty**. A round stored with no difficulty says **—**. A round played without hints says **No hints**. Then **Your score**, the breakdown, and **Total**. A give-up before any reply has no score and no breakdown.
+- **How scoring works** sits at the bottom of that card and links to `/scoring`. The page does not repeat the formula beside the breakdown.
+- The share buttons sit under the score card. The result page does not show the picture itself. The picture is the download and the public page.
 - On a phone, **Share** opens the system share sheet with that PNG when the browser allows it. That sheet is how the card gets to Instagram. There is no Instagram button.
 - On a computer, **Share on X** and **Share on Facebook** open those sites with the text filled in and a link to this round. If the card cannot be drawn: **The card could not be drawn.** If the phone has no share sheet: **This browser cannot open the share sheet.** If sharing fails: **The card could not be shared.**
 - The transcript
@@ -246,24 +244,9 @@ A page, not a popup. Only for `solved`, `miss`, and `given_up`. An active round 
 
 The score is the integer from [Rules](rules.md), never below 0. When the total comes to less than 0 before the floor, a **Floor at 0** line brings it to 0.
 
-The breakdown is the lines from [Rules](rules.md), in that order, then **Total**. Penalty lines are minus points. The token line and the no-hint line are multiplier rows: token count and the × factor, not points removed. The total is the multiplied result.
+The breakdown is the lines from [Rules](rules.md), in that order, then **Total**. Penalty lines are minus points. The token line and the no-hint line are multiplier rows: token count and the × factor, not points removed. The total is the multiplied result. A finished game keeps the factor it was scored with. The scoring page states the current cap, ×20.
 
-Next to the breakdown, heading **How this score works**, these lines and no others. Fill them with this round's numbers.
-
-> Your score starts from the base and subtracts penalties. That subtotal is multiplied by 10,000 divided by the tokens used, capped at 20, then by 2× if you played with no hints. It is rounded and never goes below 0.
-
-- Base: **2,000** for naming the model.
-- Or, when the model was not named: **Base: 400** — region 100, company 300. Drop a trait that did not match, was given, or was revealed, so a region-only base reads **Base: 100** for the region, a company-only base reads **Base: 300** for the company, and nothing matched reads **Base: 0**.
-- **Hints: Year −100. Size −100.** When none were bought: **Hints: none.**
-- **Wrong guesses: 1 × −100.** When none were made: **Wrong guesses: none.**
-- **Before the multiplier: 2,000 − 200 = 1,800.**
-- **Tokens: 500.** Token factor **×20** (10,000/500). At 2,694 tokens: **Tokens: 2,694.** Token factor **×3.712** (10,000/2,694). At 0 tokens: **Tokens: 0.** Token factor **×20.**
-- When no-hint mode was on and no hint was bought: **No-hint: ×2.**
-- When the total came to less than 0: **The total came to less than 0, so it is shown as 0.**
-
-**How scoring works** links to `/scoring`, including when the round has no score. The public page states the formula once, with one worked example. This result block stays this round's own lines.
-
-That block, plus the public scoring page, is the scoring explanation on the site.
+**How scoring works** links to `/scoring`, including when the round has no score. The public page states the formula once, with one worked example.
 
 Daily stats, later, on a daily result, once at least one daily round has finished:
 
@@ -279,6 +262,10 @@ Public. No session. This is the link Share on X and Share on Facebook use.
 Only a finished game (`solved`, `miss`, or `given_up`). An open round or an unknown id is the not-found page.
 
 The page shows the card and nothing else. No header, no footer, no transcript, no message text. Daily still does not name the hidden model. Other modes may.
+
+The card has a teal frame and rounded corners. The question-mark logo and **Who's that LLM?** sit at the top. The mode line is **Daily · Easy**, **All models · Hard**, and later **Company ·** the company name or **Category ·** the category name. The dot between those words is black, with the same space on both sides. The difficulty word uses the leaderboard colors: Easy `#1c7c43`, Medium `#d4a017`, Hard `#c41b15`, Impossible `#a78bfa`. Then the score, the outcome (**Solved**, **Not solved**, or **Given up**), the model name when this mode may show it, and the breakdown lines. When the breakdown does not already name a hint, the card adds **Hints · none**. Under that: **Can you beat 1,240?** when there is a score, or **Come try a round** when there is not, then **whos-that-llm.com**. The footer is the messages used and the tokens that count toward the score. A give-up before any reply shows **—** for the score and the tokens. The card does not show the chat.
+
+The downloaded file is `whos-that-llm-` plus the game id, then `.png`.
 
 The link preview is that same card. It is drawn when X or Facebook requests it, and it is not stored.
 

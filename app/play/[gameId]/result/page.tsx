@@ -1,9 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import { CompanyLogo } from "@/components/company-logo";
 import { MessageBubble } from "@/components/message-bubble";
-import { ResultSummary } from "@/components/round-facts";
 import { ShareActions } from "@/components/share-actions";
-import { ShareCardView } from "@/components/share-card";
 import { difficultyText, playedRoundFacts } from "@/lib/round-facts";
 import { listGameModes, readPublicGame } from "@/lib/rounds";
 import { currentProfile } from "@/lib/session";
@@ -57,13 +55,24 @@ export default async function ResultPage({ params }: { params: Promise<{ gameId:
           </div>
         </div>
       </div>
-      <p className="status" data-state={state}>
-        {status}
-      </p>
-      <ResultSummary mode={facts.mode} difficulty={difficultyText(facts.difficulty)} noHint={game.noHint} />
-      {game.score !== undefined && game.breakdown && game.explanation ? (
-        <div className="result-grid">
-          <section className="card score-card">
+      <section className="card score-card">
+        <p className="status" data-state={state}>
+          {status}
+        </p>
+        <dl className="summary-list score-facts">
+          <dt>Game mode</dt>
+          <dd>{facts.mode}</dd>
+          <dt>Difficulty</dt>
+          <dd>{difficultyText(facts.difficulty)}</dd>
+          {game.noHint ? (
+            <>
+              <dt>Hints</dt>
+              <dd>No hints</dd>
+            </>
+          ) : null}
+        </dl>
+        {game.score !== undefined && game.breakdown ? (
+          <>
             <p className="score-label">Your score</p>
             <p className="score">{game.score.toLocaleString("en-US")}</p>
             <table className="breakdown">
@@ -80,25 +89,14 @@ export default async function ResultPage({ params }: { params: Promise<{ gameId:
                 </tr>
               </tbody>
             </table>
-          </section>
-          <section className="card explain">
-            <h2>How this score works</h2>
-            {game.explanation.map((line) => (
-              <p key={line}>{line}</p>
-            ))}
-            <p>
-              <a href="/scoring">How scoring works</a>
-            </p>
-          </section>
-        </div>
-      ) : (
-        <p>
+          </>
+        ) : null}
+        <p className="score-link">
           <a href="/scoring">How scoring works</a>
         </p>
-      )}
+      </section>
       {card ? (
         <div className="share-block">
-          <ShareCardView card={card} />
           <ShareActions gameId={card.id} text={shareText(card)} />
         </div>
       ) : null}

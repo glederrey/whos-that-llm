@@ -1088,11 +1088,9 @@ html[data-theme="dark"] .hit { color: var(--teal); }
 .status[data-state="solved"] { background: var(--teal-wash); color: var(--teal-press); border-color: transparent; }
 .status[data-state="miss"] { background: var(--miss-wash); color: var(--miss-press); border-color: transparent; }
 html[data-theme="dark"] .status[data-state="solved"] { color: var(--teal); }
-.result-grid { display: grid; gap: 16px; align-items: start; }
-@media (min-width: 900px) {
-  .result-grid { grid-template-columns: minmax(0, 1fr) 340px; gap: 16px 24px; }
-}
 .score-card { padding: 22px 24px; }
+.score-facts { margin: 14px 0 4px; }
+.score-link { margin: 16px 0 0; }
 .score-label { color: var(--mute); font-size: 12px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.06em; }
 .score {
   font-size: 56px;
@@ -1109,10 +1107,6 @@ html[data-theme="dark"] .score { color: var(--teal); }
 .breakdown td:last-child, .breakdown th:last-child { text-align: right; }
 .breakdown th { font-size: 16px; }
 .breakdown tr:last-child { font-weight: 700; }
-.explain { color: var(--text); font-size: 14px; }
-.explain h2 { font-size: 17px; }
-.explain p { margin: 0 0 8px; color: var(--mute); }
-.explain p:last-child { margin-bottom: 0; }
 .chat-head { display: flex; justify-content: space-between; align-items: baseline; margin-top: 8px; }
 .chat-head h2 { margin: 0; font-size: 18px; }
 
@@ -1608,23 +1602,23 @@ html[data-theme="dark"] .history-facts .board-chip.no-hints {
   *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
 }
 
-/* Share card. A fixed light score card, about 4:5, in both themes. */
+/* Share card. A light score card in both themes, with a teal frame and rounded corners. */
 .share-card {
-  width: min(420px, 100%);
-  aspect-ratio: 4 / 5;
-  background: #ebebeb;
+  width: min(440px, 100%);
+  min-height: calc(min(440px, 100vw - 32px) * 1.25);
+  background: #00bbc9;
   color: #141414;
-  border-radius: 18px;
-  overflow: hidden;
+  border-radius: 22px;
+  padding: 7px;
   display: flex;
-  flex-direction: column;
 }
-.share-card-bar { height: 7px; background: #00bbc9; flex: none; }
 .share-card-body {
   flex: 1;
   display: flex;
   flex-direction: column;
-  padding: 18px 26px 24px;
+  background: #ebebeb;
+  border-radius: 16px;
+  padding: 14px 22px 18px;
   min-height: 0;
 }
 .share-card-brand { display: flex; align-items: center; }
@@ -1636,11 +1630,12 @@ html[data-theme="dark"] .history-facts .board-chip.no-hints {
   letter-spacing: -0.03em;
   font-weight: 700;
 }
-.share-card-mode { margin: 8px 0 0; font-size: 20px; font-weight: 700; line-height: 1.2; }
+.share-card-mode { display: flex; align-items: baseline; margin: 2px 0 0; font-size: 20px; font-weight: 700; line-height: 1.2; }
+.share-card-dot { color: #141414; padding: 0 0.42em; }
 .share-card-score {
-  margin-top: auto;
+  margin: 16px 0 0;
   font-family: var(--font-bold), var(--font), "Segoe UI", sans-serif;
-  font-size: 72px;
+  font-size: 64px;
   line-height: 0.9;
   letter-spacing: -0.045em;
   font-weight: 700;
@@ -1648,8 +1643,15 @@ html[data-theme="dark"] .history-facts .board-chip.no-hints {
 }
 .share-card-score.is-empty { font-size: 48px; letter-spacing: 0; }
 .share-card-outcome { margin: 8px 0 0; font-size: 26px; font-weight: 700; line-height: 1.1; }
-.share-card-model { margin: 6px 0 0; font-size: 18px; color: #52525b; }
-.share-card-stats { display: flex; margin-top: auto; padding-top: 12px; border-top: 3px solid #141414; }
+.share-card-model { margin: 4px 0 0; font-size: 18px; color: #52525b; }
+.share-card-details { display: grid; gap: 3px; margin-top: 14px; }
+.share-card-details div { display: flex; justify-content: space-between; gap: 12px; font-size: 14px; line-height: 1.35; }
+.share-card-details span { color: #52525b; }
+.share-card-details strong { font-weight: 700; color: #141414; }
+.share-card-invite { margin-top: auto; padding-top: 14px; }
+.share-card-invite strong { display: block; font-size: 16px; line-height: 1.2; }
+.share-card-invite span { display: block; margin-top: 2px; font-size: 14px; color: #52525b; }
+.share-card-stats { display: flex; margin-top: 12px; padding-top: 12px; border-top: 3px solid #141414; }
 .share-card-stats div { flex: 1; }
 .share-card-stats span {
   display: block;
@@ -1667,13 +1669,19 @@ html[data-theme="dark"] .history-facts .board-chip.no-hints {
   line-height: 1.1;
   color: #141414;
 }
-html[data-theme="dark"] .share-card { background: #ebebeb; color: #141414; }
+html[data-theme="dark"] .share-card { background: #00bbc9; color: #141414; }
+html[data-theme="dark"] .share-card-body { background: #ebebeb; }
 html[data-theme="dark"] .share-card-score { color: #007f88; }
 html[data-theme="dark"] .share-card-model,
+html[data-theme="dark"] .share-card-details span,
+html[data-theme="dark"] .share-card-invite span,
 html[data-theme="dark"] .share-card-stats span { color: #52525b; }
 html[data-theme="dark"] .share-card-outcome,
 html[data-theme="dark"] .share-card-mode,
+html[data-theme="dark"] .share-card-dot,
 html[data-theme="dark"] .share-card-brand strong,
+html[data-theme="dark"] .share-card-details strong,
+html[data-theme="dark"] .share-card-invite strong,
 html[data-theme="dark"] .share-card-stats strong { color: #141414; }
 .share-block { display: grid; gap: 12px; justify-items: start; }
 .share-actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
