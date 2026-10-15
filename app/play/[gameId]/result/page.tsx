@@ -2,9 +2,11 @@ import { notFound, redirect } from "next/navigation";
 import { CompanyLogo } from "@/components/company-logo";
 import { MessageBubble } from "@/components/message-bubble";
 import { ShareActions } from "@/components/share-actions";
+import { scoreSteps } from "@/lib/game";
 import { difficultyText, playedRoundFacts } from "@/lib/round-facts";
 import { listGameModes, readPublicGame } from "@/lib/rounds";
 import { currentProfile } from "@/lib/session";
+import { difficultyColor } from "@/lib/share-card";
 import { readShareCard } from "@/lib/share-card-load";
 import { shareText } from "@/lib/share-card";
 
@@ -56,40 +58,59 @@ export default async function ResultPage({ params }: { params: Promise<{ gameId:
         </div>
       </div>
       <section className="card score-card">
-        <p className="status" data-state={state}>
-          {status}
-        </p>
-        <dl className="summary-list score-facts">
-          <dt>Game mode</dt>
-          <dd>{facts.mode}</dd>
-          <dt>Difficulty</dt>
-          <dd>{difficultyText(facts.difficulty)}</dd>
-          {game.noHint ? (
-            <>
-              <dt>Hints</dt>
-              <dd>No hints</dd>
-            </>
-          ) : null}
-        </dl>
+        <div className="score-head">
+          {game.score !== undefined && game.breakdown ? (
+            <div>
+              <p className="score-label">Your score</p>
+              <p className="score">{game.score.toLocaleString("en-US")}</p>
+            </div>
+          ) : (
+            <div />
+          )}
+          <div className="score-meta">
+            <p className="status" data-state={state}>
+              {status}
+            </p>
+            <dl>
+              <dt>Game mode</dt>
+              <dd>{facts.mode}</dd>
+              <dt>Difficulty</dt>
+              <dd style={facts.difficulty ? { color: difficultyColor[facts.difficulty] } : undefined}>
+                {difficultyText(facts.difficulty)}
+              </dd>
+              {game.noHint ? (
+                <>
+                  <dt>Hints</dt>
+                  <dd>No hints</dd>
+                </>
+              ) : null}
+            </dl>
+          </div>
+        </div>
         {game.score !== undefined && game.breakdown ? (
-          <>
-            <p className="score-label">Your score</p>
-            <p className="score">{game.score.toLocaleString("en-US")}</p>
-            <table className="breakdown">
-              <tbody>
-                {game.breakdown.map((line) => (
-                  <tr key={line.label}>
-                    <td>{line.label}</td>
-                    <td>{line.multiplier ?? (line.points ?? 0).toLocaleString("en-US")}</td>
-                  </tr>
-                ))}
-                <tr>
-                  <th>Total</th>
-                  <th>{game.score.toLocaleString("en-US")}</th>
+          <table className="breakdown">
+            <thead>
+              <tr>
+                <th></th>
+                <th></th>
+                <th>After</th>
+              </tr>
+            </thead>
+            <tbody>
+              {scoreSteps(game.breakdown, game.score).map((step, index) => (
+                <tr key={`${step.label}-${index}`} className={step.kind === "subtotal" ? "is-subtotal" : undefined}>
+                  <td>{step.label}</td>
+                  <td className="change">{step.change}</td>
+                  <td>{step.after}</td>
                 </tr>
-              </tbody>
-            </table>
-          </>
+              ))}
+              <tr>
+                <th>Total</th>
+                <th></th>
+                <th>{game.score.toLocaleString("en-US")}</th>
+              </tr>
+            </tbody>
+          </table>
         ) : null}
         <p className="score-link">
           <a href="/scoring">How scoring works</a>

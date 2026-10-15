@@ -1089,7 +1089,12 @@ html[data-theme="dark"] .hit { color: var(--teal); }
 .status[data-state="miss"] { background: var(--miss-wash); color: var(--miss-press); border-color: transparent; }
 html[data-theme="dark"] .status[data-state="solved"] { color: var(--teal); }
 .score-card { padding: 22px 24px; }
-.score-facts { margin: 14px 0 4px; }
+.score-head { display: flex; justify-content: space-between; align-items: center; gap: 16px 32px; }
+.score-meta { margin-left: auto; display: grid; justify-items: end; gap: 8px; text-align: right; }
+.score-meta .status { text-align: right; }
+.score-meta dl { display: grid; grid-template-columns: auto auto; gap: 4px 14px; margin: 0; justify-content: end; }
+.score-meta dt { color: var(--mute); font-weight: 500; }
+.score-meta dd { margin: 0; font-weight: 700; }
 .score-link { margin: 16px 0 0; }
 .score-label { color: var(--mute); font-size: 12px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.06em; }
 .score {
@@ -1104,9 +1109,12 @@ html[data-theme="dark"] .status[data-state="solved"] { color: var(--teal); }
 html[data-theme="dark"] .score { color: var(--teal); }
 .breakdown { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
 .breakdown td, .breakdown th { padding: 10px 0; border-top: 1px solid var(--line); text-align: left; }
-.breakdown td:last-child, .breakdown th:last-child { text-align: right; }
-.breakdown th { font-size: 16px; }
-.breakdown tr:last-child { font-weight: 700; }
+.breakdown td.change, .breakdown td:last-child, .breakdown th:last-child { text-align: right; white-space: nowrap; padding-left: 16px; }
+.breakdown thead th { border-top: 0; padding-top: 0; padding-bottom: 4px; font-size: 12px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: var(--mute); }
+.breakdown tbody th { font-size: 16px; }
+.breakdown tbody tr:last-child { font-weight: 700; }
+.breakdown tbody tr.is-subtotal td { font-weight: 700; }
+.breakdown td.change { color: var(--mute); font-weight: 500; }
 .chat-head { display: flex; justify-content: space-between; align-items: baseline; margin-top: 8px; }
 .chat-head h2 { margin: 0; font-size: 18px; }
 
@@ -1587,6 +1595,10 @@ html[data-theme="dark"] .history-facts .board-chip.no-hints {
   .button-quiet.give-up { padding: 8px 12px; min-height: 40px; }
   .candidate { padding: 10px 8px; }
   .score { font-size: 44px; }
+  .score-head { flex-direction: column; align-items: stretch; }
+  .score-meta { margin-left: 0; justify-items: start; text-align: left; }
+  .score-meta .status { text-align: left; }
+  .score-meta dl { justify-content: start; }
   .model-lockup { align-items: flex-start; }
   .dialog { width: calc(100vw - 32px); }
 }

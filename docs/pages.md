@@ -233,7 +233,7 @@ One click. The button disables until the response returns. A revealed year shows
 A page, not a popup. Only for `solved`, `miss`, and `given_up`. An active round redirects to the round page. Refresh is safe.
 
 - Logo, model name, company, region, year, and size. Origin names the model here. The round never did.
-- One score card. Inside it: the status line (**Solved on message 2.** or **Miss.** or **Given up. This round is not on the leaderboard.**), then **Game mode** and **Difficulty**. A round stored with no difficulty says **—**. A round played without hints says **No hints**. Then **Your score**, the breakdown, and **Total**. A give-up before any reply has no score and no breakdown.
+- One score card. **Your score** and the number sit on the left. On the right: the status line (**Solved on message 2.** or **Miss.** or **Given up. This round is not on the leaderboard.**), then **Game mode** and **Difficulty**. A round stored with no difficulty says **—**. A round played without hints says **No hints**. On a phone that right-hand group moves under the score and lines up on the left.
 - **How scoring works** sits at the bottom of that card and links to `/scoring`. The page does not repeat the formula beside the breakdown.
 - The share buttons sit under the score card. The result page does not show the picture itself. The picture is the download and the public page.
 - On a phone, **Share** opens the system share sheet with that PNG when the browser allows it. That sheet is how the card gets to Instagram. There is no Instagram button.
@@ -244,7 +244,7 @@ A page, not a popup. Only for `solved`, `miss`, and `given_up`. An active round 
 
 The score is the integer from [Rules](rules.md), never below 0. When the total comes to less than 0 before the floor, a **Floor at 0** line brings it to 0.
 
-The breakdown is the lines from [Rules](rules.md), in that order, then **Total**. Penalty lines are minus points. The token line and the no-hint line are multiplier rows: token count and the × factor, not points removed. The total is the multiplied result. A finished game keeps the factor it was scored with. The scoring page states the current cap, ×20.
+The breakdown is the lines from [Rules](rules.md), in that order. Each line has the change and an **After** column, the score once that line is applied. Point lines add. The row **Before the multiplier** is the subtotal those points reach. Each later row multiplies that subtotal, and **After** shows the result. **Total** repeats the stored score. Penalty lines are minus points. The token line and the no-hint line are multiplier rows: token count and the × factor, not points removed. A finished game keeps the factor it was scored with. The scoring page states the current cap, ×20. A give-up before any reply has no score and no breakdown.
 
 **How scoring works** links to `/scoring`, including when the round has no score. The public page states the formula once, with one worked example.
 
