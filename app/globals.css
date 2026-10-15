@@ -864,6 +864,18 @@ html[data-theme="dark"] {
     pointer-events: none;
   }
 }
+@supports (animation-timeline: scroll()) {
+  .thread > header::after {
+    opacity: 0;
+    animation: message-bar-fade linear both;
+    animation-timeline: scroll(root);
+    animation-range: 0px 16px;
+  }
+}
+@keyframes message-bar-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
 .meta { display: flex; justify-content: space-between; gap: 8px; color: var(--mute); font-size: 14px; }
 .round-bar {
   justify-content: space-between;
