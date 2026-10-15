@@ -806,10 +806,49 @@ html[data-theme="dark"] {
 
 /* Round */
 .round { display: grid; gap: 16px; }
+.thread { display: contents; }
 .side { display: grid; gap: 16px; align-content: start; }
+.guess-sticky { display: flex; flex-direction: column; gap: 16px; }
 @media (min-width: 900px) {
   .round { grid-template-columns: minmax(0, 1fr) 340px; gap: 16px 24px; }
-  .side { grid-column: 2; grid-row: 1 / span 4; }
+  .thread {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    grid-column: 1;
+    grid-row: 1 / span 4;
+    min-width: 0;
+  }
+  .side {
+    grid-column: 2;
+    grid-row: 1 / span 4;
+    display: flex;
+    flex-direction: column;
+  }
+  /* The message bar and the guess card stay in place until the scroll meets
+     them, then follow the thread. The bar covers the messages underneath. */
+  .thread > header {
+    position: sticky;
+    top: 16px;
+    z-index: 6;
+    background: var(--canvas);
+  }
+  .thread > header::before,
+  .guess-box::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 100%;
+    height: 16px;
+    background: var(--canvas);
+  }
+  .guess-sticky { flex: 1 0 auto; }
+  .guess-box {
+    position: sticky;
+    top: 16px;
+    z-index: 4;
+  }
 }
 .meta { display: flex; justify-content: space-between; gap: 8px; color: var(--mute); font-size: 14px; }
 .round-bar {
@@ -1608,7 +1647,7 @@ html[data-theme="dark"] .history-facts .board-chip.no-hints {
     padding: 16px 0 calc(28px + env(safe-area-inset-bottom));
   }
   .credit { justify-content: center; }
-  .round > header { position: sticky; top: 0; z-index: 10; margin: 0 -12px; padding: 8px 12px; background: var(--canvas); }
+  .thread > header { position: sticky; top: 0; z-index: 10; margin: 0 -12px; padding: 8px 12px; background: var(--canvas); }
   .round-bar { flex-wrap: nowrap; }
   .round-title { min-width: 0; }
   .composer .meta .button { padding: 10px 22px; }

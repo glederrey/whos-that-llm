@@ -231,43 +231,45 @@ export function RoundBoard({ initial }: { initial: PublicGame }) {
 
   return (
     <div className="round">
-      <header>
-        <div className="meta round-bar">
-          <div className="round-title">
-            <span>
-              <strong>
-                Message {shown} of {game.messageLimit}
-              </strong>
-              <span className="muted"> · {game.poolLabel}</span>
-              {game.noHint ? <span className="pill">No hints</span> : null}
-            </span>
-            <span className="progress" aria-hidden="true">
-              {Array.from({ length: game.messageLimit }, (_, index) => (
-                <i key={index} className={index < game.messageNumber ? "on" : index === game.messageNumber ? "now" : undefined} />
-              ))}
-            </span>
+      <div className="thread">
+        <header>
+          <div className="meta round-bar">
+            <div className="round-title">
+              <span>
+                <strong>
+                  Message {shown} of {game.messageLimit}
+                </strong>
+                <span className="muted"> · {game.poolLabel}</span>
+                {game.noHint ? <span className="pill">No hints</span> : null}
+              </span>
+              <span className="progress" aria-hidden="true">
+                {Array.from({ length: game.messageLimit }, (_, index) => (
+                  <i key={index} className={index < game.messageNumber ? "on" : index === game.messageNumber ? "now" : undefined} />
+                ))}
+              </span>
+            </div>
+            <button type="button" className="button-quiet give-up" onClick={() => dialogRef.current?.showModal()} disabled={busy}>
+              Give up
+            </button>
           </div>
-          <button type="button" className="button-quiet give-up" onClick={() => dialogRef.current?.showModal()} disabled={busy}>
-            Give up
-          </button>
+        </header>
+        <div className="transcript">
+          {game.transcript.map((message) => (
+            <MessageBubble key={`${message.turn}-${message.role}`} role={message.role} content={message.content} />
+          ))}
+          {liveUser !== null ? <MessageBubble role="user" content={liveUser} /> : null}
+          {liveAssistant !== null ? <MessageBubble role="assistant" content={liveAssistant} live /> : null}
+          <div ref={endRef} />
         </div>
-      </header>
-      <div className="transcript">
-        {game.transcript.map((message) => (
-          <MessageBubble key={`${message.turn}-${message.role}`} role={message.role} content={message.content} />
-        ))}
-        {liveUser !== null ? <MessageBubble role="user" content={liveUser} /> : null}
-        {liveAssistant !== null ? <MessageBubble role="assistant" content={liveAssistant} live /> : null}
-        <div ref={endRef} />
+        <ChatComposer
+          draft={draft}
+          onDraft={setDraft}
+          onSend={() => void sendMessage()}
+          disabled={inputLocked}
+          limit={config.maxUserChars}
+          notice={notice}
+        />
       </div>
-      <ChatComposer
-        draft={draft}
-        onDraft={setDraft}
-        onSend={() => void sendMessage()}
-        disabled={inputLocked}
-        limit={config.maxUserChars}
-        notice={notice}
-      />
       <aside className="side">
         {showBoard ? (
           <section className="card feedback">
@@ -298,90 +300,94 @@ export function RoundBoard({ initial }: { initial: PublicGame }) {
             ) : null}
           </section>
         ) : null}
-        {game.pastGuesses.length > 0 ? (
-          <section className="card guess-history">
-            <h2>Previous guesses</h2>
-            {game.pastGuesses.map((guess) => (
-              <div key={guess.id} className={guess.id === freshGuessId ? "past-guess arrive" : "past-guess"}>
-                <div className="past-model">
-                  <CompanyLogo src={guess.logoPath} />
-                  <span>
-                    {guess.companyName}
-                    <br />
-                    {guess.name}
-                  </span>
-                </div>
-                {guess.wrong.length > 0 ? (
-                  <p className="wrong-line">{guess.wrong.map((trait) => `Wrong ${trait}`).join(" · ")}</p>
-                ) : (
-                  <p className="wrong-line">Wrong model</p>
-                )}
-              </div>
-            ))}
-          </section>
-        ) : null}
-        {game.awaitingGuess ? (
-          <section className="card stack guess-box">
-            <h2>Guess for message {game.messageNumber}.</h2>
-            <p className="muted">
-              {game.messageNumber < game.messageLimit
-                ? "You can guess, or send another message."
-                : "Last message. Name the model, or give up."}
-            </p>
-            <div className="guess-search">
-              {selectedRow && !listOpen ? (
-                <button type="button" className="picked" onClick={() => setListOpen(true)}>
-                  <CompanyLogo src={selectedRow.logoPath} />
-                  <span>
-                    {selectedRow.companyName}
-                    <br />
-                    {selectedRow.name}
-                  </span>
-                </button>
-              ) : (
-                <input
-                  value={search}
-                  placeholder="Search models"
-                  onChange={(event) => setSearch(event.target.value)}
-                  onFocus={() => {
-                    if (blurTimer.current) window.clearTimeout(blurTimer.current);
-                    setListOpen(true);
-                  }}
-                  onBlur={() => {
-                    blurTimer.current = window.setTimeout(() => setListOpen(false), 160);
-                  }}
-                />
-              )}
-              {listOpen ? (
-                <div className="candidates">
-                  {rows.map((row) => (
-                    <button
-                      key={row.id}
-                      type="button"
-                      className="candidate"
-                      aria-pressed={selected === row.id}
-                      onMouseDown={(event) => event.preventDefault()}
-                      onClick={() => {
-                        setSelected(row.id);
-                        setSearch("");
-                        setListOpen(false);
-                      }}
-                    >
-                      <CompanyLogo src={row.logoPath} />
+        {game.awaitingGuess || game.pastGuesses.length > 0 ? (
+          <div className="guess-sticky">
+            {game.awaitingGuess ? (
+              <section className="card stack guess-box">
+                <h2>Guess for message {game.messageNumber}.</h2>
+                <p className="muted">
+                  {game.messageNumber < game.messageLimit
+                    ? "You can guess, or send another message."
+                    : "Last message. Name the model, or give up."}
+                </p>
+                <div className="guess-search">
+                  {selectedRow && !listOpen ? (
+                    <button type="button" className="picked" onClick={() => setListOpen(true)}>
+                      <CompanyLogo src={selectedRow.logoPath} />
                       <span>
-                        {row.companyName}
+                        {selectedRow.companyName}
                         <br />
-                        {row.name}
+                        {selectedRow.name}
                       </span>
                     </button>
-                  ))}
+                  ) : (
+                    <input
+                      value={search}
+                      placeholder="Search models"
+                      onChange={(event) => setSearch(event.target.value)}
+                      onFocus={() => {
+                        if (blurTimer.current) window.clearTimeout(blurTimer.current);
+                        setListOpen(true);
+                      }}
+                      onBlur={() => {
+                        blurTimer.current = window.setTimeout(() => setListOpen(false), 160);
+                      }}
+                    />
+                  )}
+                  {listOpen ? (
+                    <div className="candidates">
+                      {rows.map((row) => (
+                        <button
+                          key={row.id}
+                          type="button"
+                          className="candidate"
+                          aria-pressed={selected === row.id}
+                          onMouseDown={(event) => event.preventDefault()}
+                          onClick={() => {
+                            setSelected(row.id);
+                            setSearch("");
+                            setListOpen(false);
+                          }}
+                        >
+                          <CompanyLogo src={row.logoPath} />
+                          <span>
+                            {row.companyName}
+                            <br />
+                            {row.name}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  ) : null}
                 </div>
-              ) : null}
-            </div>
-            <button type="button" className="button" disabled={!selected || guessBusy || busy} onClick={() => void guess()}>
-              Submit guess
-            </button>
-          </section>
+                <button type="button" className="button" disabled={!selected || guessBusy || busy} onClick={() => void guess()}>
+                  Submit guess
+                </button>
+              </section>
+            ) : null}
+            {game.pastGuesses.length > 0 ? (
+              <section className="card guess-history">
+                <h2>Previous guesses</h2>
+                {game.pastGuesses.map((guess) => (
+                  <div key={guess.id} className={guess.id === freshGuessId ? "past-guess arrive" : "past-guess"}>
+                    <div className="past-model">
+                      <CompanyLogo src={guess.logoPath} />
+                      <span>
+                        {guess.companyName}
+                        <br />
+                        {guess.name}
+                      </span>
+                    </div>
+                    {guess.wrong.length > 0 ? (
+                      <p className="wrong-line">{guess.wrong.map((trait) => `Wrong ${trait}`).join(" · ")}</p>
+                    ) : (
+                      <p className="wrong-line">Wrong model</p>
+                    )}
+                  </div>
+                ))}
+              </section>
+            ) : null}
+          </div>
         ) : null}
       </aside>
       <dialog ref={dialogRef} className="dialog">

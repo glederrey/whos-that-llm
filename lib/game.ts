@@ -209,7 +209,7 @@ export function missedGuesses(traits: Traits, guesses: RecordedGuess[], noHint: 
   const given = new Set(traits.given);
   return [...guesses]
     .filter((guess) => guess.modelId && !guess.modelCorrect && traits.models[guess.modelId])
-    .sort((a, b) => a.turn - b.turn)
+    .sort((a, b) => b.turn - a.turn)
     .map((guess) => {
       const model = traits.models[guess.modelId as string] as FrozenModel;
       const wrong: PastGuess["wrong"] = [];

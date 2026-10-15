@@ -546,10 +546,10 @@ test("a wrong guess keeps the model and names the traits it missed", () => {
   const named = missedGuesses(traits, guesses, false);
   assert.deepEqual(
     named.map((guess) => guess.id),
-    ["luna", "flash"],
+    ["flash", "luna"],
   );
-  assert.deepEqual(named[0]?.wrong, ["company"]);
-  assert.deepEqual(named[1]?.wrong, ["company", "region"]);
+  assert.deepEqual(named[0]?.wrong, ["company", "region"]);
+  assert.deepEqual(named[1]?.wrong, ["company"]);
   assert.deepEqual(missedGuesses(traits, guesses, true)[0]?.wrong, []);
 });
 
