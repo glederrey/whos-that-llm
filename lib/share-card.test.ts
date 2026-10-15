@@ -148,13 +148,21 @@ test("difficulty words use the leaderboard colors", () => {
 test("share text names the round and hides a daily model", () => {
   const daily = card({ gameMode: "daily", difficulty: "easy" });
   const text = shareText(daily);
-  assert.equal(text, "Solved · 1,240 · Daily · Easy — Who's that LLM?");
+  assert.equal(text, "I scored 1,240 on Who's that LLM? Daily, Easy. Can you beat it?");
   assert.equal(text.includes(hidden), false);
   assert.equal(text.includes(chat), false);
   const named = card({ gameMode: "all", difficulty: "hard" });
-  assert.equal(shareText(named), `Solved · 1,240 · All models · Hard · ${hidden} — Who's that LLM?`);
+  assert.equal(
+    shareText(named),
+    `I scored 1,240 on Who's that LLM? All models, Hard. It was ${hidden}. Can you beat it?`,
+  );
+  const missed = card({ gameMode: "all", difficulty: "hard", status: "miss", score: 400 });
+  assert.equal(
+    shareText(missed),
+    `I scored 400 on Who's that LLM? All models, Hard, and missed the model. It was ${hidden}.`,
+  );
   const quiet = card({ status: "given_up", score: null, breakdown: null, gameMode: "daily", difficulty: "medium" });
-  assert.equal(shareText(quiet), "Given up · Daily · Medium — Who's that LLM?");
+  assert.equal(shareText(quiet), "I gave up on Who's that LLM? Daily, Medium. Come try a round.");
   assert.equal(shareCardDisplay(quiet).score, "—");
   assert.equal(shareCardDisplay(quiet).tokens, "—");
   assert.equal(shareCardDisplay(card()).invite, "Can you beat 1,240?");

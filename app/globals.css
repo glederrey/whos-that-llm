@@ -1601,11 +1601,25 @@ html[data-theme="dark"] .history-facts .board-chip.no-hints {
   .button-quiet.give-up { padding: 8px 12px; min-height: 40px; }
   .candidate { padding: 10px 8px; }
   .score { font-size: 44px; }
-  .score-card .score { font-size: 56px; }
-  .score-head { flex-direction: column; align-items: stretch; }
-  .score-meta { margin-left: 0; justify-items: start; text-align: left; }
-  .score-meta .status { text-align: left; }
-  .score-meta dl { justify-content: start; }
+  .score-card { padding: 18px 16px; }
+  .score-head { align-items: center; gap: 8px 10px; }
+  .score-card .score { font-size: 44px; white-space: nowrap; }
+  .score-head > :first-child { flex: none; }
+  .score-meta { flex: 1 1 auto; gap: 4px; min-width: 0; }
+  .score-meta .status {
+    max-width: 100%;
+    font-size: 12px;
+    line-height: 1.25;
+    padding: 4px 10px;
+    white-space: normal;
+    justify-content: flex-end;
+  }
+  .score-meta dl { font-size: 13px; gap: 2px 8px; }
+  .score-foot { flex-wrap: nowrap; align-items: center; gap: 8px; }
+  .score-card .share-actions { flex-wrap: nowrap; gap: 8px; }
+  .score-card .share-actions .button,
+  .score-card .share-actions .button-quiet { padding: 8px 12px; font-size: 14px; }
+  .score-link { font-size: 14px; white-space: nowrap; }
   .model-lockup { align-items: flex-start; }
   .dialog { width: calc(100vw - 32px); }
 }

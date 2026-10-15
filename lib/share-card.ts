@@ -203,13 +203,21 @@ export function shareCardDisplay(card: ShareCard): ShareCardDisplay {
   };
 }
 
-/** Outcome, score, mode, and the model when this card is allowed to name it. */
+/** A sentence for X, Facebook, and the phone share sheet. Daily still hides the model. */
 export function shareText(card: ShareCard): string {
-  const parts: string[] = [card.outcome];
-  if (card.score !== null) parts.push(formatShareNumber(card.score));
-  parts.push(card.modeLine);
-  if (card.modelName) parts.push(card.modelName);
-  return `${parts.join(" · ")} — ${shareBrand}`;
+  const place = card.modeLine.replace(" · ", ", ");
+  const score = card.score === null ? null : formatShareNumber(card.score);
+  const model = card.modelName ? ` It was ${card.modelName}.` : "";
+  if (card.outcome === "Solved") {
+    if (!score) return `I solved a round of ${shareBrand} ${place}.${model}`;
+    return `I scored ${score} on ${shareBrand} ${place}.${model} Can you beat it?`;
+  }
+  if (card.outcome === "Not solved") {
+    if (!score) return `I missed the model on ${shareBrand} ${place}.${model}`;
+    return `I scored ${score} on ${shareBrand} ${place}, and missed the model.${model}`;
+  }
+  if (!score) return `I gave up on ${shareBrand} ${place}. Come try a round.`;
+  return `I scored ${score} on ${shareBrand} and gave up. ${place}.${model}`;
 }
 
 export function xShareUrl(pageUrl: string, text: string): string {
