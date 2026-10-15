@@ -6,7 +6,7 @@ import { SiteFooter } from "@/components/site-footer";
 import { ThemeInit } from "@/components/theme-init";
 import { sessionIsOwner } from "@/lib/admin-access";
 import { currentProfile } from "@/lib/session";
-import { siteOrigin } from "@/lib/site";
+import { crawlableFavicons, siteOrigin } from "@/lib/site";
 import "./globals.css";
 
 // Latin Roboto, vendored so the standalone release build never resolves Google Fonts.
@@ -34,6 +34,7 @@ export const metadata: Metadata = {
   description: "Ten messages to find the hidden model.",
   icons: {
     icon: [
+      ...crawlableFavicons,
       { url: "/brand/favicon-light-32.png", sizes: "32x32", type: "image/png", media: "(prefers-color-scheme: light)" },
       { url: "/brand/favicon-light-96.png", sizes: "96x96", type: "image/png", media: "(prefers-color-scheme: light)" },
       { url: "/brand/favicon-light-512.png", sizes: "512x512", type: "image/png", media: "(prefers-color-scheme: light)" },
