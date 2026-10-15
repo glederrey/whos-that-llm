@@ -239,8 +239,7 @@ A page, not a popup. Only for `solved`, `miss`, and `given_up`. An active round 
 - On a phone, **Share** opens the system share sheet with that PNG when the browser allows it. That sheet is how the card gets to Instagram. There is no Instagram button.
 - On a computer, **Share on X** and **Share on Facebook** open those sites with a short sentence and a link to this round. A solved round with a named model reads **I scored 9,500 on Who's that LLM? All models, Easy. It was Qwen3.8 Max. Can you beat it?** Daily leaves the model out. A miss says the player missed the model. A give-up with no score says **I gave up on Who's that LLM? Daily, Medium. Come try a round.** If the card cannot be drawn: **The card could not be drawn.** If the phone has no share sheet: **This browser cannot open the share sheet.** If sharing fails: **The card could not be shared.**
 - The transcript
-- **Play again** returns to the lobby. It does not start a round. A company or region round returns to that category's pool picker. Latest returns to the lobby.
-- **Leaderboard**, shown when this category has a leaderboard and the status is `solved` or `miss`
+- **Play again** and **Leaderboard** sit at the top right, level with the model name. **Play again** returns to the lobby. It does not start a round. A company or region round returns to that category's pool picker. Latest returns to the lobby. **Leaderboard** is shown when this category has a leaderboard and the status is `solved` or `miss`. On a phone those two buttons stay under the chat.
 
 The score is the integer from [Rules](rules.md), never below 0. When the total comes to less than 0 before the floor, a **Floor at 0** line brings it to 0.
 

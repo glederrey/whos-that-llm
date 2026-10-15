@@ -42,8 +42,21 @@ export default async function ResultPage({ params }: { params: Promise<{ gameId:
         ? "Miss."
         : "Given up. This round is not on the leaderboard.";
 
+  const nextRound = (
+    <div className="row result-actions">
+      <a className="button" href={again}>
+        Play again
+      </a>
+      {onBoard && (game.status === "solved" || game.status === "miss") ? (
+        <a className="button-quiet" href={`/leaderboard?gameMode=${game.gameMode}${game.difficulty ? `&difficulty=${game.difficulty}` : ""}&period=week`}>
+          Leaderboard
+        </a>
+      ) : null}
+    </div>
+  );
+
   return (
-    <div className="stack">
+    <div className="stack result">
       <div className="model-lockup">
         <CompanyLogo src={game.model.logoPath} />
         <div>
@@ -57,6 +70,7 @@ export default async function ResultPage({ params }: { params: Promise<{ gameId:
           </div>
         </div>
       </div>
+      {nextRound}
       <section className="card score-card">
         <div className="score-head">
           {game.score !== undefined && game.breakdown ? (
@@ -128,16 +142,6 @@ export default async function ResultPage({ params }: { params: Promise<{ gameId:
         {game.transcript.map((message) => (
           <MessageBubble key={`${message.turn}-${message.role}`} role={message.role} content={message.content} />
         ))}
-      </div>
-      <div className="row">
-        <a className="button" href={again}>
-          Play again
-        </a>
-        {onBoard && (game.status === "solved" || game.status === "miss") ? (
-          <a className="button-quiet" href={`/leaderboard?gameMode=${game.gameMode}${game.difficulty ? `&difficulty=${game.difficulty}` : ""}&period=week`}>
-            Leaderboard
-          </a>
-        ) : null}
       </div>
     </div>
   );

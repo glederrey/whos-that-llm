@@ -1069,6 +1069,11 @@ html[data-theme="dark"] .hit { color: var(--teal); }
 .dialog::backdrop { background: rgba(20, 20, 20, 0.5); }
 
 /* Result */
+.result { grid-template-columns: minmax(0, 1fr) auto; align-items: center; }
+.result > .score-card,
+.result > .chat-head,
+.result > .transcript { grid-column: 1 / -1; }
+.result-actions { flex-shrink: 0; justify-self: end; }
 .model-lockup { display: flex; gap: 16px; align-items: center; }
 .model-lockup img { width: 56px; height: 56px; border-radius: 12px; }
 .model-lockup h1 { margin: 0 0 6px; }
@@ -1620,6 +1625,8 @@ html[data-theme="dark"] .history-facts .board-chip.no-hints {
   .score-card .share-actions .button,
   .score-card .share-actions .button-quiet { padding: 8px 12px; font-size: 14px; }
   .score-link { font-size: 14px; white-space: nowrap; }
+  .result { grid-template-columns: 1fr; }
+  .result > .result-actions { order: 5; justify-self: start; }
   .model-lockup { align-items: flex-start; }
   .dialog { width: calc(100vw - 32px); }
 }
