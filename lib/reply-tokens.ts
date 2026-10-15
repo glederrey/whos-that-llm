@@ -111,10 +111,10 @@ export function inputSinceStartMatchesPrompt(views: ReplyTokens[]): boolean {
 export function replyTokenTooltip(tokens: ReplyTokens): string[] {
   const count = (value: number) => value.toLocaleString("en-US");
   return [
+    ...(tokens.provider ? [`Provider: ${tokens.provider}`, ""] : []),
     `Input tokens: ${count(tokens.input)}`,
     `Output tokens: ${count(resentCompletion(tokens.output, tokens.reasoning))}`,
     ...(tokens.gptTokens === null ? [] : [`gpt-tokenizer: ${count(tokens.gptTokens)}`]),
-    ...(tokens.provider ? [`Provider: ${tokens.provider}`] : []),
     `Reasoning tokens: ${count(tokens.reasoning)}`,
     `Cache read tokens: ${count(tokens.cacheRead)}`,
     "",

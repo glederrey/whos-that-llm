@@ -95,7 +95,16 @@ test("reasoning inside the completion count is left out of the output lines", ()
     "Total tokens: 352",
   ]);
   assert.equal(replyTokenTooltip({ ...views[0], gptTokens: 11 })[2], "gpt-tokenizer: 11");
-  assert.equal(replyTokenTooltip({ ...views[0], gptTokens: 11, provider: "chutes" })[3], "Provider: chutes");
+  assert.deepEqual(replyTokenTooltip({ ...views[0], gptTokens: 11, provider: "chutes" }).slice(0, 8), [
+    "Provider: chutes",
+    "",
+    "Input tokens: 341",
+    "Output tokens: 11",
+    "gpt-tokenizer: 11",
+    "Reasoning tokens: 193",
+    "Cache read tokens: 256",
+    "",
+  ]);
   assert.equal(replyTokenTooltip(views[1])[1], "Output tokens: 30");
   assert.equal(replyTokenTooltip(views[1])[7], "Total output tokens: 41");
 });
