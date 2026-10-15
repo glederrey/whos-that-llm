@@ -806,10 +806,75 @@ html[data-theme="dark"] {
 
 /* Round */
 .round { display: grid; gap: 16px; }
+.thread { display: contents; }
 .side { display: grid; gap: 16px; align-content: start; }
+.guess-sticky { display: flex; flex-direction: column; gap: 16px; }
 @media (min-width: 900px) {
   .round { grid-template-columns: minmax(0, 1fr) 340px; gap: 16px 24px; }
-  .side { grid-column: 2; grid-row: 1 / span 4; }
+  .thread {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    grid-column: 1;
+    grid-row: 1 / span 4;
+    min-width: 0;
+  }
+  .side {
+    grid-column: 2;
+    grid-row: 1 / span 4;
+    align-self: start;
+    position: sticky;
+    top: 16px;
+  }
+  /* The message bar and the right column stay put until the scroll meets them,
+     then follow the thread together. The bar covers the messages underneath. */
+  .thread > header {
+    position: sticky;
+    top: 16px;
+    z-index: 6;
+    padding-bottom: 12px;
+    background: var(--canvas);
+  }
+  .thread > header::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 100%;
+    height: 16px;
+    background: var(--canvas);
+  }
+}
+@media (max-width: 899px) {
+  .side,
+  .guess-sticky { display: contents; }
+  .guess-box { order: 1; }
+  .feedback { order: 2; }
+  .guess-history { order: 3; }
+}
+@media (min-width: 900px), (max-width: 560px) {
+  .thread > header::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 100%;
+    height: 56px;
+    background: linear-gradient(var(--canvas), transparent);
+    pointer-events: none;
+  }
+}
+@supports (animation-timeline: scroll()) {
+  .thread > header::after {
+    opacity: 0;
+    animation: message-bar-fade linear both;
+    animation-timeline: scroll(root);
+    animation-range: 0px 16px;
+  }
+}
+@keyframes message-bar-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 .meta { display: flex; justify-content: space-between; gap: 8px; color: var(--mute); font-size: 14px; }
 .round-bar {
@@ -1608,7 +1673,7 @@ html[data-theme="dark"] .history-facts .board-chip.no-hints {
     padding: 16px 0 calc(28px + env(safe-area-inset-bottom));
   }
   .credit { justify-content: center; }
-  .round > header { position: sticky; top: 0; z-index: 10; margin: 0 -12px; padding: 8px 12px; background: var(--canvas); }
+  .thread > header { position: sticky; top: 0; z-index: 10; margin: 0 -12px; padding: 8px 12px; background: var(--canvas); }
   .round-bar { flex-wrap: nowrap; }
   .round-title { min-width: 0; }
   .composer .meta .button { padding: 10px 22px; }
