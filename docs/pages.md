@@ -234,8 +234,8 @@ A page, not a popup. Only for `solved`, `miss`, and `given_up`. An active round 
 
 - Logo, model name, company, region, year, and size. Origin names the model here. The round never did.
 - One score card. **Your score** and the number sit on the left. On the right: the status line (**Solved on message 2.** or **Miss.** or **Given up. This round is not on the leaderboard.**), then **Game mode** and **Difficulty**. A round stored with no difficulty says **—**. A round played without hints says **No hints**. On a phone that right-hand group moves under the score and lines up on the left.
-- **How scoring works** sits at the bottom of that card and links to `/scoring`. The page does not repeat the formula beside the breakdown.
-- The share buttons sit under the score card. The result page does not show the picture itself. The picture is the download and the public page.
+- **How scoring works** sits at the bottom right of that card and opens `/scoring` in a new tab. The page does not repeat the formula beside the breakdown.
+- **Download**, and on a computer **Share on X** and **Share on Facebook**, sit inside the card on the bottom left. The result page does not show the picture itself. The picture is the download and the public page.
 - On a phone, **Share** opens the system share sheet with that PNG when the browser allows it. That sheet is how the card gets to Instagram. There is no Instagram button.
 - On a computer, **Share on X** and **Share on Facebook** open those sites with the text filled in and a link to this round. If the card cannot be drawn: **The card could not be drawn.** If the phone has no share sheet: **This browser cannot open the share sheet.** If sharing fails: **The card could not be shared.**
 - The transcript
@@ -246,7 +246,7 @@ The score is the integer from [Rules](rules.md), never below 0. When the total c
 
 The breakdown is the lines from [Rules](rules.md), in that order. Each line has the change and an **After** column, the score once that line is applied. Point lines add. The row **Before the multiplier** is the subtotal those points reach. Each later row multiplies that subtotal, and **After** shows the result. **Total** repeats the stored score. Penalty lines are minus points. The token line and the no-hint line are multiplier rows: token count and the × factor, not points removed. A finished game keeps the factor it was scored with. The scoring page states the current cap, ×20. A give-up before any reply has no score and no breakdown.
 
-**How scoring works** links to `/scoring`, including when the round has no score. The public page states the formula once, with one worked example.
+**How scoring works** opens `/scoring` in a new tab, including when the round has no score. The public page states the formula once, with one worked example.
 
 Daily stats, later, on a daily result, once at least one daily round has finished:
 

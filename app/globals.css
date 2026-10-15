@@ -1095,8 +1095,14 @@ html[data-theme="dark"] .status[data-state="solved"] { color: var(--teal); }
 .score-meta dl { display: grid; grid-template-columns: auto auto; gap: 4px 14px; margin: 0; justify-content: end; }
 .score-meta dt { color: var(--mute); font-weight: 500; }
 .score-meta dd { margin: 0; font-weight: 700; }
-.score-link { margin: 16px 0 0; }
+.score-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px 16px; margin-top: 18px; flex-wrap: wrap; }
+.score-link { margin: 0 0 0 auto; }
 .score-label { color: var(--mute); font-size: 12px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.06em; }
+.score-card .score {
+  font-size: 76px;
+  margin: 2px 0 0;
+}
+.score-card .breakdown { margin-top: 28px; }
 .score {
   font-size: 56px;
   line-height: 1.05;
@@ -1595,6 +1601,7 @@ html[data-theme="dark"] .history-facts .board-chip.no-hints {
   .button-quiet.give-up { padding: 8px 12px; min-height: 40px; }
   .candidate { padding: 10px 8px; }
   .score { font-size: 44px; }
+  .score-card .score { font-size: 56px; }
   .score-head { flex-direction: column; align-items: stretch; }
   .score-meta { margin-left: 0; justify-items: start; text-align: left; }
   .score-meta .status { text-align: left; }

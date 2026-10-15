@@ -112,15 +112,15 @@ export default async function ResultPage({ params }: { params: Promise<{ gameId:
             </tbody>
           </table>
         ) : null}
-        <p className="score-link">
-          <a href="/scoring">How scoring works</a>
-        </p>
-      </section>
-      {card ? (
-        <div className="share-block">
-          <ShareActions gameId={card.id} text={shareText(card)} />
+        <div className="score-foot">
+          {card ? <ShareActions gameId={card.id} text={shareText(card)} /> : <div />}
+          <p className="score-link">
+            <a href="/scoring" target="_blank" rel="noopener noreferrer">
+              How scoring works
+            </a>
+          </p>
         </div>
-      ) : null}
+      </section>
       <div className="chat-head">
         <h2>The chat</h2>
       </div>
