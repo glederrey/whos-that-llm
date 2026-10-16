@@ -153,17 +153,6 @@ export function ShareActions({ gameId, text }: { gameId: string; text: string })
     pulse(setDownloadFlash, downloadTimers);
   }
 
-  function onNetworkClick(event: MouseEvent<HTMLAnchorElement>, kind: "x" | "copy") {
-    if (kind === "x" || !isPhone()) {
-      if (kind === "copy") void copyText(message, "The message is copied. Paste it into the post.");
-      else setOpen(false);
-      return;
-    }
-    event.preventDefault();
-    void copyText(message, "The message is copied. Paste it into the post.");
-    window.open(event.currentTarget.href, "_blank", "noopener,noreferrer");
-  }
-
   async function copyLink() {
     setOpen(false);
     try {
@@ -176,19 +165,9 @@ export function ShareActions({ gameId, text }: { gameId: string; text: string })
   }
 
   const networks = [
-    { name: "X", href: xShareUrl(pageUrl, text), mark: <XMark />, tip: null },
-    {
-      name: "Facebook",
-      href: facebookShareUrl(pageUrl, text),
-      mark: <FacebookMark />,
-      tip: "The text will be copied. Paste it into the post.",
-    },
-    {
-      name: "LinkedIn",
-      href: linkedInShareUrl(pageUrl),
-      mark: <LinkedInMark />,
-      tip: "The text will be copied. Paste it into the post.",
-    },
+    { name: "X", href: xShareUrl(pageUrl, text), mark: <XMark /> },
+    { name: "Facebook", href: facebookShareUrl(pageUrl, text), mark: <FacebookMark /> },
+    { name: "LinkedIn", href: linkedInShareUrl(pageUrl), mark: <LinkedInMark /> },
   ];
 
   return (
@@ -220,11 +199,13 @@ export function ShareActions({ gameId, text }: { gameId: string; text: string })
               href={network.href}
               target="_blank"
               rel="noopener noreferrer"
-              onClick={(event) => onNetworkClick(event, network.tip ? "copy" : "x")}
+              onClick={() => {
+                setNote(null);
+                setOpen(false);
+              }}
             >
               {network.mark}
               {network.name}
-              {network.tip ? <span className="share-tip">{network.tip}</span> : null}
             </a>
           ))}
           <button

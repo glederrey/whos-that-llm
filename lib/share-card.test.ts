@@ -424,7 +424,8 @@ test("share comes before download, and the networks live in one menu", () => {
     createElement(ShareActions, { gameId: "11111111-1111-4111-8111-111111111111", text: "Solved" }),
   );
   assert.match(html, /class="button"[^>]*>Share<svg[\s\S]*Copy link[\s\S]*Download/);
-  assert.match(html, /The text will be copied\. Paste it into the post\./);
+  assert.equal(html.includes("Paste it into the post."), false);
+  assert.equal(html.includes("The message is copied. Paste it into the post."), false);
   assert.match(html, /The text will be copied\. Paste it into Instagram\./);
   assert.match(html, /share-message[\s\S]*Message/);
   assert.equal(html.includes("share-phone"), false);
