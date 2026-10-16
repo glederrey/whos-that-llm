@@ -99,24 +99,46 @@ export async function saveProviderVerdict(verdict: ProviderVerdict): Promise<voi
   const slug = verdict.slug.trim();
   if (!validProviderSlug(slug)) return;
   const client = clientOrThrow();
-  const { error } = await client.from("openrouter_providers").upsert(
-    {
-      slug,
-      blacklisted: verdict.blacklisted,
-      reason: verdict.reason,
-      model: verdict.model,
-      input_text: verdict.inputText,
-      output_text: verdict.outputText,
-      input_tokens: verdict.inputTokens,
-      output_tokens: verdict.outputTokens,
-      reasoning_tokens: verdict.reasoningTokens,
-      cached_tokens: verdict.cachedTokens,
-      gpt_tokens: verdict.gptTokens,
-      updated_at: new Date().toISOString(),
-    },
-    { onConflict: "slug" },
-  );
-  if (error) throw new Error(error.message);
+  const at = new Date().toISOString();
+  const observed = {
+    model: verdict.model,
+    input_text: verdict.inputText,
+    output_text: verdict.outputText,
+    input_tokens: verdict.inputTokens,
+    output_tokens: verdict.outputTokens,
+    reasoning_tokens: verdict.reasoningTokens,
+    cached_tokens: verdict.cachedTokens,
+    gpt_tokens: verdict.gptTokens,
+    updated_at: at,
+  };
+  if (verdict.blacklisted) {
+    const { error } = await client.from("openrouter_providers").upsert(
+      { slug, blacklisted: true, reason: verdict.reason, ...observed },
+      { onConflict: "slug" },
+    );
+    if (error) throw new Error(error.message);
+    return;
+  }
+
+  const { error } = await client.from("openrouter_providers").insert({
+    slug,
+    blacklisted: false,
+    reason: null,
+    ...observed,
+  });
+  if (!error) return;
+  if (!alreadyStored(error)) throw new Error(error.message);
+
+  const { error: updateError } = await client
+    .from("openrouter_providers")
+    .update(observed)
+    .eq("slug", slug)
+    .eq("blacklisted", false);
+  if (updateError) throw new Error(updateError.message);
+}
+
+function alreadyStored(error: { code?: string; message?: string }): boolean {
+  return error.code === "23505" || /duplicate key/i.test(error.message ?? "");
 }
 
 export async function loadProviderRecords(): Promise<ProviderRecord[]> {

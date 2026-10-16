@@ -112,14 +112,14 @@ anon and authenticated cannot insert, update, or delete `models` or `companies`.
 
 ### `openrouter_providers`
 
-One row per OpenRouter provider slug the server has judged. A missing slug has not been seen. `blacklisted` true is sent as `provider.ignore` on later calls. `0032_openrouter_providers.sql` adds the table, and `v0.3.sql` includes it. anon and authenticated cannot read or write it.
+One row per OpenRouter provider slug that has served a reply, in a normal game or in admin chat. A missing slug has not served one. `blacklisted` true is sent as `provider.ignore` on later calls. A new row is not blacklisted. An existing blacklist stays until it is cleared. `0032_openrouter_providers.sql` adds the table, and `v0.3.sql` includes it. anon and authenticated cannot read or write it.
 
 | Column | Type | Notes |
 |---|---|---|
 | `slug` | text, pk | Provider slug OpenRouter returned, such as `chutes` |
 | `blacklisted` | boolean | True skips the provider. False is trusted and may stream |
 | `reason` | text, null | Written when the row is blacklisted. Date, model, provider, the input and output text, and the token counts |
-| `model` | text, null | OpenRouter model id on the call that wrote the row |
+| `model` | text, null | OpenRouter model id on the latest reply stored for this slug |
 | `input_text` | text, null | The system prompt and messages sent on that call |
 | `output_text` | text, null | The visible reply |
 | `input_tokens` | int, null | Reported prompt tokens |
