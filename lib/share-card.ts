@@ -331,6 +331,13 @@ export function xShareUrl(pageUrl: string, text: string): string {
   return url.toString();
 }
 
+/** A phone post is the text alone. Play here is not followed by a second link. */
+export function phoneTweetUrl(postText: string): string {
+  const url = new URL("https://twitter.com/intent/tweet");
+  url.searchParams.set("text", postText);
+  return url.toString();
+}
+
 export function facebookShareUrl(pageUrl: string, text: string): string {
   const url = new URL("https://www.facebook.com/sharer/sharer.php");
   url.searchParams.set("u", pageUrl);

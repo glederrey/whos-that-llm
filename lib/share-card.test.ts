@@ -18,6 +18,7 @@ import {
   shareCardDisplay,
   shareCardTheme,
   shareFileName,
+  phoneTweetUrl,
   sharePageUrl,
   shareText,
   shareTextForImage,
@@ -238,6 +239,11 @@ test("X and Facebook get the text and the link to this round", () => {
   assert.equal(`${x.origin}${x.pathname}`, "https://twitter.com/intent/tweet");
   assert.equal(x.searchParams.get("text"), text);
   assert.equal(x.searchParams.get("url"), page);
+  const played = shareTextForImage(`Played\n\n${page}`, page);
+  const tweet = new URL(phoneTweetUrl(played));
+  assert.equal(tweet.searchParams.get("text"), played);
+  assert.equal(tweet.searchParams.get("url"), null);
+  assert.match(played, /Play here: https:\/\/www\.whos-that-llm\.com$/);
   const facebook = new URL(facebookShareUrl(page, text));
   assert.equal(`${facebook.origin}${facebook.pathname}`, "https://www.facebook.com/sharer/sharer.php");
   assert.equal(facebook.searchParams.get("u"), page);
@@ -314,7 +320,8 @@ test("share comes before download, and the networks live in one menu", () => {
   assert.match(html, /class="button"[^>]*>Share<svg[\s\S]*Copy link[\s\S]*Download/);
   assert.match(html, /The text will be copied\. Paste it into the post\./);
   assert.match(html, /The text will be copied\. Paste it into Instagram\./);
-  assert.match(html, /share-phone[\s\S]*Share/);
+  assert.match(html, /share-message[\s\S]*Message/);
+  assert.equal(html.includes("share-phone"), false);
   assert.match(html, /share-caret/);
   assert.match(html, /share-network-menu" [^>]*hidden/);
   assert.match(html, />X</);

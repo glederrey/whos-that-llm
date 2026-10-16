@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useId, useLayoutEffect, useRef, useState, type MouseEvent } from "react";
 import {
   facebookShareUrl,
   linkedInShareUrl,
+  phoneTweetUrl,
   shareCardImagePath,
   shareFileName,
   sharePageUrl,
@@ -12,10 +13,38 @@ import {
   xShareUrl,
 } from "@/lib/share-card";
 
-/** Share first. A phone opens the system sheet. A computer opens one menu. Download stays beside it. */
+/** Share first. A computer opens the post menu. A phone opens that menu too, with Message first. Download stays beside it. */
 function browserTheme(): ShareCardTheme {
   if (typeof document === "undefined") return "light";
   return document.documentElement.dataset.theme === "dark" ? "dark" : "light";
+}
+
+function isPhone(): boolean {
+  return window.matchMedia("(hover: none) and (pointer: coarse)").matches;
+}
+
+function canAttachPicture(fileName: string): boolean {
+  if (!navigator.canShare) return false;
+  try {
+    const file = new File([new Blob()], fileName, { type: "image/png" });
+    return navigator.canShare({ files: [file] });
+  } catch {
+    return false;
+  }
+}
+
+function pulse(setOn: (value: boolean) => void, timers: { current: number[] }) {
+  for (const id of timers.current) window.clearTimeout(id);
+  timers.current = [];
+  const frames = [
+    [0, true],
+    [120, false],
+    [200, true],
+    [320, false],
+  ] as const;
+  for (const [delay, on] of frames) {
+    timers.current.push(window.setTimeout(() => setOn(on), delay));
+  }
 }
 
 export function ShareActions({ gameId, text }: { gameId: string; text: string }) {
@@ -28,7 +57,11 @@ export function ShareActions({ gameId, text }: { gameId: string; text: string })
   const [open, setOpen] = useState(false);
   const [note, setNote] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [downloadFlash, setDownloadFlash] = useState(false);
   const copiedTimers = useRef<number[]>([]);
+  const downloadTimers = useRef<number[]>([]);
+  const savingTimer = useRef<number | null>(null);
 
   useLayoutEffect(() => {
     const root = document.documentElement;
@@ -42,6 +75,8 @@ export function ShareActions({ gameId, text }: { gameId: string; text: string })
   useEffect(() => {
     return () => {
       for (const id of copiedTimers.current) window.clearTimeout(id);
+      for (const id of downloadTimers.current) window.clearTimeout(id);
+      if (savingTimer.current) window.clearTimeout(savingTimer.current);
     };
   }, []);
 
@@ -61,7 +96,13 @@ export function ShareActions({ gameId, text }: { gameId: string; text: string })
     };
   }, [open]);
 
+  function phonePostText(): string {
+    if (canAttachPicture(fileName)) return shareTextForImage(text, pageUrl);
+    return text;
+  }
+
   async function onPhoneShare() {
+    setOpen(false);
     setNote(null);
     try {
       const response = await fetch(shareCardImagePath(gameId, browserTheme()));
@@ -88,10 +129,10 @@ export function ShareActions({ gameId, text }: { gameId: string; text: string })
 
   const message = text;
 
-  async function copyMessage(done: string) {
+  async function copyText(value: string, done: string) {
     setOpen(false);
     try {
-      await navigator.clipboard.writeText(message);
+      await navigator.clipboard.writeText(value);
       setNote(done);
     } catch {
       setNote("The message could not be copied.");
@@ -100,17 +141,46 @@ export function ShareActions({ gameId, text }: { gameId: string; text: string })
 
   function flashCopy() {
     setNote(null);
-    for (const id of copiedTimers.current) window.clearTimeout(id);
-    copiedTimers.current = [];
-    const frames = [
-      [0, true],
-      [120, false],
-      [200, true],
-      [320, false],
-    ] as const;
-    for (const [delay, on] of frames) {
-      copiedTimers.current.push(window.setTimeout(() => setCopied(on), delay));
+    pulse(setCopied, copiedTimers);
+  }
+
+  function savingFits(link: HTMLElement): boolean {
+    const word = link.querySelector(".share-download-word");
+    if (!(word instanceof HTMLElement)) return false;
+    const probe = word.cloneNode(false) as HTMLElement;
+    probe.textContent = "Saving…";
+    probe.style.position = "absolute";
+    probe.style.visibility = "hidden";
+    probe.style.whiteSpace = "nowrap";
+    link.appendChild(probe);
+    const fits = probe.offsetWidth <= word.offsetWidth;
+    probe.remove();
+    return fits;
+  }
+
+  function onDownloadClick(event: MouseEvent<HTMLAnchorElement>) {
+    if (!isPhone()) return;
+    if (savingFits(event.currentTarget)) {
+      setSaving(true);
+      if (savingTimer.current) window.clearTimeout(savingTimer.current);
+      savingTimer.current = window.setTimeout(() => setSaving(false), 800);
+      return;
     }
+    pulse(setDownloadFlash, downloadTimers);
+  }
+
+  function onNetworkClick(event: MouseEvent<HTMLAnchorElement>, kind: "x" | "copy") {
+    if (!isPhone()) {
+      if (kind === "copy") void copyText(message, "The message is copied. Paste it into the post.");
+      else setOpen(false);
+      return;
+    }
+    event.preventDefault();
+    const postText = phonePostText();
+    if (kind === "copy") void copyText(postText, "The message is copied. Paste it into the post.");
+    else setOpen(false);
+    if (kind === "x") window.open(phoneTweetUrl(postText), "_blank", "noopener,noreferrer");
+    else window.open(event.currentTarget.href, "_blank", "noopener,noreferrer");
   }
 
   async function copyLink() {
@@ -159,6 +229,9 @@ export function ShareActions({ gameId, text }: { gameId: string; text: string })
           </svg>
         </button>
         <div className="menu share-network-menu" id={menuId} role="menu" hidden={!open}>
+          <button className="menu-item share-message" type="button" role="menuitem" onClick={() => void onPhoneShare()}>
+            Message
+          </button>
           {networks.map((network) => (
             <a
               key={network.name}
@@ -166,10 +239,7 @@ export function ShareActions({ gameId, text }: { gameId: string; text: string })
               href={network.href}
               target="_blank"
               rel="noopener noreferrer"
-              onClick={() => {
-                if (network.tip) void copyMessage("The message is copied. Paste it into the post.");
-                else setOpen(false);
-              }}
+              onClick={(event) => onNetworkClick(event, network.tip ? "copy" : "x")}
             >
               {network.mark}
               {network.name}
@@ -180,7 +250,7 @@ export function ShareActions({ gameId, text }: { gameId: string; text: string })
             className="menu-item"
             type="button"
             role="menuitem"
-            onClick={() => void copyMessage("The message is copied. Paste it into Instagram.")}
+            onClick={() => void copyText(isPhone() ? phonePostText() : message, "The message is copied. Paste it into Instagram.")}
           >
             <InstagramMark />
             Instagram
@@ -188,16 +258,17 @@ export function ShareActions({ gameId, text }: { gameId: string; text: string })
           </button>
         </div>
       </span>
-      <span className="share-phone">
-        <button className="button" type="button" onClick={onPhoneShare}>
-          Share
-        </button>
-      </span>
       <button className={`button-quiet share-copy${copied ? " is-copied" : ""}`} type="button" onClick={() => void copyLink()}>
         Copy link
       </button>
-      <a className="button-quiet" href={downloadUrl} download={fileName}>
-        Download
+      <a
+        className={`button-quiet share-download${downloadFlash ? " is-flash" : ""}`}
+        href={downloadUrl}
+        download={fileName}
+        aria-busy={saving || undefined}
+        onClick={onDownloadClick}
+      >
+        <span className="share-download-word">{saving ? "Saving…" : "Download"}</span>
       </a>
       <span className="share-live" role="status">{copied ? "The link is copied." : ""}</span>
       {note ? <p className="share-note">{note}</p> : null}
