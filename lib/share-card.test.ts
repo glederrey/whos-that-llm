@@ -439,8 +439,8 @@ test("share comes before download, and the networks live in one menu", () => {
   assert.equal(html.includes("Paste it into the post."), false);
   assert.equal(html.includes("The message is copied. Paste it into the post."), false);
   assert.match(html, /The text will be copied\. Paste it into Instagram\./);
-  assert.match(html, /share-message[\s\S]*By message/);
-  assert.match(html, /share-menu-copy[\s\S]*Copy link/);
+  assert.match(html, /share-message[\s\S]*<svg[\s\S]*By message/);
+  assert.match(html, /share-menu-copy[\s\S]*<svg[\s\S]*Copy link/);
   assert.equal(html.includes(">Message<"), false);
   assert.equal(html.includes("share-phone"), false);
   assert.match(html, /share-caret/);
