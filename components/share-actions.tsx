@@ -229,10 +229,13 @@ export function ShareActions({ gameId, text }: { gameId: string; text: string })
         className={`button-quiet share-download${downloadFlash ? " is-flash" : ""}`}
         href={downloadUrl}
         download={fileName}
+        aria-label={saving ? "Saving…" : "Download card"}
         aria-busy={saving || undefined}
         onClick={onDownloadClick}
       >
-        <span className="share-download-word">{saving ? "Saving…" : "Download card"}</span>
+        <span className="share-download-word">
+          {saving ? "Saving…" : <>Download<span className="share-download-extra"> card</span></>}
+        </span>
       </a>
       <span className="share-live" role="status">{copied ? "The link is copied." : ""}</span>
       {note ? <p className="share-note">{note}</p> : null}
