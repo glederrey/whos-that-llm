@@ -1745,6 +1745,8 @@ html[data-theme="dark"] .history-facts .board-chip.no-hints {
 }
 
 /* The public result. The score table uses the site shell. The PNG stays for Download and the link preview. */
+.share-byline { margin: 0; font-size: 20px; line-height: 1.35; }
+.share-hidden { margin: 0; color: var(--mute); }
 .share-cta { margin: 8px 0 0; }
 @media (max-width: 560px) {
   .share-cta .button { display: block; text-align: center; }

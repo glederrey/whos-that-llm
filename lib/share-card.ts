@@ -47,6 +47,8 @@ export type ShareCard = {
   tokens: number | null;
   /** Hidden on a Daily until the UTC day after that puzzle. Other modes may name the model. */
   modelName: string | null;
+  /** Today's Daily on the public page. The player's own result and profile still name the model. */
+  modelHidden: boolean;
   /** Company logo path. Hidden with the name. */
   modelLogoPath: string | null;
   /** Company, region, year, and size. Hidden with the name. */
@@ -58,6 +60,10 @@ export type ShareCard = {
   /** Set when the breakdown does not already name a hint or no-hint mode. */
   hints: string | null;
   invite: string;
+  /** The name stored on the round. Null after the account is cleared. */
+  playerName: string | null;
+  /** The UTC day the round finished, such as October 16, 2026. */
+  playedOn: string | null;
 };
 
 export type ShareCardInput = {
@@ -77,6 +83,10 @@ export type ShareCardInput = {
   dailyKey?: string | null;
   /** Used to decide whether today's Daily may name the model. */
   now?: Date;
+  /** The username stored on the round. */
+  playerName?: string | null;
+  /** When the round finished. */
+  finishedAt?: string | null;
 };
 
 const gameIdPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -196,8 +206,39 @@ export function buildShareCard(input: ShareCardInput): ShareCard | null {
     details: detailsFrom(input.breakdown),
     hints: hintsLine(input.breakdown),
     invite: input.score === null ? "Come try a round" : `Can you beat my score of ${formatShareNumber(input.score)}?`,
+    playerName: cleanPlayerName(input.playerName),
+    playedOn: sharePlayedOn(input.finishedAt),
+    modelHidden: hideModel,
   };
 }
+
+/** October 16, 2026. The day is UTC, the same day a Daily uses. */
+export function sharePlayedOn(value: string | null | undefined): string | null {
+  if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  return new Intl.DateTimeFormat("en-US", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+    timeZone: "UTC",
+  }).format(date);
+}
+
+function cleanPlayerName(value: string | null | undefined): string | null {
+  const name = value?.trim() ?? "";
+  return name.length > 0 ? name : null;
+}
+
+/** Who played, and when. The public page says this. The card image does not. */
+export function shareIntro(playerName: string | null, playedOn: string | null): string | null {
+  if (playerName && playedOn) return `Here are the results of ${playerName}'s game, played on ${playedOn}.`;
+  if (playerName) return `Here are the results of ${playerName}'s game.`;
+  if (playedOn) return `Here are the results of a game played on ${playedOn}.`;
+  return null;
+}
+
+export const dailyModelHiddenNote = "The model is hidden until the next day.";
 
 function detailsFrom(lines: ScoreLine[] | null): ShareDetail[] {
   if (!lines) return [];

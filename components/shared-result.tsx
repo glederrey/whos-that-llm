@@ -1,6 +1,6 @@
 import { Fragment } from "react";
 import { CompanyLogo } from "@/components/company-logo";
-import { shareCardDisplay, type ShareCard } from "@/lib/share-card";
+import { dailyModelHiddenNote, shareCardDisplay, shareIntro, type ShareCard } from "@/lib/share-card";
 
 /** A scored round invites a rematch. A round with no score just invites a game. */
 function playLink(card: ShareCard): string {
@@ -13,9 +13,11 @@ export function SharedResult({ card }: { card: ShareCard }) {
   const state = display.outcome === "Solved" ? "solved" : display.outcome === "Not solved" ? "miss" : "given-up";
   const scored = card.score !== null;
   const noHint = display.details.some((detail) => detail.label === "No-hint");
+  const intro = shareIntro(card.playerName, card.playedOn);
 
   return (
     <div className="stack share-result">
+      {intro ? <p className="share-byline">{intro}</p> : null}
       {display.modelName ? (
         <div className="model-lockup">
           <CompanyLogo src={card.modelLogoPath ?? ""} />
@@ -32,12 +34,14 @@ export function SharedResult({ card }: { card: ShareCard }) {
             ) : null}
           </div>
         </div>
+      ) : card.modelHidden ? (
+        <p className="share-hidden">{dailyModelHiddenNote}</p>
       ) : null}
       <section className="card score-card">
         <div className="score-head">
           {scored ? (
             <div>
-              <p className="score-label">Your score</p>
+              <p className="score-label">Score</p>
               <p className="score">{display.score}</p>
             </div>
           ) : (
