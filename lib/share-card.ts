@@ -324,15 +324,18 @@ function shareFacts(card: ShareCard): string[] {
   return lines;
 }
 
-/** X cannot take the PNG. The round page is the shared URL, so X can preview that page's card. */
+/**
+ * X cannot take the PNG. The round page is the shared URL, so X can preview that page's card.
+ * X appends that URL to the message, so the message ends with a blank line and the link stays on its own.
+ */
 export function xShareUrl(pageUrl: string, text: string): string {
   const url = new URL("https://twitter.com/intent/tweet");
   const suffix = `\n\n${pageUrl}`;
   const body = text.endsWith(suffix)
-    ? text.slice(0, -suffix.length)
+    ? text.slice(0, -pageUrl.length)
     : text.endsWith(pageUrl)
-      ? text.slice(0, -pageUrl.length).trimEnd()
-      : text;
+      ? `${text.slice(0, -pageUrl.length).trimEnd()}\n\n`
+      : `${text.trimEnd()}\n\n`;
   url.searchParams.set("text", body);
   url.searchParams.set("url", pageUrl);
   return url.toString();

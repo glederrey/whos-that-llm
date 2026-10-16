@@ -237,11 +237,11 @@ test("X and Facebook get the text and the link to this round", () => {
   const text = "Solved · 1,240 · Daily · Easy — Who's that LLM?";
   const x = new URL(xShareUrl(page, text));
   assert.equal(`${x.origin}${x.pathname}`, "https://twitter.com/intent/tweet");
-  assert.equal(x.searchParams.get("text"), text);
+  assert.equal(x.searchParams.get("text"), `${text}\n\n`);
   assert.equal(x.searchParams.get("url"), page);
   const played = `Played\n\n${page}`;
   const tweet = new URL(xShareUrl(page, played));
-  assert.equal(tweet.searchParams.get("text"), "Played");
+  assert.equal(tweet.searchParams.get("text"), "Played\n\n");
   assert.equal(tweet.searchParams.get("url"), page);
   assert.equal(tweet.searchParams.get("text")?.includes("Play here"), false);
   assert.equal(tweet.searchParams.get("url")?.includes("/r/"), true);
