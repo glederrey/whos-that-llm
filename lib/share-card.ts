@@ -306,7 +306,7 @@ export function shareText(card: ShareCard): string {
   return blocks.join("\n\n");
 }
 
-/** Phone share already attaches the card image, so the post can point at the game. */
+/** A chat that already attaches the picture can point at the game. A public post does not use this. */
 export function shareTextForImage(text: string, pageUrl: string): string {
   if (!text.endsWith(pageUrl)) return text;
   return `${text.slice(0, -pageUrl.length)}Play here: ${siteOrigin}`;
@@ -324,10 +324,17 @@ function shareFacts(card: ShareCard): string[] {
   return lines;
 }
 
+/** X cannot take the PNG. The round page is the shared URL, so X can preview that page's card. */
 export function xShareUrl(pageUrl: string, text: string): string {
   const url = new URL("https://twitter.com/intent/tweet");
-  url.searchParams.set("text", text);
-  if (!text.includes(pageUrl)) url.searchParams.set("url", pageUrl);
+  const suffix = `\n\n${pageUrl}`;
+  const body = text.endsWith(suffix)
+    ? text.slice(0, -suffix.length)
+    : text.endsWith(pageUrl)
+      ? text.slice(0, -pageUrl.length).trimEnd()
+      : text;
+  url.searchParams.set("text", body);
+  url.searchParams.set("url", pageUrl);
   return url.toString();
 }
 

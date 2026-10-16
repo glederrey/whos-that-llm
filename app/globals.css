@@ -1751,11 +1751,13 @@ html[data-theme="dark"] .history-facts .board-chip.no-hints {
 }
 .share-actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
 .share-desktop { position: relative; display: inline-flex; }
-.share-phone { display: none; }
 .share-network-menu { left: 0; right: auto; min-width: 196px; }
 .menu.share-network-menu[hidden] { display: none; }
 .share-desktop .button { display: inline-flex; align-items: center; gap: 6px; }
 .share-caret { width: 12px; height: 12px; display: block; }
+@media (max-width: 560px) {
+  .share-caret { display: none; }
+}
 .share-network-menu a,
 .share-network-menu .menu-item { position: relative; display: flex; align-items: center; gap: 10px; }
 .share-network-menu svg { width: 18px; height: 18px; flex: none; }
@@ -1788,10 +1790,12 @@ html[data-theme="dark"] .history-facts .board-chip.no-hints {
   visibility: visible;
 }
 .share-note { flex-basis: 100%; color: var(--mute); font-size: 14px; margin: 0; }
-.button-quiet.share-copy { transition-duration: 0.05s; }
-.share-copy.is-copied { background: var(--teal); border-color: var(--teal); color: #062e2e; }
+.button-quiet.share-copy,
+.button-quiet.share-download { transition-duration: 0.05s; }
+.share-copy.is-copied,
+.share-download.is-flash { background: var(--teal); border-color: var(--teal); color: #062e2e; }
+.share-network-menu .share-message { display: none; }
 .share-live { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 @media (hover: none) and (pointer: coarse) {
-  .share-desktop { display: none; }
-  .share-phone { display: contents; }
+  .share-network-menu .share-message { display: flex; }
 }
