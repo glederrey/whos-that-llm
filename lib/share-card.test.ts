@@ -437,7 +437,8 @@ test("share comes before download, and the networks live in one menu", () => {
   );
   assert.match(html, /class="button"[^>]*>Share<svg[\s\S]*Copy link[\s\S]*Download card/);
   assert.equal(html.includes("The message is copied. Paste it into the post."), false);
-  assert.equal(html.match(/This opens the post\. Paste the message\./g)?.length, 3);
+  assert.equal(html.match(/This opens the post\. Paste the message\./g)?.length, 2);
+  assert.equal(html.includes("Instagram"), false);
   assert.match(html, /share-message[\s\S]*<svg[\s\S]*By message/);
   assert.match(html, /share-menu-copy[\s\S]*<svg[\s\S]*Copy link/);
   assert.equal(html.includes(">Message<"), false);
@@ -445,9 +446,7 @@ test("share comes before download, and the networks live in one menu", () => {
   assert.match(html, /share-caret/);
   assert.match(html, /share-network-menu" [^>]*hidden/);
   assert.match(html, />X</);
-  assert.match(html, />Facebook</);
-  assert.match(html, />LinkedIn</);
-  assert.match(html, />Instagram</);
+  assert.ok(html.indexOf(">LinkedIn<") < html.indexOf(">Facebook<"));
   assert.equal(html.includes("Bluesky"), false);
   assert.match(html, /linkedin\.com\/sharing\/share-offsite/);
   assert.match(html, /card\.png\?theme=light&amp;download=1/);

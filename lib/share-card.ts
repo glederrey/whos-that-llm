@@ -338,7 +338,7 @@ export function shareCardAlt(card: ShareCard): string {
   return parts.join(", ");
 }
 
-/** The post for X, Facebook, LinkedIn, Instagram, and the phone share sheet. Today's Daily hides the model. */
+/** The post for X, LinkedIn, Facebook, and the phone share sheet. Today's Daily hides the model. */
 export function shareText(card: ShareCard): string {
   const score = card.score === null ? null : formatShareNumber(card.score);
   const blocks = [
