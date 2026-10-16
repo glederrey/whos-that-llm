@@ -275,13 +275,13 @@ Public. No session. This is the link Share on X and Share on Facebook use. It ha
 
 Only a finished game (`solved`, `miss`, or `given_up`). An open round or an unknown id is the not-found page.
 
-Above the score, the page names the player and the day: **Here are the results of Gael's game, played on October 16, 2026.** The day is the UTC day the round finished. A round with no stored name says **a game**. The player's own result and the profile still name the model on a Daily. This page does not, while that puzzle's UTC day is still today. In place of the name it says **The model is hidden until the next day.** The next UTC day, this page names the model. Other modes name it as soon as the round is finished.
+Above the card, the player's name is the title: **Gael's game.** Under it, quieter: **Played on October 16, 2026.** The day is the UTC day the round finished. A round with no stored name has no title, only the date when one is stored. The player's own result and the profile still name the model on a Daily. This page does not, while that puzzle's UTC day is still today. In the model's place: the game logo, **Model hidden**, and **It will be revealed tomorrow.** The downloaded card uses that same placement. The next UTC day, this page and the card name the model. Other modes name it as soon as the round is finished.
 
 When this round may name the model, the logo, the name, and the company, region, year, and size sit above the card.
 
 **Score** and the number sit on the left. On the right: **Solved on message 2.** or **Miss.** or **Given up.**, then **Game mode** and **Difficulty**. A company, category, or region round names that instead of the difficulty. The difficulty word uses the leaderboard colors: Easy `#1c7c43`, Medium `#d4a017`, Hard `#c41b15`, Impossible `#a78bfa`. A round played without hints says **No hints**.
 
-The breakdown is the full score: each line, the change, and **After**, including **Before the multiplier**, then **Total**. A give-up before any reply has no score and no breakdown. **How scoring works** sits at the bottom right of the card.
+The breakdown is the full score: each line, the change, and **After**, including **Before the multiplier**, then **Total**. A give-up before any reply has no score and no breakdown. This page does not link to **How scoring works**. The player's own result still does.
 
 Under the card, a scored round says **Wanna try to beat this score**. A round with no score says **Wanna try a round**. That link goes to the home page.
 

@@ -230,15 +230,19 @@ function cleanPlayerName(value: string | null | undefined): string | null {
   return name.length > 0 ? name : null;
 }
 
-/** Who played, and when. The public page says this. The card image does not. */
-export function shareIntro(playerName: string | null, playedOn: string | null): string | null {
-  if (playerName && playedOn) return `Here are the results of ${playerName}'s game, played on ${playedOn}.`;
-  if (playerName) return `Here are the results of ${playerName}'s game.`;
-  if (playedOn) return `Here are the results of a game played on ${playedOn}.`;
-  return null;
+/** Gael's game. The date sits on the line under it. */
+export function shareGameTitle(playerName: string | null): string | null {
+  return playerName ? `${playerName}'s game` : null;
 }
 
-export const dailyModelHiddenNote = "The model is hidden until the next day.";
+/** Played on October 16, 2026. */
+export function sharePlayedLine(playedOn: string | null): string | null {
+  return playedOn ? `Played on ${playedOn}.` : null;
+}
+
+export const hiddenModelTitle = "Model hidden";
+
+export const hiddenModelNote = "It will be revealed tomorrow.";
 
 function detailsFrom(lines: ScoreLine[] | null): ShareDetail[] {
   if (!lines) return [];

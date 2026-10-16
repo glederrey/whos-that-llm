@@ -1,5 +1,5 @@
 import { createElement, type CSSProperties, type ReactElement } from "react";
-import { shareCardDisplay, type ShareCard, type ShareCardTheme, type ShareMeta } from "./share-card";
+import { hiddenModelNote, hiddenModelTitle, shareCardDisplay, type ShareCard, type ShareCardTheme, type ShareMeta } from "./share-card";
 
 export const shareCardWidth = 1080;
 export const shareCardHeight = 1350;
@@ -94,33 +94,43 @@ export function shareCardImage(
       ),
       box(
         { flexDirection: "column", flexGrow: 1, justifyContent: "center" },
-        display.modelName
+        card.modelHidden
         ? box(
             { alignItems: "center" },
-            modelLogoSrc
-              ? box(
-                  {
-                    width: 96,
-                    height: 96,
-                    flexShrink: 0,
-                    alignItems: "center",
-                    justifyContent: "center",
-                    background: tone.chip,
-                    borderRadius: 22,
-                    marginRight: 18,
-                  },
-                  createElement("img", { src: modelLogoSrc, width: 72, height: 72 }),
-                )
-              : null,
+            createElement("img", { src: logoSrc, width: 96, height: 96, style: { marginRight: 18 } }),
             box(
               { flexDirection: "column" },
-              text(display.modelName, { fontSize: 44, fontWeight: 700, lineHeight: 1.1 }),
-              display.modelFacts.length > 0 ? factLine(display.modelFacts, tone) : null,
+              text(hiddenModelTitle, { fontSize: 44, fontWeight: 700, lineHeight: 1.1 }),
+              text(hiddenModelNote, { marginTop: 8, fontSize: 26, color: tone.mute }),
             ),
           )
-        : null,
+        : display.modelName
+          ? box(
+              { alignItems: "center" },
+              modelLogoSrc
+                ? box(
+                    {
+                      width: 96,
+                      height: 96,
+                      flexShrink: 0,
+                      alignItems: "center",
+                      justifyContent: "center",
+                      background: tone.chip,
+                      borderRadius: 22,
+                      marginRight: 18,
+                    },
+                    createElement("img", { src: modelLogoSrc, width: 72, height: 72 }),
+                  )
+                : null,
+              box(
+                { flexDirection: "column" },
+                text(display.modelName, { fontSize: 44, fontWeight: 700, lineHeight: 1.1 }),
+                display.modelFacts.length > 0 ? factLine(display.modelFacts, tone) : null,
+              ),
+            )
+          : null,
       box(
-        { alignItems: "center", justifyContent: "space-between", marginTop: display.modelName ? 76 : 0 },
+        { alignItems: "center", justifyContent: "space-between", marginTop: display.modelName || card.modelHidden ? 76 : 0 },
         box(
           { flexDirection: "column" },
           text("Your score", {

@@ -1745,11 +1745,28 @@ html[data-theme="dark"] .history-facts .board-chip.no-hints {
 }
 
 /* The public result. The score table uses the site shell. The PNG stays for Download and the link preview. */
-.share-byline { margin: 0; font-size: 20px; line-height: 1.35; }
-.share-hidden { margin: 0; color: var(--mute); }
+.share-heading h1 { margin: 0; font-size: 28px; line-height: 1.2; letter-spacing: -0.02em; }
+.share-when { margin: 4px 0 0; color: var(--mute); }
+.model-lockup .share-model {
+  margin: 0 0 6px;
+  font-size: 40px;
+  line-height: 1.1;
+  letter-spacing: -0.025em;
+  font-weight: 700;
+}
+.model-lockup img.share-mark {
+  width: 72px;
+  height: 72px;
+  margin: -8px 0 -8px -8px;
+  border: 0;
+  border-radius: 0;
+}
+.share-reveal { margin: 0; color: var(--mute); }
 .share-cta { margin: 8px 0 0; }
+.share-cta .button { display: block; width: 100%; text-align: center; }
 @media (max-width: 560px) {
-  .share-cta .button { display: block; text-align: center; }
+  .share-heading h1 { font-size: 24px; }
+  .model-lockup .share-model { font-size: 32px; }
 }
 .share-actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
 .share-desktop { position: relative; display: inline-flex; }

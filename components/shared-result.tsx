@@ -1,6 +1,13 @@
 import { Fragment } from "react";
 import { CompanyLogo } from "@/components/company-logo";
-import { dailyModelHiddenNote, shareCardDisplay, shareIntro, type ShareCard } from "@/lib/share-card";
+import {
+  hiddenModelNote,
+  hiddenModelTitle,
+  shareCardDisplay,
+  shareGameTitle,
+  sharePlayedLine,
+  type ShareCard,
+} from "@/lib/share-card";
 
 /** A scored round invites a rematch. A round with no score just invites a game. */
 function playLink(card: ShareCard): string {
@@ -13,16 +20,22 @@ export function SharedResult({ card }: { card: ShareCard }) {
   const state = display.outcome === "Solved" ? "solved" : display.outcome === "Not solved" ? "miss" : "given-up";
   const scored = card.score !== null;
   const noHint = display.details.some((detail) => detail.label === "No-hint");
-  const intro = shareIntro(card.playerName, card.playedOn);
+  const title = shareGameTitle(card.playerName);
+  const playedLine = sharePlayedLine(card.playedOn);
 
   return (
     <div className="stack share-result">
-      {intro ? <p className="share-byline">{intro}</p> : null}
+      {title || playedLine ? (
+        <div className="share-heading">
+          {title ? <h1>{title}</h1> : null}
+          {playedLine ? <p className="share-when">{playedLine}</p> : null}
+        </div>
+      ) : null}
       {display.modelName ? (
         <div className="model-lockup">
           <CompanyLogo src={card.modelLogoPath ?? ""} />
           <div>
-            <h1>{display.modelName}</h1>
+            <p className="share-model">{display.modelName}</p>
             {display.modelFacts.length > 0 ? (
               <div className="model-facts">
                 {display.modelFacts.map((fact, index) => (
@@ -35,7 +48,14 @@ export function SharedResult({ card }: { card: ShareCard }) {
           </div>
         </div>
       ) : card.modelHidden ? (
-        <p className="share-hidden">{dailyModelHiddenNote}</p>
+        <div className="model-lockup">
+          <img className="share-mark for-light" src="/brand/logo-tail-right-light.png" alt="" />
+          <img className="share-mark for-dark" src="/brand/logo-tail-right-dark.png" alt="" />
+          <div>
+            <p className="share-model">{hiddenModelTitle}</p>
+            <p className="share-reveal">{hiddenModelNote}</p>
+          </div>
+        </div>
       ) : null}
       <section className="card score-card">
         <div className="score-head">
@@ -92,12 +112,6 @@ export function SharedResult({ card }: { card: ShareCard }) {
             </tbody>
           </table>
         ) : null}
-        <div className="score-foot">
-          <div />
-          <p className="score-link">
-            <a href="/scoring">How scoring works</a>
-          </p>
-        </div>
       </section>
       <p className="share-cta">
         <a className="button button-lg" href="/">

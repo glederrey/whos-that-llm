@@ -20,7 +20,8 @@ import {
   shareCardTheme,
   shareFileName,
   sharePageUrl,
-  shareIntro,
+  shareGameTitle,
+  sharePlayedLine,
   sharePlayedOn,
   shareText,
   shareTextForImage,
@@ -280,6 +281,8 @@ test("the public picture and the download are the same card", () => {
   assert.match(image, /After/);
   assert.match(image, /Before the multiplier/);
   assert.match(image, /Total/);
+  assert.match(image, /Model hidden/);
+  assert.match(image, /It will be revealed tomorrow/);
   assert.equal(image.includes(hidden), false);
   assert.equal(image.includes(decoy), false);
   assert.equal(image.includes(chat), false);
@@ -305,6 +308,7 @@ test("the public picture and the download are the same card", () => {
   assert.match(namedImage, /bbbb/);
   assert.match(namedImage, /Anthropic/);
   assert.match(namedImage, /Solved on message/);
+  assert.equal(namedImage.includes("Model hidden"), false);
   assert.equal(namedImage.includes(decoy), false);
   assert.match(shareCardAlt(named), new RegExp(hidden));
 
@@ -326,7 +330,7 @@ test("the public result is the score table and a link home", () => {
   assert.match(html, new RegExp(hidden));
   assert.match(html, /Wanna try to beat this score/);
   assert.match(html, /href="\/"/);
-  assert.match(html, /href="\/scoring"/);
+  assert.equal(html.includes("How scoring works"), false);
   assert.equal(html.includes("transcript"), false);
   assert.equal(html.includes(chat), false);
   assert.equal(html.includes(decoy), false);
@@ -336,7 +340,9 @@ test("the public result is the score table and a link home", () => {
   const daily = card({ gameMode: "daily", difficulty: "easy" });
   const dailyHtml = renderToStaticMarkup(createElement(SharedResult, { card: daily }));
   assert.equal(dailyHtml.includes(hidden), false);
-  assert.match(dailyHtml, /The model is hidden until the next day/);
+  assert.match(dailyHtml, /Model hidden/);
+  assert.match(dailyHtml, /It will be revealed tomorrow/);
+  assert.match(dailyHtml, /logo-tail-right/);
   assert.match(dailyHtml, /Daily/);
   assert.match(dailyHtml, /Easy/);
   assert.match(dailyHtml, /#1c7c43/);
@@ -355,8 +361,10 @@ test("the public result is the score table and a link home", () => {
   assert.equal(today.playedOn, "October 16, 2026");
   const todayHtml = renderToStaticMarkup(createElement(SharedResult, { card: today }));
   assert.equal(todayHtml.includes(hidden), false);
-  assert.match(todayHtml, /Here are the results of Gael&#x27;s game, played on October 16, 2026\.|Here are the results of Gael's game, played on October 16, 2026\./);
-  assert.match(todayHtml, /The model is hidden until the next day/);
+  assert.match(todayHtml, /Gael&#x27;s game|Gael's game/);
+  assert.match(todayHtml, /Played on October 16, 2026\./);
+  assert.match(todayHtml, /Model hidden/);
+  assert.match(todayHtml, /It will be revealed tomorrow/);
   const yesterday = card({
     gameMode: "daily",
     difficulty: "easy",
@@ -369,7 +377,8 @@ test("the public result is the score table and a link home", () => {
   assert.equal(yesterday.modelName, hidden);
   const yesterdayHtml = renderToStaticMarkup(createElement(SharedResult, { card: yesterday }));
   assert.match(yesterdayHtml, new RegExp(hidden));
-  assert.equal(yesterdayHtml.includes("hidden until the next day"), false);
+  assert.equal(yesterdayHtml.includes("Model hidden"), false);
+  assert.match(yesterdayHtml, /Played on October 15, 2026\./);
 
   const company = card({ gameMode: "company", poolKey: "anthropic", difficulty: null });
   const companyHtml = renderToStaticMarkup(createElement(SharedResult, { card: company }));
@@ -407,14 +416,17 @@ test("the public result is the score table and a link home", () => {
   assert.match(played, /transcript/);
   assert.match(played, /shareText/);
   assert.match(played, /game\.model/);
-  assert.doesNotMatch(played, /hidden until the next day|modelHidden/);
+  assert.doesNotMatch(played, /Model hidden|modelHidden/);
+  const scoreCard = fs.readFileSync(path.join(root, "components/score-card.tsx"), "utf8");
+  assert.match(scoreCard, /How scoring works/);
+  assert.doesNotMatch(view, /How scoring works/);
   const profile = fs.readFileSync(path.join(root, "lib/profile-data.ts"), "utf8");
   assert.match(profile, /modelName: finished \? \(frozen\?\.name/);
-  assert.doesNotMatch(profile, /hidden until the next day|modelHidden/);
-  assert.equal(shareIntro("Gael", "October 16, 2026"), "Here are the results of Gael's game, played on October 16, 2026.");
-  assert.equal(shareIntro("Gael", null), "Here are the results of Gael's game.");
-  assert.equal(shareIntro(null, "October 16, 2026"), "Here are the results of a game played on October 16, 2026.");
-  assert.equal(shareIntro(null, null), null);
+  assert.doesNotMatch(profile, /Model hidden|modelHidden/);
+  assert.equal(shareGameTitle("Gael"), "Gael's game");
+  assert.equal(shareGameTitle(null), null);
+  assert.equal(sharePlayedLine("October 16, 2026"), "Played on October 16, 2026.");
+  assert.equal(sharePlayedLine(null), null);
   assert.equal(sharePlayedOn("2026-10-16T00:30:00.000Z"), "October 16, 2026");
   assert.equal(sharePlayedOn("not-a-date"), null);
 });
