@@ -55,7 +55,7 @@ type GameRow = {
 
 type RpcResult = { ok: boolean; error?: string; gameId?: string; nextAt?: string };
 
-export type ApiFailure = { status: number; error: string; nextAt?: string; paused?: boolean };
+export type ApiFailure = { status: number; error: string; nextAt?: string; paused?: boolean; gameId?: string };
 
 export function serviceOrThrow() {
   const client = createServiceClient();
@@ -72,7 +72,7 @@ function fromRpc(result: RpcResult): ApiFailure | null {
   if (result.error === "paused") return fail(503, "paused");
   if (result.error === "not_found") return fail(404, "not_found");
   if (result.error === "username") return fail(422, "username");
-  if (result.error === "active_game") return fail(409, "active_game");
+  if (result.error === "active_game") return fail(409, "active_game", { gameId: result.gameId });
   if (result.error === "daily_done") return fail(409, "daily_done");
   if (result.error === "hourly_cap") return fail(429, "hourly_cap", { nextAt: result.nextAt });
   if (result.error === "conflict") return fail(409, "conflict");
@@ -208,10 +208,10 @@ export async function lobbyState(userId: string) {
   const client = serviceOrThrow();
   const since = new Date(Date.now() - 60 * 60 * 1000).toISOString();
   const day = utcDayKey();
-  const [{ data: settings }, { count }, { data: active }, { data: dailyToday }, catalog] = await Promise.all([
+  const [{ data: settings }, { count }, activeResult, { data: dailyToday }, catalog] = await Promise.all([
     client.from("app_settings").select("paused").eq("id", 1).single(),
     client.from("games").select("id", { count: "exact", head: true }).eq("user_id", userId).gt("started_at", since),
-    client.from("games").select("id, game_mode, difficulty").eq("user_id", userId).eq("status", "active").maybeSingle(),
+    client.from("games").select("id, game_mode, difficulty").eq("user_id", userId).eq("status", "active"),
     client.from("games").select("status, difficulty").eq("user_id", userId).eq("game_mode", "daily").like("daily_key", `${day}:%`),
     loadCatalog(client),
   ]);
@@ -229,13 +229,17 @@ export async function lobbyState(userId: string) {
       nextAt = new Date(new Date(oldest.started_at as string).getTime() + 60 * 60 * 1000).toISOString();
     }
   }
+  if (activeResult.error) throw new Error(activeResult.error.message);
   return {
     paused: Boolean(settings?.paused),
     played: count ?? 0,
     cap: config.hourlyCap,
-    activeGameId: (active?.id as string | undefined) ?? null,
-    activeGameMode: (active?.game_mode as string | undefined) ?? null,
-    activeGameDifficulty: difficultyFromStored(active?.difficulty),
+    openGames: (activeResult.data ?? []).flatMap((row) => {
+      const id = typeof row.id === "string" ? row.id : null;
+      const mode = typeof row.game_mode === "string" ? row.game_mode : null;
+      if (!id || !mode) return [];
+      return [{ id, mode, difficulty: difficultyFromStored(row.difficulty) }];
+    }),
     dailyFinished: (dailyToday ?? []).flatMap((row) => {
       if (row.status === "active") return [];
       const level = difficultyFromStored(row.difficulty);

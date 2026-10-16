@@ -203,7 +203,7 @@ The share card at `/r/{id}` reads this row: mode, pool, difficulty, status, mess
 Indexes:
 
 - `(user_id, started_at desc)` for the hourly count and, later, the profile history
-- unique `(user_id)` where `status = 'active'`
+- unique `(user_id, game_mode, difficulty)` where `status = 'active'`. One unfinished round per mode and difficulty. Easy can stay open while Medium starts. `0033_one_active_per_difficulty.sql` replaces the older unique `(user_id)` index. It does not rewrite existing games
 - unique `(user_id, daily_key)` where `daily_key is not null`. One Daily round per account per difficulty per UTC day, because the key includes the difficulty. `start_game` writes `daily_key` only for `daily`
 - `(category, status, finished_at)` for the leaderboard
 
