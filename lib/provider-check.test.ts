@@ -10,6 +10,7 @@ import {
   openRouterRequestOptions,
   formatOutputGap,
   outputAboveCount,
+  providerBlacklisted,
   outputGapPercent,
   revealStride,
   revealWords,
@@ -36,6 +37,9 @@ test("a provider is blacklisted only when it reports no reasoning and the gap is
   assert.equal(outputAboveCount(0, 0, 0), false);
   assert.equal(outputAboveCount(0, 5, 0), false);
   assert.equal(outputAboveCount(0, 17, 0), true);
+  assert.equal(providerBlacklisted(false, true), false);
+  assert.equal(providerBlacklisted(true, false), false);
+  assert.equal(providerBlacklisted(true, true), true);
   assert.equal(outputGapPercent(180, 1000, 0), 456);
   assert.equal(formatOutputGap(254, 450, 153), "+17%");
   assert.equal(formatOutputGap(100, 80, 0), "-20%");
@@ -149,6 +153,12 @@ test("the provider page lists both tables and can clear a blacklist", () => {
   assert.match(nav, /href="\/admin\/providers"/);
   assert.match(openrouter, /includeRawChunks: true/);
   assert.match(openrouter, /outputAboveCount/);
+  assert.match(openrouter, /providerBlacklisted\(input\.reasoning, over\)/);
+  assert.match(openrouter, /if \(outcome\.slug\) await remember/);
+  const providers = fs.readFileSync(path.join(root, "lib/openrouter-providers.ts"), "utf8");
+  assert.match(providers, /blacklisted: false/);
+  assert.match(providers, /\.eq\("blacklisted", false\)/);
+  assert.match(providers, /23505/);
   assert.match(openrouter, /out\.reveal\(text\)/);
   assert.match(openrouter, /emitPaced/);
   assert.match(config, /maxOutputTokens: 2000/);

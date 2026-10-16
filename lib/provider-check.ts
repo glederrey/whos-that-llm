@@ -61,6 +61,14 @@ export function outputAboveCount(gptTokens: number, output: number, reasoning: n
   return gap > outputGapSlack && visible * 5 > gptTokens * 6;
 }
 
+/**
+ * Only a reasoning reply that fails {@link outputAboveCount} is blacklisted.
+ * A model that does not reason is not judged, so a new provider is stored and left off the blacklist.
+ */
+export function providerBlacklisted(reasoning: boolean, over: boolean): boolean {
+  return reasoning && over;
+}
+
 export function outputGapPercent(gptTokens: number, output: number, reasoning: number): number {
   const visible = visibleOutput(output, reasoning);
   const base = Math.max(gptTokens, 1);

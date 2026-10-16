@@ -10,6 +10,7 @@ import {
   formatSentTranscript,
   openRouterRequestOptions,
   outputAboveCount,
+  providerBlacklisted,
   providerSlug,
   canonicalProviderSlug,
 } from "./provider-check";
@@ -158,28 +159,20 @@ export async function streamHiddenReply(input: {
       onWord: input.onWord,
     });
     if (!outcome.ok) return outcome.reply;
-    if (!input.reasoning) {
-      await outcome.done();
+
+    const over = input.reasoning
+      ? outputAboveCount(outcome.reply.gptTokens, outcome.reply.tokens.output, outcome.reply.tokens.reasoning)
+      : false;
+    const blacklisted = providerBlacklisted(input.reasoning, over);
+    if (outcome.slug) await remember(verdict(input.openrouterId, outcome, blacklisted));
+
+    if (!input.reasoning || outcome.streamed || !blacklisted) {
+      if (outcome.streamed || !input.reasoning) await outcome.done();
+      else await outcome.reveal();
       return outcome.reply;
     }
 
-    const over = outputAboveCount(outcome.reply.gptTokens, outcome.reply.tokens.output, outcome.reply.tokens.reasoning);
-    if (outcome.streamed) {
-      if (over && outcome.slug) await remember(verdict(input.openrouterId, outcome, true));
-      await outcome.done();
-      return outcome.reply;
-    }
-
-    if (!over) {
-      if (outcome.slug && !book.trusted.has(outcome.slug)) await remember(verdict(input.openrouterId, outcome, false));
-      await outcome.reveal();
-      return outcome.reply;
-    }
-
-    if (outcome.slug) {
-      await remember(verdict(input.openrouterId, outcome, true));
-      if (!ignored.includes(outcome.slug)) ignored.push(outcome.slug);
-    }
+    if (outcome.slug && !ignored.includes(outcome.slug)) ignored.push(outcome.slug);
     if (attempt === 1 || !outcome.slug) {
       await outcome.reveal();
       return outcome.reply;

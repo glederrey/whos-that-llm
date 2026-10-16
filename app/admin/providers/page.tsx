@@ -27,10 +27,13 @@ export default async function ProvidersPage({
       <SectionNav />
       <h1>OpenRouter providers</h1>
       <p className="muted">
-        A reasoning reply from a provider we have not seen is held, counted, then stored here. Trusted providers stream
-        on the next call. A provider that reports reasoning tokens is trusted. A provider that reports none is
-        blacklisted when the output, with reasoning removed, is more than 20% above the gpt-tokenizer count and more
-        than 16 tokens above it. Output in this table is that same count. Deblacklist puts a provider back on trial.
+        Every provider that serves a reply is stored here, from a normal game and from admin chat, including one that
+        passes the check. A new row is not blacklisted. A reasoning reply from a provider we have not seen is held,
+        counted, then released. Trusted providers stream on the next call. A provider that reports reasoning tokens is
+        trusted. A provider that reports none is blacklisted when the output, with reasoning removed, is more than 20%
+        above the gpt-tokenizer count and more than 16 tokens above it. A model that does not reason is not judged by
+        that check. Output in this table is that same count. Deblacklist puts a provider back on trial. A later reply
+        does not clear an existing blacklist.
       </p>
       {failed ? (
         <p className="error" role="alert">
@@ -45,7 +48,7 @@ export default async function ProvidersPage({
       <h2>Blacklisted</h2>
       <ProviderTable rows={blacklisted} empty="No provider is blacklisted." blacklisted />
       <h2>Trusted</h2>
-      <ProviderTable rows={trusted} empty="No provider has passed the check yet." blacklisted={false} />
+      <ProviderTable rows={trusted} empty="No provider has served a reply yet." blacklisted={false} />
     </div>
   );
 }
