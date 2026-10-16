@@ -4,7 +4,6 @@ import { useEffect, useId, useLayoutEffect, useRef, useState, type MouseEvent } 
 import {
   facebookShareUrl,
   linkedInShareUrl,
-  phoneTweetUrl,
   shareCardImagePath,
   shareFileName,
   sharePageUrl,
@@ -21,16 +20,6 @@ function browserTheme(): ShareCardTheme {
 
 function isPhone(): boolean {
   return window.matchMedia("(hover: none) and (pointer: coarse)").matches;
-}
-
-function canAttachPicture(fileName: string): boolean {
-  if (!navigator.canShare) return false;
-  try {
-    const file = new File([new Blob()], fileName, { type: "image/png" });
-    return navigator.canShare({ files: [file] });
-  } catch {
-    return false;
-  }
 }
 
 function pulse(setOn: (value: boolean) => void, timers: { current: number[] }) {
@@ -95,11 +84,6 @@ export function ShareActions({ gameId, text }: { gameId: string; text: string })
       document.removeEventListener("keydown", onKey);
     };
   }, [open]);
-
-  function phonePostText(): string {
-    if (canAttachPicture(fileName)) return shareTextForImage(text, pageUrl);
-    return text;
-  }
 
   async function onPhoneShare() {
     setOpen(false);
@@ -170,17 +154,14 @@ export function ShareActions({ gameId, text }: { gameId: string; text: string })
   }
 
   function onNetworkClick(event: MouseEvent<HTMLAnchorElement>, kind: "x" | "copy") {
-    if (!isPhone()) {
+    if (kind === "x" || !isPhone()) {
       if (kind === "copy") void copyText(message, "The message is copied. Paste it into the post.");
       else setOpen(false);
       return;
     }
     event.preventDefault();
-    const postText = phonePostText();
-    if (kind === "copy") void copyText(postText, "The message is copied. Paste it into the post.");
-    else setOpen(false);
-    if (kind === "x") window.open(phoneTweetUrl(postText), "_blank", "noopener,noreferrer");
-    else window.open(event.currentTarget.href, "_blank", "noopener,noreferrer");
+    void copyText(message, "The message is copied. Paste it into the post.");
+    window.open(event.currentTarget.href, "_blank", "noopener,noreferrer");
   }
 
   async function copyLink() {
@@ -250,7 +231,7 @@ export function ShareActions({ gameId, text }: { gameId: string; text: string })
             className="menu-item"
             type="button"
             role="menuitem"
-            onClick={() => void copyText(isPhone() ? phonePostText() : message, "The message is copied. Paste it into Instagram.")}
+            onClick={() => void copyText(message, "The message is copied. Paste it into Instagram.")}
           >
             <InstagramMark />
             Instagram

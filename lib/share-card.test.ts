@@ -18,7 +18,6 @@ import {
   shareCardDisplay,
   shareCardTheme,
   shareFileName,
-  phoneTweetUrl,
   sharePageUrl,
   shareText,
   shareTextForImage,
@@ -239,11 +238,13 @@ test("X and Facebook get the text and the link to this round", () => {
   assert.equal(`${x.origin}${x.pathname}`, "https://twitter.com/intent/tweet");
   assert.equal(x.searchParams.get("text"), text);
   assert.equal(x.searchParams.get("url"), page);
-  const played = shareTextForImage(`Played\n\n${page}`, page);
-  const tweet = new URL(phoneTweetUrl(played));
-  assert.equal(tweet.searchParams.get("text"), played);
-  assert.equal(tweet.searchParams.get("url"), null);
-  assert.match(played, /Play here: https:\/\/www\.whos-that-llm\.com$/);
+  const played = `Played\n\n${page}`;
+  const tweet = new URL(xShareUrl(page, played));
+  assert.equal(tweet.searchParams.get("text"), "Played");
+  assert.equal(tweet.searchParams.get("url"), page);
+  assert.equal(tweet.searchParams.get("text")?.includes("Play here"), false);
+  assert.equal(tweet.searchParams.get("url")?.includes("/r/"), true);
+  assert.match(shareTextForImage(played, page), /Play here: https:\/\/www\.whos-that-llm\.com$/);
   const facebook = new URL(facebookShareUrl(page, text));
   assert.equal(`${facebook.origin}${facebook.pathname}`, "https://www.facebook.com/sharer/sharer.php");
   assert.equal(facebook.searchParams.get("u"), page);
