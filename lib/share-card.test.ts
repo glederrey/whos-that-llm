@@ -5,6 +5,7 @@ import test from "node:test";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { ShareActions } from "../components/share-actions";
+import { SharedResult } from "../components/shared-result";
 import { rulesForGameMode } from "./config";
 import { scoreRound, type Traits } from "./game";
 import {
@@ -19,6 +20,9 @@ import {
   shareCardTheme,
   shareFileName,
   sharePageUrl,
+  shareGameTitle,
+  sharePlayedLine,
+  sharePlayedOn,
   shareText,
   shareTextForImage,
   tokensFromBreakdown,
@@ -236,8 +240,15 @@ test("X and Facebook get the text and the link to this round", () => {
   const text = "Solved · 1,240 · Daily · Easy — Who's that LLM?";
   const x = new URL(xShareUrl(page, text));
   assert.equal(`${x.origin}${x.pathname}`, "https://twitter.com/intent/tweet");
-  assert.equal(x.searchParams.get("text"), text);
+  assert.equal(x.searchParams.get("text"), `${text}\n\n`);
   assert.equal(x.searchParams.get("url"), page);
+  const played = `Played\n\n${page}`;
+  const tweet = new URL(xShareUrl(page, played));
+  assert.equal(tweet.searchParams.get("text"), "Played\n\n");
+  assert.equal(tweet.searchParams.get("url"), page);
+  assert.equal(tweet.searchParams.get("text")?.includes("Play here"), false);
+  assert.equal(tweet.searchParams.get("url")?.includes("/r/"), true);
+  assert.match(shareTextForImage(played, page), /Play here: https:\/\/www\.whos-that-llm\.com$/);
   const facebook = new URL(facebookShareUrl(page, text));
   assert.equal(`${facebook.origin}${facebook.pathname}`, "https://www.facebook.com/sharer/sharer.php");
   assert.equal(facebook.searchParams.get("u"), page);
@@ -270,6 +281,8 @@ test("the public picture and the download are the same card", () => {
   assert.match(image, /After/);
   assert.match(image, /Before the multiplier/);
   assert.match(image, /Total/);
+  assert.match(image, /Model hidden/);
+  assert.match(image, /It will be revealed tomorrow/);
   assert.equal(image.includes(hidden), false);
   assert.equal(image.includes(decoy), false);
   assert.equal(image.includes(chat), false);
@@ -295,32 +308,145 @@ test("the public picture and the download are the same card", () => {
   assert.match(namedImage, /bbbb/);
   assert.match(namedImage, /Anthropic/);
   assert.match(namedImage, /Solved on message/);
+  assert.equal(namedImage.includes("Model hidden"), false);
   assert.equal(namedImage.includes(decoy), false);
   assert.match(shareCardAlt(named), new RegExp(hidden));
 
   const page = fs.readFileSync(path.join(root, "app/r/[gameId]/page.tsx"), "utf8");
-  const picture = fs.readFileSync(path.join(root, "components/share-picture.tsx"), "utf8");
-  assert.match(page, /SharePicture/);
   assert.match(page, /shareCardPath/);
-  assert.match(picture, /share-picture/);
-  assert.match(picture, /data-theme/);
-  assert.doesNotMatch(page, /ShareCardView/);
+  assert.doesNotMatch(page, /SharePicture|ShareCardView/);
+});
+
+test("the public result is the score table and a link home", () => {
+  const named = card();
+  const html = renderToStaticMarkup(createElement(SharedResult, { card: named }));
+  assert.match(html, />Score</);
+  assert.equal(html.includes("Your score"), false);
+  assert.equal(html.includes("hidden until the next day"), false);
+  assert.match(html, /1,240/);
+  assert.match(html, /Solved on message/);
+  assert.match(html, /All models/);
+  assert.match(html, /Hard/);
+  assert.match(html, new RegExp(hidden));
+  assert.match(html, /Wanna try to beat this score/);
+  assert.match(html, /href="\/"/);
+  assert.equal(html.includes("How scoring works"), false);
+  assert.equal(html.includes("transcript"), false);
+  assert.equal(html.includes(chat), false);
+  assert.equal(html.includes(decoy), false);
+  assert.equal(html.includes("Share"), false);
+  assert.equal(html.includes("Download"), false);
+
+  const daily = card({ gameMode: "daily", difficulty: "easy" });
+  const dailyHtml = renderToStaticMarkup(createElement(SharedResult, { card: daily }));
+  assert.equal(dailyHtml.includes(hidden), false);
+  assert.match(dailyHtml, /Model hidden/);
+  assert.match(dailyHtml, /It will be revealed tomorrow/);
+  assert.match(dailyHtml, /logo-tail-right/);
+  assert.match(dailyHtml, /Daily/);
+  assert.match(dailyHtml, /Easy/);
+  assert.match(dailyHtml, /#1c7c43/);
+  const when = new Date("2026-10-16T12:00:00.000Z");
+  const today = card({
+    gameMode: "daily",
+    difficulty: "easy",
+    dailyKey: "2026-10-16:1",
+    now: when,
+    playerName: "Gael",
+    finishedAt: "2026-10-16T18:30:00.000Z",
+  });
+  assert.equal(today.modelHidden, true);
+  assert.equal(today.modelName, null);
+  assert.equal(today.playerName, "Gael");
+  assert.equal(today.playedOn, "October 16, 2026");
+  const todayHtml = renderToStaticMarkup(createElement(SharedResult, { card: today }));
+  assert.equal(todayHtml.includes(hidden), false);
+  assert.match(todayHtml, /Gael&#x27;s game|Gael's game/);
+  assert.match(todayHtml, /Played on October 16, 2026\./);
+  assert.match(todayHtml, /Model hidden/);
+  assert.match(todayHtml, /It will be revealed tomorrow/);
+  const yesterday = card({
+    gameMode: "daily",
+    difficulty: "easy",
+    dailyKey: "2026-10-15:1",
+    now: when,
+    playerName: "Gael",
+    finishedAt: "2026-10-15T18:30:00.000Z",
+  });
+  assert.equal(yesterday.modelHidden, false);
+  assert.equal(yesterday.modelName, hidden);
+  const yesterdayHtml = renderToStaticMarkup(createElement(SharedResult, { card: yesterday }));
+  assert.match(yesterdayHtml, new RegExp(hidden));
+  assert.equal(yesterdayHtml.includes("Model hidden"), false);
+  assert.match(yesterdayHtml, /Played on October 15, 2026\./);
+
+  const company = card({ gameMode: "company", poolKey: "anthropic", difficulty: null });
+  const companyHtml = renderToStaticMarkup(createElement(SharedResult, { card: company }));
+  assert.match(companyHtml, />Company</);
+  assert.match(companyHtml, />Anthropic</);
+
+  const quiet = card({ status: "given_up", score: null, breakdown: null, messageCount: 0 });
+  const quietHtml = renderToStaticMarkup(createElement(SharedResult, { card: quiet }));
+  assert.match(quietHtml, /Given up\./);
+  assert.match(quietHtml, /Wanna try a round/);
+  assert.equal(quietHtml.includes("Your score"), false);
+  assert.equal(quietHtml.includes("Wanna try to beat this score"), false);
+
+  const hinted = card({
+    breakdown: [
+      { label: "Year hint", points: -100 },
+      { label: "No-hint", points: null, multiplier: "×2" },
+    ],
+  });
+  const hintedHtml = renderToStaticMarkup(createElement(SharedResult, { card: hinted }));
+  assert.match(hintedHtml, />No hints</);
+  assert.match(hintedHtml, /No-hint/);
+
+  const page = fs.readFileSync(path.join(root, "app/r/[gameId]/page.tsx"), "utf8");
+  const view = fs.readFileSync(path.join(root, "components/shared-result.tsx"), "utf8");
+  const layout = fs.readFileSync(path.join(root, "app/layout.tsx"), "utf8");
+  const played = fs.readFileSync(path.join(root, "app/play/[gameId]/result/page.tsx"), "utf8");
+  assert.match(page, /SharedResult/);
+  assert.match(page, /shareCardPath/);
+  assert.doesNotMatch(page, /SharePicture|ShareActions|MessageBubble|transcript/);
+  assert.match(view, /Wanna try to beat this score/);
+  assert.doesNotMatch(view, /ShareActions|MessageBubble|transcript/);
+  assert.doesNotMatch(layout, /startsWith\("\/r\/"\)/);
+  assert.match(played, /MessageBubble/);
+  assert.match(played, /transcript/);
+  assert.match(played, /shareText/);
+  assert.match(played, /game\.model/);
+  assert.doesNotMatch(played, /Model hidden|modelHidden/);
+  const scoreCard = fs.readFileSync(path.join(root, "components/score-card.tsx"), "utf8");
+  assert.match(scoreCard, /How scoring works/);
+  assert.doesNotMatch(view, /How scoring works/);
+  const profile = fs.readFileSync(path.join(root, "lib/profile-data.ts"), "utf8");
+  assert.match(profile, /modelName: finished \? \(frozen\?\.name/);
+  assert.doesNotMatch(profile, /Model hidden|modelHidden/);
+  assert.equal(shareGameTitle("Gael"), "Gael's game");
+  assert.equal(shareGameTitle(null), null);
+  assert.equal(sharePlayedLine("October 16, 2026"), "Played on October 16, 2026.");
+  assert.equal(sharePlayedLine(null), null);
+  assert.equal(sharePlayedOn("2026-10-16T00:30:00.000Z"), "October 16, 2026");
+  assert.equal(sharePlayedOn("not-a-date"), null);
 });
 
 test("share comes before download, and the networks live in one menu", () => {
   const html = renderToStaticMarkup(
     createElement(ShareActions, { gameId: "11111111-1111-4111-8111-111111111111", text: "Solved" }),
   );
-  assert.match(html, /class="button"[^>]*>Share<svg[\s\S]*Copy link[\s\S]*Download/);
-  assert.match(html, /The text will be copied\. Paste it into the post\./);
-  assert.match(html, /The text will be copied\. Paste it into Instagram\./);
-  assert.match(html, /share-phone[\s\S]*Share/);
+  assert.match(html, /class="button"[^>]*>Share<svg[\s\S]*Copy link[\s\S]*Download<span class="share-download-extra"> card<\/span>/);
+  assert.equal(html.includes("The message is copied. Paste it into the post."), false);
+  assert.equal(html.match(/This opens the post\. Paste the message\./g)?.length, 2);
+  assert.equal(html.includes("Instagram"), false);
+  assert.match(html, /share-message[\s\S]*<svg[\s\S]*By message/);
+  assert.match(html, /share-menu-copy[\s\S]*<svg[\s\S]*Copy link/);
+  assert.equal(html.includes(">Message<"), false);
+  assert.equal(html.includes("share-phone"), false);
   assert.match(html, /share-caret/);
   assert.match(html, /share-network-menu" [^>]*hidden/);
   assert.match(html, />X</);
-  assert.match(html, />Facebook</);
-  assert.match(html, />LinkedIn</);
-  assert.match(html, />Instagram</);
+  assert.ok(html.indexOf(">LinkedIn<") < html.indexOf(">Facebook<"));
   assert.equal(html.includes("Bluesky"), false);
   assert.match(html, /linkedin\.com\/sharing\/share-offsite/);
   assert.match(html, /card\.png\?theme=light&amp;download=1/);
@@ -333,10 +459,11 @@ test("the public card is drawn from the game row and is not stored", () => {
   const load = fs.readFileSync(path.join(root, "lib/share-card-load.ts"), "utf8");
   const route = fs.readFileSync(path.join(root, "app/r/[gameId]/card.png/route.tsx"), "utf8");
   const page = fs.readFileSync(path.join(root, "app/r/[gameId]/page.tsx"), "utf8");
-  assert.match(load, /id, status, game_mode, pool_key, difficulty, message_count, score, score_breakdown, model_id, traits, daily_key/);
+  assert.match(load, /id, status, game_mode, pool_key, difficulty, message_count, score, score_breakdown, model_id, traits, daily_key, username, finished_at/);
   assert.doesNotMatch(load, /from\("messages"\)/);
   assert.doesNotMatch(load, /from\("usage"\)/);
   assert.doesNotMatch(load, /from\("guesses"\)/);
   assert.doesNotMatch(`${load}\n${route}\n${page}`, /\.storage|writeFile/);
-  assert.doesNotMatch(page, /MessageBubble|transcript/);
+  assert.doesNotMatch(page, /MessageBubble|transcript|SharePicture|ShareActions/);
+  assert.match(route, /card\.png|ImageResponse|shareCardImage/);
 });

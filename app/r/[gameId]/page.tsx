@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { SharePicture } from "@/components/share-picture";
+import { SharedResult } from "@/components/shared-result";
 import { shareCardHeight, shareCardWidth } from "@/lib/share-card-image";
 import { readShareCard } from "@/lib/share-card-load";
-import { shareBrand, shareCardAlt, shareCardPath, sharePagePath, shareText } from "@/lib/share-card";
+import { shareBrand, shareCardPath, sharePagePath, shareText } from "@/lib/share-card";
 
 export const dynamic = "force-dynamic";
 
@@ -32,14 +32,10 @@ export async function generateMetadata({ params }: { params: Promise<{ gameId: s
   };
 }
 
-/** The public page shows the same PNG Download saves. */
+/** A finished round anyone can open. The chat and the share buttons stay on the player's own result. */
 export default async function SharedResultPage({ params }: { params: Promise<{ gameId: string }> }) {
   const { gameId } = await params;
   const card = await readShareCard(gameId);
   if (!card) notFound();
-  return (
-    <main className="share-page">
-      <SharePicture gameId={card.id} alt={shareCardAlt(card)} />
-    </main>
-  );
+  return <SharedResult card={card} />;
 }

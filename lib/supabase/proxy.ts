@@ -16,9 +16,7 @@ function hide(request: NextRequest) {
 }
 
 function withPath(request: NextRequest) {
-  const headers = new Headers(request.headers);
-  headers.set("x-pathname", request.nextUrl.pathname);
-  return NextResponse.next({ request: { headers } });
+  return NextResponse.next({ request });
 }
 
 export async function updateSession(request: NextRequest) {

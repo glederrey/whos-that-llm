@@ -47,6 +47,8 @@ export type ShareCard = {
   tokens: number | null;
   /** Hidden on a Daily until the UTC day after that puzzle. Other modes may name the model. */
   modelName: string | null;
+  /** Today's Daily on the public page. The player's own result and profile still name the model. */
+  modelHidden: boolean;
   /** Company logo path. Hidden with the name. */
   modelLogoPath: string | null;
   /** Company, region, year, and size. Hidden with the name. */
@@ -58,6 +60,10 @@ export type ShareCard = {
   /** Set when the breakdown does not already name a hint or no-hint mode. */
   hints: string | null;
   invite: string;
+  /** The name stored on the round. Null after the account is cleared. */
+  playerName: string | null;
+  /** The UTC day the round finished, such as October 16, 2026. */
+  playedOn: string | null;
 };
 
 export type ShareCardInput = {
@@ -77,6 +83,10 @@ export type ShareCardInput = {
   dailyKey?: string | null;
   /** Used to decide whether today's Daily may name the model. */
   now?: Date;
+  /** The username stored on the round. */
+  playerName?: string | null;
+  /** When the round finished. */
+  finishedAt?: string | null;
 };
 
 const gameIdPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -196,8 +206,43 @@ export function buildShareCard(input: ShareCardInput): ShareCard | null {
     details: detailsFrom(input.breakdown),
     hints: hintsLine(input.breakdown),
     invite: input.score === null ? "Come try a round" : `Can you beat my score of ${formatShareNumber(input.score)}?`,
+    playerName: cleanPlayerName(input.playerName),
+    playedOn: sharePlayedOn(input.finishedAt),
+    modelHidden: hideModel,
   };
 }
+
+/** October 16, 2026. The day is UTC, the same day a Daily uses. */
+export function sharePlayedOn(value: string | null | undefined): string | null {
+  if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  return new Intl.DateTimeFormat("en-US", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+    timeZone: "UTC",
+  }).format(date);
+}
+
+function cleanPlayerName(value: string | null | undefined): string | null {
+  const name = value?.trim() ?? "";
+  return name.length > 0 ? name : null;
+}
+
+/** Gael's game. The date sits on the line under it. */
+export function shareGameTitle(playerName: string | null): string | null {
+  return playerName ? `${playerName}'s game` : null;
+}
+
+/** Played on October 16, 2026. */
+export function sharePlayedLine(playedOn: string | null): string | null {
+  return playedOn ? `Played on ${playedOn}.` : null;
+}
+
+export const hiddenModelTitle = "Model hidden";
+
+export const hiddenModelNote = "It will be revealed tomorrow.";
 
 function detailsFrom(lines: ScoreLine[] | null): ShareDetail[] {
   if (!lines) return [];
@@ -293,7 +338,7 @@ export function shareCardAlt(card: ShareCard): string {
   return parts.join(", ");
 }
 
-/** The post for X, Facebook, LinkedIn, Instagram, and the phone share sheet. Today's Daily hides the model. */
+/** The post for X, LinkedIn, Facebook, and the phone share sheet. Today's Daily hides the model. */
 export function shareText(card: ShareCard): string {
   const score = card.score === null ? null : formatShareNumber(card.score);
   const blocks = [
@@ -306,7 +351,7 @@ export function shareText(card: ShareCard): string {
   return blocks.join("\n\n");
 }
 
-/** Phone share already attaches the card image, so the post can point at the game. */
+/** A chat that already attaches the picture can point at the game. A public post does not use this. */
 export function shareTextForImage(text: string, pageUrl: string): string {
   if (!text.endsWith(pageUrl)) return text;
   return `${text.slice(0, -pageUrl.length)}Play here: ${siteOrigin}`;
@@ -324,10 +369,20 @@ function shareFacts(card: ShareCard): string[] {
   return lines;
 }
 
+/**
+ * X cannot take the PNG. The round page is the shared URL, so X can preview that page's card.
+ * X appends that URL to the message, so the message ends with a blank line and the link stays on its own.
+ */
 export function xShareUrl(pageUrl: string, text: string): string {
   const url = new URL("https://twitter.com/intent/tweet");
-  url.searchParams.set("text", text);
-  if (!text.includes(pageUrl)) url.searchParams.set("url", pageUrl);
+  const suffix = `\n\n${pageUrl}`;
+  const body = text.endsWith(suffix)
+    ? text.slice(0, -pageUrl.length)
+    : text.endsWith(pageUrl)
+      ? `${text.slice(0, -pageUrl.length).trimEnd()}\n\n`
+      : `${text.trimEnd()}\n\n`;
+  url.searchParams.set("text", body);
+  url.searchParams.set("url", pageUrl);
   return url.toString();
 }
 
