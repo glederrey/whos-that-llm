@@ -166,9 +166,9 @@ export function ShareActions({ gameId, text }: { gameId: string; text: string })
   }
 
   const networks = [
-    { name: "X", href: xShareUrl(pageUrl, text), mark: <XMark /> },
-    { name: "Facebook", href: facebookShareUrl(pageUrl, text), mark: <FacebookMark /> },
-    { name: "LinkedIn", href: linkedInShareUrl(pageUrl), mark: <LinkedInMark /> },
+    { name: "X", href: xShareUrl(pageUrl, text), mark: <XMark />, tip: null },
+    { name: "Facebook", href: facebookShareUrl(pageUrl, text), mark: <FacebookMark />, tip: "This opens the post." },
+    { name: "LinkedIn", href: linkedInShareUrl(pageUrl), mark: <LinkedInMark />, tip: "This opens the post." },
   ];
 
   return (
@@ -212,6 +212,7 @@ export function ShareActions({ gameId, text }: { gameId: string; text: string })
             >
               {network.mark}
               {network.name}
+              {network.tip ? <span className="share-tip">{network.tip}</span> : null}
             </a>
           ))}
           <button
