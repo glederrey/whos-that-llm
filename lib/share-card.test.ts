@@ -5,6 +5,7 @@ import test from "node:test";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { ShareActions } from "../components/share-actions";
+import { SharedResult } from "../components/shared-result";
 import { rulesForGameMode } from "./config";
 import { scoreRound, type Traits } from "./game";
 import {
@@ -299,12 +300,70 @@ test("the public picture and the download are the same card", () => {
   assert.match(shareCardAlt(named), new RegExp(hidden));
 
   const page = fs.readFileSync(path.join(root, "app/r/[gameId]/page.tsx"), "utf8");
-  const picture = fs.readFileSync(path.join(root, "components/share-picture.tsx"), "utf8");
-  assert.match(page, /SharePicture/);
   assert.match(page, /shareCardPath/);
-  assert.match(picture, /share-picture/);
-  assert.match(picture, /data-theme/);
-  assert.doesNotMatch(page, /ShareCardView/);
+  assert.doesNotMatch(page, /SharePicture|ShareCardView/);
+});
+
+test("the public result is the score table and a link home", () => {
+  const named = card();
+  const html = renderToStaticMarkup(createElement(SharedResult, { card: named }));
+  assert.match(html, /Your score/);
+  assert.match(html, /1,240/);
+  assert.match(html, /Solved on message/);
+  assert.match(html, /All models/);
+  assert.match(html, /Hard/);
+  assert.match(html, new RegExp(hidden));
+  assert.match(html, /Wanna try to beat this score/);
+  assert.match(html, /href="\/"/);
+  assert.match(html, /href="\/scoring"/);
+  assert.equal(html.includes("transcript"), false);
+  assert.equal(html.includes(chat), false);
+  assert.equal(html.includes(decoy), false);
+  assert.equal(html.includes("Share"), false);
+  assert.equal(html.includes("Download"), false);
+
+  const daily = card({ gameMode: "daily", difficulty: "easy" });
+  const dailyHtml = renderToStaticMarkup(createElement(SharedResult, { card: daily }));
+  assert.equal(dailyHtml.includes(hidden), false);
+  assert.match(dailyHtml, /Daily/);
+  assert.match(dailyHtml, /Easy/);
+  assert.match(dailyHtml, /#1c7c43/);
+
+  const company = card({ gameMode: "company", poolKey: "anthropic", difficulty: null });
+  const companyHtml = renderToStaticMarkup(createElement(SharedResult, { card: company }));
+  assert.match(companyHtml, />Company</);
+  assert.match(companyHtml, />Anthropic</);
+
+  const quiet = card({ status: "given_up", score: null, breakdown: null, messageCount: 0 });
+  const quietHtml = renderToStaticMarkup(createElement(SharedResult, { card: quiet }));
+  assert.match(quietHtml, /Given up\./);
+  assert.match(quietHtml, /Wanna try a round/);
+  assert.equal(quietHtml.includes("Your score"), false);
+  assert.equal(quietHtml.includes("Wanna try to beat this score"), false);
+
+  const hinted = card({
+    breakdown: [
+      { label: "Year hint", points: -100 },
+      { label: "No-hint", points: null, multiplier: "×2" },
+    ],
+  });
+  const hintedHtml = renderToStaticMarkup(createElement(SharedResult, { card: hinted }));
+  assert.match(hintedHtml, />No hints</);
+  assert.match(hintedHtml, /No-hint/);
+
+  const page = fs.readFileSync(path.join(root, "app/r/[gameId]/page.tsx"), "utf8");
+  const view = fs.readFileSync(path.join(root, "components/shared-result.tsx"), "utf8");
+  const layout = fs.readFileSync(path.join(root, "app/layout.tsx"), "utf8");
+  const played = fs.readFileSync(path.join(root, "app/play/[gameId]/result/page.tsx"), "utf8");
+  assert.match(page, /SharedResult/);
+  assert.match(page, /shareCardPath/);
+  assert.doesNotMatch(page, /SharePicture|ShareActions|MessageBubble|transcript/);
+  assert.match(view, /Wanna try to beat this score/);
+  assert.doesNotMatch(view, /ShareActions|MessageBubble|transcript/);
+  assert.doesNotMatch(layout, /startsWith\("\/r\/"\)/);
+  assert.match(played, /MessageBubble/);
+  assert.match(played, /transcript/);
+  assert.match(played, /shareText/);
 });
 
 test("share comes before download, and the networks live in one menu", () => {
@@ -338,5 +397,6 @@ test("the public card is drawn from the game row and is not stored", () => {
   assert.doesNotMatch(load, /from\("usage"\)/);
   assert.doesNotMatch(load, /from\("guesses"\)/);
   assert.doesNotMatch(`${load}\n${route}\n${page}`, /\.storage|writeFile/);
-  assert.doesNotMatch(page, /MessageBubble|transcript/);
+  assert.doesNotMatch(page, /MessageBubble|transcript|SharePicture|ShareActions/);
+  assert.match(route, /card\.png|ImageResponse|shareCardImage/);
 });

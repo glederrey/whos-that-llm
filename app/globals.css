@@ -1744,14 +1744,11 @@ html[data-theme="dark"] .history-facts .board-chip.no-hints {
   *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
 }
 
-/* The public page shows the same PNG Download saves. The frame is part of the picture. */
-.share-picture {
-  width: min(440px, 100%);
-  height: auto;
-  border-radius: 22px;
+/* The public result. The score table uses the site shell. The PNG stays for Download and the link preview. */
+.share-cta { margin: 8px 0 0; }
+@media (max-width: 560px) {
+  .share-cta .button { display: block; text-align: center; }
 }
-.share-picture-pending { aspect-ratio: 1080 / 1350; }
-.share-block { display: grid; gap: 12px; justify-items: start; }
 .share-actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
 .share-desktop { position: relative; display: inline-flex; }
 .share-phone { display: none; }
@@ -1797,11 +1794,4 @@ html[data-theme="dark"] .history-facts .board-chip.no-hints {
 @media (hover: none) and (pointer: coarse) {
   .share-desktop { display: none; }
   .share-phone { display: contents; }
-}
-.share-page {
-  min-height: 100dvh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 24px 16px;
 }

@@ -49,8 +49,9 @@ const dark: Tone = {
 };
 
 /**
- * The 4:5 score card. Satori draws this to a PNG. The public page shows that
- * same PNG, and Download saves it. Nothing here is the chat.
+ * The 4:5 score card. Satori draws this to a PNG. Download saves it, and the
+ * link preview uses it. The public page itself is the score table. Nothing
+ * here is the chat.
  * The teal frame and the rounded corners are part of the image.
  */
 export function shareCardImage(
