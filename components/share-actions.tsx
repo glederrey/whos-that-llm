@@ -12,7 +12,7 @@ import {
   xShareUrl,
 } from "@/lib/share-card";
 
-/** Share first. A computer opens the post menu. A phone opens that menu too, with Message first. Download stays beside it. */
+/** Share first. A computer opens the post menu. A phone opens that menu too, with By message first, then Copy link. Download card stays beside it. */
 function browserTheme(): ShareCardTheme {
   if (typeof document === "undefined") return "light";
   return document.documentElement.dataset.theme === "dark" ? "dark" : "light";
@@ -153,11 +153,12 @@ export function ShareActions({ gameId, text }: { gameId: string; text: string })
     pulse(setDownloadFlash, downloadTimers);
   }
 
-  async function copyLink() {
+  async function copyLink(fromMenu = false) {
     setOpen(false);
     try {
       await navigator.clipboard.writeText(pageUrl);
       flashCopy();
+      if (fromMenu) setNote("The link is copied.");
     } catch {
       setCopied(false);
       setNote("The link could not be copied.");
@@ -190,7 +191,10 @@ export function ShareActions({ gameId, text }: { gameId: string; text: string })
         </button>
         <div className="menu share-network-menu" id={menuId} role="menu" hidden={!open}>
           <button className="menu-item share-message" type="button" role="menuitem" onClick={() => void onPhoneShare()}>
-            Message
+            By message
+          </button>
+          <button className="menu-item share-menu-copy" type="button" role="menuitem" onClick={() => void copyLink(true)}>
+            Copy link
           </button>
           {networks.map((network) => (
             <a
@@ -230,7 +234,7 @@ export function ShareActions({ gameId, text }: { gameId: string; text: string })
         aria-busy={saving || undefined}
         onClick={onDownloadClick}
       >
-        <span className="share-download-word">{saving ? "Saving…" : "Download"}</span>
+        <span className="share-download-word">{saving ? "Saving…" : "Download card"}</span>
       </a>
       <span className="share-live" role="status">{copied ? "The link is copied." : ""}</span>
       {note ? <p className="share-note">{note}</p> : null}
