@@ -9,5 +9,6 @@ export function apiError(failure: ApiFailure) {
   const body: Record<string, unknown> = { error: failure.error };
   if (failure.nextAt) body.nextAt = failure.nextAt;
   if (failure.paused !== undefined) body.paused = failure.paused;
+  if (failure.gameId) body.gameId = failure.gameId;
   return apiJson(body, failure.status);
 }

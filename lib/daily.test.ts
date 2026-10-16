@@ -166,7 +166,9 @@ test("the play page explains one round per difficulty", () => {
   assert.match(home, /dailyFinished\.includes\(difficulty\)/);
   assert.match(home, /is-done/);
   assert.match(home, /Already played\./);
-  assert.match(home, /\(!daily && Boolean\(activeGameId\)\)/);
+  assert.match(home, /openGameOn/);
+  assert.match(home, /unfinishedLine/);
+  assert.doesNotMatch(home, /activeGameId/);
   assert.doesNotMatch(home, /dailyDone/);
   assert.doesNotMatch(home, /The same model for everyone today/);
 });

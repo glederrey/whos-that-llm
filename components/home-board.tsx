@@ -4,6 +4,14 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { canStartMode, presentDailyCard } from "@/lib/daily";
 import { difficulties, difficultyBlurb, difficultyLabel, type Difficulty } from "@/lib/difficulty";
+import {
+  difficultyAside,
+  difficultyBlocked,
+  modeToOpen,
+  openGameOn,
+  unfinishedLine,
+  type OpenGame,
+} from "@/lib/lobby-row";
 
 export type HomeGameMode = {
   id: string;
@@ -74,9 +82,7 @@ export function HomeBoard({
   paused,
   played,
   cap,
-  activeGameId,
-  activeGameMode,
-  activeGameDifficulty,
+  openGames,
   dailyFinished,
   poolSize,
   difficultyCounts,
@@ -86,9 +92,7 @@ export function HomeBoard({
   paused: boolean;
   played: number;
   cap: number;
-  activeGameId: string | null;
-  activeGameMode: string | null;
-  activeGameDifficulty: Difficulty | null;
+  openGames: OpenGame[];
   dailyFinished: Difficulty[];
   poolSize: number;
   difficultyCounts: Record<Difficulty, number>;
@@ -96,9 +100,10 @@ export function HomeBoard({
   gameModes: HomeGameMode[];
 }) {
   const router = useRouter();
-  const [openId, setOpenId] = useState<string | null>(null);
+  const [openId, setOpenId] = useState<string | null>(() => modeToOpen(openGames));
   const [noHint, setNoHint] = useState(false);
   const [notice, setNotice] = useState("");
+  const [resumeId, setResumeId] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const cards = lineup(gameModes);
   const left = Math.max(0, cap - played);
@@ -114,19 +119,15 @@ export function HomeBoard({
     return left === 0 ? `Next one at ${when}` : `Adding a new game to the pool at ${when}`;
   }
 
-  function resumes(gameMode: string, difficulty: Difficulty) {
-    if (!activeGameId || activeGameMode !== gameMode) return false;
-    if (gameMode === "daily") return activeGameDifficulty === difficulty;
-    return true;
-  }
-
   async function start(gameMode: string, difficulty: Difficulty) {
-    if (resumes(gameMode, difficulty)) {
-      router.push(`/play/${activeGameId}`);
+    const open = openGameOn(openGames, gameMode, difficulty);
+    if (open) {
+      router.push(`/play/${open.id}`);
       return;
     }
     setBusy(true);
     setNotice("");
+    setResumeId(null);
     const response = await fetch("/api/games", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -138,12 +139,14 @@ export function HomeBoard({
       router.push("/login?next=/play");
       return;
     }
-    if (body.gameId) {
-      router.push(`/play/${body.gameId}`);
+    if (body.error === "active_game") {
+      const known = openGameOn(openGames, gameMode, difficulty) ?? openGames.find((game) => game.id) ?? null;
+      setResumeId(body.gameId ?? known?.id ?? null);
+      setNotice("You already have a game open.");
       return;
     }
-    if (body.error === "active_game") {
-      setNotice("You already have a game open.");
+    if (body.gameId) {
+      router.push(`/play/${body.gameId}`);
       return;
     }
     if (body.error === "hourly_cap") {
@@ -191,7 +194,6 @@ export function HomeBoard({
       <div className="card category-list">
         {cards.map((gameMode) => {
           const playable = canStartMode(gameMode.id) && gameMode.enabled;
-          const continueGame = Boolean(activeGameId) && activeGameMode === gameMode.id;
           const daily = gameMode.id === "daily";
           const opened = gameMode.enabled && openId === gameMode.id;
           const custom = gameMode.id === "custom";
@@ -226,13 +228,7 @@ export function HomeBoard({
                 ) : (
                   <div className="category-toggle">{label}</div>
                 )}
-                {continueGame ? (
-                  <button type="button" className="button" onClick={() => router.push(`/play/${activeGameId}`)}>
-                    Continue
-                  </button>
-                ) : gameMode.enabled ? null : (
-                  <span className="pill">Coming soon</span>
-                )}
+                {gameMode.enabled ? null : <span className="pill">Coming soon</span>}
               </div>
               {opened ? (
                 <div className="difficulty-panel">
@@ -246,19 +242,31 @@ export function HomeBoard({
                           const count = difficultyCounts[difficulty];
                           const small = count < 2;
                           const finished = daily && dailyFinished.includes(difficulty);
-                          const resumeThis = resumes(gameMode.id, difficulty);
-                          const blocked = finished || (!resumeThis && (!playable || paused || busy || small || full || (!daily && Boolean(activeGameId))));
+                          const open = openGameOn(openGames, gameMode.id, difficulty);
+                          const blocked = difficultyBlocked({
+                            open: Boolean(open),
+                            finished,
+                            playable,
+                            paused,
+                            busy,
+                            full,
+                            count,
+                          });
                           const choice = (
                             <>
                               <span className="difficulty-name">
                                 <strong>{difficultyLabel[difficulty]}</strong>
                                 <span className="muted">
                                   {difficultyBlurb[difficulty]}
-                                  {playable && small ? ". Not enough models." : ""}
+                                  {playable && small && !open ? ". Not enough models." : ""}
                                   {finished ? ". Already played." : ""}
                                 </span>
                               </span>
-                              <span className="difficulty-count">{count === 1 ? "1 model" : `${count} models`}</span>
+                              {open ? (
+                                <span className="difficulty-resume">{unfinishedLine}</span>
+                              ) : (
+                                <span className="difficulty-count">{difficultyAside(count, false)}</span>
+                              )}
                             </>
                           );
                           return playable ? (
@@ -279,7 +287,7 @@ export function HomeBoard({
                           );
                         })}
                       </div>
-                      {playable && !continueGame ? (
+                      {playable ? (
                         <label className="check category-check">
                           <input type="checkbox" checked={noHint} onChange={(event) => setNoHint(event.target.checked)} />
                           <span>
@@ -299,8 +307,8 @@ export function HomeBoard({
       {notice ? (
         <p className="error">
           {notice}{" "}
-          {notice.startsWith("You already have a game open") && activeGameId ? (
-            <a href={`/play/${activeGameId}`}>Continue</a>
+          {notice.startsWith("You already have a game open") && resumeId ? (
+            <a href={`/play/${resumeId}`}>Continue</a>
           ) : null}
         </p>
       ) : null}

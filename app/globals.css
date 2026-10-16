@@ -554,6 +554,7 @@ html[data-theme="dark"] .hour-status strong { color: var(--teal); }
 .category-block { padding: 16px 0; border-top: 1px solid var(--line); }
 .card.category-list > .category-block:first-child { border-top: 0; }
 .category-main { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 16px; }
+.category-main > :only-child { grid-column: 1 / -1; }
 .category-main strong { font-size: 17px; }
 .category-block.closed .category-main strong { color: var(--mute); }
 .category-toggle {
@@ -600,6 +601,15 @@ html[data-theme="dark"] .hour-status strong { color: var(--teal); }
 }
 .difficulty-name { display: flex; align-items: baseline; gap: 8px; min-width: 0; }
 .difficulty-count { margin-left: auto; white-space: nowrap; }
+.difficulty-resume {
+  margin-left: auto;
+  max-width: 22rem;
+  color: #007278;
+  font-weight: 600;
+  line-height: 1.35;
+  text-align: right;
+}
+html[data-theme="dark"] .difficulty-resume { color: var(--teal); }
 .difficulty-choice strong { color: var(--diff); }
 .difficulty-choice:disabled, .difficulty-choice.is-done { opacity: 0.45; cursor: not-allowed; }
 .difficulty-choice.is-soon { cursor: default; }
@@ -1662,8 +1672,8 @@ html[data-theme="dark"] .history-facts .board-chip.no-hints {
   .button-lg { width: 100%; text-align: center; }
   .hour-status { flex-direction: column; align-items: flex-start; gap: 4px; }
   .hour-status .hour-note { margin-left: 0; text-align: left; }
-  .category-main:has(> .button) { grid-template-columns: minmax(0, 1fr); }
-  .category-main > .button { width: 100%; text-align: center; }
+  .difficulty-choice:has(.difficulty-resume) { flex-wrap: wrap; align-items: flex-start; }
+  .difficulty-resume { flex: 1 1 100%; max-width: none; margin-left: 0; text-align: left; }
   .round-bar { padding: 10px 12px; }
   .footer-inner {
     flex-direction: column;

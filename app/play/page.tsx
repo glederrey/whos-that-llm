@@ -17,9 +17,7 @@ export default async function PlayPage() {
       paused={state.paused}
       played={state.played}
       cap={state.cap ?? config.hourlyCap}
-      activeGameId={state.activeGameId}
-      activeGameMode={state.activeGameMode}
-      activeGameDifficulty={state.activeGameDifficulty}
+      openGames={state.openGames}
       dailyFinished={state.dailyFinished}
       poolSize={state.poolSize}
       difficultyCounts={state.difficultyCounts}
