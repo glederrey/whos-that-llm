@@ -112,15 +112,23 @@ export function ShareActions({ gameId, text }: { gameId: string; text: string })
   }
 
   const message = text;
+  const postTip = "This opens the post. Paste the message.";
 
-  async function copyText(value: string, done: string) {
-    setOpen(false);
+  async function copyMessage() {
     try {
-      await navigator.clipboard.writeText(value);
-      setNote(done);
+      await navigator.clipboard.writeText(message);
     } catch {
       setNote("The message could not be copied.");
     }
+  }
+
+  function onNetworkClick(event: MouseEvent<HTMLAnchorElement>, copy: boolean) {
+    setOpen(false);
+    if (!copy) return;
+    void copyMessage();
+    if (!isPhone()) return;
+    event.preventDefault();
+    window.open(event.currentTarget.href, "_blank", "noopener,noreferrer");
   }
 
   function flashCopy() {
@@ -166,9 +174,9 @@ export function ShareActions({ gameId, text }: { gameId: string; text: string })
   }
 
   const networks = [
-    { name: "X", href: xShareUrl(pageUrl, text), mark: <XMark />, tip: null },
-    { name: "Facebook", href: facebookShareUrl(pageUrl, text), mark: <FacebookMark />, tip: "This opens the post." },
-    { name: "LinkedIn", href: linkedInShareUrl(pageUrl), mark: <LinkedInMark />, tip: "This opens the post." },
+    { name: "X", href: xShareUrl(pageUrl, text), mark: <XMark />, tip: null, copy: false },
+    { name: "Facebook", href: facebookShareUrl(pageUrl, text), mark: <FacebookMark />, tip: postTip, copy: true },
+    { name: "LinkedIn", href: linkedInShareUrl(pageUrl), mark: <LinkedInMark />, tip: postTip, copy: true },
   ];
 
   return (
@@ -205,10 +213,7 @@ export function ShareActions({ gameId, text }: { gameId: string; text: string })
               href={network.href}
               target="_blank"
               rel="noopener noreferrer"
-              onClick={() => {
-                setNote(null);
-                setOpen(false);
-              }}
+              onClick={(event) => onNetworkClick(event, network.copy)}
             >
               {network.mark}
               {network.name}
@@ -219,11 +224,14 @@ export function ShareActions({ gameId, text }: { gameId: string; text: string })
             className="menu-item"
             type="button"
             role="menuitem"
-            onClick={() => void copyText(message, "The message is copied. Paste it into Instagram.")}
+            onClick={() => {
+              setOpen(false);
+              void copyMessage();
+            }}
           >
             <InstagramMark />
             Instagram
-            <span className="share-tip">The text will be copied. Paste it into Instagram.</span>
+            <span className="share-tip">{postTip}</span>
           </button>
         </div>
       </span>
