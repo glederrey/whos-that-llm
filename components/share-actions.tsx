@@ -12,7 +12,7 @@ import {
   xShareUrl,
 } from "@/lib/share-card";
 
-/** Share first. A computer opens the post menu. A phone opens that menu too, with By message first, then Copy link. Download card stays beside it. */
+/** Share first. A computer opens the post menu. A phone opens that menu too, with By message first. Copy link and Download card sit beside Share. */
 function browserTheme(): ShareCardTheme {
   if (typeof document === "undefined") return "light";
   return document.documentElement.dataset.theme === "dark" ? "dark" : "light";
@@ -48,6 +48,8 @@ export function ShareActions({ gameId, text }: { gameId: string; text: string })
   const [copied, setCopied] = useState(false);
   const [saving, setSaving] = useState(false);
   const [downloadFlash, setDownloadFlash] = useState(false);
+  const [shortDownload, setShortDownload] = useState(false);
+  const downloadRef = useRef<HTMLAnchorElement>(null);
   const copiedTimers = useRef<number[]>([]);
   const downloadTimers = useRef<number[]>([]);
   const savingTimer = useRef<number | null>(null);
@@ -59,6 +61,21 @@ export function ShareActions({ gameId, text }: { gameId: string; text: string })
     const observer = new MutationObserver(apply);
     observer.observe(root, { attributes: true, attributeFilter: ["data-theme"] });
     return () => observer.disconnect();
+  }, []);
+
+  useLayoutEffect(() => {
+    const link = downloadRef.current;
+    if (!link) return;
+    const narrow = window.matchMedia("(max-width: 560px)");
+    const apply = () => setShortDownload(narrow.matches && !downloadCardFits(link));
+    apply();
+    const observer = new ResizeObserver(apply);
+    observer.observe(link);
+    narrow.addEventListener("change", apply);
+    return () => {
+      observer.disconnect();
+      narrow.removeEventListener("change", apply);
+    };
   }, []);
 
   useEffect(() => {
@@ -91,13 +108,13 @@ export function ShareActions({ gameId, text }: { gameId: string; text: string })
     try {
       const response = await fetch(shareCardImagePath(gameId, browserTheme()));
       if (!response.ok) {
-        setNote("The card could not be drawn.");
+        setNote("Try again.");
         return;
       }
       const blob = await response.blob();
       const file = new File([blob], fileName, { type: "image/png" });
       if (!navigator.share) {
-        setNote("This browser cannot open the share sheet.");
+        setNote("Try again.");
         return;
       }
       if (navigator.canShare?.({ files: [file] })) {
@@ -107,7 +124,7 @@ export function ShareActions({ gameId, text }: { gameId: string; text: string })
       await navigator.share({ text });
     } catch (error) {
       if (error instanceof DOMException && error.name === "AbortError") return;
-      setNote("The card could not be shared.");
+      setNote("Try again.");
     }
   }
 
@@ -161,12 +178,12 @@ export function ShareActions({ gameId, text }: { gameId: string; text: string })
     pulse(setDownloadFlash, downloadTimers);
   }
 
-  async function copyLink(fromMenu = false) {
+  async function copyLink() {
     setOpen(false);
     try {
       await navigator.clipboard.writeText(pageUrl);
+      if (isPhone()) return;
       flashCopy();
-      if (fromMenu) setNote("The link is copied.");
     } catch {
       setCopied(false);
       setNote("The link could not be copied.");
@@ -181,6 +198,7 @@ export function ShareActions({ gameId, text }: { gameId: string; text: string })
 
   return (
     <div className="share-actions" ref={rootRef}>
+      <div className="share-row">
       <span className="share-desktop">
         <button
           className="button"
@@ -202,10 +220,6 @@ export function ShareActions({ gameId, text }: { gameId: string; text: string })
             <MessageMark />
             By message
           </button>
-          <button className="menu-item share-menu-copy" type="button" role="menuitem" onClick={() => void copyLink(true)}>
-            <LinkMark />
-            Copy link
-          </button>
           {networks.map((network) => (
             <a
               key={network.name}
@@ -226,7 +240,8 @@ export function ShareActions({ gameId, text }: { gameId: string; text: string })
         Copy link
       </button>
       <a
-        className={`button-quiet share-download${downloadFlash ? " is-flash" : ""}`}
+        ref={downloadRef}
+        className={`button-quiet share-download${downloadFlash ? " is-flash" : ""}${shortDownload ? " is-short" : ""}`}
         href={downloadUrl}
         download={fileName}
         aria-label={saving ? "Saving…" : "Download card"}
@@ -237,24 +252,35 @@ export function ShareActions({ gameId, text }: { gameId: string; text: string })
           {saving ? "Saving…" : <>Download<span className="share-download-extra"> card</span></>}
         </span>
       </a>
+      </div>
       <span className="share-live" role="status">{copied ? "The link is copied." : ""}</span>
-      {note ? <p className="share-note">{note}</p> : null}
+      {note ? <p className={`share-note${note === "Try again." ? " is-error" : ""}`}>{note}</p> : null}
     </div>
   );
+}
+
+function downloadCardFits(link: HTMLElement): boolean {
+  const word = link.querySelector(".share-download-word");
+  if (!(word instanceof HTMLElement)) return true;
+  const probe = document.createElement("span");
+  probe.textContent = "Download card";
+  const font = getComputedStyle(word).font;
+  probe.style.font = font;
+  probe.style.whiteSpace = "nowrap";
+  probe.style.position = "absolute";
+  probe.style.visibility = "hidden";
+  link.appendChild(probe);
+  const box = getComputedStyle(link);
+  const pad = Number.parseFloat(box.paddingLeft) + Number.parseFloat(box.paddingRight);
+  const fits = probe.offsetWidth <= link.clientWidth - pad;
+  probe.remove();
+  return fits;
 }
 
 function MessageMark() {
   return (
     <svg viewBox="0 0 24 24" aria-hidden="true">
       <path fill="currentColor" d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z" />
-    </svg>
-  );
-}
-
-function LinkMark() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path fill="currentColor" d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z" />
     </svg>
   );
 }

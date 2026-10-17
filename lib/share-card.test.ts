@@ -440,7 +440,15 @@ test("share comes before download, and the networks live in one menu", () => {
   assert.equal(html.match(/This opens the post\. Paste the message\./g)?.length, 2);
   assert.equal(html.includes("Instagram"), false);
   assert.match(html, /share-message[\s\S]*<svg[\s\S]*By message/);
-  assert.match(html, /share-menu-copy[\s\S]*<svg[\s\S]*Copy link/);
+  assert.equal(html.includes("share-menu-copy"), false);
+  const actions = fs.readFileSync(path.join(root, "components/share-actions.tsx"), "utf8");
+  assert.match(actions, /setNote\("Try again\."\)/);
+  assert.doesNotMatch(actions, /share-menu-copy/);
+  assert.doesNotMatch(actions, /setNote\("The link is copied\."\)/);
+  const css = fs.readFileSync(path.join(root, "app/globals.css"), "utf8");
+  assert.match(css, /\.score-card \.score-link \{ display: none; \}/);
+  assert.match(css, /\.share-note\.is-error \{ color: var\(--miss-press\); \}/);
+  assert.doesNotMatch(css, /\.share-actions \.share-copy \{ display: none; \}/);
   assert.equal(html.includes(">Message<"), false);
   assert.equal(html.includes("share-phone"), false);
   assert.match(html, /share-caret/);
