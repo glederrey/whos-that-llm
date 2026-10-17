@@ -56,7 +56,6 @@ export default async function HomePage({
               </>
             )}
           </div>
-          <p className="muted hero-note">The leaderboard is open to everyone. An account is only for playing.</p>
         </div>
       </section>
       <section className="how-round">

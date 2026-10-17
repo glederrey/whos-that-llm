@@ -81,8 +81,7 @@ Two columns. On a narrow screen they stack.
 - Under the buttons: three counts. **Models in play** is the enabled roster. **Games today** counts finished games by the UTC day they finished. A game that started yesterday and finished today counts today. A game that starts today and finishes tomorrow does not count today. A game with `finished_at` null never counts. **Players** is the number of distinct accounts with at least one finished game. A game left behind after an account is deleted has no `user_id` and does not count.
 - Under the counts: **Top 5**, with the same bar as the full leaderboard. It shows that board's rows, stopped at 5. **Full leaderboard** opens `/leaderboard` with the same choice. Changing a control on either page is the same choice on the other.
 - Signed out: **Sign up** goes to `/login?tab=create&next=/play`. **Sign in** goes to `/login?next=/play`.
-- Signed in: **Play** goes to `/play`.
-- Under the buttons: **The leaderboard is open to everyone. An account is only for playing.** Scoring is the header link.
+- Signed in: **Play** goes to `/play`. Scoring is the header link.
 
 A confirmation or password-reset link returns here. If the URL carries a session and the profile has no username, send the player to `/welcome`.
 
