@@ -104,6 +104,7 @@ export default async function ProfilePage({
               regionFound: row.regionFound,
               mode: row.mode,
               difficulty: row.difficulty,
+              companyPlace: row.companyPlace,
               noHint: row.noHint,
               scoreValue: row.score,
               modelFacts: row.modelFacts,

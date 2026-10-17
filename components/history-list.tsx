@@ -24,6 +24,8 @@ export type HistoryItem = {
   regionFound: boolean;
   mode: string;
   difficulty: Difficulty | null;
+  /** Company rounds put this name where a difficulty chip would be. */
+  companyPlace?: string | null;
   noHint: boolean;
   /** The stored score. The closed row uses the formatted `score` string. */
   scoreValue: number | null;
@@ -73,7 +75,9 @@ export function HistoryFacts({ item }: { item: HistoryItem }) {
   return (
     <span className="history-facts">
       <span className="board-chip history-mode">{item.mode}</span>
-      {item.difficulty ? (
+      {item.companyPlace ? (
+        <span className="board-chip company-chip">{item.companyPlace}</span>
+      ) : item.difficulty ? (
         <span className={`board-chip difficulty-${item.difficulty}`}>{difficultyText(item.difficulty)}</span>
       ) : null}
       {item.noHint ? <span className="board-chip no-hints">No hints</span> : null}
@@ -96,6 +100,7 @@ export function HistoryDetail({ item, panel }: { item: HistoryItem; panel?: stri
           state={item.state}
           mode={item.mode}
           difficulty={item.difficulty}
+          company={item.companyPlace}
           noHint={item.noHint}
           breakdown={item.breakdown}
           share={item.shareText ? { gameId: item.id, text: item.shareText } : null}
@@ -122,7 +127,11 @@ export function HistoryDetail({ item, panel }: { item: HistoryItem; panel?: stri
       <dl className="summary-list">
         <dt>Date</dt>
         <dd>{item.when}</dd>
-        <RoundFacts mode={item.mode} difficulty={difficultyText(item.difficulty)} />
+        <RoundFacts
+          mode={item.mode}
+          difficulty={item.companyPlace ?? difficultyText(item.difficulty)}
+          label={item.companyPlace ? "Company" : "Difficulty"}
+        />
         {item.noHint ? (
           <>
             <dt>Hints</dt>

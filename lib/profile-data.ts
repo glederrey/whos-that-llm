@@ -20,6 +20,7 @@ export type HistoryRow = {
   regionFound: boolean;
   mode: string;
   difficulty: Difficulty | null;
+  companyPlace: string | null;
   noHint: boolean;
   modelFacts: string[];
   breakdown: ScoreLine[] | null;
@@ -181,6 +182,7 @@ export async function loadHistory(userId: string, page: number) {
       regionFound: traitFound({ status, given, companyCorrect: seen.company, regionCorrect: seen.region, trait: "region" }),
       mode: facts.mode,
       difficulty: facts.difficulty,
+      companyPlace: row.game_mode === "company" ? (frozen?.companyName ?? company?.name ?? null) : null,
       noHint: Boolean(row.no_hint),
     };
   });

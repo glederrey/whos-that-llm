@@ -2,8 +2,9 @@ import { redirect } from "next/navigation";
 import { BoardControls } from "@/components/board-controls";
 import { BoardTable } from "@/components/board-table";
 import { ResetPassword } from "@/components/reset-password";
+import { allCompanies } from "@/lib/company";
 import { anyDifficulty } from "@/lib/difficulty";
-import { boardChoice, boardHref, boardModes } from "@/lib/board-query";
+import { boardChoice, boardHref, boardModes, selectedCompany } from "@/lib/board-query";
 import { landingSnapshot, leaderboard, listBoardOptions, listGameModes } from "@/lib/rounds";
 import { currentProfile } from "@/lib/session";
 import { organizationJsonLd } from "@/lib/site";
@@ -13,7 +14,7 @@ export const dynamic = "force-dynamic";
 export default async function HomePage({
   searchParams,
 }: {
-  searchParams: Promise<{ reset?: string; error?: string; gameMode?: string; period?: string; difficulty?: string }>;
+  searchParams: Promise<{ reset?: string; error?: string; gameMode?: string; period?: string; difficulty?: string; company?: string }>;
 }) {
   const params = await searchParams;
   if (params.error === "access_denied") redirect("/login?error=cancelled");
@@ -24,7 +25,17 @@ export default async function HomePage({
   const [snapshot, gameModes, options] = await Promise.all([landingSnapshot(), listGameModes(), listBoardOptions()]);
   const modes = boardModes(gameModes);
   const choice = boardChoice(params, modes);
-  const board = await leaderboard(choice.gameMode, choice.period, user?.id, choice.difficulty);
+  const view = {
+    ...choice,
+    company: choice.gameMode === "company" ? selectedCompany(choice.company, options.companies) : allCompanies,
+  };
+  const board = await leaderboard(
+    view.gameMode,
+    view.period,
+    user?.id,
+    view.difficulty,
+    view.gameMode === "company" && view.company !== allCompanies ? view.company : null,
+  );
   const top = "rows" in board ? board.rows.slice(0, 5) : [];
 
   return (
@@ -103,13 +114,17 @@ export default async function HomePage({
       <section className="stack">
         <div className="section-head">
           <h2>Top 5</h2>
-          <a href={boardHref("/leaderboard", choice)}>Full leaderboard</a>
+          <a href={boardHref("/leaderboard", view)}>Full leaderboard</a>
         </div>
-        <BoardControls base="/" modes={modes} categories={options.categories} companies={options.companies} {...choice} />
+        <BoardControls base="/" modes={modes} categories={options.categories} companies={options.companies} {...view} />
         {top.length === 0 ? (
           <div className="card empty">No finished games on this board yet.</div>
         ) : (
-          <BoardTable rows={top} showDifficulty={choice.difficulty === anyDifficulty} />
+          <BoardTable
+            rows={top}
+            showDifficulty={view.gameMode !== "company" && view.difficulty === anyDifficulty}
+            showCompany={view.gameMode === "company"}
+          />
         )}
       </section>
     </div>

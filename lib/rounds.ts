@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { config, currentRules, rulesForGameMode, type Rules } from "./config";
 import { boardSince } from "./board-query";
+import { companyModelCounts } from "./company";
 import { dailyRoundKey, startDailyRound, utcDayKey, type DailyRound } from "./daily";
 import { difficulties, difficultyFromStored, difficultyNumber, inDifficultyPool, type BoardDifficulty, type Difficulty } from "./difficulty";
 import {
@@ -194,13 +195,17 @@ export async function listBoardOptions() {
   const client = serviceOrThrow();
   const [categories, companies] = await Promise.all([
     client.from("categories").select("id, name").order("name"),
-    client.from("companies").select("id, name").order("name"),
+    client.from("companies").select("id, name, logo_path").order("name"),
   ]);
   if (categories.error) throw new Error(categories.error.message);
   if (companies.error) throw new Error(companies.error.message);
   return {
     categories: (categories.data ?? []).map((row) => ({ id: row.id as string, name: row.name as string })),
-    companies: (companies.data ?? []).map((row) => ({ id: row.id as string, name: row.name as string })),
+    companies: (companies.data ?? []).map((row) => ({
+      id: row.id as string,
+      name: row.name as string,
+      logoUrl: presentLogo((row.logo_path as string | null) ?? "", row.id as string),
+    })),
   };
 }
 
@@ -208,12 +213,13 @@ export async function lobbyState(userId: string) {
   const client = serviceOrThrow();
   const since = new Date(Date.now() - 60 * 60 * 1000).toISOString();
   const day = utcDayKey();
-  const [{ data: settings }, { count }, activeResult, { data: dailyToday }, catalog] = await Promise.all([
+  const [{ data: settings }, { count }, activeResult, { data: dailyToday }, catalog, companyRows] = await Promise.all([
     client.from("app_settings").select("paused").eq("id", 1).single(),
     client.from("games").select("id", { count: "exact", head: true }).eq("user_id", userId).gt("started_at", since),
-    client.from("games").select("id, game_mode, difficulty").eq("user_id", userId).eq("status", "active"),
+    client.from("games").select("id, game_mode, difficulty, pool_key").eq("user_id", userId).eq("status", "active"),
     client.from("games").select("status, difficulty").eq("user_id", userId).eq("game_mode", "daily").like("daily_key", `${day}:%`),
     loadCatalog(client),
+    client.from("companies").select("id, name, logo_path").order("name"),
   ]);
   let nextAt: string | null = null;
   if ((count ?? 0) > 0) {
@@ -230,6 +236,19 @@ export async function lobbyState(userId: string) {
     }
   }
   if (activeResult.error) throw new Error(activeResult.error.message);
+  if (companyRows.error) throw new Error(companyRows.error.message);
+  const logos = new Map(
+    (companyRows.data ?? []).map((row) => [row.id as string, (row.logo_path as string | null) ?? ""]),
+  );
+  const companies = companyModelCounts(
+    (companyRows.data ?? []).flatMap((row) =>
+      typeof row.id === "string" && typeof row.name === "string" ? [{ id: row.id, name: row.name }] : [],
+    ),
+    catalog.map((model) => ({ companyId: model.companyId, enabled: true })),
+  ).map((company) => ({
+    ...company,
+    logoUrl: presentLogo(logos.get(company.id) ?? "", company.id),
+  }));
   return {
     paused: Boolean(settings?.paused),
     played: count ?? 0,
@@ -238,7 +257,8 @@ export async function lobbyState(userId: string) {
       const id = typeof row.id === "string" ? row.id : null;
       const mode = typeof row.game_mode === "string" ? row.game_mode : null;
       if (!id || !mode) return [];
-      return [{ id, mode, difficulty: difficultyFromStored(row.difficulty) }];
+      const companyId = mode === "company" && typeof row.pool_key === "string" ? row.pool_key : null;
+      return [{ id, mode, difficulty: difficultyFromStored(row.difficulty), companyId }];
     }),
     dailyFinished: (dailyToday ?? []).flatMap((row) => {
       if (row.status === "active") return [];
@@ -247,6 +267,7 @@ export async function lobbyState(userId: string) {
     }),
     poolSize: catalog.length,
     difficultyCounts: difficultyCounts(catalog),
+    companies,
     nextAt,
   };
 }
@@ -257,6 +278,39 @@ export function startAllModels(userId: string, noHint: boolean, difficulty: Diff
 
 export function startDaily(userId: string, noHint: boolean, difficulty: Difficulty) {
   return startRosterRound(userId, "daily", noHint, difficulty);
+}
+
+/** One company. Enabled models from that lab only. No difficulty, and no hints. */
+export async function startCompany(userId: string, companyId: string): Promise<{ gameId: string } | ApiFailure> {
+  const id = companyId.trim().toLowerCase();
+  if (!/^[a-z0-9][a-z0-9-]{0,63}$/.test(id)) return fail(422, "company");
+  const client = serviceOrThrow();
+  const [{ data: gameMode, error }, { data: company, error: companyError }, catalog] = await Promise.all([
+    client.from("game_modes").select("id, enabled, hints_allowed").eq("id", "company").maybeSingle(),
+    client.from("companies").select("id").eq("id", id).maybeSingle(),
+    loadCatalog(client),
+  ]);
+  if (error) throw new Error(error.message);
+  if (companyError) throw new Error(companyError.message);
+  if (!gameMode?.enabled || !company) return fail(404, "not_found");
+  const pool = catalog.filter((model) => model.companyId === id);
+  const modelId = pool[Math.floor(Math.random() * pool.length)]?.id ?? null;
+  if (pool.length < 2 || !modelId) return fail(422, "pool_too_small");
+  const result = await rpc(client, "start_game", {
+    p_user_id: userId,
+    p_hourly_cap: config.hourlyCap,
+    p_game_mode: "company",
+    p_pool_key: id,
+    p_no_hint: false,
+    p_model_id: modelId,
+    p_pool_model_ids: pool.map((model) => model.id),
+    p_traits: buildTraits(pool),
+    p_rules: rulesForGameMode(Boolean(gameMode.hints_allowed) && gameModeAllowsHints("company")),
+    p_difficulty: null,
+  });
+  const failure = fromRpc(result);
+  if (failure) return failure;
+  return { gameId: result.gameId as string };
 }
 
 async function startRosterRound(
@@ -633,6 +687,9 @@ export type BoardRow = {
   seed: string;
   difficulty: Difficulty | null;
   noHint: boolean;
+  companyId: string | null;
+  companyName: string | null;
+  companyLogo: string | null;
 };
 
 type BoardEntry = {
@@ -644,6 +701,9 @@ type BoardEntry = {
   avatar_path?: string | null;
   difficulty?: number | string | null;
   no_hint?: boolean | null;
+  company_id?: string | null;
+  company_name?: string | null;
+  company_logo?: string | null;
 };
 
 function toBoardRow(entry: BoardEntry, mine: boolean): BoardRow {
@@ -657,6 +717,12 @@ function toBoardRow(entry: BoardEntry, mine: boolean): BoardRow {
     seed: userId || entry.name,
     difficulty: difficultyFromStored(entry.difficulty),
     noHint: Boolean(entry.no_hint),
+    companyId: typeof entry.company_id === "string" ? entry.company_id : null,
+    companyName: typeof entry.company_name === "string" ? entry.company_name : null,
+    companyLogo:
+      typeof entry.company_logo === "string" && typeof entry.company_id === "string"
+        ? presentLogo(entry.company_logo, entry.company_id)
+        : null,
   };
 }
 
@@ -665,19 +731,33 @@ export async function leaderboard(
   period: string,
   viewerId?: string | null,
   difficulty?: BoardDifficulty | null,
+  companyId?: string | null,
 ) {
   const client = serviceOrThrow();
   const { data: row } = await client.from("game_modes").select("leaderboard").eq("id", gameMode).maybeSingle();
   if (!row?.leaderboard) return fail(404, "not_found");
   const since = boardSince(period === "month" || period === "all" ? period : "week");
+  const pickedDifficulty = gameMode === "company" || !difficulty || difficulty === "any" ? null : difficultyNumber[difficulty];
+  const pickedCompany = gameMode === "company" && companyId ? companyId : null;
   const fresh = await client.rpc("leaderboard", {
     game_mode: gameMode,
     since,
     viewer: viewerId ?? null,
-    p_difficulty: difficulty && difficulty !== "any" ? difficultyNumber[difficulty] : null,
+    p_difficulty: pickedDifficulty,
+    p_company: pickedCompany,
   });
   if (!fresh.error) {
     const rows = ((fresh.data ?? []) as BoardEntry[]).map((entry) => toBoardRow(entry, Boolean(entry.mine)));
+    return { rows };
+  }
+  const previous = await client.rpc("leaderboard", {
+    game_mode: gameMode,
+    since,
+    viewer: viewerId ?? null,
+    p_difficulty: pickedDifficulty,
+  });
+  if (!previous.error) {
+    const rows = ((previous.data ?? []) as BoardEntry[]).map((entry) => toBoardRow(entry, Boolean(entry.mine)));
     return { rows };
   }
   const legacy = await client.rpc("leaderboard", { game_mode: gameMode, since });

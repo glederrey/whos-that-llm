@@ -1,9 +1,9 @@
-export function RoundFacts({ mode, difficulty }: { mode: string; difficulty: string }) {
+export function RoundFacts({ mode, difficulty, label = "Difficulty" }: { mode: string; difficulty: string; label?: string }) {
   return (
     <>
       <dt>Game mode</dt>
       <dd>{mode}</dd>
-      <dt>Difficulty</dt>
+      <dt>{label}</dt>
       <dd>{difficulty}</dd>
     </>
   );

@@ -26,10 +26,11 @@ export default async function ResultPage({ params }: { params: Promise<{ gameId:
     difficulty: game.difficulty,
   });
   const onBoard = Boolean(mode?.leaderboard);
-  const again =
-    game.gameMode === "company" || game.gameMode === "region"
-      ? `/play/new?gameMode=${game.gameMode}`
-      : "/play";
+  const again = game.gameMode === "region" ? `/play/new?gameMode=${game.gameMode}` : "/play";
+  const leaderboardHref =
+    game.gameMode === "company"
+      ? `/leaderboard?gameMode=company${game.poolKey ? `&company=${encodeURIComponent(game.poolKey)}` : ""}&period=week`
+      : `/leaderboard?gameMode=${game.gameMode}${game.difficulty ? `&difficulty=${game.difficulty}` : ""}&period=week`;
 
   const nextRound = (
     <div className="row result-actions">
@@ -37,7 +38,7 @@ export default async function ResultPage({ params }: { params: Promise<{ gameId:
         Play again
       </a>
       {onBoard && (game.status === "solved" || game.status === "miss") ? (
-        <a className="button-quiet" href={`/leaderboard?gameMode=${game.gameMode}${game.difficulty ? `&difficulty=${game.difficulty}` : ""}&period=week`}>
+        <a className="button-quiet" href={leaderboardHref}>
           Leaderboard
         </a>
       ) : null}
@@ -57,6 +58,7 @@ export default async function ResultPage({ params }: { params: Promise<{ gameId:
         state={game.status === "solved" ? "solved" : game.status === "miss" ? "miss" : "given_up"}
         mode={facts.mode}
         difficulty={facts.difficulty}
+        company={game.gameMode === "company" ? game.model.companyName : null}
         noHint={game.noHint}
         breakdown={game.breakdown ?? null}
         share={card ? { gameId: card.id, text: shareText(card) } : null}

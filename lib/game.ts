@@ -77,6 +77,7 @@ export type PastGuess = {
 export type PublicGame = {
   id: string;
   gameMode: string;
+  poolKey?: string | null;
   poolLabel: string;
   noHint: boolean;
   hintsAllowed: boolean;
@@ -654,6 +655,7 @@ export function toPublicGame(input: {
   const game: PublicGame = {
     id: input.id,
     gameMode: input.gameMode,
+    poolKey: input.poolKey,
     poolLabel: poolLabel(input.gameMode, input.poolKey, input.traits, input.difficulty),
     difficulty: input.difficulty ?? null,
     noHint: input.noHint,
