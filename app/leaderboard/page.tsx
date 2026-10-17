@@ -1,8 +1,9 @@
 import Link from "next/link";
 import { BoardControls } from "@/components/board-controls";
 import { BoardTable } from "@/components/board-table";
+import { allCompanies } from "@/lib/company";
 import { anyDifficulty } from "@/lib/difficulty";
-import { boardChoice, boardHref, boardModes } from "@/lib/board-query";
+import { boardChoice, boardHref, boardModes, selectedCompany } from "@/lib/board-query";
 import { leaderboard, listBoardOptions, listGameModes } from "@/lib/rounds";
 import { currentProfile } from "@/lib/session";
 
@@ -13,14 +14,24 @@ const pageSize = 20;
 export default async function LeaderboardPage({
   searchParams,
 }: {
-  searchParams: Promise<{ gameMode?: string; period?: string; page?: string; difficulty?: string }>;
+  searchParams: Promise<{ gameMode?: string; period?: string; page?: string; difficulty?: string; company?: string }>;
 }) {
   const params = await searchParams;
   const { user } = await currentProfile();
   const [gameModes, options] = await Promise.all([listGameModes(), listBoardOptions()]);
   const modes = boardModes(gameModes);
   const choice = boardChoice(params, modes);
-  const result = await leaderboard(choice.gameMode, choice.period, user?.id, choice.difficulty);
+  const view = {
+    ...choice,
+    company: choice.gameMode === "company" ? selectedCompany(choice.company, options.companies) : allCompanies,
+  };
+  const result = await leaderboard(
+    view.gameMode,
+    view.period,
+    user?.id,
+    view.difficulty,
+    view.gameMode === "company" && view.company !== allCompanies ? view.company : null,
+  );
   const rows = "rows" in result ? result.rows : [];
   const pageCount = Math.max(1, Math.ceil(rows.length / pageSize));
   const requested = Number(params.page);
@@ -31,23 +42,27 @@ export default async function LeaderboardPage({
 
   return (
     <div className="stack">
-      <a className="back" href={boardHref("/", choice)}>
+      <a className="back" href={boardHref("/", view)}>
         <svg viewBox="0 0 24 24" aria-hidden="true">
           <path fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M15 6 9 12l6 6" />
         </svg>
         Back
       </a>
       <h1>Leaderboard</h1>
-      <BoardControls base="/leaderboard" modes={modes} categories={options.categories} companies={options.companies} {...choice} />
+      <BoardControls base="/leaderboard" modes={modes} categories={options.categories} companies={options.companies} {...view} />
       {rows.length === 0 ? (
         <div className="card empty">No finished games on this board yet.</div>
       ) : (
         <>
-          <BoardTable rows={slice} showDifficulty={choice.difficulty === anyDifficulty} />
+          <BoardTable
+            rows={slice}
+            showDifficulty={view.gameMode !== "company" && view.difficulty === anyDifficulty}
+            showCompany={view.gameMode === "company"}
+          />
           <div className="row pager">
             <div className="row">
               {page > 1 ? (
-                <Link className="button-quiet" href={boardHref("/leaderboard", choice, page - 1)} scroll={false}>
+                <Link className="button-quiet" href={boardHref("/leaderboard", view, page - 1)} scroll={false}>
                   Previous
                 </Link>
               ) : (
@@ -57,7 +72,7 @@ export default async function LeaderboardPage({
                 Page {page} of {pageCount}
               </span>
               {page < pageCount ? (
-                <Link className="button-quiet" href={boardHref("/leaderboard", choice, page + 1)} scroll={false}>
+                <Link className="button-quiet" href={boardHref("/leaderboard", view, page + 1)} scroll={false}>
                   Next
                 </Link>
               ) : (
@@ -65,7 +80,7 @@ export default async function LeaderboardPage({
               )}
             </div>
             {minePage && minePage !== page ? (
-              <Link className="button" href={boardHref("/leaderboard", choice, minePage)} scroll={false}>
+              <Link className="button" href={boardHref("/leaderboard", view, minePage)} scroll={false}>
                 Your place
               </Link>
             ) : null}

@@ -2,12 +2,14 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { CompanyLogo } from "@/components/company-logo";
 import { canStartMode, presentDailyCard } from "@/lib/daily";
 import { difficulties, difficultyBlurb, difficultyLabel, type Difficulty } from "@/lib/difficulty";
 import {
   difficultyAside,
   difficultyBlocked,
   modeToOpen,
+  openCompanyOn,
   openGameOn,
   unfinishedLine,
   type OpenGame,
@@ -20,7 +22,7 @@ export type HomeGameMode = {
   enabled: boolean;
 };
 
-const order = ["daily", "all", "class", "company", "region", "custom"];
+const order = ["daily", "all", "company", "class", "region", "custom"];
 const hidden = new Set(["latest", "origin", "family"]);
 
 const numberWords = [
@@ -86,6 +88,7 @@ export function HomeBoard({
   dailyFinished,
   poolSize,
   difficultyCounts,
+  companies,
   nextAt,
   gameModes,
 }: {
@@ -96,6 +99,7 @@ export function HomeBoard({
   dailyFinished: Difficulty[];
   poolSize: number;
   difficultyCounts: Record<Difficulty, number>;
+  companies: Array<{ id: string; name: string; logoUrl: string; models: number }>;
   nextAt: string | null;
   gameModes: HomeGameMode[];
 }) {
@@ -174,6 +178,64 @@ export function HomeBoard({
       setNotice("Choose a difficulty.");
       return;
     }
+    if (body.error === "company") {
+      setNotice("Choose a company.");
+      return;
+    }
+    setNotice("Not enough models.");
+  }
+
+  async function startCompany(companyId: string) {
+    const open = openCompanyOn(openGames, companyId);
+    if (open) {
+      router.push(`/play/${open.id}`);
+      return;
+    }
+    setBusy(true);
+    setNotice("");
+    setResumeId(null);
+    const response = await fetch("/api/games", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ gameMode: "company", companyId, noHint }),
+    });
+    const body = (await response.json().catch(() => ({}))) as { gameId?: string; error?: string; nextAt?: string };
+    setBusy(false);
+    if (response.status === 401) {
+      router.push("/login?next=/play");
+      return;
+    }
+    if (body.error === "active_game") {
+      const known = openCompanyOn(openGames, companyId);
+      setResumeId(body.gameId ?? known?.id ?? null);
+      setNotice("You already have a game open.");
+      return;
+    }
+    if (body.gameId) {
+      router.push(`/play/${body.gameId}`);
+      return;
+    }
+    if (body.error === "hourly_cap") {
+      const when = body.nextAt ? localTime(body.nextAt) : nextAt ? localTime(nextAt) : "";
+      setNotice(when ? `Hourly limit reached. Next game at ${when}.` : "Hourly limit reached.");
+      return;
+    }
+    if (body.error === "paused") {
+      setNotice("The game is paused.");
+      return;
+    }
+    if (body.error === "username") {
+      router.push("/welcome?next=/play");
+      return;
+    }
+    if (body.error === "not_found") {
+      setNotice("That mode is not open yet.");
+      return;
+    }
+    if (body.error === "company") {
+      setNotice("Choose a company.");
+      return;
+    }
     setNotice("Not enough models.");
   }
 
@@ -234,6 +296,55 @@ export function HomeBoard({
                 <div className="difficulty-panel">
                   {custom ? (
                     <p className="muted">The player chooses that pool.</p>
+                  ) : gameMode.id === "company" ? (
+                    <>
+                      <p className="difficulty-heading">Choose company</p>
+                      <div className="difficulty-list">
+                        {companies.map((company) => {
+                          const count = company.models;
+                          const small = count < 2;
+                          const open = openCompanyOn(openGames, company.id);
+                          const blocked = difficultyBlocked({
+                            open: Boolean(open),
+                            finished: false,
+                            playable,
+                            paused,
+                            busy,
+                            full,
+                            count,
+                          });
+                          const choice = (
+                            <>
+                              <CompanyLogo src={company.logoUrl} />
+                              <span className="difficulty-name">
+                                <strong>{company.name}</strong>
+                                {playable && small && !open ? <span className="muted">Not enough models.</span> : null}
+                              </span>
+                              {open ? (
+                                <span className="difficulty-resume">{unfinishedLine}</span>
+                              ) : (
+                                <span className="difficulty-count">{difficultyAside(count, false)}</span>
+                              )}
+                            </>
+                          );
+                          return playable ? (
+                            <button
+                              key={company.id}
+                              type="button"
+                              className="difficulty-choice company-choice"
+                              disabled={blocked}
+                              onClick={() => void startCompany(company.id)}
+                            >
+                              {choice}
+                            </button>
+                          ) : (
+                            <div key={company.id} className="difficulty-choice company-choice is-soon">
+                              {choice}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </>
                   ) : (
                     <>
                       <p className="difficulty-heading">Choose difficulty</p>
@@ -287,17 +398,17 @@ export function HomeBoard({
                           );
                         })}
                       </div>
-                      {playable ? (
-                        <label className="check category-check">
-                          <input type="checkbox" checked={noHint} onChange={(event) => setNoHint(event.target.checked)} />
-                          <span>
-                            <strong>Play without hints.</strong>
-                            <span className="muted">No hints. No match feedback.</span>
-                          </span>
-                        </label>
-                      ) : null}
                     </>
                   )}
+                  {playable ? (
+                    <label className="check category-check">
+                      <input type="checkbox" checked={noHint} onChange={(event) => setNoHint(event.target.checked)} />
+                      <span>
+                        <strong>Play without hints.</strong>
+                        <span className="muted">No hints. No match feedback.</span>
+                      </span>
+                    </label>
+                  ) : null}
                 </div>
               ) : null}
             </div>

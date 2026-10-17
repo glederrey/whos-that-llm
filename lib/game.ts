@@ -14,6 +14,11 @@ export function isFinishedGame(status: string): boolean {
   return (finishedGameStatuses as readonly string[]).includes(status);
 }
 
+/** The message about to be written. Two replies already in means the next one is 3. The tenth stays at the limit. */
+export function upcomingMessageNumber(messageNumber: number, messageLimit: number): number {
+  return Math.min(messageLimit, Math.max(1, messageNumber + 1));
+}
+
 export type FrozenModel = {
   name: string;
   companyId: string;
@@ -77,6 +82,7 @@ export type PastGuess = {
 export type PublicGame = {
   id: string;
   gameMode: string;
+  poolKey?: string | null;
   poolLabel: string;
   noHint: boolean;
   hintsAllowed: boolean;
@@ -442,9 +448,16 @@ const hintNames: Record<HintKey, string> = {
 
 const hintKeyList: readonly HintKey[] = ["company", "region", "year", "size"];
 
-/** Hints exist only on Daily, All models, and Custom. Every other game mode, including class and region, has none. */
+/** Hints exist on Daily, All models, Company, and Custom. Class and region have none. */
 export function gameModeAllowsHints(gameMode: string): boolean {
-  return gameMode === "daily" || gameMode === "all" || gameMode === "custom";
+  return gameMode === "daily" || gameMode === "all" || gameMode === "company" || gameMode === "custom";
+}
+
+/** Company already names the lab and its region, so only the year and the size can be bought. */
+export function hintAllowedForMode(gameMode: string, key: HintKey): boolean {
+  if (!gameModeAllowsHints(gameMode)) return false;
+  if (gameMode === "company") return key === "year" || key === "size";
+  return true;
 }
 
 export function playableHints(value: readonly string[] | null | undefined): HintKey[] {
@@ -654,6 +667,7 @@ export function toPublicGame(input: {
   const game: PublicGame = {
     id: input.id,
     gameMode: input.gameMode,
+    poolKey: input.poolKey,
     poolLabel: poolLabel(input.gameMode, input.poolKey, input.traits, input.difficulty),
     difficulty: input.difficulty ?? null,
     noHint: input.noHint,

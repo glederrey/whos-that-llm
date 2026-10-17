@@ -1,9 +1,12 @@
 import assert from "node:assert/strict";
+import fs from "node:fs";
+import path from "node:path";
 import test from "node:test";
 import { currentRules, rulesForGameMode } from "./config";
 import {
   buildTraits,
   gameModeAllowsHints,
+  upcomingMessageNumber,
   eliminatedCompanyIds,
   filterCandidates,
   hintOffered,
@@ -21,6 +24,7 @@ import {
 } from "./game";
 
 const rules = rulesForGameMode(true);
+const root = path.resolve(import.meta.dirname, "..");
 
 function model(
   partial: Partial<FrozenModel> & Pick<FrozenModel, "name" | "companyId"> & { id?: string },
@@ -553,11 +557,41 @@ test("a wrong guess keeps the model and names the traits it missed", () => {
   assert.deepEqual(missedGuesses(traits, guesses, true)[0]?.wrong, []);
 });
 
-test("hints are only possible on daily, all models, and custom", () => {
+test("the header counts the message about to be written", () => {
+  assert.equal(upcomingMessageNumber(0, 10), 1);
+  assert.equal(upcomingMessageNumber(2, 10), 3);
+  assert.equal(upcomingMessageNumber(9, 10), 10);
+  assert.equal(upcomingMessageNumber(10, 10), 10);
+  const board = fs.readFileSync(path.join(root, "components/round-board.tsx"), "utf8");
+  const css = fs.readFileSync(path.join(root, "app/globals.css"), "utf8");
+  assert.match(board, /upcomingMessageNumber\(game\.messageNumber, game\.messageLimit\)/);
+  assert.match(board, /className="round-pool muted"/);
+  assert.match(css, /\.round-pool \{ display: block; \}/);
+  assert.match(css, /\.round-pool-sep \{ display: none; \}/);
+  assert.match(css, /\.give-up \{ grid-column: 2; grid-row: 1; \}/);
+  assert.match(css, /\.progress \{ grid-column: 1 \/ -1; grid-row: 2; width: 100%; \}/);
+  assert.match(board, /Guess for message \{guessFor\}/);
+  assert.match(board, /disabled=\{!canGuess \|\| !selected \|\| guessBusy \|\| busy\}/);
+  assert.match(board, /placeholder="Search models"/);
+  assert.doesNotMatch(board, /game\.awaitingGuess \? \(/);
+  assert.match(css, /max-height: calc\(100dvh - 32px\)/);
+  assert.match(css, /\.guess-history \{ flex: none; overflow: hidden; \}/);
+  assert.match(css, /\.guess-history \{ --fit: 1; \}/);
+  assert.match(css, /\.guess-history h2 \{ font-size: 16px; margin-bottom: 4px; \}/);
+  assert.doesNotMatch(css, /\.guess-history h2 \{[^}]*var\(--fit\)/);
+  assert.match(board, /setProperty\("--fit"/);
+  assert.doesNotMatch(board, /side\.style\.height/);
+  assert.match(board, /Math\.max\(stickyTop, threadTop\)/);
+  assert.match(board, /Math\.min\(window\.innerHeight - gap, composerBottom\)/);
+  assert.match(css, /\.page \{ flex: 1; padding: 20px 0 0; \}/);
+});
+
+test("hints are possible on daily, all models, company, and custom", () => {
   assert.equal(gameModeAllowsHints("daily"), true);
   assert.equal(gameModeAllowsHints("all"), true);
+  assert.equal(gameModeAllowsHints("company"), true);
   assert.equal(gameModeAllowsHints("custom"), true);
-  for (const gameMode of ["class", "region", "company", "latest"]) {
+  for (const gameMode of ["class", "region", "latest"]) {
     assert.equal(gameModeAllowsHints(gameMode), false, gameMode);
   }
 });

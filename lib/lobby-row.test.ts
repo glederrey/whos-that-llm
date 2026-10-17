@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
 import test from "node:test";
-import { difficultyAside, difficultyBlocked, modeToOpen, openGameOn, unfinishedLine, type OpenGame } from "./lobby-row";
+import { difficultyAside, difficultyBlocked, modeToOpen, openCompanyOn, openGameOn, unfinishedLine, type OpenGame } from "./lobby-row";
 
 const root = path.resolve(import.meta.dirname, "..");
 
@@ -45,6 +45,11 @@ test("daily and all models keep separate unfinished rounds", () => {
   assert.equal(modeToOpen([hard]), "all");
   assert.equal(modeToOpen([]), null);
   assert.equal(modeToOpen([{ id: "old", mode: "all", difficulty: null }]), null);
+  const company: OpenGame = { id: "anthropic-round", mode: "company", difficulty: null, companyId: "anthropic" };
+  assert.equal(openCompanyOn([company], "anthropic")?.id, "anthropic-round");
+  assert.equal(openCompanyOn([company], "openai"), null);
+  assert.equal(modeToOpen([company]), "company");
+  assert.equal(modeToOpen([hard, company]), "all");
 });
 
 test("one active round per mode and difficulty replaces the single active round", () => {

@@ -1,6 +1,8 @@
 import Link from "next/link";
+import { allCompanies } from "@/lib/company";
 import { anyDifficulty, difficulties, difficultyLabel, type BoardDifficulty } from "@/lib/difficulty";
 import { boardHref, boardMiddle, type BoardChoice, type BoardMode, type BoardPeriod } from "@/lib/board-query";
+import { CompanyLogo } from "./company-logo";
 
 export function BoardControls({
   base,
@@ -10,16 +12,18 @@ export function BoardControls({
   gameMode,
   period,
   difficulty,
+  company,
 }: {
   base: "/" | "/leaderboard";
   modes: BoardMode[];
   categories: Array<{ id: string; name: string }>;
-  companies: Array<{ id: string; name: string }>;
+  companies: Array<{ id: string; name: string; logoUrl: string }>;
   gameMode: string;
   period: BoardPeriod;
   difficulty: BoardDifficulty;
+  company: string;
 }) {
-  const choice: BoardChoice = { gameMode, period, difficulty };
+  const choice: BoardChoice = { gameMode, period, difficulty, company };
   const middle = boardMiddle(gameMode, modes);
   return (
     <div className="board-controls">
@@ -71,19 +75,7 @@ export function BoardControls({
           </select>
         ) : null}
         {middle?.kind === "company" ? (
-          <select
-            aria-label="Company"
-            disabled={middle.disabled}
-            defaultValue=""
-            title={middle.disabled ? "That mode is not open yet." : undefined}
-          >
-            <option value="">Company</option>
-            {companies.map((item) => (
-              <option key={item.id} value={item.id}>
-                {item.name}
-              </option>
-            ))}
-          </select>
+          <CompanyMenu base={base} choice={choice} companies={companies} company={company} disabled={middle.disabled} />
         ) : null}
       </div>
       <div className="segmented board-controls-period" role="group" aria-label="Period">
@@ -98,5 +90,56 @@ export function BoardControls({
         </Link>
       </div>
     </div>
+  );
+}
+
+function CompanyMenu({
+  base,
+  choice,
+  companies,
+  company,
+  disabled,
+}: {
+  base: "/" | "/leaderboard";
+  choice: BoardChoice;
+  companies: Array<{ id: string; name: string; logoUrl: string }>;
+  company: string;
+  disabled: boolean;
+}) {
+  const picked = companies.find((item) => item.id === company) ?? null;
+  const label = picked?.name ?? "All companies";
+  if (disabled) {
+    return (
+      <span className="company-menu is-disabled" aria-disabled="true" title="That mode is not open yet.">
+        <span className="company-menu-summary">{label}</span>
+      </span>
+    );
+  }
+  return (
+    <details key={company} className="company-menu">
+      <summary aria-label="Company">
+        {picked ? <CompanyLogo src={picked.logoUrl} /> : null}
+        <span>{label}</span>
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="m6 9 6 6 6-6" />
+        </svg>
+      </summary>
+      <div className="company-menu-list">
+        <Link aria-current={company === allCompanies ? "true" : undefined} href={boardHref(base, { ...choice, company: allCompanies })} scroll={false}>
+          All companies
+        </Link>
+        {companies.map((item) => (
+          <Link
+            key={item.id}
+            aria-current={item.id === company ? "true" : undefined}
+            href={boardHref(base, { ...choice, company: item.id })}
+            scroll={false}
+          >
+            <CompanyLogo src={item.logoUrl} />
+            <span>{item.name}</span>
+          </Link>
+        ))}
+      </div>
+    </details>
   );
 }

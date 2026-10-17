@@ -1,6 +1,7 @@
+import { allCompanies, parseBoardCompany } from "@/lib/company";
 import { parseDifficulty } from "@/lib/difficulty";
 import { apiError, apiJson } from "@/lib/http";
-import { startAllModels, startDaily } from "@/lib/rounds";
+import { startAllModels, startCompany, startDaily } from "@/lib/rounds";
 import { currentUser } from "@/lib/session";
 
 export async function POST(request: Request) {
@@ -11,7 +12,15 @@ export async function POST(request: Request) {
     poolKey?: string | null;
     noHint?: boolean;
     difficulty?: string;
+    companyId?: string;
   };
+  if (body.gameMode === "company") {
+    const companyId = parseBoardCompany(body.companyId);
+    if (companyId === allCompanies) return apiJson({ error: "company" }, 422);
+    const result = await startCompany(user.id, companyId, Boolean(body.noHint));
+    if ("error" in result) return apiError(result);
+    return apiJson({ gameId: result.gameId });
+  }
   if (body.gameMode !== "all" && body.gameMode !== "daily") return apiJson({ error: "not_found" }, 404);
   const difficulty = parseDifficulty(body.difficulty);
   if (!difficulty) return apiJson({ error: "difficulty" }, 422);
