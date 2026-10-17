@@ -328,7 +328,7 @@ test("the public result is the score table and a link home", () => {
   assert.match(html, /All models/);
   assert.match(html, /Hard/);
   assert.match(html, new RegExp(hidden));
-  assert.match(html, /Wanna try to beat this score/);
+  assert.match(html, /Try to beat this score/);
   assert.match(html, /href="\/"/);
   assert.equal(html.includes("How scoring works"), false);
   assert.equal(html.includes("transcript"), false);
@@ -388,9 +388,9 @@ test("the public result is the score table and a link home", () => {
   const quiet = card({ status: "given_up", score: null, breakdown: null, messageCount: 0 });
   const quietHtml = renderToStaticMarkup(createElement(SharedResult, { card: quiet }));
   assert.match(quietHtml, /Given up\./);
-  assert.match(quietHtml, /Wanna try a round/);
+  assert.match(quietHtml, /Try a round/);
   assert.equal(quietHtml.includes("Your score"), false);
-  assert.equal(quietHtml.includes("Wanna try to beat this score"), false);
+  assert.equal(quietHtml.includes("Try to beat this score"), false);
 
   const hinted = card({
     breakdown: [
@@ -409,7 +409,7 @@ test("the public result is the score table and a link home", () => {
   assert.match(page, /SharedResult/);
   assert.match(page, /shareCardPath/);
   assert.doesNotMatch(page, /SharePicture|ShareActions|MessageBubble|transcript/);
-  assert.match(view, /Wanna try to beat this score/);
+  assert.match(view, /Try to beat this score/);
   assert.doesNotMatch(view, /ShareActions|MessageBubble|transcript/);
   assert.doesNotMatch(layout, /startsWith\("\/r\/"\)/);
   assert.match(played, /MessageBubble/);
