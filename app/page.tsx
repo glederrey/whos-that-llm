@@ -59,23 +59,26 @@ export default async function HomePage({
           <p className="muted hero-note">The leaderboard is open to everyone. An account is only for playing.</p>
         </div>
       </section>
-      <ol className="steps">
-        <li>
-          <span className="step-no">1</span>
-          <strong>Ask anything</strong>
-          <span>Ten messages with a model you cannot see.</span>
-        </li>
-        <li>
-          <span className="step-no">2</span>
-          <strong>Guess when you want</strong>
-          <span>Name it, or stay in the chat.</span>
-        </li>
-        <li>
-          <span className="step-no">3</span>
-          <strong>Score high</strong>
-          <span>Few tokens and few hints score the most.</span>
-        </li>
-      </ol>
+      <section className="how-round">
+        <h2 className="how-round-title">How a round works</h2>
+        <ol className="steps">
+          <li>
+            <span className="step-no">1</span>
+            <strong>Ask anything</strong>
+            <span className="step-text">Ten messages with a model you cannot see.</span>
+          </li>
+          <li>
+            <span className="step-no">2</span>
+            <strong>Guess when you want</strong>
+            <span className="step-text">Name it, or stay in the chat.</span>
+          </li>
+          <li>
+            <span className="step-no">3</span>
+            <strong>Score high</strong>
+            <span className="step-text">Few tokens and few hints score the most.</span>
+          </li>
+        </ol>
+      </section>
       <dl className="stats">
         <div>
           <dt>Models in play</dt>
