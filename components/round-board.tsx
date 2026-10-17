@@ -242,12 +242,15 @@ export function RoundBoard({ initial }: { initial: PublicGame }) {
         <header>
           <div className="meta round-bar">
             <div className="round-title">
-              <span>
+              <span className="round-count">
                 <strong>
                   Message {shown} of {game.messageLimit}
                 </strong>
-                <span className="muted"> · {game.poolLabel}</span>
-                {game.noHint ? <span className="pill">No hints</span> : null}
+                <span className="round-pool muted">
+                  <span className="round-pool-sep"> · </span>
+                  {game.poolLabel}
+                  {game.noHint ? <span className="pill">No hints</span> : null}
+                </span>
               </span>
               <span className="progress" aria-hidden="true">
                 {Array.from({ length: game.messageLimit }, (_, index) => (

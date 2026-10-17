@@ -1010,6 +1010,7 @@ html[data-theme="dark"] .company-menu summary { color: var(--text); }
 .round-title { display: grid; gap: 8px; }
 .round-title strong { color: var(--text); font-size: 16px; }
 .round-title .pill { margin-left: 8px; }
+.round-pool { min-width: 0; }
 .progress { display: flex; gap: 4px; width: min(260px, 100%); }
 .progress i { flex: 1; height: 5px; border-radius: 999px; background: var(--line); transition: background 0.3s ease; }
 .progress i.on { background: var(--teal); }
@@ -1844,8 +1845,12 @@ html[data-theme="dark"] .history-facts .board-chip.no-hints {
   }
   .credit { justify-content: center; }
   .thread > header { position: sticky; top: 0; z-index: 10; margin: 0 -12px; padding: 8px 12px; background: var(--canvas); }
-  .round-bar { flex-wrap: nowrap; }
+  .round-bar { flex-wrap: nowrap; align-items: flex-start; }
   .round-title { min-width: 0; }
+  .round-count { display: block; }
+  .round-pool { display: block; }
+  .round-pool-sep { display: none; }
+  .round-pool .pill { margin-left: 8px; }
   .composer .meta .button { padding: 10px 22px; }
   .trait { flex-wrap: wrap; gap: 8px 12px; }
   .trait-side { flex-wrap: wrap; justify-content: flex-end; }
