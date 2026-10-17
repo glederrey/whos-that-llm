@@ -29,6 +29,7 @@ export type { CategoryRow, RosterRow } from "./roster-row";
 import { readListPrice } from "./list-price";
 import { planReasoningUpdates, type CatalogModel } from "./roster-sync";
 import { companyLogoPath } from "./logos";
+import { enabledModelCounts } from "./model-counts";
 import { companyForOrg, type CompanyChoice } from "./openrouter-draft";
 import { countedPlayerId } from "./anonymize-account";
 import { presentLogo, serviceOrThrow } from "./rounds";
@@ -42,6 +43,9 @@ export type AdminStats = {
 };
 
 type CompanyRow = { id: string; name: string; region: Region };
+
+export type CategoryListRow = CategoryRow & { modelCount: number };
+export type CompanyListRow = CompanyRow & { modelCount: number };
 
 export async function loadAdminStats(): Promise<AdminStats> {
   await requireOwner();
@@ -63,7 +67,7 @@ export async function loadRoster(): Promise<{ rows: RosterRow[]; companies: Comp
   const [{ data, error }, companies, categories] = await Promise.all([
     client
       .from("models")
-      .select("id, openrouter_id, name, size, difficulty, released_on, enabled, input_usd_per_mtok, output_usd_per_mtok, logo_path, company_id, companies(name, region, logo_path), model_categories(category_id)")
+      .select("id, openrouter_id, name, size, difficulty, released_on, enabled, available, input_usd_per_mtok, output_usd_per_mtok, logo_path, company_id, companies(name, region, logo_path), model_categories(category_id)")
       .order("enabled", { ascending: false })
       .order("name"),
     loadCompanies(client),
@@ -87,6 +91,7 @@ export async function loadRoster(): Promise<{ rows: RosterRow[]; companies: Comp
       inputUsdPerMtok: readListPrice(row.input_usd_per_mtok),
       outputUsdPerMtok: readListPrice(row.output_usd_per_mtok),
       enabled: Boolean(row.enabled),
+      available: row.available !== false,
       logoUrl: presentLogo((row.logo_path as string | null) || company?.logo_path || "", companyId),
       categoryIds,
       categoryNames: categoryIds.map((id) => categoryName.get(id) ?? id).join(", "),
@@ -194,10 +199,11 @@ export async function setRosterEnabled(idRaw: string, enabled: boolean): Promise
   const client = serviceOrThrow();
   const current = await client
     .from("models")
-    .select("id, released_on, reasoning, provider_settings")
+    .select("id, released_on, reasoning, provider_settings, available")
     .eq("id", id)
     .maybeSingle();
   if (current.error || !current.data) return "save";
+  if (enabled && current.data.available === false) return "unavailable";
   if (enabled && !canTurnOn({
     releasedOn: current.data.released_on as string | null,
     reasoning: Boolean(current.data.reasoning),
@@ -267,7 +273,7 @@ export async function writeReasoningFlags(catalog: CatalogModel[]): Promise<bool
   return true;
 }
 
-export async function disableRosterModels(ids: string[]): Promise<boolean> {
+export async function markRosterUnavailable(ids: string[]): Promise<boolean> {
   await requireOwner();
   if (ids.length === 0) return true;
   const clean: string[] = [];
@@ -277,10 +283,10 @@ export async function disableRosterModels(ids: string[]): Promise<boolean> {
     clean.push(id);
   }
   const client = serviceOrThrow();
-  // Off, not deleted, so a game that already drew the model still resolves.
+  // Off and unavailable, not deleted, so a game that already drew the model still resolves.
   const { error } = await client
     .from("models")
-    .update({ enabled: false, updated_at: new Date().toISOString() })
+    .update({ available: false, enabled: false, updated_at: new Date().toISOString() })
     .in("id", clean);
   return !error;
 }
@@ -379,12 +385,38 @@ async function loadCompanies(client: SupabaseClient): Promise<CompanyRow[] | nul
   }));
 }
 
-export async function loadCategoryList(): Promise<{ categories: CategoryRow[]; companies: CompanyRow[] }> {
+async function loadEnabledCounts(client: SupabaseClient) {
+  const { data, error } = await client.from("models").select("enabled, company_id, model_categories(category_id)");
+  if (error) return null;
+  const memberships = (data ?? []).map((row) => ({
+    enabled: Boolean(row.enabled),
+    companyId: typeof row.company_id === "string" ? row.company_id : "",
+    categoryIds: membershipIds(row.model_categories),
+  }));
+  return enabledModelCounts(memberships);
+}
+
+export async function loadCategoryList(): Promise<{ categories: CategoryListRow[]; companies: CompanyRow[] }> {
   await requireOwner();
   const client = serviceOrThrow();
-  const [categories, companies] = await Promise.all([loadCategories(client), loadCompanies(client)]);
-  if (!categories || !companies) throw new Error("Could not read categories.");
-  return { categories, companies };
+  const [categories, companies, counts] = await Promise.all([
+    loadCategories(client),
+    loadCompanies(client),
+    loadEnabledCounts(client),
+  ]);
+  if (!categories || !companies || !counts) throw new Error("Could not read categories.");
+  return {
+    categories: categories.map((row) => ({ ...row, modelCount: counts.byCategory.get(row.id) ?? 0 })),
+    companies,
+  };
+}
+
+export async function loadCompanyList(): Promise<CompanyListRow[]> {
+  await requireOwner();
+  const client = serviceOrThrow();
+  const [companies, counts] = await Promise.all([loadCompanies(client), loadEnabledCounts(client)]);
+  if (!companies || !counts) throw new Error("Could not read companies.");
+  return companies.map((company) => ({ ...company, modelCount: counts.byCompany.get(company.id) ?? 0 }));
 }
 
 export async function createCategory(raw: {

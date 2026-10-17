@@ -14,6 +14,7 @@ function rosterStamp(rows: RosterRow[]): string {
       [
         row.id,
         row.enabled ? "1" : "0",
+        row.available ? "1" : "0",
         row.name,
         row.openrouterId,
         row.companyName,
@@ -33,7 +34,7 @@ function rosterStamp(rows: RosterRow[]): string {
 export default async function ModelsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ notice?: string; q?: string; active?: string; inactive?: string; sort?: string; dir?: string }>;
+  searchParams: Promise<{ notice?: string; q?: string; active?: string; inactive?: string; unavailable?: string; sort?: string; dir?: string }>;
 }) {
   const params = await searchParams;
   const notice = rosterNotice(params.notice);
@@ -41,8 +42,9 @@ export default async function ModelsPage({
   const query = (params.q ?? "").slice(0, 100);
   const sort = rosterSortOf(params.sort, params.dir);
   const found = sortRoster(searchRoster(rows, query), sort);
-  const active = pageOf(found.filter((row) => row.enabled), params.active);
-  const inactive = pageOf(found.filter((row) => !row.enabled), params.inactive);
+  const active = pageOf(found.filter((row) => row.available && row.enabled), params.active);
+  const inactive = pageOf(found.filter((row) => row.available && !row.enabled), params.inactive);
+  const unavailable = pageOf(found.filter((row) => !row.available), params.unavailable);
 
   return (
     <div className="stack">
@@ -51,8 +53,9 @@ export default async function ModelsPage({
       <p className="muted">
         Turning a model off leaves it out of new rounds. Games already started keep the model they drew. Input and
         output are the list price in dollars per 1 million tokens. Update prices writes the current OpenRouter list
-        price. Check availability turns off models OpenRouter no longer lists. Search for new models lists text models
-        OpenRouter added in the last 30 days that are not already on the roster.
+        price. Check availability moves models OpenRouter no longer lists into Unavailable on OpenRouter. Those stay in
+        the database and cannot be turned on. Search for new models lists text models OpenRouter added in the last 30
+        days that are not already on the roster.
       </p>
       {notice ? (
         <p className="error" role="alert">
@@ -68,6 +71,7 @@ export default async function ModelsPage({
         initialSort={sort}
         initialActive={active.page}
         initialInactive={inactive.page}
+        initialUnavailable={unavailable.page}
       />
       <datalist id="roster-companies">
         {companies.map((company) => (

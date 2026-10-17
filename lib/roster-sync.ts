@@ -22,6 +22,8 @@ export type SyncModel = {
   inputUsdPerMtok: number | null;
   outputUsdPerMtok: number | null;
   enabled: boolean;
+  /** False once OpenRouter no longer lists the model. Those rows are not checked again. */
+  available: boolean;
 };
 
 export type PriceSide = {
@@ -60,7 +62,7 @@ export type UnavailableModel = {
 
 export type AvailabilityPlan = {
   unavailable: UnavailableModel[];
-  disableIds: string[];
+  markIds: string[];
 };
 
 export type PriceSyncResult =
@@ -192,14 +194,14 @@ export function planPriceUpdates(roster: SyncModel[], catalog: CatalogModel[]): 
   return { changes, notUpdated, updates };
 }
 
-/** Models still listed on OpenRouter stay as they are, including ones that are already off. An empty catalog is refused. */
+/** Models still listed on OpenRouter stay as they are, including ones that are already off. Models already marked unavailable are left alone. An empty catalog is refused. */
 export function planUnavailable(roster: SyncModel[], catalog: CatalogModel[]): AvailabilityPlan | null {
   if (catalog.length === 0) return null;
   const ids = new Set(catalogById(catalog).keys());
-  const unavailable = roster.filter((model) => !ids.has(model.openrouterId.trim()));
+  const unavailable = roster.filter((model) => model.available && !ids.has(model.openrouterId.trim()));
   return {
     unavailable: unavailable.map((model) => ({ id: model.id, name: model.name })),
-    disableIds: unavailable.filter((model) => model.enabled).map((model) => model.id),
+    markIds: unavailable.map((model) => model.id),
   };
 }
 

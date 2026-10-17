@@ -2,7 +2,7 @@ import { DeleteCategoryForm } from "@/components/delete-category-form";
 import { SectionNav } from "@/components/section-nav";
 import { addCategory, saveCategory } from "@/app/admin/actions";
 import { categoryDeleteMessage, categoryNotice } from "@/lib/admin-category";
-import { loadCategoryList, type CategoryRow } from "@/lib/admin-roster";
+import { loadCategoryList, type CategoryListRow } from "@/lib/admin-roster";
 
 export const dynamic = "force-dynamic";
 
@@ -22,7 +22,8 @@ export default async function CategoriesPage({
       <h1>Categories</h1>
       <p className="muted">
         A category is a set we define, not a lab&apos;s line. One model can be in several: only Opus, only the nano
-        models, or a pile of obscure ones. Company is optional. A category has no logo of its own.
+        models, or a pile of obscure ones. Company is optional. A category has no logo of its own. The model count is
+        models that are turned on.
       </p>
       {notice ? (
         <p className="error" role="alert">
@@ -52,13 +53,14 @@ export default async function CategoriesPage({
               <th>Name</th>
               <th>Description</th>
               <th>Company</th>
+              <th>Models</th>
               <th></th>
             </tr>
           </thead>
           <tbody>
             {categories.length === 0 ? (
               <tr>
-                <td colSpan={4} className="muted">
+                <td colSpan={5} className="muted">
                   No categories yet.
                 </td>
               </tr>
@@ -72,7 +74,7 @@ export default async function CategoriesPage({
   );
 }
 
-function CategoryRowView({ row, companies }: { row: CategoryRow; companies: { id: string; name: string }[] }) {
+function CategoryRowView({ row, companies }: { row: CategoryListRow; companies: { id: string; name: string }[] }) {
   const panel = `edit-category-${row.id}`;
   const choices = companies;
   return (
@@ -80,6 +82,7 @@ function CategoryRowView({ row, companies }: { row: CategoryRow; companies: { id
       <td>{row.name}</td>
       <td>{row.description || "—"}</td>
       <td>{row.companyName ?? "None"}</td>
+      <td>{row.modelCount.toLocaleString("en-US")}</td>
       <td>
         <div className="roster-buttons">
           <button className="button-quiet" type="button" popoverTarget={panel}>

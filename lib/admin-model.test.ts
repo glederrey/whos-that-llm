@@ -134,6 +134,7 @@ test("a release date and typed prices are kept", () => {
 
 test("unknown notices stay blank", () => {
   assert.equal(rosterNotice("duplicate"), "That OpenRouter id is already on a model.");
+  assert.match(rosterNotice("unavailable") ?? "", /stays off/);
   assert.equal(rosterNotice("admin"), null);
   assert.equal(rosterNotice(undefined), null);
 });

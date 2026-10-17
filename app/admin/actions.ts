@@ -7,7 +7,7 @@ import { parseDifficulty } from "@/lib/difficulty";
 import {
   createCategory,
   createRosterModel,
-  disableRosterModels,
+  markRosterUnavailable,
   insertDiscoveredModels,
   loadRoster,
   removeCategory,
@@ -71,6 +71,7 @@ function finish(formData: FormData, notice: string | null) {
       dir: text(formData, "dir"),
       active: text(formData, "active"),
       inactive: text(formData, "inactive"),
+      unavailable: text(formData, "unavailable"),
     }),
   );
 }
@@ -137,11 +138,13 @@ export async function checkRosterAvailability(): Promise<AvailabilityResult> {
   const { rows } = await loadRoster();
   const plan = planUnavailable(rows, catalog.models);
   if (!plan) return { ok: false, error: "OpenRouter returned models in a shape this page does not read." };
-  if (plan.disableIds.length > 0) {
-    const saved = await disableRosterModels(plan.disableIds);
-    if (!saved) return { ok: false, error: "Could not turn those models off." };
+  if (plan.markIds.length > 0) {
+    const saved = await markRosterUnavailable(plan.markIds);
+    if (!saved) return { ok: false, error: "Could not mark those models unavailable." };
     revalidatePath("/admin");
     revalidatePath("/admin/models");
+    revalidatePath("/admin/categories");
+    revalidatePath("/admin/companies");
   }
   const reasoning = await writeReasoningFlags(catalog.models);
   if (!reasoning) return { ok: false, error: "Could not save which models can reason." };

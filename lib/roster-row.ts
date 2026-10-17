@@ -13,6 +13,7 @@ export type RosterRow = {
   inputUsdPerMtok: number | null;
   outputUsdPerMtok: number | null;
   enabled: boolean;
+  available: boolean;
   logoUrl: string;
   categoryIds: string[];
   categoryNames: string;
