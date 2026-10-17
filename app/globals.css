@@ -918,7 +918,10 @@ html[data-theme="dark"] .company-menu summary { color: var(--text); }
 .round { display: grid; gap: 16px; }
 .thread { display: contents; }
 .side { display: grid; gap: 16px; align-content: start; }
-.guess-sticky { display: flex; flex-direction: column; gap: 16px; }
+.guess-sticky { display: flex; flex-direction: column; gap: 16px; min-height: 0; }
+.feedback,
+.guess-box { flex: none; }
+.guess-history { min-height: 0; }
 @media (min-width: 900px) {
   .round { grid-template-columns: minmax(0, 1fr) 340px; gap: 16px 24px; }
   .thread {
@@ -935,7 +938,12 @@ html[data-theme="dark"] .company-menu summary { color: var(--text); }
     align-self: start;
     position: sticky;
     top: 16px;
+    display: flex;
+    flex-direction: column;
+    max-height: calc(100dvh - 32px);
   }
+  .guess-sticky { flex: 1 1 auto; min-height: 0; overflow: visible; }
+  .guess-history { flex: 1 1 auto; min-height: 0; overflow-y: auto; }
   /* The message bar and the right column stay put until the scroll meets them,
      then follow the thread together. The bar covers the messages underneath. */
   .thread > header {

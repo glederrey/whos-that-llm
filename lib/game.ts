@@ -14,6 +14,11 @@ export function isFinishedGame(status: string): boolean {
   return (finishedGameStatuses as readonly string[]).includes(status);
 }
 
+/** The message about to be written. Two replies already in means the next one is 3. The tenth stays at the limit. */
+export function upcomingMessageNumber(messageNumber: number, messageLimit: number): number {
+  return Math.min(messageLimit, Math.max(1, messageNumber + 1));
+}
+
 export type FrozenModel = {
   name: string;
   companyId: string;

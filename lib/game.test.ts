@@ -1,9 +1,12 @@
 import assert from "node:assert/strict";
+import fs from "node:fs";
+import path from "node:path";
 import test from "node:test";
 import { currentRules, rulesForGameMode } from "./config";
 import {
   buildTraits,
   gameModeAllowsHints,
+  upcomingMessageNumber,
   eliminatedCompanyIds,
   filterCandidates,
   hintOffered,
@@ -21,6 +24,7 @@ import {
 } from "./game";
 
 const rules = rulesForGameMode(true);
+const root = path.resolve(import.meta.dirname, "..");
 
 function model(
   partial: Partial<FrozenModel> & Pick<FrozenModel, "name" | "companyId"> & { id?: string },
@@ -551,6 +555,22 @@ test("a wrong guess keeps the model and names the traits it missed", () => {
   assert.deepEqual(named[0]?.wrong, ["company", "region"]);
   assert.deepEqual(named[1]?.wrong, ["company"]);
   assert.deepEqual(missedGuesses(traits, guesses, true)[0]?.wrong, []);
+});
+
+test("the header counts the message about to be written", () => {
+  assert.equal(upcomingMessageNumber(0, 10), 1);
+  assert.equal(upcomingMessageNumber(2, 10), 3);
+  assert.equal(upcomingMessageNumber(9, 10), 10);
+  assert.equal(upcomingMessageNumber(10, 10), 10);
+  const board = fs.readFileSync(path.join(root, "components/round-board.tsx"), "utf8");
+  assert.match(board, /upcomingMessageNumber\(game\.messageNumber, game\.messageLimit\)/);
+  assert.match(board, /Guess for message \{guessFor\}/);
+  assert.match(board, /disabled=\{!canGuess \|\| !selected \|\| guessBusy \|\| busy\}/);
+  assert.match(board, /placeholder="Search models"/);
+  assert.doesNotMatch(board, /game\.awaitingGuess \? \(/);
+  const css = fs.readFileSync(path.join(root, "app/globals.css"), "utf8");
+  assert.match(css, /max-height: calc\(100dvh - 32px\)/);
+  assert.match(css, /\.guess-history \{ flex: 1 1 auto; min-height: 0; overflow-y: auto; \}/);
 });
 
 test("hints are possible on daily, all models, company, and custom", () => {

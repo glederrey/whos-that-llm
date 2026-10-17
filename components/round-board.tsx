@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { config } from "@/lib/config";
-import type { HintKey, PublicGame } from "@/lib/game";
+import { upcomingMessageNumber, type HintKey, type PublicGame } from "@/lib/game";
 import { readReplyEvents } from "@/lib/reply-events";
 import { ChatComposer } from "./chat-composer";
 import { CompanyLogo } from "./company-logo";
@@ -34,6 +34,11 @@ export function RoundBoard({ initial }: { initial: PublicGame }) {
   }, [game.transcript, liveUser, liveAssistant]);
 
   useEffect(() => {
+    if (game.awaitingGuess) return;
+    setSelected(null);
+  }, [game.awaitingGuess]);
+
+  useEffect(() => {
     const raw = window.sessionStorage.getItem(`hints:${game.id}`);
     if (!raw) return;
     try {
@@ -44,7 +49,9 @@ export function RoundBoard({ initial }: { initial: PublicGame }) {
     }
   }, [game.id]);
 
-  const shown = game.awaitingGuess ? Math.max(game.messageNumber, 1) : Math.min(game.messageLimit, game.messageNumber + 1);
+  const shown = upcomingMessageNumber(game.messageNumber, game.messageLimit);
+  const canGuess = game.awaitingGuess && game.status === "active";
+  const guessFor = Math.max(game.messageNumber, 1);
   const inputLocked = busy || game.messageNumber >= game.messageLimit || game.status !== "active";
   const given = new Map(game.given.map((row) => [row.key, row.value]));
   const hintsOpen = game.hintsAllowed && !game.noHint;
@@ -300,71 +307,73 @@ export function RoundBoard({ initial }: { initial: PublicGame }) {
             ) : null}
           </section>
         ) : null}
-        {game.awaitingGuess || game.pastGuesses.length > 0 ? (
-          <div className="guess-sticky">
-            {game.awaitingGuess ? (
-              <section className="card stack guess-box">
-                <h2>Guess for message {game.messageNumber}.</h2>
-                <p className="muted">
-                  {game.messageNumber < game.messageLimit
+        <div className="guess-sticky">
+            <section className="card stack guess-box">
+              <h2>Guess for message {guessFor}.</h2>
+              <p className="muted">
+                {canGuess
+                  ? game.messageNumber < game.messageLimit
                     ? "You can guess, or send another message."
-                    : "Last message. Name the model, or give up."}
-                </p>
-                <div className="guess-search">
-                  {selectedRow && !listOpen ? (
-                    <button type="button" className="picked" onClick={() => setListOpen(true)}>
-                      <CompanyLogo src={selectedRow.logoPath} />
-                      <span>
-                        {selectedRow.companyName}
-                        <br />
-                        {selectedRow.name}
-                      </span>
-                    </button>
-                  ) : (
-                    <input
-                      value={search}
-                      placeholder="Search models"
-                      onChange={(event) => setSearch(event.target.value)}
-                      onFocus={() => {
-                        if (blurTimer.current) window.clearTimeout(blurTimer.current);
-                        setListOpen(true);
-                      }}
-                      onBlur={() => {
-                        blurTimer.current = window.setTimeout(() => setListOpen(false), 160);
-                      }}
-                    />
-                  )}
-                  {listOpen ? (
-                    <div className="candidates">
-                      {rows.map((row) => (
-                        <button
-                          key={row.id}
-                          type="button"
-                          className="candidate"
-                          aria-pressed={selected === row.id}
-                          onMouseDown={(event) => event.preventDefault()}
-                          onClick={() => {
-                            setSelected(row.id);
-                            setSearch("");
-                            setListOpen(false);
-                          }}
-                        >
-                          <CompanyLogo src={row.logoPath} />
-                          <span>
-                            {row.companyName}
-                            <br />
-                            {row.name}
-                          </span>
-                        </button>
-                      ))}
-                    </div>
-                  ) : null}
-                </div>
-                <button type="button" className="button" disabled={!selected || guessBusy || busy} onClick={() => void guess()}>
-                  Submit guess
-                </button>
-              </section>
-            ) : null}
+                    : "Last message. Name the model, or give up."
+                  : game.messageNumber < 1
+                    ? "Send a message before you guess."
+                    : "You already guessed this message."}
+              </p>
+              <div className="guess-search">
+                {canGuess && selectedRow && !listOpen ? (
+                  <button type="button" className="picked" onClick={() => setListOpen(true)}>
+                    <CompanyLogo src={selectedRow.logoPath} />
+                    <span>
+                      {selectedRow.companyName}
+                      <br />
+                      {selectedRow.name}
+                    </span>
+                  </button>
+                ) : (
+                  <input
+                    value={search}
+                    placeholder="Search models"
+                    onChange={(event) => setSearch(event.target.value)}
+                    onFocus={() => {
+                      if (blurTimer.current) window.clearTimeout(blurTimer.current);
+                      setListOpen(true);
+                    }}
+                    onBlur={() => {
+                      blurTimer.current = window.setTimeout(() => setListOpen(false), 160);
+                    }}
+                  />
+                )}
+                {listOpen ? (
+                  <div className="candidates">
+                    {rows.map((row) => (
+                      <button
+                        key={row.id}
+                        type="button"
+                        className="candidate"
+                        aria-pressed={canGuess && selected === row.id}
+                        onMouseDown={(event) => event.preventDefault()}
+                        onClick={() => {
+                          if (!canGuess) return;
+                          setSelected(row.id);
+                          setSearch("");
+                          setListOpen(false);
+                        }}
+                      >
+                        <CompanyLogo src={row.logoPath} />
+                        <span>
+                          {row.companyName}
+                          <br />
+                          {row.name}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                ) : null}
+              </div>
+              <button type="button" className="button" disabled={!canGuess || !selected || guessBusy || busy} onClick={() => void guess()}>
+                Submit guess
+              </button>
+            </section>
             {game.pastGuesses.length > 0 ? (
               <section className="card guess-history">
                 <h2>Previous guesses</h2>
@@ -388,7 +397,6 @@ export function RoundBoard({ initial }: { initial: PublicGame }) {
               </section>
             ) : null}
           </div>
-        ) : null}
       </aside>
       <dialog ref={dialogRef} className="dialog">
         <p>End the round? You will see the model. This round stays off the leaderboard.</p>
