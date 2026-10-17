@@ -283,7 +283,7 @@ When this round may name the model, the logo, the name, and the company, region,
 
 The breakdown is the full score: each line, the change, and **After**, including **Before the multiplier**, then **Total**. A give-up before any reply has no score and no breakdown. This page does not link to **How scoring works**. The player's own result still does.
 
-Under the card, a scored round says **Wanna try to beat this score**. A round with no score says **Wanna try a round**. That link goes to the home page.
+Under the card, a scored round says **Try to beat this score**. A round with no score says **Try a round**. That link goes to the home page.
 
 Download still saves the picture from `/r/[gameId]/card.png`. The file is `whos-that-llm-` plus the game id, then `.png`. The picture is not the page. It has a teal frame and rounded corners. The question-mark logo and **Who's that LLM?** sit at the top, at the same height. The score sits on the left. On the right: the status, then **Game mode** and **Difficulty**, with the same colors. Under the breakdown: **Can you beat my score of 9,500?** when there is a score, or **Come try a round** when there is not, then **https://whos-that-llm.com** in teal. The picture does not show the chat. Download uses the theme already chosen in the browser: dark mode gets the dark logo and a dark card, light mode gets the light logo and a light card.
 
