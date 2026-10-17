@@ -40,7 +40,7 @@ export default async function HomePage({
             A hidden model answers you. You have ten messages. Name it when you want. Find it, and the round is yours. Miss
             the name, and the company and the region can still count.
           </p>
-          <div className="row">
+          <div className="row hero-actions">
             {signedIn ? (
               <a className="button button-lg" href="/play">
                 Play
