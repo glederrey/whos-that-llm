@@ -1716,8 +1716,8 @@ html[data-theme="dark"] .history-facts .board-chip.no-hints {
   .board th, .board td { padding: 12px 12px; }
   .board .rank { width: 56px; }
   .button-lg { width: 100%; text-align: center; }
-  .hero .row { flex-wrap: nowrap; }
-  .hero .button-lg { width: fit-content; }
+  .hero .row { flex-wrap: nowrap; width: 100%; }
+  .hero .button-lg { flex: 1 1 0; width: auto; min-width: 0; text-align: center; }
   .hour-status { flex-direction: column; align-items: flex-start; gap: 4px; }
   .hour-status .hour-note { margin-left: 0; text-align: left; }
   .difficulty-choice:has(.difficulty-resume) { flex-wrap: wrap; align-items: flex-start; }
