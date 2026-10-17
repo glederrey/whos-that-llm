@@ -322,8 +322,10 @@ textarea { min-height: 76px; resize: vertical; }
 }
 .hero-logo { width: 100%; height: auto; }
 .hero h1 { font-size: 56px; margin: 0; }
+.hero .title-phone { display: none; }
 .hero .stack { gap: 18px; }
-.hero-copy { font-size: 18px; color: var(--mute); max-width: 52ch; }
+.hero-intro { display: grid; gap: 8px; }
+.hero-copy { font-size: 18px; color: var(--mute); }
 .stats {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -1595,6 +1597,8 @@ html[data-theme="dark"] .history-facts .board-chip.no-hints {
   .hero { grid-template-columns: 1fr; }
   .hero-logo { width: min(180px, 56%); }
   .hero h1 { font-size: 42px; }
+  .hero .title-full { display: none; }
+  .hero .title-phone { display: inline; }
   .stats, .steps { grid-template-columns: 1fr; }
   .how-round {
     background: var(--card);
@@ -1802,10 +1806,6 @@ html[data-theme="dark"] .history-facts .board-chip.no-hints {
   .board .rank { width: 44px; }
   .board .marks { padding-left: 4px; padding-right: 4px; }
   .board .num, .board th.num { padding-left: 6px; padding-right: 8px; }
-}
-
-@media (max-width: 360px) {
-  .hero h1 { font-size: 34px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
