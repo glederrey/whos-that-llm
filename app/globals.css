@@ -324,7 +324,6 @@ textarea { min-height: 76px; resize: vertical; }
 .hero h1 { font-size: 56px; margin: 0; }
 .hero .title-phone { display: none; }
 .hero .stack { gap: 18px; }
-.hero-intro { display: grid; gap: 8px; }
 .hero-copy { font-size: 18px; color: var(--mute); }
 .stats {
   display: grid;

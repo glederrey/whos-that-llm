@@ -39,14 +39,11 @@ export default async function HomePage({
             <span className="title-full">Guess the hidden AI model</span>
             <span className="title-phone">Guess the AI model</span>
           </h1>
-          <div className="hero-intro">
-            <p className="hero-copy">
-              Think you can tell AI models apart, like a wine? In this guessing game, one of{" "}
-              {snapshot.models.toLocaleString("en-US")} LLMs hides behind the chat. Ten messages, one guess. Take on the daily
-              round or pick a game mode to climb the leaderboard.
-            </p>
-            <p className="hero-copy">ChatGPT, Claude, Gemini, and the other models in play.</p>
-          </div>
+          <p className="hero-copy">
+            Think you can tell AI models apart, like a wine? In this guessing game, a hidden LLM answers you. It could be
+            ChatGPT, Claude, Gemini, or any of the {snapshot.models.toLocaleString("en-US")} models in play. Ten messages, one
+            guess. Take on the daily round or pick a game mode to climb the leaderboard.
+          </p>
           <div className="row">
             {signedIn ? (
               <a className="button button-lg" href="/play">
