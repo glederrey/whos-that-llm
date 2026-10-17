@@ -80,7 +80,7 @@ button { cursor: pointer; }
   padding: 20px 0 12px;
   min-height: 72px;
 }
-.page { flex: 1; padding: 20px 0 48px; }
+.page { flex: 1; padding: 20px 0 0; }
 .brand {
   display: flex;
   align-items: center;
@@ -941,6 +941,8 @@ html[data-theme="dark"] .company-menu summary { color: var(--text); }
     display: flex;
     flex-direction: column;
     max-height: calc(100dvh - 32px);
+    /* The board tightens this while scrolling so the column stops above the
+       composer and below the header, and the guess list scrolls inside it. */
   }
   .guess-sticky { flex: 1 1 auto; min-height: 0; overflow: visible; }
   .guess-history { flex: 1 1 auto; min-height: 0; overflow-y: auto; }

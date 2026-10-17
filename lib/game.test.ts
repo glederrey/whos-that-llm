@@ -576,6 +576,11 @@ test("the header counts the message about to be written", () => {
   assert.doesNotMatch(board, /game\.awaitingGuess \? \(/);
   assert.match(css, /max-height: calc\(100dvh - 32px\)/);
   assert.match(css, /\.guess-history \{ flex: 1 1 auto; min-height: 0; overflow-y: auto; \}/);
+  assert.match(board, /side\.style\.maxHeight/);
+  assert.match(board, /side\.style\.height/);
+  assert.match(board, /Math\.max\(stickyTop, threadBox\.top\)/);
+  assert.match(board, /Math\.min\(window\.innerHeight - gap, threadBox\.bottom - gap\)/);
+  assert.match(css, /\.page \{ flex: 1; padding: 20px 0 0; \}/);
 });
 
 test("hints are possible on daily, all models, company, and custom", () => {

@@ -28,10 +28,57 @@ export function RoundBoard({ initial }: { initial: PublicGame }) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const blurTimer = useRef<number | null>(null);
   const endRef = useRef<HTMLDivElement>(null);
+  const roundRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ block: "nearest" });
   }, [game.transcript, liveUser, liveAssistant]);
+
+  useEffect(() => {
+    const round = roundRef.current;
+    const side = round?.querySelector<HTMLElement>(".side");
+    const thread = round?.querySelector<HTMLElement>(".thread");
+    if (!side || !thread) return;
+    const gap = 16;
+    const stickyTop = 16;
+    let frame = 0;
+    const fit = () => {
+      frame = 0;
+      if (window.matchMedia("(max-width: 899px)").matches) {
+        side.style.maxHeight = "";
+        side.style.height = "";
+        return;
+      }
+      const threadBox = thread.getBoundingClientRect();
+      const top = Math.max(stickyTop, threadBox.top);
+      const bottom = Math.min(window.innerHeight - gap, threadBox.bottom - gap);
+      const available = Math.max(0, bottom - top);
+      // Measure the column at its own height, then cap it. A definite height
+      // is what lets the guess list scroll; a short list stays short.
+      side.style.maxHeight = "none";
+      side.style.height = "auto";
+      const natural = side.offsetHeight;
+      side.style.maxHeight = `${available}px`;
+      side.style.height = natural > available ? `${available}px` : "";
+    };
+    const schedule = () => {
+      if (frame) return;
+      frame = window.requestAnimationFrame(fit);
+    };
+    fit();
+    window.addEventListener("scroll", schedule, { capture: true, passive: true });
+    window.addEventListener("resize", schedule);
+    const observer = new ResizeObserver(schedule);
+    observer.observe(thread);
+    return () => {
+      window.removeEventListener("scroll", schedule, true);
+      window.removeEventListener("resize", schedule);
+      observer.disconnect();
+      if (frame) window.cancelAnimationFrame(frame);
+      side.style.maxHeight = "";
+      side.style.height = "";
+    };
+  }, []);
 
   useEffect(() => {
     if (game.awaitingGuess) return;
@@ -237,7 +284,7 @@ export function RoundBoard({ initial }: { initial: PublicGame }) {
   }
 
   return (
-    <div className="round">
+    <div className="round" ref={roundRef}>
       <div className="thread">
         <header>
           <div className="meta round-bar">
