@@ -941,8 +941,8 @@ html[data-theme="dark"] .company-menu summary { color: var(--text); }
     display: flex;
     flex-direction: column;
     max-height: calc(100dvh - 32px);
-    /* The board shrinks the previous-guesses card to this column. The type,
-       logos, and gaps scale down so every guess stays visible. */
+    /* The board shrinks the model rows in the previous-guesses card. The
+       title stays full size. */
   }
   .guess-sticky { flex: none; min-height: 0; overflow: visible; }
   .guess-history { flex: none; overflow: hidden; }
@@ -1226,8 +1226,8 @@ html[data-theme="dark"] .hit { color: var(--teal); }
   line-height: 1.3;
 }
 .picked img { width: 28px; height: 28px; border-radius: 6px; }
-.guess-history { --fit: 1; padding-top: calc(18px * var(--fit)); padding-bottom: calc(18px * var(--fit)); }
-.guess-history h2 { font-size: calc(16px * var(--fit)); margin-bottom: calc(4px * var(--fit)); }
+.guess-history { --fit: 1; }
+.guess-history h2 { font-size: 16px; margin-bottom: 4px; }
 .past-guess { padding: calc(12px * var(--fit)) 0; border-top: 1px solid var(--line); }
 .past-guess:first-of-type { border-top: 0; }
 .past-model { display: flex; gap: calc(10px * var(--fit)); align-items: center; font-size: calc(16px * var(--fit)); line-height: 1.3; }
