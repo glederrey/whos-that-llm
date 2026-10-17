@@ -228,7 +228,7 @@ p { margin: 0; }
    paragraph than from the paragraph above. These margins land at 24px above
    a heading and 8px below it. */
 .why h2 { margin-top: 8px; margin-bottom: -8px; }
-.landing { gap: 28px; }
+.landing { gap: 36px; }
 .landing .hero { padding-bottom: 0; }
 .landing .stats { margin: 0; }
 .landing .stat-companies { display: none; }
@@ -1591,6 +1591,7 @@ html[data-theme="dark"] .history-facts .board-chip.no-hints {
 .summary-list dd { margin: 0; }
 
 @media (max-width: 720px) {
+  .landing { gap: 28px; }
   .hero { grid-template-columns: 1fr; }
   .hero-logo { width: min(180px, 56%); }
   .hero h1 { font-size: 42px; }
