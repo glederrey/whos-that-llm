@@ -28,7 +28,7 @@ test("category and company pages share the enabled-model count", () => {
   const categories = fs.readFileSync(path.join(root, "app/admin/categories/page.tsx"), "utf8");
   const companies = fs.readFileSync(path.join(root, "app/admin/companies/page.tsx"), "utf8");
   const counts = fs.readFileSync(path.join(root, "lib/model-counts.ts"), "utf8");
-  const sql = fs.readFileSync(path.join(root, "supabase/migrations/0035_unavailable_models.sql"), "utf8");
+  const sql = fs.readFileSync(path.join(root, "supabase/migrations/0036_unavailable_models.sql"), "utf8");
   const baseline = fs.readFileSync(path.join(root, "supabase/v0.3.sql"), "utf8");
 
   assert.match(counts, /if \(!model\.enabled\) continue/);
