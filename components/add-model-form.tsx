@@ -15,12 +15,14 @@ export function AddModelForm({
   sort,
   activePage,
   inactivePage,
+  unavailablePage,
 }: {
   categories: ModelFieldCategory[];
   query: string;
   sort: RosterSort;
   activePage: number;
   inactivePage: number;
+  unavailablePage: number;
 }) {
   const [openrouterId, setOpenrouterId] = useState("");
   const [pending, setPending] = useState(false);
@@ -57,7 +59,7 @@ export function AddModelForm({
 
   return (
     <form action={addModel} className="stack">
-      <RosterReturnFields query={query} sort={sort} activePage={activePage} inactivePage={inactivePage} />
+      <RosterReturnFields query={query} sort={sort} activePage={activePage} inactivePage={inactivePage} unavailablePage={unavailablePage} />
       <div className="roster-lookup">
         <label>
           OpenRouter id

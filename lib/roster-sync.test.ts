@@ -46,6 +46,7 @@ function model(fields: {
   input?: number | null;
   output?: number | null;
   enabled?: boolean;
+  available?: boolean;
 }): SyncModel {
   return {
     id: fields.id,
@@ -54,6 +55,7 @@ function model(fields: {
     inputUsdPerMtok: fields.input === undefined ? null : fields.input,
     outputUsdPerMtok: fields.output === undefined ? null : fields.output,
     enabled: fields.enabled ?? true,
+    available: fields.available ?? true,
   };
 }
 
@@ -125,6 +127,7 @@ test("price updates list changes and leave matching or unpriced models alone", (
     listed("nousresearch/hermes", null, null),
     listed("partial/input", 1, null),
     listed("new/price", 0, 0.2),
+    listed("openai/retired", 9, 9),
   ];
   const plan = planPriceUpdates(
     [
@@ -135,6 +138,8 @@ test("price updates list changes and leave matching or unpriced models alone", (
       model({ id: "gone", name: "Gone", openrouterId: "openai/gone", input: 3, output: 15 }),
       model({ id: "fresh", name: "Fresh", openrouterId: "new/price", input: null, output: null }),
       model({ id: "padded", name: "Padded", openrouterId: "  openai/same  ", input: 2, output: 10 }),
+      model({ id: "retired", name: "Retired", openrouterId: "openai/retired", input: 1, output: 1, available: false }),
+      model({ id: "gone-parked", name: "Gone parked", openrouterId: "openai/old", input: 3, output: 15, available: false }),
     ],
     catalog,
   );
@@ -162,6 +167,9 @@ test("price updates list changes and leave matching or unpriced models alone", (
   ]);
   assert.equal(plan.changes.some((row) => row.name === "Same"), false);
   assert.equal(plan.notUpdated.some((row) => row.name === "Same"), false);
+  assert.equal(plan.changes.some((row) => row.name === "Retired" || row.name === "Gone parked"), false);
+  assert.equal(plan.notUpdated.some((row) => row.name === "Retired" || row.name === "Gone parked"), false);
+  assert.equal(plan.updates.some((row) => row.id === "retired" || row.id === "gone-parked"), false);
   assert.equal(formatSyncPrice(15), "$15");
   assert.equal(formatSyncPrice(0.2), "$0.2");
   assert.equal(formatSyncPrice(0), "$0");
@@ -203,7 +211,7 @@ test("a catalog reasoning object marks the model, and a missing one does not", (
   ]);
 });
 
-test("availability turns off models OpenRouter no longer lists", () => {
+test("availability moves models OpenRouter no longer lists, and skips ones already unavailable", () => {
   const catalog: CatalogModel[] = [
     listed("openai/still", 1, 2),
     listed("openai/off-but-listed", 1, 2),
@@ -214,12 +222,17 @@ test("availability turns off models OpenRouter no longer lists", () => {
       model({ id: "resting", name: "Resting", openrouterId: "openai/off-but-listed", enabled: false }),
       model({ id: "gone", name: "Gone", openrouterId: "openai/gone", enabled: true }),
       model({ id: "old", name: "Old", openrouterId: "openai/old", enabled: false }),
+      model({ id: "parked", name: "Parked", openrouterId: "openai/parked", enabled: false, available: false }),
     ],
     catalog,
   );
   assert.deepEqual(plan?.unavailable.map((row) => row.name), ["Gone", "Old"]);
-  assert.deepEqual(plan?.disableIds, ["gone"]);
+  assert.deepEqual(plan?.markIds, ["gone", "old"]);
   assert.equal(planUnavailable([model({ id: "still", openrouterId: "openai/still" })], []), null);
+  assert.deepEqual(
+    planUnavailable([model({ id: "parked", openrouterId: "openai/parked", available: false })], [listed("openai/other", 1, 2)])?.markIds,
+    [],
+  );
 });
 
 test("a catalog row keeps the name, description, created time, and text outputs", () => {
@@ -398,30 +411,41 @@ test("the model page keeps price updates and availability apart", () => {
   assert.match(prices, /planPriceUpdates\(rows, catalog\.models\)/);
   assert.match(prices, /writeRosterPrices\(plan\.updates\)/);
   assert.match(prices, /catalog\.error/);
-  assert.doesNotMatch(prices, /redirect\(|planUnavailable|disableRosterModels/);
+  assert.doesNotMatch(prices, /redirect\(|planUnavailable|markRosterUnavailable/);
   assert.match(availability, /loadOpenRouterCatalog\(\)/);
   assert.match(availability, /planUnavailable\(rows, catalog\.models\)/);
-  assert.match(availability, /disableRosterModels\(plan\.disableIds\)/);
+  assert.match(availability, /markRosterUnavailable\(plan\.markIds\)/);
   assert.match(availability, /catalog\.error/);
   assert.doesNotMatch(availability, /redirect\(|planPriceUpdates|writeRosterPrices/);
   assert.match(search, /loadOpenRouterCatalog\(\)/);
   assert.match(search, /planNewModels\(rows, catalog\.models/);
   assert.match(search, /catalog\.error/);
-  assert.doesNotMatch(search, /redirect\(|insertDiscoveredModels|writeRosterPrices|disableRosterModels|planPriceUpdates|planUnavailable/);
+  assert.doesNotMatch(search, /redirect\(|insertDiscoveredModels|writeRosterPrices|markRosterUnavailable|planPriceUpdates|planUnavailable/);
   assert.match(add, /planNewModels\(rows, catalog\.models/);
   assert.match(add, /insertDiscoveredModels\(/);
   assert.match(add, /catalog\.error/);
-  assert.doesNotMatch(add, /redirect\(|writeRosterPrices|disableRosterModels|planPriceUpdates|planUnavailable/);
+  assert.doesNotMatch(add, /redirect\(|writeRosterPrices|markRosterUnavailable|planPriceUpdates|planUnavailable/);
   assert.match(page, /Search for new models/);
+  assert.match(page, /Unavailable on OpenRouter/);
+  assert.match(browser, /Unavailable on OpenRouter/);
+  assert.match(browser, /"OFF"/);
+  assert.match(browser, /"ON"/);
+  assert.match(browser, /row\.available \?/);
+  assert.match(buttons, /Moved to Unavailable on OpenRouter/);
 
-  const write = between(roster, "export async function writeRosterPrices", "export async function disableRosterModels");
-  const disable = between(roster, "export async function disableRosterModels", "export async function insertDiscoveredModels");
+  const turnOn = between(roster, "export async function setRosterEnabled", "export async function writeRosterPrices");
+  const write = between(roster, "export async function writeRosterPrices", "export async function markRosterUnavailable");
+  const disable = between(roster, "export async function markRosterUnavailable", "export async function insertDiscoveredModels");
+  assert.match(turnOn, /available === false/);
+  assert.match(turnOn, /return "unavailable"/);
+  assert.doesNotMatch(turnOn, /\.delete\(/);
   const insert = between(roster, "export async function insertDiscoveredModels", "async function resolveCompany");
   assert.match(write, /await requireOwner\(\)/);
   assert.match(write, /input_usd_per_mtok: row\.inputUsdPerMtok/);
   assert.match(write, /output_usd_per_mtok: row\.outputUsdPerMtok/);
   assert.doesNotMatch(write, /\.delete\(|enabled/);
   assert.match(disable, /await requireOwner\(\)/);
+  assert.match(disable, /available: false/);
   assert.match(disable, /enabled: false/);
   assert.doesNotMatch(disable, /\.delete\(|input_usd_per_mtok|output_usd_per_mtok/);
   assert.match(insert, /await requireOwner\(\)/);

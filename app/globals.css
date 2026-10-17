@@ -1617,6 +1617,10 @@ html[data-theme="dark"] .history-facts .board-chip.no-hints {
 .roster-buttons { display: flex; gap: 8px; align-items: center; justify-content: flex-end; flex-wrap: nowrap; }
 .roster-buttons form { margin: 0; }
 .category-delete { margin: 0; flex: none; width: fit-content; max-width: 100%; }
+.roster.categories th:nth-child(4),
+.roster.categories td:nth-child(4) { width: 1%; white-space: nowrap; text-align: right; }
+.roster.companies th:last-child,
+.roster.companies td:last-child { width: 1%; white-space: nowrap; text-align: right; }
 .roster-add > summary { cursor: pointer; font-size: 20px; font-weight: 600; list-style: none; }
 .roster-add > summary::-webkit-details-marker { display: none; }
 .roster-add > summary::before { content: "+"; display: inline-block; width: 1.2em; color: var(--mute); }

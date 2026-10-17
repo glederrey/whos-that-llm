@@ -31,6 +31,7 @@ export function RosterBrowser({
   initialSort,
   initialActive,
   initialInactive,
+  initialUnavailable,
 }: {
   rows: RosterRow[];
   categories: CategoryRow[];
@@ -38,32 +39,44 @@ export function RosterBrowser({
   initialSort: RosterSort;
   initialActive: number;
   initialInactive: number;
+  initialUnavailable: number;
 }) {
   const [query, setQuery] = useState(initialQuery);
   const [sort, setSort] = useState<RosterSort>(initialSort);
   const [activePage, setActivePage] = useState(initialActive);
   const [inactivePage, setInactivePage] = useState(initialInactive);
+  const [unavailablePage, setUnavailablePage] = useState(initialUnavailable);
   const found = sortRoster(searchRoster(rows, query), sort);
-  const active = pageOf(found.filter((row) => row.enabled), activePage);
-  const inactive = pageOf(found.filter((row) => !row.enabled), inactivePage);
+  const active = pageOf(found.filter((row) => row.available && row.enabled), activePage);
+  const inactive = pageOf(found.filter((row) => row.available && !row.enabled), inactivePage);
+  const unavailable = pageOf(found.filter((row) => !row.available), unavailablePage);
 
   function search(value: string) {
     setQuery(value.slice(0, 100));
     setActivePage(1);
     setInactivePage(1);
+    setUnavailablePage(1);
   }
 
   function chooseSort(column: RosterSortColumn) {
     setSort((current) => nextRosterSort(current, column));
     setActivePage(1);
     setInactivePage(1);
+    setUnavailablePage(1);
   }
 
   return (
     <>
       <details className="card roster-add">
         <summary>Add a model</summary>
-        <AddModelForm categories={categories} query={query} sort={sort} activePage={active.page} inactivePage={inactive.page} />
+        <AddModelForm
+          categories={categories}
+          query={query}
+          sort={sort}
+          activePage={active.page}
+          inactivePage={inactive.page}
+          unavailablePage={unavailable.page}
+        />
       </details>
       <div className="roster-search">
         <input
@@ -85,6 +98,7 @@ export function RosterBrowser({
         categories={categories}
         activePage={active.page}
         inactivePage={inactive.page}
+        unavailablePage={unavailable.page}
         onSort={chooseSort}
         onPage={setActivePage}
       />
@@ -99,8 +113,24 @@ export function RosterBrowser({
         categories={categories}
         activePage={active.page}
         inactivePage={inactive.page}
+        unavailablePage={unavailable.page}
         onSort={chooseSort}
         onPage={setInactivePage}
+      />
+      <RosterSection
+        title="Unavailable on OpenRouter"
+        empty="No unavailable models."
+        rows={unavailable.rows}
+        page={unavailable.page}
+        pageCount={unavailable.pageCount}
+        query={query}
+        sort={sort}
+        categories={categories}
+        activePage={active.page}
+        inactivePage={inactive.page}
+        unavailablePage={unavailable.page}
+        onSort={chooseSort}
+        onPage={setUnavailablePage}
       />
     </>
   );
@@ -117,6 +147,7 @@ function RosterSection({
   categories,
   activePage,
   inactivePage,
+  unavailablePage,
   onSort,
   onPage,
 }: {
@@ -130,6 +161,7 @@ function RosterSection({
   categories: CategoryRow[];
   activePage: number;
   inactivePage: number;
+  unavailablePage: number;
   onSort: (column: RosterSortColumn) => void;
   onPage: (page: number) => void;
 }) {
@@ -168,6 +200,7 @@ function RosterSection({
                     sort={sort}
                     activePage={activePage}
                     inactivePage={inactivePage}
+                    unavailablePage={unavailablePage}
                   />
                 ))}
               </tbody>
@@ -207,6 +240,7 @@ function ModelRow({
   sort,
   activePage,
   inactivePage,
+  unavailablePage,
 }: {
   row: RosterRow;
   categories: CategoryRow[];
@@ -214,10 +248,11 @@ function ModelRow({
   sort: RosterSort;
   activePage: number;
   inactivePage: number;
+  unavailablePage: number;
 }) {
   const panel = `edit-${row.id}`;
   return (
-    <tr className={row.enabled ? undefined : "is-off"}>
+    <tr className={row.available && row.enabled ? undefined : "is-off"}>
       <td>{row.name}</td>
       <td>
         <span className="roster-company">
@@ -234,14 +269,22 @@ function ModelRow({
       <td>{row.categoryNames || "—"}</td>
       <td>
         <div className="roster-buttons">
-          <form action={setModelEnabled}>
-            <RosterReturnFields query={query} sort={sort} activePage={activePage} inactivePage={inactivePage} />
-            <input type="hidden" name="id" value={row.id} />
-            <input type="hidden" name="enabled" value={row.enabled ? "0" : "1"} />
-            <button className={row.enabled ? "button-off" : "button-on"} type="submit">
-              {row.enabled ? "Off" : "On"}
-            </button>
-          </form>
+          {row.available ? (
+            <form action={setModelEnabled}>
+              <RosterReturnFields
+                query={query}
+                sort={sort}
+                activePage={activePage}
+                inactivePage={inactivePage}
+                unavailablePage={unavailablePage}
+              />
+              <input type="hidden" name="id" value={row.id} />
+              <input type="hidden" name="enabled" value={row.enabled ? "0" : "1"} />
+              <button className={row.enabled ? "button-off" : "button-on"} type="submit">
+                {row.enabled ? "OFF" : "ON"}
+              </button>
+            </form>
+          ) : null}
           <button className="button-quiet" type="button" popoverTarget={panel}>
             Edit
           </button>
@@ -249,7 +292,13 @@ function ModelRow({
         <div id={panel} popover="auto" className="roster-edit card">
           <form action={saveModel} className="stack">
             <h2>Edit {row.name}</h2>
-            <RosterReturnFields query={query} sort={sort} activePage={activePage} inactivePage={inactivePage} />
+            <RosterReturnFields
+              query={query}
+              sort={sort}
+              activePage={activePage}
+              inactivePage={inactivePage}
+              unavailablePage={unavailablePage}
+            />
             <input type="hidden" name="id" value={row.id} />
             <div className="roster-form">
               <ModelFields

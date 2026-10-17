@@ -85,6 +85,7 @@ test("saving a model returns to the same search", () => {
   assert.equal(modelsReturnPath({}), "/admin/models");
   assert.equal(modelsReturnPath({ notice: "save", q: "gpt" }), "/admin/models?notice=save&q=gpt");
   assert.equal(modelsReturnPath({ q: "gpt", active: "1", inactive: "0" }), "/admin/models?q=gpt");
+  assert.equal(modelsReturnPath({ unavailable: "2" }), "/admin/models?unavailable=2");
 });
 
 test("pages hold ten rows and clamp the requested page", () => {
