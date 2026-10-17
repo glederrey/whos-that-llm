@@ -575,8 +575,9 @@ test("the header counts the message about to be written", () => {
   assert.match(board, /placeholder="Search models"/);
   assert.doesNotMatch(board, /game\.awaitingGuess \? \(/);
   assert.match(css, /max-height: calc\(100dvh - 32px\)/);
-  assert.match(css, /\.guess-history \{ flex: 1 1 auto; min-height: 0; overflow-y: auto; \}/);
-  assert.match(board, /history\.style\.maxHeight/);
+  assert.match(css, /\.guess-history \{ flex: none; overflow: hidden; \}/);
+  assert.match(css, /\.guess-history \{ --fit: 1;/);
+  assert.match(board, /setProperty\("--fit"/);
   assert.doesNotMatch(board, /side\.style\.height/);
   assert.match(board, /Math\.max\(stickyTop, threadTop\)/);
   assert.match(board, /Math\.min\(window\.innerHeight - gap, composerBottom\)/);
