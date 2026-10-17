@@ -1845,12 +1845,20 @@ html[data-theme="dark"] .history-facts .board-chip.no-hints {
   }
   .credit { justify-content: center; }
   .thread > header { position: sticky; top: 0; z-index: 10; margin: 0 -12px; padding: 8px 12px; background: var(--canvas); }
-  .round-bar { flex-wrap: nowrap; align-items: flex-start; }
-  .round-title { min-width: 0; }
-  .round-count { display: block; }
+  .round-bar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    column-gap: 12px;
+    row-gap: 8px;
+    align-items: center;
+  }
+  .round-title { display: contents; }
+  .round-count { display: block; grid-column: 1; grid-row: 1; }
   .round-pool { display: block; }
   .round-pool-sep { display: none; }
   .round-pool .pill { margin-left: 8px; }
+  .give-up { grid-column: 2; grid-row: 1; }
+  .progress { grid-column: 1 / -1; grid-row: 2; width: 100%; }
   .composer .meta .button { padding: 10px 22px; }
   .trait { flex-wrap: wrap; gap: 8px 12px; }
   .trait-side { flex-wrap: wrap; justify-content: flex-end; }
