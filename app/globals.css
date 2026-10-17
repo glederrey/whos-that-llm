@@ -324,14 +324,6 @@ textarea { min-height: 76px; resize: vertical; }
 .hero h1 { font-size: 56px; margin: 0; }
 .hero .stack { gap: 18px; }
 .hero-copy { font-size: 18px; color: var(--mute); max-width: 52ch; }
-.hero-actions { gap: 12px; }
-.hero-actions .button,
-.hero-actions .button-quiet {
-  min-width: 168px;
-  padding: 16px 36px;
-  font-size: 18px;
-  text-align: center;
-}
 .stats {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
