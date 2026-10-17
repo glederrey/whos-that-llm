@@ -328,7 +328,7 @@ test("the public result is the score table and a link home", () => {
   assert.match(html, /All models/);
   assert.match(html, /Hard/);
   assert.match(html, new RegExp(hidden));
-  assert.match(html, /Wanna try to beat this score/);
+  assert.match(html, /Try to beat this score/);
   assert.match(html, /href="\/"/);
   assert.equal(html.includes("How scoring works"), false);
   assert.equal(html.includes("transcript"), false);
@@ -388,9 +388,9 @@ test("the public result is the score table and a link home", () => {
   const quiet = card({ status: "given_up", score: null, breakdown: null, messageCount: 0 });
   const quietHtml = renderToStaticMarkup(createElement(SharedResult, { card: quiet }));
   assert.match(quietHtml, /Given up\./);
-  assert.match(quietHtml, /Wanna try a round/);
+  assert.match(quietHtml, /Try a round/);
   assert.equal(quietHtml.includes("Your score"), false);
-  assert.equal(quietHtml.includes("Wanna try to beat this score"), false);
+  assert.equal(quietHtml.includes("Try to beat this score"), false);
 
   const hinted = card({
     breakdown: [
@@ -409,7 +409,7 @@ test("the public result is the score table and a link home", () => {
   assert.match(page, /SharedResult/);
   assert.match(page, /shareCardPath/);
   assert.doesNotMatch(page, /SharePicture|ShareActions|MessageBubble|transcript/);
-  assert.match(view, /Wanna try to beat this score/);
+  assert.match(view, /Try to beat this score/);
   assert.doesNotMatch(view, /ShareActions|MessageBubble|transcript/);
   assert.doesNotMatch(layout, /startsWith\("\/r\/"\)/);
   assert.match(played, /MessageBubble/);
@@ -440,7 +440,15 @@ test("share comes before download, and the networks live in one menu", () => {
   assert.equal(html.match(/This opens the post\. Paste the message\./g)?.length, 2);
   assert.equal(html.includes("Instagram"), false);
   assert.match(html, /share-message[\s\S]*<svg[\s\S]*By message/);
-  assert.match(html, /share-menu-copy[\s\S]*<svg[\s\S]*Copy link/);
+  assert.equal(html.includes("share-menu-copy"), false);
+  const actions = fs.readFileSync(path.join(root, "components/share-actions.tsx"), "utf8");
+  assert.match(actions, /setNote\("Try again\."\)/);
+  assert.doesNotMatch(actions, /share-menu-copy/);
+  assert.doesNotMatch(actions, /setNote\("The link is copied\."\)/);
+  const css = fs.readFileSync(path.join(root, "app/globals.css"), "utf8");
+  assert.match(css, /\.score-card \.score-link \{ display: none; \}/);
+  assert.match(css, /\.share-note\.is-error \{ color: var\(--miss-press\); \}/);
+  assert.doesNotMatch(css, /\.share-actions \.share-copy \{ display: none; \}/);
   assert.equal(html.includes(">Message<"), false);
   assert.equal(html.includes("share-phone"), false);
   assert.match(html, /share-caret/);

@@ -11,7 +11,7 @@ import {
 
 /** A scored round invites a rematch. A round with no score just invites a game. */
 function playLink(card: ShareCard): string {
-  return card.score === null ? "Wanna try a round" : "Wanna try to beat this score";
+  return card.score === null ? "Try a round" : "Try to beat this score";
 }
 
 /** The public result. The score table, with no chat and no share buttons. */
