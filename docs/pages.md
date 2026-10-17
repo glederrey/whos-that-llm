@@ -82,7 +82,8 @@ Two columns. On a narrow screen they stack.
 - Under the buttons: three counts on a wide screen. **Models in play** is the enabled roster. **Games today** counts finished games by the UTC day they finished. A game that started yesterday and finished today counts today. A game that starts today and finishes tomorrow does not count today. A game with `finished_at` null never counts. **Players** is the number of distinct accounts with at least one finished game. A game left behind after an account is deleted has no `user_id` and does not count. On a phone a fourth count, **Companies**, sits beside Models in play. It is the number of labs with at least one model in play. Games today and Players sit on the row under that. A wide screen leaves Companies out.
 - Under the counts: **Top 5**, with the same bar as the full leaderboard. It shows that board's rows, stopped at 5. **Full leaderboard** opens `/leaderboard` with the same choice. Changing a control on either page is the same choice on the other.
 - Signed out: **Sign up** goes to `/login?tab=create&next=/play`. **Sign in** goes to `/login?next=/play`.
-- Signed in: **Play** goes to `/play`. Scoring is the header link.
+- Signed in: **Start playing** goes to `/play`. Scoring is the header link.
+- On a wide screen, **Start playing**, **Sign up**, and **Sign in** are taller, with rounder corners. On a phone they keep the original size.
 
 A confirmation or password-reset link returns here. If the URL carries a session and the profile has no username, send the player to `/welcome`.
 

@@ -47,7 +47,7 @@ export default async function HomePage({
           <div className="row">
             {signedIn ? (
               <a className="button button-lg" href="/play">
-                Play
+                Start playing
               </a>
             ) : (
               <>

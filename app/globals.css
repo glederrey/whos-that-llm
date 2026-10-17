@@ -325,6 +325,15 @@ textarea { min-height: 76px; resize: vertical; }
 .hero .title-phone { display: none; }
 .hero .stack { gap: 18px; }
 .hero-copy { font-size: 18px; color: var(--mute); }
+@media (min-width: 721px) {
+  .hero .button-lg {
+    padding: 16px 48px;
+    font-size: 18px;
+    font-weight: 600;
+    line-height: 22px;
+    border-radius: 14px;
+  }
+}
 .stats {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
