@@ -941,8 +941,8 @@ html[data-theme="dark"] .company-menu summary { color: var(--text); }
     display: flex;
     flex-direction: column;
     max-height: calc(100dvh - 32px);
-    /* The board tightens this while scrolling so the column stops above the
-       composer and below the header, and the guess list scrolls inside it. */
+    /* The board caps .guess-history itself so the list scrolls without the
+       column being resized, and so the card ends level with the writing box. */
   }
   .guess-sticky { flex: 1 1 auto; min-height: 0; overflow: visible; }
   .guess-history { flex: 1 1 auto; min-height: 0; overflow-y: auto; }

@@ -38,47 +38,55 @@ export function RoundBoard({ initial }: { initial: PublicGame }) {
     const round = roundRef.current;
     const side = round?.querySelector<HTMLElement>(".side");
     const thread = round?.querySelector<HTMLElement>(".thread");
-    if (!side || !thread) return;
+    const history = side?.querySelector<HTMLElement>(".guess-history");
+    if (!side || !thread || !history) return;
     const gap = 16;
     const stickyTop = 16;
     let frame = 0;
     const fit = () => {
       frame = 0;
       if (window.matchMedia("(max-width: 899px)").matches) {
-        side.style.maxHeight = "";
-        side.style.height = "";
+        history.style.maxHeight = "";
         return;
       }
-      const threadBox = thread.getBoundingClientRect();
-      const top = Math.max(stickyTop, threadBox.top);
-      const bottom = Math.min(window.innerHeight - gap, threadBox.bottom - gap);
-      const available = Math.max(0, bottom - top);
-      // Measure the column at its own height, then cap it. A definite height
-      // is what lets the guess list scroll; a short list stays short.
-      side.style.maxHeight = "none";
-      side.style.height = "auto";
-      const natural = side.offsetHeight;
-      side.style.maxHeight = `${available}px`;
-      side.style.height = natural > available ? `${available}px` : "";
+      const composer = thread.querySelector<HTMLElement>(".composer");
+      const threadTop = thread.getBoundingClientRect().top;
+      const top = Math.max(stickyTop, threadTop);
+      const composerBottom = composer?.getBoundingClientRect().bottom ?? thread.getBoundingClientRect().bottom;
+      // At the top of the page the list stops just above the window. Once the
+      // writing box is on screen, the list ends level with it.
+      const limit = Math.min(window.innerHeight - gap, composerBottom);
+      const feedback = side.querySelector<HTMLElement>(".feedback");
+      const guessBox = side.querySelector<HTMLElement>(".guess-box");
+      let used = 0;
+      if (feedback) used += feedback.offsetHeight + gap;
+      if (guessBox) used += guessBox.offsetHeight + gap;
+      const next = `${Math.max(0, Math.round(limit - top - used))}px`;
+      if (history.style.maxHeight !== next) history.style.maxHeight = next;
     };
     const schedule = () => {
       if (frame) return;
       frame = window.requestAnimationFrame(fit);
     };
     fit();
-    window.addEventListener("scroll", schedule, { capture: true, passive: true });
+    window.addEventListener("scroll", schedule, { passive: true });
     window.addEventListener("resize", schedule);
     const observer = new ResizeObserver(schedule);
     observer.observe(thread);
+    const composer = thread.querySelector(".composer");
+    if (composer) observer.observe(composer);
+    const feedback = side.querySelector(".feedback");
+    if (feedback) observer.observe(feedback);
+    const guessBox = side.querySelector(".guess-box");
+    if (guessBox) observer.observe(guessBox);
     return () => {
-      window.removeEventListener("scroll", schedule, true);
+      window.removeEventListener("scroll", schedule);
       window.removeEventListener("resize", schedule);
       observer.disconnect();
       if (frame) window.cancelAnimationFrame(frame);
-      side.style.maxHeight = "";
-      side.style.height = "";
+      history.style.maxHeight = "";
     };
-  }, []);
+  }, [game.pastGuesses.length]);
 
   useEffect(() => {
     if (game.awaitingGuess) return;
