@@ -67,7 +67,7 @@ export function RoundBoard({ initial }: { initial: PublicGame }) {
       Boolean(game.hints[key]) ||
       (key === "company" && game.feedback?.company === "match") ||
       (key === "region" && game.feedback?.region === "match");
-    if (!hintsOpen || visible || game.status !== "active") return null;
+    if (game.gameMode === "company" || !hintsOpen || visible || game.status !== "active") return null;
     return { label: `Reveal (−${game.hintCosts[key]} pts)`, busy: hintBusy !== null, onOpen: () => void buy(key) };
   }
 

@@ -197,7 +197,7 @@ export function HomeBoard({
     const response = await fetch("/api/games", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ gameMode: "company", companyId }),
+      body: JSON.stringify({ gameMode: "company", companyId, noHint }),
     });
     const body = (await response.json().catch(() => ({}))) as { gameId?: string; error?: string; nextAt?: string };
     setBusy(false);
@@ -398,17 +398,17 @@ export function HomeBoard({
                           );
                         })}
                       </div>
-                      {playable ? (
-                        <label className="check category-check">
-                          <input type="checkbox" checked={noHint} onChange={(event) => setNoHint(event.target.checked)} />
-                          <span>
-                            <strong>Play without hints.</strong>
-                            <span className="muted">No hints. No match feedback.</span>
-                          </span>
-                        </label>
-                      ) : null}
                     </>
                   )}
+                  {playable ? (
+                    <label className="check category-check">
+                      <input type="checkbox" checked={noHint} onChange={(event) => setNoHint(event.target.checked)} />
+                      <span>
+                        <strong>Play without hints.</strong>
+                        <span className="muted">No hints. No match feedback.</span>
+                      </span>
+                    </label>
+                  ) : null}
                 </div>
               ) : null}
             </div>

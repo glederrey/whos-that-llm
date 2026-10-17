@@ -553,11 +553,12 @@ test("a wrong guess keeps the model and names the traits it missed", () => {
   assert.deepEqual(missedGuesses(traits, guesses, true)[0]?.wrong, []);
 });
 
-test("hints are only possible on daily, all models, and custom", () => {
+test("hints are possible on daily, all models, company, and custom", () => {
   assert.equal(gameModeAllowsHints("daily"), true);
   assert.equal(gameModeAllowsHints("all"), true);
+  assert.equal(gameModeAllowsHints("company"), true);
   assert.equal(gameModeAllowsHints("custom"), true);
-  for (const gameMode of ["class", "region", "company", "latest"]) {
+  for (const gameMode of ["class", "region", "latest"]) {
     assert.equal(gameModeAllowsHints(gameMode), false, gameMode);
   }
 });

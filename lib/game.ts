@@ -443,9 +443,16 @@ const hintNames: Record<HintKey, string> = {
 
 const hintKeyList: readonly HintKey[] = ["company", "region", "year", "size"];
 
-/** Hints exist only on Daily, All models, and Custom. Every other game mode, including class and region, has none. */
+/** Hints exist on Daily, All models, Company, and Custom. Class and region have none. */
 export function gameModeAllowsHints(gameMode: string): boolean {
-  return gameMode === "daily" || gameMode === "all" || gameMode === "custom";
+  return gameMode === "daily" || gameMode === "all" || gameMode === "company" || gameMode === "custom";
+}
+
+/** Company already names the lab and its region, so only the year and the size can be bought. */
+export function hintAllowedForMode(gameMode: string, key: HintKey): boolean {
+  if (!gameModeAllowsHints(gameMode)) return false;
+  if (gameMode === "company") return key === "year" || key === "size";
+  return true;
 }
 
 export function playableHints(value: readonly string[] | null | undefined): HintKey[] {

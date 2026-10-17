@@ -17,7 +17,7 @@ export async function POST(request: Request) {
   if (body.gameMode === "company") {
     const companyId = parseBoardCompany(body.companyId);
     if (companyId === allCompanies) return apiJson({ error: "company" }, 422);
-    const result = await startCompany(user.id, companyId);
+    const result = await startCompany(user.id, companyId, Boolean(body.noHint));
     if ("error" in result) return apiError(result);
     return apiJson({ gameId: result.gameId });
   }

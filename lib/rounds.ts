@@ -11,6 +11,7 @@ import {
   eliminatedRegions,
   filterCandidates,
   gameModeAllowsHints,
+  hintAllowedForMode,
   hintOffered,
   playableHints,
   knownValues,
@@ -280,8 +281,8 @@ export function startDaily(userId: string, noHint: boolean, difficulty: Difficul
   return startRosterRound(userId, "daily", noHint, difficulty);
 }
 
-/** One company. Enabled models from that lab only. No difficulty, and no hints. */
-export async function startCompany(userId: string, companyId: string): Promise<{ gameId: string } | ApiFailure> {
+/** One company. Enabled models from that lab only. No difficulty. Year and size can be bought. */
+export async function startCompany(userId: string, companyId: string, noHint = false): Promise<{ gameId: string } | ApiFailure> {
   const id = companyId.trim().toLowerCase();
   if (!/^[a-z0-9][a-z0-9-]{0,63}$/.test(id)) return fail(422, "company");
   const client = serviceOrThrow();
@@ -301,7 +302,7 @@ export async function startCompany(userId: string, companyId: string): Promise<{
     p_hourly_cap: config.hourlyCap,
     p_game_mode: "company",
     p_pool_key: id,
-    p_no_hint: false,
+    p_no_hint: noHint,
     p_model_id: modelId,
     p_pool_model_ids: pool.map((model) => model.id),
     p_traits: buildTraits(pool),
@@ -592,6 +593,7 @@ export async function buyHint(gameId: string, userId: string, key: string): Prom
   const client = serviceOrThrow();
   const game = await loadGame(client, gameId, userId);
   if (!game) return fail(404, "not_found");
+  if (!hintAllowedForMode(game.game_mode, hint)) return fail(422, "hint");
   const hidden = game.traits.models[game.model_id];
   if (!hidden) return fail(409, "conflict");
   const { data: guesses } = await client

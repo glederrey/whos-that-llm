@@ -7,7 +7,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { ScoreCard } from "../components/score-card";
 import { rulesForGameMode } from "./config";
 import { allCompanies, companyModelCounts, parseBoardCompany } from "./company";
-import { gameModeAllowsHints, poolLabel, scoreRound, type Traits } from "./game";
+import { buildTraits, gameModeAllowsHints, hintAllowedForMode, hintOffered, poolLabel, scoreRound, type Traits } from "./game";
 
 const root = path.resolve(import.meta.dirname, "..");
 
@@ -61,7 +61,12 @@ test("a finished company round scores like all models, and the company takes the
   assert.equal(easy.breakdown.some((line) => line.label.startsWith("Difficulty")), true);
   assert.equal(company.score, 40000);
   assert.equal(easy.score, 20000);
-  assert.equal(gameModeAllowsHints("company"), false);
+  const withYear = scoreRound({ ...shared, rules: rulesForGameMode(true), hints: ["year"] });
+  assert.equal(withYear.breakdown.some((line) => line.label === "Year hint" && line.points === -100), true);
+  assert.equal(withYear.score, 38000);
+  const blind = scoreRound({ ...shared, rules: rulesForGameMode(true), noHint: true });
+  assert.equal(blind.breakdown.some((line) => line.label === "No-hint"), true);
+  assert.equal(blind.score, 80000);
 
   const traits: Traits = {
     given: ["company", "region"],
@@ -98,6 +103,57 @@ test("a finished company round scores like all models, and the company takes the
   assert.match(html, /Company/);
   assert.match(html, /Anthropic/);
   assert.equal(html.includes("Difficulty"), false);
+});
+
+test("a company round can buy the year and the size, and not the lab or the region", () => {
+  assert.equal(gameModeAllowsHints("company"), true);
+  assert.equal(hintAllowedForMode("company", "year"), true);
+  assert.equal(hintAllowedForMode("company", "size"), true);
+  assert.equal(hintAllowedForMode("company", "company"), false);
+  assert.equal(hintAllowedForMode("company", "region"), false);
+  assert.equal(hintAllowedForMode("region", "year"), false);
+
+  const traits = buildTraits([
+    {
+      id: "haiku",
+      name: "Haiku",
+      companyId: "anthropic",
+      companyName: "Anthropic",
+      region: "us",
+      size: "small",
+      year: 2024,
+      logoPath: "logos/anthropic.png",
+    },
+    {
+      id: "opus",
+      name: "Opus",
+      companyId: "anthropic",
+      companyName: "Anthropic",
+      region: "us",
+      size: "large",
+      year: 2026,
+      logoPath: "logos/anthropic.png",
+    },
+  ]);
+  const hidden = traits.models.opus;
+  assert.ok(hidden);
+  assert.deepEqual(traits.given, ["company", "region"]);
+  const offer = (key: "company" | "region" | "year" | "size") =>
+    hintOffered({ key, traits, hidden, guesses: [], hints: [], noHint: false });
+  assert.equal(offer("company"), false);
+  assert.equal(offer("region"), false);
+  assert.equal(offer("year"), true);
+  assert.equal(offer("size"), true);
+
+  const sql = fs.readFileSync(path.join(root, "supabase/migrations/0037_company_hints.sql"), "utf8");
+  assert.match(sql, /hints_allowed = true/);
+  assert.match(sql, /where id = 'company'/);
+  assert.doesNotMatch(sql, /delete from|truncate|drop table|update public\.games|update public\.models|update public\.profiles/i);
+  const home = fs.readFileSync(path.join(root, "components/home-board.tsx"), "utf8");
+  assert.match(home, /gameMode: "company", companyId, noHint/);
+  assert.match(home, /Play without hints/);
+  const board = fs.readFileSync(path.join(root, "components/round-board.tsx"), "utf8");
+  assert.match(board, /game\.gameMode === "company"/);
 });
 
 test("company mode is enabled in a migration and does not rewrite play data", () => {
