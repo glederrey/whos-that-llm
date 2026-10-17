@@ -228,9 +228,10 @@ p { margin: 0; }
    paragraph than from the paragraph above. These margins land at 24px above
    a heading and 8px below it. */
 .why h2 { margin-top: 8px; margin-bottom: -8px; }
-.landing { gap: 36px; }
+.landing { gap: 28px; }
 .landing .hero { padding-bottom: 0; }
 .landing .stats { margin: 0; }
+.landing .stat-companies { display: none; }
 .narrow { max-width: 720px; }
 .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
 
@@ -1626,16 +1627,15 @@ html[data-theme="dark"] .history-facts .board-chip.no-hints {
   .how-round .steps strong { font-size: 15px; line-height: 1.25; }
   .how-round .steps .step-text { font-size: 14px; line-height: 1.3; }
   .landing .stats {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: 1fr 1fr;
     gap: 8px;
   }
-  .landing .stats div { padding: 10px 8px; }
+  .landing .stat-companies { display: block; }
+  .landing .stats div { padding: 12px 14px; }
   .landing .stats dt {
     font-size: 12px;
     line-height: 1.25;
-    letter-spacing: 0.03em;
-    min-height: 2.5em;
-    text-wrap: balance;
+    letter-spacing: 0.04em;
   }
   .landing .stats dd { margin-top: 4px; font-size: 24px; }
   .profile-stats { grid-template-columns: 1fr 1fr; }

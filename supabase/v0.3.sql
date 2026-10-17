@@ -283,6 +283,11 @@ set search_path = public
 as $$
   select jsonb_build_object(
     'models', (select count(*)::int from public.models where enabled),
+    'companies', (
+      select count(distinct company_id)::int
+      from public.models
+      where enabled
+    ),
     'gamesToday', (
       select count(*)::int
       from public.games

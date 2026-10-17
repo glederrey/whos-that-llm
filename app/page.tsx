@@ -83,6 +83,10 @@ export default async function HomePage({
           <dt>Models in play</dt>
           <dd>{snapshot.models.toLocaleString("en-US")}</dd>
         </div>
+        <div className="stat-companies">
+          <dt>Companies</dt>
+          <dd>{snapshot.companies.toLocaleString("en-US")}</dd>
+        </div>
         <div>
           <dt>Games today</dt>
           <dd>{snapshot.gamesToday.toLocaleString("en-US")}</dd>

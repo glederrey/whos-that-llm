@@ -722,18 +722,19 @@ export async function landingSnapshot() {
 async function readPublicStats(client: SupabaseClient) {
   const { data, error } = await client.rpc("public_stats");
   if (!error && data && typeof data === "object") {
-    const stats = data as { models?: number; gamesToday?: number; players?: number };
+    const stats = data as { models?: number; gamesToday?: number; players?: number; companies?: number };
     return {
       models: Number(stats.models ?? 0),
       gamesToday: Number(stats.gamesToday ?? 0),
       players: Number(stats.players ?? 0),
+      companies: typeof stats.companies === "number" ? stats.companies : await countCompanies(client),
     };
   }
   const midnight = new Date();
   const startDate = new Date(Date.UTC(midnight.getUTCFullYear(), midnight.getUTCMonth(), midnight.getUTCDate()));
   const start = startDate.toISOString();
   const end = new Date(startDate.getTime() + 24 * 60 * 60 * 1000).toISOString();
-  const [models, gamesToday, players] = await Promise.all([
+  const [models, gamesToday, players, companies] = await Promise.all([
     client.from("models").select("id", { count: "exact", head: true }).eq("enabled", true),
     client
       .from("games")
@@ -741,10 +742,28 @@ async function readPublicStats(client: SupabaseClient) {
       .gte("finished_at", start)
       .lt("finished_at", end),
     countPlayers(client),
+    countCompanies(client),
   ]);
   if (models.error) throw new Error(models.error.message);
   if (gamesToday.error) throw new Error(gamesToday.error.message);
-  return { models: models.count ?? 0, gamesToday: gamesToday.count ?? 0, players };
+  return { models: models.count ?? 0, gamesToday: gamesToday.count ?? 0, players, companies };
+}
+
+async function countCompanies(client: SupabaseClient) {
+  const ids = new Set<string>();
+  for (let from = 0; from < 5000; from += 1000) {
+    const { data, error } = await client
+      .from("models")
+      .select("company_id")
+      .eq("enabled", true)
+      .range(from, from + 999);
+    if (error) throw new Error(error.message);
+    for (const row of data ?? []) {
+      if (typeof row.company_id === "string" && row.company_id) ids.add(row.company_id);
+    }
+    if (!data || data.length < 1000) break;
+  }
+  return ids.size;
 }
 
 async function countPlayers(client: SupabaseClient) {
