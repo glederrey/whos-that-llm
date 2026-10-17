@@ -231,6 +231,7 @@ p { margin: 0; }
 .landing { gap: 36px; }
 .landing .hero { padding-bottom: 0; }
 .landing .stats { margin: 0; }
+.landing .stat-companies { display: none; }
 .narrow { max-width: 720px; }
 .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
 
@@ -321,9 +322,18 @@ textarea { min-height: 76px; resize: vertical; }
 }
 .hero-logo { width: 100%; height: auto; }
 .hero h1 { font-size: 56px; margin: 0; }
+.hero .title-phone { display: none; }
 .hero .stack { gap: 18px; }
-.hero-copy { font-size: 18px; color: var(--mute); max-width: 52ch; }
-.hero-note { font-size: 14px; }
+.hero-copy { font-size: 18px; color: var(--mute); }
+@media (min-width: 721px) {
+  .hero .button-lg {
+    padding: 16px 48px;
+    font-size: 18px;
+    font-weight: 600;
+    line-height: 22px;
+    border-radius: 14px;
+  }
+}
 .stats {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -362,7 +372,9 @@ textarea { min-height: 76px; resize: vertical; }
   margin-bottom: 6px;
 }
 .steps strong { font-size: 16px; }
-.steps span:last-child { color: var(--mute); font-size: 14px; }
+.steps .step-text { color: var(--mute); font-size: 14px; }
+/* Phone shows this title inside one card. A wide screen keeps the three columns and leaves the title out. */
+.how-round-title { display: none; }
 .section-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-top: 8px; }
 .section-head h2 { margin: 0; }
 .section-head a { font-size: 14px; font-weight: 500; }
@@ -1589,10 +1601,56 @@ html[data-theme="dark"] .history-facts .board-chip.no-hints {
 .summary-list dd { margin: 0; }
 
 @media (max-width: 720px) {
+  .landing { gap: 28px; }
   .hero { grid-template-columns: 1fr; }
   .hero-logo { width: min(180px, 56%); }
   .hero h1 { font-size: 42px; }
+  .hero .title-full { display: none; }
+  .hero .title-phone { display: inline; }
   .stats, .steps { grid-template-columns: 1fr; }
+  .how-round {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 14px 16px 10px;
+  }
+  .how-round-title {
+    display: block;
+    margin: 0 0 6px;
+    font-size: 16px;
+    line-height: 1.3;
+  }
+  .how-round .steps { gap: 10px; }
+  .how-round .steps li {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    column-gap: 10px;
+    row-gap: 0;
+    align-items: center;
+    padding: 1px 0;
+  }
+  .how-round .steps .step-no {
+    grid-row: 1 / span 2;
+    width: 22px;
+    height: 22px;
+    margin: 0;
+    font-size: 12px;
+  }
+  .how-round .steps strong { font-size: 15px; line-height: 1.25; }
+  .how-round .steps .step-text { font-size: 14px; line-height: 1.3; }
+  .landing .stats {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .landing .stat-companies { display: block; }
+  .landing .stats div { padding: 12px 14px; }
+  .landing .stats dt {
+    font-size: 12px;
+    line-height: 1.25;
+    letter-spacing: 0.04em;
+  }
+  .landing .stats dd { margin-top: 4px; font-size: 24px; }
   .profile-stats { grid-template-columns: 1fr 1fr; }
   .profile-stats div { padding: 16px 12px; }
   .profile-stats dt { letter-spacing: 0.04em; }
@@ -1670,6 +1728,8 @@ html[data-theme="dark"] .history-facts .board-chip.no-hints {
   .board th, .board td { padding: 12px 12px; }
   .board .rank { width: 56px; }
   .button-lg { width: 100%; text-align: center; }
+  .hero .row { flex-wrap: nowrap; width: 100%; }
+  .hero .button-lg { flex: 1 1 0; width: auto; min-width: 0; text-align: center; }
   .hour-status { flex-direction: column; align-items: flex-start; gap: 4px; }
   .hour-status .hour-note { margin-left: 0; text-align: left; }
   .difficulty-choice:has(.difficulty-resume) { flex-wrap: wrap; align-items: flex-start; }

@@ -77,12 +77,13 @@ The header keeps the name and a logo the same height as that text, plus **Scorin
 Two columns. On a narrow screen they stack.
 
 - Left: the logo, large.
-- Right: **Find the model.** Then: a hidden model answers you. You have ten messages. Name it when you want. Find it, and the round is yours. Miss the name, and the company and the region can still count.
-- Under the buttons: three counts. **Models in play** is the enabled roster. **Games today** counts finished games by the UTC day they finished. A game that started yesterday and finished today counts today. A game that starts today and finishes tomorrow does not count today. A game with `finished_at` null never counts. **Players** is the number of distinct accounts with at least one finished game. A game left behind after an account is deleted has no `user_id` and does not count.
+- Right: **Guess the hidden AI model** on a wide screen, and **Guess the AI model** on a phone. Then: Think you can tell AI models apart, like a wine? In this guessing game, a hidden LLM answers you. It could be ChatGPT, Claude, Gemini, or any of the N models in play. Ten messages, one guess. Take on the daily round or pick a game mode to climb the leaderboard. N is **Models in play**, the enabled roster, not a fixed number. That paragraph uses the full width of the text column.
+- The search description is separate from that paragraph: **A guessing game for AI fans. Chat with a hidden LLM for ten messages and guess which model it is. Daily rounds, several game modes, and a public leaderboard.** Pages that set their own description, such as a public result, keep that one.
+- Under the buttons: three counts on a wide screen. **Models in play** is the enabled roster. **Games today** counts finished games by the UTC day they finished. A game that started yesterday and finished today counts today. A game that starts today and finishes tomorrow does not count today. A game with `finished_at` null never counts. **Players** is the number of distinct accounts with at least one finished game. A game left behind after an account is deleted has no `user_id` and does not count. On a phone a fourth count, **Companies**, sits beside Models in play. It is the number of labs with at least one model in play. Games today and Players sit on the row under that. A wide screen leaves Companies out.
 - Under the counts: **Top 5**, with the same bar as the full leaderboard. It shows that board's rows, stopped at 5. **Full leaderboard** opens `/leaderboard` with the same choice. Changing a control on either page is the same choice on the other.
 - Signed out: **Sign up** goes to `/login?tab=create&next=/play`. **Sign in** goes to `/login?next=/play`.
-- Signed in: **Play** goes to `/play`.
-- Under the buttons: **The leaderboard is open to everyone. An account is only for playing.** Scoring is the header link.
+- Signed in: **Start playing** goes to `/play`. Scoring is the header link.
+- On a wide screen, **Start playing**, **Sign up**, and **Sign in** are taller, with rounder corners. On a phone they keep the original size.
 
 A confirmation or password-reset link returns here. If the URL carries a session and the profile has no username, send the player to `/welcome`.
 

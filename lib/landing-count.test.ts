@@ -86,3 +86,21 @@ test("players on the main page are distinct accounts with a finished game", () =
   assert.match(controls, /This week/);
   assert.match(controls, /This month/);
 });
+
+test("companies on the phone homepage are labs with a model in play", () => {
+  const companies =
+    /'companies',\s*\(\s*select count\(distinct company_id\)::int\s*from public\.models\s*where enabled\s*\)/;
+  const sql = fs.readFileSync(path.join(root, "supabase/migrations/0034_companies_in_play.sql"), "utf8");
+  const baseline = fs.readFileSync(path.join(root, "supabase/v0.3.sql"), "utf8");
+  assert.match(sql, companies);
+  assert.match(baseline, companies);
+  assert.match(sql, /'models', \(select count\(\*\)::int from public\.models where enabled\)/);
+  assert.doesNotMatch(sql, /alter table|delete from|truncate/i);
+  const rounds = fs.readFileSync(path.join(root, "lib/rounds.ts"), "utf8");
+  assert.match(rounds, /\.from\("models"\)\s*\.select\("company_id"\)\s*\.eq\("enabled", true\)/);
+  const home = fs.readFileSync(path.join(root, "app/page.tsx"), "utf8");
+  assert.match(home, /className="stat-companies"/);
+  assert.match(home, /<dt>Companies<\/dt>/);
+  const css = fs.readFileSync(path.join(root, "app/globals.css"), "utf8");
+  assert.match(css, /\.landing \.stat-companies \{ display: none; \}/);
+});

@@ -31,7 +31,8 @@ const fontBold = localFont({
 export const metadata: Metadata = {
   metadataBase: new URL(siteOrigin),
   title: "Who's that LLM?",
-  description: "Ten messages to find the hidden model.",
+  description:
+    "A guessing game for AI fans. Chat with a hidden LLM for ten messages and guess which model it is. Daily rounds, several game modes, and a public leaderboard.",
   icons: {
     icon: [
       ...crawlableFavicons,
