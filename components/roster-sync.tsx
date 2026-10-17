@@ -210,7 +210,7 @@ function AvailabilityCard({ result }: { result: AvailabilityResult }) {
                 </li>
               ))}
             </ul>
-            <p className="muted">Turned off. They stay in the roster.</p>
+            <p className="muted">Moved to Unavailable on OpenRouter. They stay in the database, and past games keep them.</p>
           </>
         )
       ) : (

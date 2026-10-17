@@ -5,11 +5,13 @@ export function RosterReturnFields({
   sort,
   activePage,
   inactivePage,
+  unavailablePage,
 }: {
   query: string;
   sort: RosterSort;
   activePage: number;
   inactivePage: number;
+  unavailablePage: number;
 }) {
   return (
     <>
@@ -22,6 +24,7 @@ export function RosterReturnFields({
       ) : null}
       {activePage > 1 ? <input type="hidden" name="active" value={activePage} /> : null}
       {inactivePage > 1 ? <input type="hidden" name="inactive" value={inactivePage} /> : null}
+      {unavailablePage > 1 ? <input type="hidden" name="unavailable" value={unavailablePage} /> : null}
     </>
   );
 }

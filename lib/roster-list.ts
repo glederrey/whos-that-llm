@@ -94,6 +94,7 @@ export function modelsReturnPath(raw: {
   dir?: string;
   active?: string;
   inactive?: string;
+  unavailable?: string;
 }): string {
   const params = new URLSearchParams();
   if (raw.notice) params.set("notice", raw.notice);
@@ -104,7 +105,7 @@ export function modelsReturnPath(raw: {
     params.set("sort", sort.column);
     params.set("dir", sort.dir);
   }
-  for (const key of ["active", "inactive"] as const) {
+  for (const key of ["active", "inactive", "unavailable"] as const) {
     const number = Number(raw[key]);
     if (Number.isFinite(number) && number > 1) params.set(key, String(Math.trunc(number)));
   }

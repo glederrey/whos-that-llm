@@ -28,6 +28,7 @@ create table public.models (
   provider_settings jsonb not null default '{}'::jsonb,
   released_on date,
   enabled boolean not null default false,
+  available boolean not null default true,
   logo_path text,
   input_usd_per_mtok numeric,
   output_usd_per_mtok numeric,
@@ -35,7 +36,8 @@ create table public.models (
   constraint models_enabled_needs_date check (not enabled or released_on is not null),
   constraint models_reasoning_needs_settings check (
     not enabled or not reasoning or provider_settings <> '{}'::jsonb
-  )
+  ),
+  constraint models_unavailable_stays_off check (available or not enabled)
 );
 
 create table public.game_modes (
