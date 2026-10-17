@@ -127,6 +127,7 @@ test("price updates list changes and leave matching or unpriced models alone", (
     listed("nousresearch/hermes", null, null),
     listed("partial/input", 1, null),
     listed("new/price", 0, 0.2),
+    listed("openai/retired", 9, 9),
   ];
   const plan = planPriceUpdates(
     [
@@ -137,6 +138,8 @@ test("price updates list changes and leave matching or unpriced models alone", (
       model({ id: "gone", name: "Gone", openrouterId: "openai/gone", input: 3, output: 15 }),
       model({ id: "fresh", name: "Fresh", openrouterId: "new/price", input: null, output: null }),
       model({ id: "padded", name: "Padded", openrouterId: "  openai/same  ", input: 2, output: 10 }),
+      model({ id: "retired", name: "Retired", openrouterId: "openai/retired", input: 1, output: 1, available: false }),
+      model({ id: "gone-parked", name: "Gone parked", openrouterId: "openai/old", input: 3, output: 15, available: false }),
     ],
     catalog,
   );
@@ -164,6 +167,9 @@ test("price updates list changes and leave matching or unpriced models alone", (
   ]);
   assert.equal(plan.changes.some((row) => row.name === "Same"), false);
   assert.equal(plan.notUpdated.some((row) => row.name === "Same"), false);
+  assert.equal(plan.changes.some((row) => row.name === "Retired" || row.name === "Gone parked"), false);
+  assert.equal(plan.notUpdated.some((row) => row.name === "Retired" || row.name === "Gone parked"), false);
+  assert.equal(plan.updates.some((row) => row.id === "retired" || row.id === "gone-parked"), false);
   assert.equal(formatSyncPrice(15), "$15");
   assert.equal(formatSyncPrice(0.2), "$0.2");
   assert.equal(formatSyncPrice(0), "$0");

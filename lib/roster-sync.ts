@@ -166,13 +166,14 @@ export function mergeCatalogPages(pages: CatalogPage[]): CatalogModel[] | null {
   return models;
 }
 
-/** A roster model with the same list price is left out. A model with no OpenRouter price is not updated. */
+/** A roster model with the same list price is left out. A model with no OpenRouter price is not updated. Models already unavailable are not checked. */
 export function planPriceUpdates(roster: SyncModel[], catalog: CatalogModel[]): PricePlan {
   const byId = catalogById(catalog);
   const changes: PriceChange[] = [];
   const notUpdated: NotUpdatedModel[] = [];
   const updates: PriceUpdate[] = [];
   for (const model of roster) {
+    if (!model.available) continue;
     const remote = byId.get(model.openrouterId.trim());
     const input = remote?.inputUsdPerMtok ?? null;
     const output = remote?.outputUsdPerMtok ?? null;
