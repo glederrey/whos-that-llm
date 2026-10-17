@@ -35,10 +35,11 @@ export default async function HomePage({
         <img className="hero-logo for-light" src="/brand/logo-tail-right-light.png" alt="" />
         <img className="hero-logo for-dark" src="/brand/logo-tail-right-dark.png" alt="" />
         <div className="stack">
-          <h1>Find the model.</h1>
+          <h1>Guess the hidden AI model</h1>
           <p className="hero-copy">
-            A hidden model answers you. You have ten messages. Name it when you want. Find it, and the round is yours. Miss
-            the name, and the company and the region can still count.
+            Think you can tell AI models apart, like a wine? In this guessing game, one of{" "}
+            {snapshot.models.toLocaleString("en-US")} LLMs hides behind the chat. Ten messages, one guess. Take on the daily
+            round or pick a game mode to climb the leaderboard.
           </p>
           <div className="row">
             {signedIn ? (

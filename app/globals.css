@@ -1804,6 +1804,10 @@ html[data-theme="dark"] .history-facts .board-chip.no-hints {
   .board .num, .board th.num { padding-left: 6px; padding-right: 8px; }
 }
 
+@media (max-width: 360px) {
+  .hero h1 { font-size: 34px; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
 }
