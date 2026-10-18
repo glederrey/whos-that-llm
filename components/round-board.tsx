@@ -485,6 +485,7 @@ export function RoundBoard({ initial }: { initial: PublicGame }) {
                         <br />
                         {guess.name}
                       </span>
+                      <span className="past-message">Message {guess.message}</span>
                     </div>
                     {!game.noHint && index === 0 ? (
                       <p className="wrong-line">

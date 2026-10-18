@@ -76,6 +76,7 @@ export type PastGuess = {
   name: string;
   companyName: string;
   logoPath: string;
+  message: number;
   wrong: Array<"company" | "region">;
 };
 
@@ -228,6 +229,7 @@ export function missedGuesses(traits: Traits, guesses: RecordedGuess[], noHint: 
         name: model.name,
         companyName: model.companyName,
         logoPath: model.logoPath,
+        message: guess.turn,
         wrong,
       };
     });

@@ -553,10 +553,15 @@ test("a wrong guess keeps the model and names the traits it missed", () => {
     ["flash", "luna"],
   );
   assert.deepEqual(named[0]?.wrong, ["company", "region"]);
+  assert.equal(named[0]?.message, 2);
   assert.deepEqual(named[1]?.wrong, ["company"]);
+  assert.equal(named[1]?.message, 1);
   assert.deepEqual(missedGuesses(traits, guesses, true)[0]?.wrong, []);
   const board = fs.readFileSync(path.join(root, "components/round-board.tsx"), "utf8");
+  const css = fs.readFileSync(path.join(root, "app/globals.css"), "utf8");
   assert.match(board, /!game\.noHint && index === 0/);
+  assert.match(board, /className="past-message">Message \{guess\.message\}/);
+  assert.match(css, /\.past-message \{ margin-left: auto;/);
   assert.match(board, /Wrong model/);
 });
 

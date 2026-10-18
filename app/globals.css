@@ -1231,7 +1231,9 @@ html[data-theme="dark"] .hit { color: var(--teal); }
 .past-guess { padding: calc(12px * var(--fit)) 0; border-top: 1px solid var(--line); }
 .past-guess:first-of-type { border-top: 0; }
 .past-model { display: flex; gap: calc(10px * var(--fit)); align-items: center; font-size: calc(16px * var(--fit)); line-height: 1.3; }
+.past-model > span:first-of-type { min-width: 0; }
 .past-model img { width: calc(28px * var(--fit)); height: calc(28px * var(--fit)); border-radius: 6px; }
+.past-message { margin-left: auto; flex: none; color: var(--mute); font-size: calc(13px * var(--fit)); font-weight: 500; white-space: nowrap; }
 .wrong-line { margin: calc(6px * var(--fit)) 0 0; color: var(--miss-press); font-weight: 500; font-size: calc(14px * var(--fit)); }
 .past-guess.arrive { animation: guess-in 0.5s ease; }
 @keyframes guess-in {
