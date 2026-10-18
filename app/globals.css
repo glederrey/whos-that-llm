@@ -1438,8 +1438,9 @@ html[data-theme="dark"] .md a { color: var(--teal); }
 .history { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
 .history-row {
   display: grid;
-  grid-template-columns: 13.5rem minmax(0, 1fr) 9rem 7rem;
-  gap: 12px;
+  grid-template-columns: 12.85rem minmax(0, 1fr) 5.75rem 4.75rem;
+  column-gap: 8px;
+  row-gap: 12px;
   align-items: center;
   width: 100%;
   padding: 12px 14px;
