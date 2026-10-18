@@ -416,7 +416,7 @@ export function RoundBoard({ initial }: { initial: PublicGame }) {
                     : "Last message. Name the model, or give up."
                   : game.messageNumber < 1
                     ? "Send a message before you guess."
-                    : "You already guessed this message."}
+                    : "You already guessed for this message."}
               </p>
               <div className="guess-search">
                 {canGuess && selectedRow && !listOpen ? (
@@ -476,7 +476,7 @@ export function RoundBoard({ initial }: { initial: PublicGame }) {
             {game.pastGuesses.length > 0 ? (
               <section className="card guess-history">
                 <h2>Previous guesses</h2>
-                {game.pastGuesses.map((guess) => (
+                {game.pastGuesses.map((guess, index) => (
                   <div key={guess.id} className={guess.id === freshGuessId ? "past-guess arrive" : "past-guess"}>
                     <div className="past-model">
                       <CompanyLogo src={guess.logoPath} />
@@ -486,11 +486,11 @@ export function RoundBoard({ initial }: { initial: PublicGame }) {
                         {guess.name}
                       </span>
                     </div>
-                    {guess.wrong.length > 0 ? (
-                      <p className="wrong-line">{guess.wrong.map((trait) => `Wrong ${trait}`).join(" · ")}</p>
-                    ) : (
-                      <p className="wrong-line">Wrong model</p>
-                    )}
+                    {!game.noHint && index === 0 ? (
+                      <p className="wrong-line">
+                        {guess.wrong.length > 0 ? guess.wrong.map((trait) => `Wrong ${trait}`).join(" · ") : "Wrong model"}
+                      </p>
+                    ) : null}
                   </div>
                 ))}
               </section>

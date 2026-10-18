@@ -555,6 +555,9 @@ test("a wrong guess keeps the model and names the traits it missed", () => {
   assert.deepEqual(named[0]?.wrong, ["company", "region"]);
   assert.deepEqual(named[1]?.wrong, ["company"]);
   assert.deepEqual(missedGuesses(traits, guesses, true)[0]?.wrong, []);
+  const board = fs.readFileSync(path.join(root, "components/round-board.tsx"), "utf8");
+  assert.match(board, /!game\.noHint && index === 0/);
+  assert.match(board, /Wrong model/);
 });
 
 test("the header counts the message about to be written", () => {
@@ -571,6 +574,7 @@ test("the header counts the message about to be written", () => {
   assert.match(css, /\.give-up \{ grid-column: 2; grid-row: 1; \}/);
   assert.match(css, /\.progress \{ grid-column: 1 \/ -1; grid-row: 2; width: 100%; \}/);
   assert.match(board, /Guess for message \{guessFor\}/);
+  assert.match(board, /You already guessed for this message\./);
   assert.match(board, /disabled=\{!canGuess \|\| !selected \|\| guessBusy \|\| busy\}/);
   assert.match(board, /placeholder="Search models"/);
   assert.doesNotMatch(board, /game\.awaitingGuess \? \(/);
