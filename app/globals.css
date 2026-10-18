@@ -1279,10 +1279,8 @@ html[data-theme="dark"] .hit { color: var(--teal); }
   background: var(--soft);
   border: 1px solid var(--line);
 }
-.status[data-state="solved"] { background: var(--teal-wash); color: var(--teal-press); border-color: transparent; }
-.status[data-state="miss"] { background: var(--miss-wash); color: var(--miss-press); border-color: transparent; }
-html[data-theme="dark"] .status[data-state="solved"] { color: var(--teal); }
-html[data-theme="dark"] .status[data-state="miss"] { color: var(--miss); }
+.status[data-state="solved"] { background: #1c7c43; color: #fff; border-color: transparent; }
+.status[data-state="miss"] { background: #c41b15; color: #fff; border-color: transparent; }
 .score-card { padding: 22px 24px; }
 .score-head { display: flex; justify-content: space-between; align-items: center; gap: 16px 32px; }
 .score-meta { margin-left: auto; display: grid; justify-items: end; gap: 8px; text-align: right; }
