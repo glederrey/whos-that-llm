@@ -1,5 +1,6 @@
 import { difficultyLabel, type Difficulty } from "@/lib/difficulty";
 import { Avatar } from "./avatar";
+import { CompanyLogo } from "./company-logo";
 
 export type BoardRow = {
   rank: number;
@@ -10,10 +11,20 @@ export type BoardRow = {
   seed?: string;
   difficulty?: Difficulty | null;
   noHint?: boolean;
+  companyName?: string | null;
+  companyLogo?: string | null;
 };
 
-export function BoardTable({ rows, showDifficulty = false }: { rows: BoardRow[]; showDifficulty?: boolean }) {
-  const showMarks = showDifficulty || rows.some((row) => row.noHint);
+export function BoardTable({
+  rows,
+  showDifficulty = false,
+  showCompany = false,
+}: {
+  rows: BoardRow[];
+  showDifficulty?: boolean;
+  showCompany?: boolean;
+}) {
+  const showMarks = showDifficulty || showCompany || rows.some((row) => row.noHint);
   return (
     <div className="card board-card">
       <table className="board">
@@ -50,6 +61,16 @@ export function BoardTable({ rows, showDifficulty = false }: { rows: BoardRow[];
                       {showDifficulty ? (
                         row.difficulty ? (
                           <span className={`board-chip difficulty-${row.difficulty}`}>{difficultyLabel[row.difficulty]}</span>
+                        ) : (
+                          <span className="mark-slot" />
+                        )
+                      ) : null}
+                      {showCompany ? (
+                        row.companyName ? (
+                          <span className="board-chip company-chip">
+                            {row.companyLogo ? <CompanyLogo src={row.companyLogo} /> : null}
+                            {row.companyName}
+                          </span>
                         ) : (
                           <span className="mark-slot" />
                         )

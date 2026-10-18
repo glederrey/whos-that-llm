@@ -22,6 +22,7 @@ export function ScoreCard({
   state,
   mode,
   difficulty,
+  company = null,
   noHint,
   breakdown,
   share,
@@ -33,6 +34,8 @@ export function ScoreCard({
   state: "solved" | "miss" | "given_up";
   mode: string;
   difficulty: Difficulty | null;
+  /** When set, this name takes the place difficulty occupies. */
+  company?: string | null;
   noHint: boolean;
   breakdown: ScoreLine[] | null;
   share: { gameId: string; text: string } | null;
@@ -43,7 +46,7 @@ export function ScoreCard({
     state === "solved"
       ? `Solved on message ${messages}.`
       : state === "miss"
-        ? "Miss."
+        ? "Failed."
         : "Given up. This round is not on the leaderboard.";
   const shown = state === "given_up" ? "given-up" : state;
 
@@ -84,8 +87,17 @@ export function ScoreCard({
             <dl>
               <dt>Game mode</dt>
               <dd>{mode}</dd>
-              <dt>Difficulty</dt>
-              <dd style={difficulty ? { color: difficultyColor[difficulty] } : undefined}>{difficultyText(difficulty)}</dd>
+              {company ? (
+                <>
+                  <dt>Company</dt>
+                  <dd>{company}</dd>
+                </>
+              ) : (
+                <>
+                  <dt>Difficulty</dt>
+                  <dd style={difficulty ? { color: difficultyColor[difficulty] } : undefined}>{difficultyText(difficulty)}</dd>
+                </>
+              )}
               {noHint ? (
                 <>
                   <dt>Hints</dt>

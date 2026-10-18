@@ -35,7 +35,7 @@ function formatStat(stats: ProfileStats, key: keyof ProfileStats) {
 
 function statusLabel(status: GameStatus) {
   if (status === "solved") return "Solved";
-  if (status === "miss") return "Miss";
+  if (status === "miss") return "Failed";
   if (status === "given_up") return "Given up";
   return "In progress";
 }
@@ -59,7 +59,7 @@ export default async function ProfilePage({
   const figures: { label: string; key: keyof ProfileStats }[] = [
     { label: "Games played", key: "played" },
     { label: "Solved", key: "solved" },
-    { label: "Missed", key: "missed" },
+    { label: "Failed", key: "missed" },
     { label: "Given up", key: "givenUp" },
     { label: "Solve rate", key: "solveRate" },
     { label: "Best score", key: "best" },
@@ -104,6 +104,7 @@ export default async function ProfilePage({
               regionFound: row.regionFound,
               mode: row.mode,
               difficulty: row.difficulty,
+              companyPlace: row.companyPlace,
               noHint: row.noHint,
               scoreValue: row.score,
               modelFacts: row.modelFacts,

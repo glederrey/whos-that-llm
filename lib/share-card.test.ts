@@ -274,7 +274,7 @@ test("the public picture and the download are the same card", () => {
   assert.match(image, /Daily/);
   assert.match(image, /Easy/);
   assert.match(image, /#1c7c43/);
-  assert.match(image, /Miss\./);
+  assert.match(image, /Failed\./);
   assert.equal(image.includes("Messages"), false);
   assert.equal(image.includes("Hints"), false);
   assert.equal(image.includes(">None<"), false);
