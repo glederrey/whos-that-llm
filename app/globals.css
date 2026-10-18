@@ -1770,17 +1770,18 @@ html[data-theme="dark"] .history-facts .board-chip.no-hints {
     grid-template-areas: none;
     column-gap: 8px;
     row-gap: 8px;
-    justify-items: start;
+    justify-items: center;
   }
-  .history-when { grid-column: 1 / -1; grid-row: 1; justify-self: stretch; }
+  .history-when { grid-column: 1 / -1; grid-row: 1; justify-self: stretch; text-align: left; }
   .history-facts,
   .history-outcome { display: contents; }
   .history-level:empty { display: flex; }
   .history-row .board-chip.history-mode { grid-column: 1; grid-row: 2; }
   .history-level { grid-column: 2; grid-row: 2; }
   .history-facts .no-hints { grid-column: 1; grid-row: 3; }
-  .history-status { grid-column: 3; grid-row: 2; }
-  .history-score { grid-column: 4; grid-row: 2; justify-self: end; }
+  .history-status { grid-column: 3; grid-row: 2; text-align: center; }
+  .history-score,
+  .history-score[data-best="true"] { grid-column: 4; grid-row: 2; justify-self: center; text-align: center; }
   .history-row .board-chip.history-mode,
   .history-level,
   .history-status {
