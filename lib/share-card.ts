@@ -272,7 +272,7 @@ export type ShareCardDisplay = {
   variantColor: string | null;
   score: string;
   outcome: ShareOutcome;
-  /** Solved on message 2. Out of guesses. Given up. */
+  /** Solved on message 2. Failed. Given up. */
   status: string;
   meta: ShareMeta[];
   modelName: string | null;
@@ -303,7 +303,7 @@ export function shareCardDisplay(card: ShareCard): ShareCardDisplay {
     card.outcome === "Solved"
       ? `Solved on message ${formatShareNumber(card.messages)}.`
       : card.outcome === "Not solved"
-        ? "Out of guesses."
+        ? "Failed."
         : "Given up.";
   return {
     title: shareBrand,
