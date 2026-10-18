@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { HomeBoard } from "@/components/home-board";
 import { config } from "@/lib/config";
@@ -5,6 +6,11 @@ import { listGameModes, lobbyState } from "@/lib/rounds";
 import { currentProfile } from "@/lib/session";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  description:
+    "Start a round. Daily, All models, and Company are open. You have ten messages with a hidden model, then you name it.",
+};
 
 export default async function PlayPage() {
   const { user, username } = await currentProfile();

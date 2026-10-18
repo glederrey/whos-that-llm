@@ -1,7 +1,13 @@
+import type { Metadata } from "next";
 import { config, rulesForGameMode } from "@/lib/config";
 import { formatFactor, scoreRound, tokenFactor } from "@/lib/game";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  description:
+    "How a round is scored, from the base through penalties, tokens, the no-hint bonus, and the difficulty multiplier, with one example.",
+};
 
 const n = (value: number) => value.toLocaleString("en-US");
 

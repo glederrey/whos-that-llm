@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { DeleteAccountForm } from "@/components/delete-account-form";
@@ -9,6 +10,10 @@ import { isBestGame, type ProfileStats } from "@/lib/profile";
 import { currentProfile } from "@/lib/session";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  description: "Your username, picture, scores, and the rounds you have played. You can delete your account from here.",
+};
 
 function profileHref(page: number) {
   return page > 1 ? `/profile?page=${page}` : "/profile";

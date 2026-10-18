@@ -1,4 +1,10 @@
+import type { Metadata } from "next";
 import { config } from "@/lib/config";
+
+export const metadata: Metadata = {
+  description:
+    "The reason for the game, the data a round stores, and who runs it. It asks whether people can tell language models apart.",
+};
 
 export default function WhyPage() {
   return (
