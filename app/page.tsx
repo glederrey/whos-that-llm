@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { BoardControls } from "@/components/board-controls";
 import { BoardTable } from "@/components/board-table";
@@ -10,6 +11,11 @@ import { currentProfile } from "@/lib/session";
 import { organizationJsonLd } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  description:
+    "A guessing game for AI fans. Chat with a hidden LLM for ten messages and guess which model it is. Daily rounds, several game modes, and a public leaderboard.",
+};
 
 export default async function HomePage({
   searchParams,

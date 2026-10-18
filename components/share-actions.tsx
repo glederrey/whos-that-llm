@@ -48,8 +48,6 @@ export function ShareActions({ gameId, text }: { gameId: string; text: string })
   const [copied, setCopied] = useState(false);
   const [saving, setSaving] = useState(false);
   const [downloadFlash, setDownloadFlash] = useState(false);
-  const [shortDownload, setShortDownload] = useState(false);
-  const downloadRef = useRef<HTMLAnchorElement>(null);
   const copiedTimers = useRef<number[]>([]);
   const downloadTimers = useRef<number[]>([]);
   const savingTimer = useRef<number | null>(null);
@@ -61,21 +59,6 @@ export function ShareActions({ gameId, text }: { gameId: string; text: string })
     const observer = new MutationObserver(apply);
     observer.observe(root, { attributes: true, attributeFilter: ["data-theme"] });
     return () => observer.disconnect();
-  }, []);
-
-  useLayoutEffect(() => {
-    const link = downloadRef.current;
-    if (!link) return;
-    const narrow = window.matchMedia("(max-width: 560px)");
-    const apply = () => setShortDownload(narrow.matches && !downloadCardFits(link));
-    apply();
-    const observer = new ResizeObserver(apply);
-    observer.observe(link);
-    narrow.addEventListener("change", apply);
-    return () => {
-      observer.disconnect();
-      narrow.removeEventListener("change", apply);
-    };
   }, []);
 
   useEffect(() => {
@@ -240,11 +223,10 @@ export function ShareActions({ gameId, text }: { gameId: string; text: string })
         Copy link
       </button>
       <a
-        ref={downloadRef}
-        className={`button-quiet share-download${downloadFlash ? " is-flash" : ""}${shortDownload ? " is-short" : ""}`}
+        className={`button-quiet share-download${downloadFlash ? " is-flash" : ""}`}
         href={downloadUrl}
         download={fileName}
-        aria-label={saving ? "Saving…" : "Download card"}
+        aria-label={saving ? "Saving…" : undefined}
         aria-busy={saving || undefined}
         onClick={onDownloadClick}
       >
@@ -257,24 +239,6 @@ export function ShareActions({ gameId, text }: { gameId: string; text: string })
       {note ? <p className={`share-note${note === "Try again." ? " is-error" : ""}`}>{note}</p> : null}
     </div>
   );
-}
-
-function downloadCardFits(link: HTMLElement): boolean {
-  const word = link.querySelector(".share-download-word");
-  if (!(word instanceof HTMLElement)) return true;
-  const probe = document.createElement("span");
-  probe.textContent = "Download card";
-  const font = getComputedStyle(word).font;
-  probe.style.font = font;
-  probe.style.whiteSpace = "nowrap";
-  probe.style.position = "absolute";
-  probe.style.visibility = "hidden";
-  link.appendChild(probe);
-  const box = getComputedStyle(link);
-  const pad = Number.parseFloat(box.paddingLeft) + Number.parseFloat(box.paddingRight);
-  const fits = probe.offsetWidth <= link.clientWidth - pad;
-  probe.remove();
-  return fits;
 }
 
 function MessageMark() {

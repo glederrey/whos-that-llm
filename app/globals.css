@@ -1913,6 +1913,7 @@ html[data-theme="dark"] .history-score[data-best="true"] { color: var(--teal); }
     padding: 8px 4px;
     font-size: 14px;
   }
+  .share-download-extra { display: none; }
   .result { grid-template-columns: 1fr; }
   .result > .model-lockup { order: 1; }
   .result > .score-card { order: 2; }
@@ -1971,7 +1972,6 @@ html[data-theme="dark"] .history-score[data-best="true"] { color: var(--teal); }
 .share-actions { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
 .share-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
 .share-download-word { white-space: nowrap; }
-.share-download.is-short .share-download-extra { display: none; }
 .share-desktop { position: relative; display: inline-flex; }
 .share-network-menu { left: 0; right: auto; min-width: 196px; }
 .menu.share-network-menu[hidden] { display: none; }

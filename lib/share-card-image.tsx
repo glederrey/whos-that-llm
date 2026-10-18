@@ -13,9 +13,6 @@ type Tone = {
   line: string;
   score: string;
   frame: string;
-  solvedWash: string;
-  missWash: string;
-  missInk: string;
   quietWash: string;
   chip: string;
 };
@@ -27,9 +24,6 @@ const light: Tone = {
   line: "#D4D4D8",
   score: "#007F88",
   frame: "#00BBC9",
-  solvedWash: "#E6F8F8",
-  missWash: "#FDECEC",
-  missInk: "#C41B15",
   quietWash: "#F3F3F4",
   chip: "#FFFFFF",
 };
@@ -41,9 +35,6 @@ const dark: Tone = {
   line: "#2E2E2E",
   score: "#00BBC9",
   frame: "#00BBC9",
-  solvedWash: "#062E2E",
-  missWash: "#3A1212",
-  missInk: "#C41B15",
   quietWash: "#262626",
   chip: "#FFFFFF",
 };
@@ -62,8 +53,7 @@ export function shareCardImage(
 ): ReactElement {
   const tone = theme === "dark" ? dark : light;
   const display = shareCardDisplay(card);
-  const statusColor = display.outcome === "Not solved" ? tone.missInk : display.outcome === "Solved" ? tone.score : tone.ink;
-  const statusWash = display.outcome === "Not solved" ? tone.missWash : display.outcome === "Solved" ? tone.solvedWash : tone.quietWash;
+  const status = statusChip(display.outcome, tone);
   return box(
     {
       width: "100%",
@@ -154,10 +144,11 @@ export function shareCardImage(
           text(display.status, {
             fontSize: 36,
             fontWeight: 700,
-            color: statusColor,
-            background: statusWash,
+            color: status.color,
+            background: status.background,
             borderRadius: 999,
             padding: "12px 22px",
+            ...(status.border ? { border: status.border } : {}),
           }),
           ...display.meta.map((row) => metaRow(row, tone)),
         ),
@@ -180,6 +171,13 @@ export function shareCardImage(
       ),
     ),
   );
+}
+
+/** Same chips as the score card. Solved is the Easy green, Failed is the Hard red, Given up stays gray. */
+function statusChip(outcome: ShareCard["outcome"], tone: Tone): { color: string; background: string; border?: string } {
+  if (outcome === "Solved") return { color: "#fff", background: "#1c7c43" };
+  if (outcome === "Not solved") return { color: "#fff", background: "#c41b15" };
+  return { color: tone.ink, background: tone.quietWash, border: `1px solid ${tone.line}` };
 }
 
 function factLine(facts: string[], tone: Tone): ReactElement {

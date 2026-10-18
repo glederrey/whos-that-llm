@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { BoardControls } from "@/components/board-controls";
 import { BoardTable } from "@/components/board-table";
@@ -8,6 +9,11 @@ import { leaderboard, listBoardOptions, listGameModes } from "@/lib/rounds";
 import { currentProfile } from "@/lib/session";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  description:
+    "The highest scores from finished rounds. Choose a game mode, then this week, this month, or all time, and a difficulty or a company.",
+};
 
 const pageSize = 20;
 

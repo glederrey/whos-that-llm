@@ -275,6 +275,9 @@ test("the public picture and the download are the same card", () => {
   assert.match(image, /Easy/);
   assert.match(image, /#1c7c43/);
   assert.match(image, /Failed\./);
+  assert.match(image, /background:#c41b15/);
+  assert.match(image, /color:#fff/);
+  assert.doesNotMatch(image, /#FDECEC|#fdecec|#E6F8F8|#e6f8f8/);
   assert.equal(image.includes("Messages"), false);
   assert.equal(image.includes("Hints"), false);
   assert.equal(image.includes(">None<"), false);
@@ -299,6 +302,8 @@ test("the public picture and the download are the same card", () => {
   const darkImage = renderToStaticMarkup(shareCardImage(daily, "data:image/png;base64,aaaa", null, "dark"));
   assert.match(darkImage, /#1E1E1E/);
   assert.match(darkImage, /#EBEBEB/);
+  assert.match(darkImage, /background:#c41b15/);
+  assert.match(darkImage, /color:#fff/);
   assert.equal(/#007F88/i.test(darkImage), false);
   assert.equal(shareCardAlt(daily).includes(hidden), false);
 
@@ -308,9 +313,22 @@ test("the public picture and the download are the same card", () => {
   assert.match(namedImage, /bbbb/);
   assert.match(namedImage, /Anthropic/);
   assert.match(namedImage, /Solved on message/);
+  assert.match(namedImage, /background:#1c7c43/);
+  assert.match(namedImage, /color:#fff/);
   assert.equal(namedImage.includes("Model hidden"), false);
   assert.equal(namedImage.includes(decoy), false);
   assert.match(shareCardAlt(named), new RegExp(hidden));
+  const quiet = card({ status: "given_up", score: null, breakdown: null, messageCount: 0 });
+  const quietImage = renderToStaticMarkup(shareCardImage(quiet, "data:image/png;base64,aaaa"));
+  assert.match(quietImage, /Given up\./);
+  assert.match(quietImage, /background:#F3F3F4/i);
+  assert.match(quietImage, /color:#141414/i);
+  assert.match(quietImage, /border:1px solid #D4D4D8/i);
+  assert.doesNotMatch(quietImage, /background:#1c7c43|background:#c41b15/);
+  const quietDark = renderToStaticMarkup(shareCardImage(quiet, "data:image/png;base64,aaaa", null, "dark"));
+  assert.match(quietDark, /background:#262626/i);
+  assert.match(quietDark, /color:#EBEBEB/i);
+  assert.match(quietDark, /border:1px solid #2E2E2E/i);
 
   const page = fs.readFileSync(path.join(root, "app/r/[gameId]/page.tsx"), "utf8");
   assert.match(page, /shareCardPath/);
@@ -447,6 +465,8 @@ test("share comes before download, and the networks live in one menu", () => {
   assert.doesNotMatch(actions, /setNote\("The link is copied\."\)/);
   const css = fs.readFileSync(path.join(root, "app/globals.css"), "utf8");
   assert.match(css, /\.score-card \.score-link \{ display: none; \}/);
+  assert.match(css, /@media \(max-width: 720px\) \{[\s\S]*?\.share-download-extra \{ display: none; \}/);
+  assert.doesNotMatch(css, /\.share-download\.is-short/);
   assert.match(css, /\.share-note\.is-error \{ color: var\(--miss-press\); \}/);
   assert.doesNotMatch(css, /\.share-actions \.share-copy \{ display: none; \}/);
   assert.equal(html.includes(">Message<"), false);
