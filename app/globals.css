@@ -1765,35 +1765,42 @@ html[data-theme="dark"] .history-facts .board-chip.no-hints {
   .daybars { gap: 3px; }
   .daybar-count { font-size: 10px; }
   .daybar-date { display: none; }
+  .history {
+    grid-template-columns: 6px max-content max-content minmax(16px, 1fr) max-content 6px;
+    column-gap: 8px;
+    row-gap: 8px;
+  }
+  .history > li {
+    display: grid;
+    grid-template-columns: subgrid;
+    grid-column: 1 / -1;
+  }
+  .history > li > .history-detail { grid-column: 1 / -1; }
   .history-row {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-column: 1 / -1;
+    grid-template-columns: subgrid;
     grid-template-areas: none;
     column-gap: 8px;
     row-gap: 8px;
     justify-items: start;
+    align-items: center;
+    width: auto;
+    padding-left: 0;
+    padding-right: 0;
   }
-  .history-when { grid-column: 1 / -1; grid-row: 1; justify-self: stretch; text-align: left; }
-  .history-facts,
-  .history-outcome { display: contents; }
+  .history-when { grid-column: 2 / 6; grid-row: 1; justify-self: stretch; text-align: left; }
+  .history-facts { display: contents; }
   .history-level:empty { display: flex; }
-  .history-row .board-chip.history-mode { grid-column: 1; grid-row: 2; }
-  .history-level { grid-column: 2; grid-row: 2; }
-  .history-facts .no-hints { grid-column: 1; grid-row: 3; }
-  .history-status { grid-column: 3; grid-row: 2; justify-self: end; text-align: right; }
-  .history-score,
-  .history-score[data-best="true"] { grid-column: 4; grid-row: 2; justify-self: end; text-align: right; }
-  .history-row .board-chip.history-mode,
-  .history-level,
-  .history-status {
-    min-width: 0;
-    max-width: 100%;
-  }
-  .history-score { min-width: 0; }
-  .history-row .board-chip.history-mode,
-  .history-level .board-chip,
-  .history-facts .no-hints {
-    overflow: hidden;
-    text-overflow: ellipsis;
+  .history-row .board-chip.history-mode { grid-column: 2; grid-row: 2; }
+  .history-level { grid-column: 3; grid-row: 2; }
+  .history-facts .no-hints { grid-column: 2; grid-row: 3; }
+  .history-outcome {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    grid-column: 5;
+    grid-row: 2;
+    justify-self: end;
   }
   .roster-form { grid-template-columns: 1fr; }
   .bubble, .reply-block { max-width: 94%; }
