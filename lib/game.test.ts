@@ -580,6 +580,7 @@ test("the header counts the message about to be written", () => {
   assert.match(css, /\.progress \{ grid-column: 1 \/ -1; grid-row: 2; width: 100%; \}/);
   assert.match(board, /Guess for message \{guessFor\}/);
   assert.match(board, /You already guessed for this message\./);
+  assert.match(board, /It's your last guess!/);
   assert.match(board, /disabled=\{!canGuess \|\| !selected \|\| guessBusy \|\| busy\}/);
   assert.match(board, /placeholder="Search models"/);
   assert.doesNotMatch(board, /game\.awaitingGuess \? \(/);

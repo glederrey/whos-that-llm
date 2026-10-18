@@ -413,7 +413,7 @@ export function RoundBoard({ initial }: { initial: PublicGame }) {
                 {canGuess
                   ? game.messageNumber < game.messageLimit
                     ? "You can guess, or send another message."
-                    : "Last message. Name the model, or give up."
+                    : "It's your last guess!"}
                   : game.messageNumber < 1
                     ? "Send a message before you guess."
                     : "You already guessed for this message."}
