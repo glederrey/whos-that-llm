@@ -1464,7 +1464,9 @@ html[data-theme="dark"] .history-facts .board-chip.no-hints {
 }
 .history-status { text-align: left; white-space: nowrap; }
 .history-status[data-state="solved"] { color: #1c7c43; font-weight: 600; }
+.history-status[data-state="miss"],
 .history-status[data-state="given_up"] { color: var(--miss-press); font-weight: 600; }
+html[data-theme="dark"] .history-status[data-state="miss"] { color: var(--miss); }
 .history-score { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .history-score[data-best="true"] {
   justify-self: end;

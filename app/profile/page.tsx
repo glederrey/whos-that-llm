@@ -35,7 +35,7 @@ function formatStat(stats: ProfileStats, key: keyof ProfileStats) {
 
 function statusLabel(status: GameStatus) {
   if (status === "solved") return "Solved";
-  if (status === "miss") return "Miss";
+  if (status === "miss") return "Failed";
   if (status === "given_up") return "Given up";
   return "In progress";
 }
