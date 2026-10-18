@@ -75,11 +75,13 @@ export function HistoryFacts({ item }: { item: HistoryItem }) {
   return (
     <span className="history-facts">
       <span className="board-chip history-mode">{item.mode}</span>
-      {item.companyPlace ? (
-        <span className="board-chip company-chip">{item.companyPlace}</span>
-      ) : item.difficulty ? (
-        <span className={`board-chip difficulty-${item.difficulty}`}>{difficultyText(item.difficulty)}</span>
-      ) : null}
+      <span className="history-level">
+        {item.companyPlace ? (
+          <span className="board-chip company-chip">{item.companyPlace}</span>
+        ) : item.difficulty ? (
+          <span className={`board-chip difficulty-${item.difficulty}`}>{difficultyText(item.difficulty)}</span>
+        ) : null}
+      </span>
       {item.noHint ? <span className="board-chip no-hints">No hints</span> : null}
     </span>
   );
