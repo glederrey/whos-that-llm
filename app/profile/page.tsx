@@ -59,7 +59,7 @@ export default async function ProfilePage({
   const figures: { label: string; key: keyof ProfileStats }[] = [
     { label: "Games played", key: "played" },
     { label: "Solved", key: "solved" },
-    { label: "Missed", key: "missed" },
+    { label: "Failed", key: "missed" },
     { label: "Given up", key: "givenUp" },
     { label: "Solve rate", key: "solveRate" },
     { label: "Best score", key: "best" },
