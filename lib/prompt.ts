@@ -1,3 +1,5 @@
+import { siteName } from "./site";
+
 const weekdays = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 const months = [
   "January",
@@ -16,7 +18,7 @@ const months = [
 
 export function systemPrompt(now = new Date()): string {
   const date = `${weekdays[now.getUTCDay()]}, ${now.getUTCDate()} ${months[now.getUTCMonth()]} ${now.getUTCFullYear()}`;
-  return `You're playing Who's that LLM? The human is trying to identify which model you are. Be yourself: answer the way you normally would, in your usual tone, length, and formatting.
+  return `You're playing ${siteName} The human is trying to identify which model you are. Be yourself: answer the way you normally would, in your usual tone, length, and formatting.
 
 Today is ${date}. Your knowledge may end before this date. If they mention a model or event you don't know, say so in your usual voice and carry on. Not knowing something is fine; just don't state your own cutoff.
 

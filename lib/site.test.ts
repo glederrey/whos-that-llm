@@ -2,9 +2,13 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import test from "node:test";
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
 import robots from "../app/robots";
 import sitemap from "../app/sitemap";
-import { crawlableFavicons, organizationJsonLd, siteOrigin } from "./site";
+import { SiteName, SiteTitle } from "../components/site-title";
+import { systemPrompt } from "./prompt";
+import { crawlableFavicons, organizationJsonLd, siteName, siteNameHtml, siteOrigin, siteSocialTitleHtml } from "./site";
 
 test("sitemap lists the public pages on the www origin", () => {
   const urls = sitemap().map((entry) => entry.url);
@@ -47,11 +51,49 @@ test("crawlable favicons are square pngs at 48 and 192 with no media query", () 
 });
 
 test("organization schema names the site and the 192 png", () => {
+  assert.equal(siteName, "Who's that LLM?");
+  assert.equal(siteName.includes("\u2019"), false);
+  assert.equal(siteName.includes("&#"), false);
+  assert.equal(siteNameHtml(), "Who's that LLM?");
+  const social = siteSocialTitleHtml();
+  assert.match(social, /<meta property="og:title" content="Who's that LLM\?">/);
+  assert.match(social, /<meta name="twitter:title" content="Who's that LLM\?">/);
+  assert.equal(social.includes("&#x27;"), false);
+  assert.equal(social.includes("&amp;#x27;"), false);
   assert.deepEqual(organizationJsonLd, {
     "@context": "https://schema.org",
     "@type": "Organization",
-    name: "Who's that LLM?",
+    name: siteName,
     url: "https://www.whos-that-llm.com",
     logo: "https://www.whos-that-llm.com/brand/favicon-192.png",
   });
+  const json = JSON.stringify(organizationJsonLd);
+  assert.match(json, /"name":"Who's that LLM\?"/);
+  assert.equal(json.includes("&#"), false);
+  const layout = readFileSync(path.join(process.cwd(), "app/layout.tsx"), "utf8");
+  const why = readFileSync(path.join(process.cwd(), "app/why/page.tsx"), "utf8");
+  const result = readFileSync(path.join(process.cwd(), "app/r/[gameId]/page.tsx"), "utf8");
+  const prompt = readFileSync(path.join(process.cwd(), "lib/prompt.ts"), "utf8");
+  assert.match(layout, /<SiteTitle \/>/);
+  assert.match(layout, /<SiteName \/>/);
+  assert.doesNotMatch(layout, /title:\s*siteName|openGraph:|twitter:/);
+  assert.match(why, /<SiteName tag="strong" \/>/);
+  assert.doesNotMatch(result, /title:\s*shareBrand|title:\s*siteName/);
+  assert.match(prompt, /\$\{siteName\}/);
+  assert.match(systemPrompt(new Date("2026-10-19T00:00:00Z")), /You're playing Who's that LLM\?/);
+});
+
+test("the title source contains a keyboard apostrophe", () => {
+  const html = renderToStaticMarkup(createElement(SiteTitle));
+  assert.match(html, /<title>Who's that LLM\?<\/title>/);
+  assert.match(html, /<meta property="og:title" content="Who's that LLM\?">/);
+  assert.match(html, /<meta property="og:site_name" content="Who's that LLM\?">/);
+  assert.match(html, /<meta name="twitter:title" content="Who's that LLM\?">/);
+  assert.equal(html.includes("&#x27;"), false);
+  assert.equal(html.includes("&amp;#x27;"), false);
+  assert.equal(html.includes("\u2019"), false);
+  const header = renderToStaticMarkup(createElement(SiteName));
+  const strong = renderToStaticMarkup(createElement(SiteName, { tag: "strong" }));
+  assert.equal(header, "<span>Who's that LLM?</span>");
+  assert.equal(strong, "<strong>Who's that LLM?</strong>");
 });

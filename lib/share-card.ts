@@ -10,7 +10,7 @@ import {
   type Traits,
 } from "./game";
 import { utcDayKey } from "./daily";
-import { siteOrigin } from "./site";
+import { siteName, siteOrigin } from "./site";
 
 /** Leaderboard difficulty colors. The card uses these on the difficulty word. */
 export const difficultyColor: Record<Difficulty, string> = {
@@ -20,7 +20,7 @@ export const difficultyColor: Record<Difficulty, string> = {
   impossible: "#a78bfa",
 };
 
-export const shareBrand = "Who's that LLM?";
+export const shareBrand = siteName;
 
 export const shareSite = "whos-that-llm.com";
 

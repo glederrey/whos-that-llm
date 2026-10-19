@@ -5,6 +5,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { HistoryDetail, HistoryList } from "../components/history-list";
 import { ResultSummary } from "../components/round-facts";
 import { difficultyText, playedRoundFacts } from "./round-facts";
+import { siteName } from "./site";
 
 const item = {
   id: "game-1",
@@ -26,7 +27,7 @@ const item = {
   scoreValue: 1200,
   modelFacts: ["Anthropic", "USA", "2026", "Large"],
   breakdown: [{ label: "Named the model", points: 1200 }],
-  shareText: "I just played on Who's that LLM?",
+  shareText: `I just played on ${siteName}`,
 };
 
 test("a stored game mode and difficulty become the labels a player sees", () => {

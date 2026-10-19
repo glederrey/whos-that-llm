@@ -6,6 +6,7 @@ import { SiteFooter } from "@/components/site-footer";
 import { ThemeInit } from "@/components/theme-init";
 import { sessionIsOwner } from "@/lib/admin-access";
 import { currentProfile } from "@/lib/session";
+import { SiteName, SiteTitle } from "@/components/site-title";
 import { crawlableFavicons, siteOrigin } from "@/lib/site";
 import "./globals.css";
 
@@ -30,7 +31,6 @@ const fontBold = localFont({
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteOrigin),
-  title: "Who's that LLM?",
   description:
     "A guessing game for AI fans. Chat with a hidden LLM for ten messages and guess which model it is. Daily rounds, several game modes, and a public leaderboard.",
   icons: {
@@ -51,6 +51,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang="en" className={`${font.variable} ${fontBold.variable}`} suppressHydrationWarning>
       <head>
+        <SiteTitle />
         <ThemeInit />
       </head>
       <body suppressHydrationWarning>
@@ -59,7 +60,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             <a className="brand" href="/">
               <img className="for-light" src="/brand/logo-tail-right-light.png" alt="" />
               <img className="for-dark" src="/brand/logo-tail-right-dark.png" alt="" />
-              <span>Who&apos;s that LLM?</span>
+              <SiteName />
             </a>
             <nav className="header-nav">
               <a href="/scoring" aria-label="Scoring">

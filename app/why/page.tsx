@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { config } from "@/lib/config";
+import { SiteName } from "@/components/site-title";
 
 export const metadata: Metadata = {
   description:
@@ -17,7 +18,7 @@ export default function WhyPage() {
       </a>
       <h1>Why this game?</h1>
       <p>
-        <strong>Who&apos;s that LLM?</strong> started with something a friend said:
+        <SiteName tag="strong" /> started with something a friend said:
       </p>
       <blockquote className="quote">
         <p>“Over time I think I could tell an Opus 4.5 from a 4.7 and a 4.8. Like a wine...”</p>
@@ -67,7 +68,7 @@ export default function WhyPage() {
       </p>
       <h2>Do you want to contribute?</h2>
       <p>
-        <strong>Who&apos;s that LLM?</strong> is a small side project, and it gets better with help. If you have an idea,
+        <SiteName tag="strong" /> is a small side project, and it gets better with help. If you have an idea,
         want to contribute, or found a bug, you&apos;re very welcome to{" "}
         <a href="https://github.com/glederrey/whos-that-llm/issues" target="_blank" rel="noreferrer">
           open an issue on GitHub
