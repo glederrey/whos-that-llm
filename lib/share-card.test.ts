@@ -271,9 +271,12 @@ test("a card theme is dark only when the request says dark", () => {
 test("the public picture and the download are the same card", () => {
   const daily = card({ gameMode: "daily", difficulty: "easy", status: "miss", score: 100 });
   const image = renderToStaticMarkup(shareCardImage(daily, "data:image/png;base64,aaaa"));
-  assert.match(image, /Who\u2019s that LLM\?/);
-  assert.equal(image.includes("&#x27;"), false);
-  assert.equal(image.includes("Who's"), false);
+  assert.equal(shareCardDisplay(daily).title, "Who's that LLM?");
+  assert.equal(shareCardDisplay(daily).title.includes("\u2019"), false);
+  assert.equal(shareCardDisplay(daily).title.includes("&#"), false);
+  assert.match(image, /Who&#x27;s that LLM\?/);
+  assert.equal(image.includes("&amp;#x27;"), false);
+  assert.equal(image.includes("\u2019"), false);
   assert.match(image, /Daily/);
   assert.match(image, /Easy/);
   assert.match(image, /#1c7c43/);
