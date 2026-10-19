@@ -4,7 +4,7 @@ import path from "node:path";
 import test from "node:test";
 import robots from "../app/robots";
 import sitemap from "../app/sitemap";
-import { crawlableFavicons, organizationJsonLd, siteOrigin } from "./site";
+import { crawlableFavicons, organizationJsonLd, siteName, siteOrigin } from "./site";
 
 test("sitemap lists the public pages on the www origin", () => {
   const urls = sitemap().map((entry) => entry.url);
@@ -47,11 +47,27 @@ test("crawlable favicons are square pngs at 48 and 192 with no media query", () 
 });
 
 test("organization schema names the site and the 192 png", () => {
+  assert.equal(siteName, "Who\u2019s that LLM?");
+  assert.equal(siteName.includes("'"), false);
+  assert.equal(siteName.includes("&#"), false);
   assert.deepEqual(organizationJsonLd, {
     "@context": "https://schema.org",
     "@type": "Organization",
-    name: "Who's that LLM?",
+    name: siteName,
     url: "https://www.whos-that-llm.com",
     logo: "https://www.whos-that-llm.com/brand/favicon-192.png",
   });
+  const layout = readFileSync(path.join(process.cwd(), "app/layout.tsx"), "utf8");
+  const why = readFileSync(path.join(process.cwd(), "app/why/page.tsx"), "utf8");
+  const result = readFileSync(path.join(process.cwd(), "app/r/[gameId]/page.tsx"), "utf8");
+  assert.match(layout, /title: siteName/);
+  assert.match(layout, /openGraph: \{ title: siteName, siteName \}/);
+  assert.match(layout, /twitter: \{ title: siteName \}/);
+  assert.match(layout, /\{siteName\}/);
+  assert.doesNotMatch(layout, /Who's|Who&apos;|&#x27;/);
+  assert.match(why, /\{siteName\}/);
+  assert.doesNotMatch(why, /Who's|Who&apos;|&#x27;/);
+  assert.match(result, /title: shareBrand/);
+  assert.match(result, /openGraph: \{[\s\S]*title: shareBrand/);
+  assert.match(result, /twitter: \{[\s\S]*title: shareBrand/);
 });

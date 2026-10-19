@@ -17,6 +17,7 @@ import {
   dailyModelVisible,
   shareCardAlt,
   shareCardDisplay,
+  shareBrand,
   shareCardTheme,
   shareFileName,
   sharePageUrl,
@@ -165,7 +166,7 @@ test("share text names the round and hides a daily model", () => {
   assert.equal(
     text,
     [
-      "I just played on Who's that LLM? and scored 1,240 points.",
+      `I just played on ${shareBrand} and scored 1,240 points.`,
       "Game mode: Daily\nDifficulty: Easy.",
       "Do you think you can beat my score?",
       link,
@@ -181,7 +182,7 @@ test("share text names the round and hides a daily model", () => {
   assert.equal(
     shareText(named),
     [
-      "I just played on Who's that LLM? and scored 1,240 points.",
+      `I just played on ${shareBrand} and scored 1,240 points.`,
       "Game mode: All models\nDifficulty: Hard.",
       `The model I had to guess was ${hidden}.`,
       "Do you think you can beat my score?",
@@ -197,7 +198,7 @@ test("share text names the round and hides a daily model", () => {
   const quiet = card({ status: "given_up", score: null, breakdown: null, gameMode: "daily", difficulty: "medium" });
   assert.equal(
     shareText(quiet),
-    ["I just played on Who's that LLM?", "Game mode: Daily\nDifficulty: Medium.", link].join("\n\n"),
+    [`I just played on ${shareBrand}`, "Game mode: Daily\nDifficulty: Medium.", link].join("\n\n"),
   );
   assert.equal(shareCardDisplay(quiet).score, "—");
   assert.equal(shareCardDisplay(quiet).tokens, "—");
@@ -270,7 +271,9 @@ test("a card theme is dark only when the request says dark", () => {
 test("the public picture and the download are the same card", () => {
   const daily = card({ gameMode: "daily", difficulty: "easy", status: "miss", score: 100 });
   const image = renderToStaticMarkup(shareCardImage(daily, "data:image/png;base64,aaaa"));
-  assert.match(image, /Who&#x27;s that LLM\?|Who's that LLM\?/);
+  assert.match(image, /Who\u2019s that LLM\?/);
+  assert.equal(image.includes("&#x27;"), false);
+  assert.equal(image.includes("Who's"), false);
   assert.match(image, /Daily/);
   assert.match(image, /Easy/);
   assert.match(image, /#1c7c43/);

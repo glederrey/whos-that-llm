@@ -1,5 +1,11 @@
 export const siteOrigin = "https://www.whos-that-llm.com";
 
+/**
+ * Typographic apostrophe. A straight one is written as &#x27; in the title,
+ * and a search card prints that code.
+ */
+export const siteName = "Who\u2019s that LLM?";
+
 /** Pages a searcher should find. Admin, API, auth, and per-game URLs stay out. */
 export const publicPaths = ["/", "/scoring", "/leaderboard", "/statistics", "/why"] as const;
 
@@ -12,7 +18,7 @@ export const crawlableFavicons = [
 export const organizationJsonLd = {
   "@context": "https://schema.org",
   "@type": "Organization",
-  name: "Who's that LLM?",
+  name: siteName,
   url: siteOrigin,
   logo: `${siteOrigin}/brand/favicon-192.png`,
 };
