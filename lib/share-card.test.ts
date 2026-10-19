@@ -238,7 +238,7 @@ test("X and Facebook get the text and the link to this round", () => {
   const id = "11111111-1111-4111-8111-111111111111";
   const page = sharePageUrl(id);
   assert.equal(page, `https://www.whos-that-llm.com/r/${id}`);
-  const text = "Solved · 1,240 · Daily · Easy — Who's that LLM?";
+  const text = `Solved · 1,240 · Daily · Easy — ${shareBrand}`;
   const x = new URL(xShareUrl(page, text));
   assert.equal(`${x.origin}${x.pathname}`, "https://twitter.com/intent/tweet");
   assert.equal(x.searchParams.get("text"), `${text}\n\n`);
