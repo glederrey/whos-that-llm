@@ -5,8 +5,21 @@
 -- account and company. Company is playable, with year and size hints, and
 -- its leaderboard filters by company. A model OpenRouter no longer lists
 -- stays in the table and cannot be turned on.
--- This includes the migrations through 0037_company_hints.sql.
--- Do not run 0033 through 0037 after this script.
+-- This includes the migrations through 0038_public_data_api_grants.sql.
+-- Do not run 0033 through 0038 after this script.
+-- From 30 Oct 2026, new tables and sequences in public are not granted to
+-- anon, authenticated, or service_role. These defaults run before the tables
+-- are created, so a fresh database still gives service_role select, insert,
+-- update, and delete. anon and authenticated keep the explicit grants further
+-- down: select only, and only on tables they can already read. They are not
+-- granted writes. Sequences keep usage and select. Function execute stays
+-- as granted below, per function.
+
+alter default privileges for role postgres in schema public
+  grant select, insert, update, delete on tables to service_role;
+
+alter default privileges for role postgres in schema public
+  grant usage, select on sequences to anon, authenticated, service_role;
 
 create table public.companies (
   id text primary key,
@@ -899,6 +912,7 @@ grant usage on schema public to anon, authenticated, service_role;
 
 grant select on public.companies, public.game_modes to anon, authenticated;
 grant select on public.models_public to anon, authenticated, service_role;
+revoke insert, update, delete on public.models_public from service_role;
 grant select on public.profiles to authenticated;
 
 grant select, insert, update, delete on
