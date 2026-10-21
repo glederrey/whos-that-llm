@@ -3,6 +3,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "dev:prod": "node scripts/dev-prod.mjs",
     "build": "next build",
     "start": "next start",
     "test": "tsx --test \"lib/**/*.test.ts\"",
