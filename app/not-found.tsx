@@ -16,7 +16,7 @@ export default function NotFound() {
         <MessageBubble role="user" content="Which page are you?" />
         <MessageBubble
           role="assistant"
-          content="Great question! I'm a large language model trained to be helpful, harmless, and honest. I'm also, I regret to say, not here."
+          content="Great question! I'm the page you were looking for. As a large language model, I regret to say I have no idea where I went."
         />
         <MessageBubble role="user" content="That sounds like exactly what a model would say." />
       </div>
