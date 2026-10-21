@@ -20,6 +20,9 @@ export function SiteFooter() {
       <p className="credit">
         One human, two AIs:{" "}
         <a href="https://github.com/glederrey" target="_blank" rel="noreferrer">
+          <svg className="claude-mark" viewBox="0 0 24 24" aria-hidden="true">
+            <path fill="currentColor" fillRule="evenodd" clipRule="evenodd" d="M8 5h8v5H8zM4 11h16v5H4zM7 16h3v4H7zM14 16h3v4h-3zM10 6.5h1.5v2H10zM12.5 6.5H14v2h-1.5z" />
+          </svg>
           Gael Lederrey
         </a>
         ,{" "}
