@@ -1,13 +1,12 @@
-<p align="center">
+<h1 align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="public/brand/logo-tail-right-dark.png">
-    <img alt="Who's that LLM?" src="public/brand/logo-tail-right-light.png" width="360">
+    <img alt="" src="public/brand/logo-tail-right-light.png" height="56" align="absmiddle">
   </picture>
-</p>
+  Who's that LLM?
+</h1>
 
-# Who's that LLM?
-
-**Who's that Pokémon, but for language models.**
+<p align="center"><b>Who's that Pokémon, but for language models.</b></p>
 
 A hidden model answers you in a chat. You get ten messages to work out who you are talking to: Claude, GPT, DeepSeek, Mistral, something else? Name it early for a bigger score, buy hints if you are stuck, or give up and see the reveal.
 
@@ -78,4 +77,4 @@ Ground rules for agents and humans alike: no secrets or real keys anywhere in th
 
 ## License
 
-[MIT](LICENSE).
+This project is released under the [MIT License](LICENSE). You are free to use, copy, modify and share it, as long as the copyright notice and the license text stay with it. The software comes as is, without warranty.
