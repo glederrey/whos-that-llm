@@ -212,7 +212,7 @@ a.kofi span { text-decoration: underline; text-underline-offset: 3px; }
 .kofi-mark { width: 18px; height: 18px; flex: none; }
 .credit { display: inline-flex; align-items: center; flex-wrap: wrap; justify-content: center; gap: 4px 8px; margin: 0; }
 .credit a { display: inline-flex; align-items: center; padding: 6px 2px; }
-.credit-avatar { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; }
+.gael-mark { width: 23px; height: 28px; }
 .cursor-mark { width: 24px; height: 24px; }
 .claude-mark { width: 28px; height: 28px; }
 

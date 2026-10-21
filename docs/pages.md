@@ -64,7 +64,7 @@ On every page, including the round and admin. The shared result page is the exce
 
 - A line separates the footer from the page.
 - **The API bill is winning, a little help?**, with the Ko-fi cup, opens `tipUrl` in `lib/config.ts` in a new tab. An empty string keeps the sentence as a placeholder: **The models invoice the developer. A Ko-fi will sit here when you feel like covering a round.**
-- **One human, two AIs. Created by**, then three icon-only links, each with an `aria-label` and a hover title: a round photo of Gael Lederrey (`public/brand/gael.jpg`, links to `https://github.com/glederrey`), the Cursor logo (`https://cursor.com`) and the Claude Code mascot (`public/brand/claude-code.svg`, links to `https://claude.com/product/claude-code`). The logos use the link color. One line on desktop; on a phone it wraps and is centered.
+- **Created by one human and two AIs:**, then three icon-only links, each with an `aria-label` and a hover title: a silhouette of Gael Lederrey (`public/brand/gael.svg`, links to `https://github.com/glederrey`), the Cursor logo (`https://cursor.com`) and the Claude Code mascot (`public/brand/claude-code.svg`, links to `https://claude.com/product/claude-code`). All three icons use the link color. One line on desktop; on a phone it wraps and is centered.
 
 A tip does not raise the hourly cap, change a score, or put a name on the leaderboard.
 
