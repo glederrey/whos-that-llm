@@ -53,8 +53,8 @@ test("daily and all models keep separate unfinished rounds", () => {
 });
 
 test("one active round per mode and difficulty replaces the single active round", () => {
-  const sql = fs.readFileSync(path.join(root, "supabase/legacy/migrations/0033_one_active_per_difficulty.sql"), "utf8");
-  assert.match(sql, /drop index if exists public\.games_one_active_idx/);
+  const sql = fs.readFileSync(path.join(root, "supabase/migrations/20261021080000_baseline.sql"), "utf8");
+  assert.doesNotMatch(sql, /games_one_active_idx/);
   assert.match(sql, /create unique index games_one_active_per_difficulty_idx/);
   assert.match(sql, /on public\.games \(user_id, game_mode, difficulty\)/);
   assert.match(sql, /where status = 'active'/);
@@ -64,7 +64,6 @@ test("one active round per mode and difficulty replaces the single active round"
   assert.match(sql, /existing_status = 'active'/);
   assert.match(sql, /'daily_done'/);
   assert.doesNotMatch(sql, /select count\(\*\) into active_count from public\.games where user_id = p_user_id and status = 'active'/);
-  assert.doesNotMatch(sql, /delete from|truncate|drop table|update public\.games|update public\.models|update public\.profiles/i);
   const home = fs.readFileSync(path.join(root, "components/home-board.tsx"), "utf8");
   assert.match(home, /unfinishedLine/);
   assert.match(home, /openGameOn/);

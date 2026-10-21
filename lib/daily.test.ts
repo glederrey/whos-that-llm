@@ -180,32 +180,23 @@ test("only daily and all models can start", () => {
   for (const id of ["class", "region", "custom"]) assert.equal(canStartMode(id), false);
 });
 
-test("daily stores one model per difficulty and does not reset play data", () => {
-  const sql = fs.readFileSync(path.join(root, "supabase/legacy/migrations/0030_daily_model.sql"), "utf8");
+test("daily stores one model per difficulty", () => {
+  const sql = fs.readFileSync(path.join(root, "supabase/migrations/20261021080000_baseline.sql"), "utf8");
   assert.match(sql, /create table public\.daily_models/);
+  assert.match(sql, /create table public\.openrouter_providers/);
   assert.match(sql, /primary key \(played_on, difficulty\)/);
   assert.match(sql, /m\.difficulty <= p_difficulty/);
-  assert.match(sql, /alter column daily_key type text using daily_key::text/);
+  assert.match(sql, /\n  daily_key text,/);
   assert.match(sql, /to_char\(today, 'YYYY-MM-DD'\) \|\| ':' \|\| p_difficulty::text/);
   assert.match(sql, /and daily_key = day_key/);
   assert.match(sql, /existing_status = 'active'/);
   assert.doesNotMatch(sql, /daily_key = \(timezone\('utc', now\(\)\)\)::date/);
   assert.match(sql, /'daily_done'/);
-  assert.match(sql, /update public\.game_modes/);
-  assert.match(sql, /enabled = true/);
-  assert.match(sql, /One round per difficulty\. Everyone at that level gets the same model\. A new puzzle tomorrow\./);
-  assert.match(sql, /where id = 'daily'/);
+  assert.match(
+    sql,
+    /\('daily', 'Daily', 'One round per difficulty\. Everyone at that level gets the same model\. A new puzzle tomorrow\.', true, true, true, 1\)/,
+  );
   assert.match(sql, /revoke all on table public\.daily_models from public, anon, authenticated/);
   assert.match(sql, /enable row level security/);
-  assert.doesNotMatch(sql, /delete from|truncate|drop table|update public\.games|update public\.models|update public\.profiles/i);
-  const previous = fs.readFileSync(path.join(root, "supabase/legacy/v0.2.sql"), "utf8");
-  assert.doesNotMatch(previous, /daily_models/);
-  const baseline = fs.readFileSync(path.join(root, "supabase/legacy/v0.3.sql"), "utf8");
-  assert.match(baseline, /create table public\.daily_models/);
-  assert.match(baseline, /create table public\.openrouter_providers/);
-  assert.match(baseline, /0032_openrouter_providers\.sql/);
-  assert.match(baseline, /Do not run 0028 through 0032 after this script/);
-  assert.match(baseline, /starting with 0033/);
-  assert.match(baseline, /to_char\(today, 'YYYY-MM-DD'\)/);
-  assert.doesNotMatch(baseline, /daily_key date/);
+  assert.doesNotMatch(sql, /daily_key date/);
 });
