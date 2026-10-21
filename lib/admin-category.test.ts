@@ -60,7 +60,7 @@ test("the category row deletes that category and keeps the models", () => {
   const action = fs.readFileSync(path.join(root, "app/admin/actions.ts"), "utf8");
   const roster = fs.readFileSync(path.join(root, "lib/admin-roster.ts"), "utf8");
   const css = fs.readFileSync(path.join(root, "app/globals.css"), "utf8");
-  const schema = fs.readFileSync(path.join(root, "supabase/v0.3.sql"), "utf8");
+  const schema = fs.readFileSync(path.join(root, "supabase/legacy/v0.3.sql"), "utf8");
 
   const buttons = page.indexOf('className="roster-buttons"');
   const edit = page.indexOf("\n            Edit\n", buttons);

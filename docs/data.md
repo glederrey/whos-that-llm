@@ -2,6 +2,10 @@
 
 One Supabase Postgres database. The catalog, the rounds, and the cost ledger are tables in it.
 
+## Migrations
+
+The schema is the timestamped files in `supabase/migrations/`, run by the Supabase CLI in name order. `20261021080000_baseline.sql` is the whole schema as it stood on 21 Oct 2026: a fresh database (local, CI, a new project) runs it first, and production is marked as already applied: its 35 old history rows are first marked reverted, then `supabase migration repair --status applied 20261021080000`. `20261021090000_hardening.sql` revokes every table privilege from `anon` and `authenticated` on the tables they must never touch. `supabase/seed.sql` is a snapshot of the production catalog (roster, companies, categories, `openrouter_providers` slugs, `app_settings`) with no player data; it upserts, so it is safe on top of the baseline's own rows, and `supabase db reset` runs it after the migrations. A change is a new file from `npm run db:new <name>`. An applied file is never edited. A new table gets its explicit `GRANT` and its row level security in the same file. Production receives migrations only from the deploy workflow on a release. The bucket rows for `avatars` and `logos` are created by the baseline, not by `config.toml`.
+
 The browser may read `companies` and the view `models_public`. Those rows are the roster a player is allowed to see. `models_public` is `models` where `enabled` is true, and the columns are `id`, `name`, `company_id`, and `logo_path`. It omits `openrouter_id`, `provider_settings`, the two prices, `size`, `released_on`, `open_weights`, and `reasoning`. The guess list for a round does not come from this view. The server sends logo, company, and name for the models that are still legal. `classes` and `model_classes` are admin tables. The public statistics page reads class membership on the server. The browser does not read those tables. The class game mode is not built.
 
 The secret of an open round is `games.model_id`. The browser never queries `games`. Server routes use the secret key, which bypasses row level security. Row level security denies `anon` and `authenticated` on `games`, `messages`, `guesses`, and `usage`.
@@ -20,7 +24,7 @@ The text is kept. Later analysis reads `messages` joined to `games` on `game_id`
 
 A failed call writes `usage` and does not write `messages`, because there is no stored reply. The system prompt is not a row.
 
-`supabase/migrations/0002_transcripts.sql` is the file to run in the Supabase SQL editor for this table. It is safe after `0001_init.sql`. The create does nothing when `messages` is already there. The comments, row level security, and the service-role grant still apply.
+The table is part of the baseline migration, with its comments, row level security, and service-role grant.
 
 ## Access
 
@@ -112,7 +116,7 @@ anon and authenticated cannot insert, update, or delete `models` or `companies`.
 
 ### `openrouter_providers`
 
-One row per OpenRouter provider slug that has served a reply, in a normal game or in admin chat. A missing slug has not served one. `blacklisted` true is sent as `provider.ignore` on later calls. A new row is not blacklisted. An existing blacklist stays until it is cleared. `0032_openrouter_providers.sql` adds the table, and `v0.3.sql` includes it. anon and authenticated cannot read or write it.
+One row per OpenRouter provider slug that has served a reply, in a normal game or in admin chat. A missing slug has not served one. `blacklisted` true is sent as `provider.ignore` on later calls. A new row is not blacklisted. An existing blacklist stays until it is cleared. The baseline migration creates the table. anon and authenticated cannot read or write it, and the hardening migration revokes every table privilege from them as well.
 
 | Column | Type | Notes |
 |---|---|---|
@@ -145,7 +149,7 @@ The lobby and the leaderboard read this table. The built-in rows are seeded and 
 | `sort_order` | int | Main page and lobby order |
 | `created_at` | timestamptz | |
 
-Seed `enabled` true only for `all`. `0030_daily_model.sql` turns `daily` on. The others stay false until they are built. Seed `leaderboard` true for `all` and `daily`. The leaderboard bar shows Daily, All models, Class, and Company. Daily and All models can be selected. Class and Company stay grayed out. Region and Custom are not on that bar.
+Seed `enabled` true only for `all`. The baseline turns `daily` on. The others stay false until they are built. Seed `leaderboard` true for `all` and `daily`. The leaderboard bar shows Daily, All models, Class, and Company. Daily and All models can be selected. Class and Company stay grayed out. Region and Custom are not on that bar.
 
 Every scored round uses the formula in [Rules](rules.md). The category row does not store a multiplier.
 
@@ -176,7 +180,7 @@ One row per round.
 | Column | Type | Notes |
 |---|---|---|
 | `id` | uuid, pk | default `gen_random_uuid()` |
-| `user_id` | uuid, null, fk `profiles` | on delete set null, after `0017_anonymize_games_on_account_delete.sql`. Deleting the account clears this and `username`. The round stays. A null `user_id` is off the leaderboard |
+| `user_id` | uuid, null, fk `profiles` | on delete set null, so deleting the account clears this and `username`. The round stays. A null `user_id` is off the leaderboard |
 | `username` | text, null | Copied at insert, then rewritten when that user renames. Cleared when the account is deleted. Leaderboard name for that round |
 | `category` | text, fk `categories` | |
 | `pool_key` | text, null | `anthropic`, `opus`, `us`, `cn`, or `eu`. Null for `all`, `daily`, and `custom` |
@@ -203,7 +207,7 @@ The share card at `/r/{id}` reads this row: mode, pool, difficulty, status, mess
 Indexes:
 
 - `(user_id, started_at desc)` for the hourly count and, later, the profile history
-- unique `(user_id, game_mode, difficulty)` where `status = 'active'`. One unfinished round per mode and difficulty. Easy can stay open while Medium starts. `0033_one_active_per_difficulty.sql` replaces the older unique `(user_id)` index. It does not rewrite existing games
+- unique `(user_id, game_mode, difficulty)` where `status = 'active'`. One unfinished round per mode and difficulty. Easy can stay open while Medium starts. It replaces the older unique `(user_id)` index.
 - unique `(user_id, daily_key)` where `daily_key is not null`. One Daily round per account per difficulty per UTC day, because the key includes the difficulty. `start_game` writes `daily_key` only for `daily`
 - `(category, status, finished_at)` for the leaderboard
 
@@ -219,9 +223,9 @@ The hidden model for one difficulty on one UTC day. `games.daily_key` records th
 
 The first start of that day and difficulty inserts the row. The inserted model must have `difficulty <=` the chosen level, so Easy cannot store an Impossible model. A concurrent second start hits the primary key, does nothing, and reads the stored id. The next UTC day has no row yet, so each level draws again. anon and authenticated cannot read the table. The model id is the answer.
 
-`0030_daily_model.sql` adds the table and teaches `start_game` to fill `games.daily_key`. It turns Daily on and sets its blurb to **One round per difficulty. Everyone at that level gets the same model. A new puzzle tomorrow.** It does not rewrite games, models, or accounts. `v0.3.sql` includes this table. `v0.2.sql` does not, so a database created from that baseline still needs this migration. The lobby shows that sentence and leaves Daily open even before this migration is applied.
+`start_game` fills `games.daily_key` from this table. Daily is on, and its blurb is **One round per difficulty. Everyone at that level gets the same model. A new puzzle tomorrow.**
 
-`0014_delete_games_with_account.sql` put `games_user_id_fkey` back as `on delete cascade`. `0017_anonymize_games_on_account_delete.sql` replaces that with `on delete set null` and makes `games.user_id`, `games.username`, and `usage.user_id` nullable. The server clears `user_id` and `username` on that player's games, and clears `usage.user_id`, before it deletes the auth user. Messages and guesses stay, because they cascade from `games` only when a game row is deleted. `public.leaderboard()` skips games whose `user_id` or `username` is null, so a deleted player is not a blank row and is not pooled with other deleted players. Game, solve, token, and guess counts still include those rounds. Profile history reads `games.user_id`, so it does not. anon and authenticated still cannot delete these tables. The server action uses the service key after it has read the session.
+`games_user_id_fkey` is `on delete set null`, and `games.user_id`, `games.username`, and `usage.user_id` nullable. The server clears `user_id` and `username` on that player's games, and clears `usage.user_id`, before it deletes the auth user. Messages and guesses stay, because they cascade from `games` only when a game row is deleted. `public.leaderboard()` skips games whose `user_id` or `username` is null, so a deleted player is not a blank row and is not pooled with other deleted players. Game, solve, token, and guess counts still include those rounds. Profile history reads `games.user_id`, so it does not. anon and authenticated still cannot delete these tables. The server action uses the service key after it has read the session.
 
 `rules` shape:
 

@@ -181,7 +181,7 @@ test("only daily and all models can start", () => {
 });
 
 test("daily stores one model per difficulty and does not reset play data", () => {
-  const sql = fs.readFileSync(path.join(root, "supabase/migrations/0030_daily_model.sql"), "utf8");
+  const sql = fs.readFileSync(path.join(root, "supabase/legacy/migrations/0030_daily_model.sql"), "utf8");
   assert.match(sql, /create table public\.daily_models/);
   assert.match(sql, /primary key \(played_on, difficulty\)/);
   assert.match(sql, /m\.difficulty <= p_difficulty/);
@@ -198,9 +198,9 @@ test("daily stores one model per difficulty and does not reset play data", () =>
   assert.match(sql, /revoke all on table public\.daily_models from public, anon, authenticated/);
   assert.match(sql, /enable row level security/);
   assert.doesNotMatch(sql, /delete from|truncate|drop table|update public\.games|update public\.models|update public\.profiles/i);
-  const previous = fs.readFileSync(path.join(root, "supabase/v0.2.sql"), "utf8");
+  const previous = fs.readFileSync(path.join(root, "supabase/legacy/v0.2.sql"), "utf8");
   assert.doesNotMatch(previous, /daily_models/);
-  const baseline = fs.readFileSync(path.join(root, "supabase/v0.3.sql"), "utf8");
+  const baseline = fs.readFileSync(path.join(root, "supabase/legacy/v0.3.sql"), "utf8");
   assert.match(baseline, /create table public\.daily_models/);
   assert.match(baseline, /create table public\.openrouter_providers/);
   assert.match(baseline, /0032_openrouter_providers\.sql/);

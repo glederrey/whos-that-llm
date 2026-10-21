@@ -145,7 +145,7 @@ test("a company round can buy the year and the size, and not the lab or the regi
   assert.equal(offer("year"), true);
   assert.equal(offer("size"), true);
 
-  const sql = fs.readFileSync(path.join(root, "supabase/migrations/0037_company_hints.sql"), "utf8");
+  const sql = fs.readFileSync(path.join(root, "supabase/legacy/migrations/0037_company_hints.sql"), "utf8");
   assert.match(sql, /hints_allowed = true/);
   assert.match(sql, /where id = 'company'/);
   assert.doesNotMatch(sql, /delete from|truncate|drop table|update public\.games|update public\.models|update public\.profiles/i);
@@ -157,7 +157,7 @@ test("a company round can buy the year and the size, and not the lab or the regi
 });
 
 test("company mode is enabled in a migration and does not rewrite play data", () => {
-  const sql = fs.readFileSync(path.join(root, "supabase/migrations/0035_company_mode.sql"), "utf8");
+  const sql = fs.readFileSync(path.join(root, "supabase/legacy/migrations/0035_company_mode.sql"), "utf8");
   assert.match(sql, /where id = 'company'/);
   assert.match(sql, /enabled = true/);
   assert.match(sql, /leaderboard = true/);

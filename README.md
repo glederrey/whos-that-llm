@@ -28,16 +28,27 @@ Next.js (App Router) · Supabase (Auth, Postgres, Storage) · OpenRouter through
 You need Node 22 or newer, a free [Supabase](https://supabase.com) project and an [OpenRouter](https://openrouter.ai) key.
 
 1. `npm install`
-2. Create the database. In the Supabase SQL editor, run [`supabase/v0.4.sql`](supabase/v0.4.sql) once. It is the baseline for a fresh project and already includes every migration up to `0038`. Do not run the files in [`supabase/migrations/`](supabase/migrations/) after it.
-3. Copy [`.env.example`](.env.example) to `.env.local` and fill it in. Never commit that file.
+2. Create a Supabase project for development, then build its database from the migrations: `npx supabase login`, `npx supabase link --project-ref <your-dev-project-ref>`, `npx supabase db push`. The baseline migration creates the tables and the `avatars` and `logos` buckets, and [`supabase/seed.sql`](supabase/seed.sql) fills the roster. Add `--include-seed` to `db push` to load the seed too. `npm run db:copy-logos -- <source project URL>` copies the company logos into your `logos` bucket.
+3. Copy [`.env.example`](.env.example) to `.env.development.local` and fill it in with your dev project. Never commit that file.
 4. In Supabase Auth, set the site URL and the redirect URLs to the site root, including `http://localhost:3000/`.
 5. `npm run dev`, then open <http://localhost:3000>. Sign up, pick a username, start a round.
+
+The app reads three env files, none of them tracked. `npm run dev` loads `.env.development.local` (it overrides `.env.local`). `npm run dev:prod` loads `.env.prod.local` instead, so the local app talks to the production project. Use that one with care.
+
+Database changes follow one flow:
+
+1. `npm run db:new <name>` creates a timestamped file in [`supabase/migrations/`](supabase/migrations/).
+2. Write the SQL in it. Never edit a migration that has already been applied; add a new one.
+3. `npx supabase db push` applies it to the project you linked (your dev project).
+4. Test it with `npm run dev`.
+
+Production changes only on a release: the deploy workflow runs `supabase db push` against the production project, then deploys the app. Nothing reaches production on a push to `main`.
 
 Handy things to know:
 
 - A credit error from OpenRouter pauses the game for everyone. Top up, then set `app_settings.paused` back to `false`.
 - The owner account is the one whose Supabase `app_metadata` has `admin: true`. It sees **Admin** in the account menu. For everyone else `/admin` looks like a missing page.
-- The app never applies SQL files for you.
+- The app never applies SQL files for you: migrations run with the Supabase CLI, and on production only from the release workflow.
 
 ```bash
 npm test            # unit tests
@@ -54,7 +65,7 @@ Run both before opening a pull request.
 | `app/` | Pages and API route handlers. The handlers are the whole backend |
 | `lib/` | Game logic, scoring, OpenRouter calls, Supabase clients, and the tests next to them |
 | `components/` | React components |
-| `supabase/` | Database baseline and migrations |
+| `supabase/` | Timestamped migrations, the seed and the CLI config |
 
 `lib/game.ts` is the one place that decides a match, a hint or a score. Components render what the server sends and never re-implement the rules.
 

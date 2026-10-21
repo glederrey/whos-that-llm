@@ -156,7 +156,7 @@ test("account deletion uses only the signed-in user", () => {
 });
 
 test("deleting an account keeps the rounds and drops the player", () => {
-  const sql = fs.readFileSync(path.join(root, "supabase/migrations/0017_anonymize_games_on_account_delete.sql"), "utf8");
+  const sql = fs.readFileSync(path.join(root, "supabase/legacy/migrations/0017_anonymize_games_on_account_delete.sql"), "utf8");
   assert.match(sql, /alter table public\.games alter column user_id drop not null/);
   assert.match(sql, /alter table public\.games alter column username drop not null/);
   assert.match(sql, /alter table public\.usage alter column user_id drop not null/);
@@ -170,7 +170,7 @@ test("deleting an account keeps the rounds and drops the player", () => {
 });
 
 test("client roles cannot write the roster", () => {
-  const sql = fs.readFileSync(path.join(root, "supabase/migrations/0012_roster_client_writes.sql"), "utf8");
+  const sql = fs.readFileSync(path.join(root, "supabase/legacy/migrations/0012_roster_client_writes.sql"), "utf8");
   assert.match(sql, /revoke all on table public\.models from public, anon, authenticated/);
   assert.match(sql, /as restrictive/);
   assert.doesNotMatch(sql, /grant execute[\s\S]*to anon/);

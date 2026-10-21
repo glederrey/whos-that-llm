@@ -3,10 +3,13 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "dev:prod": "node scripts/dev-prod.mjs",
     "build": "next build",
     "start": "next start",
     "test": "tsx --test \"lib/**/*.test.ts\"",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "db:new": "supabase migration new",
+    "db:copy-logos": "tsx scripts/copy-logos.ts"
   },
   "dependencies": {
     "@openrouter/ai-sdk-provider": "^3.1.0",
@@ -25,6 +28,7 @@
     "@types/node": "^26.6.5",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
+    "supabase": "2.121.0",
     "tsx": "^4.23.15",
     "typescript": "^7.0.2"
   }

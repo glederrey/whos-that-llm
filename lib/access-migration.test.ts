@@ -6,7 +6,7 @@ import test from "node:test";
 const root = path.resolve(import.meta.dirname, "..");
 
 test("client roles cannot empty tables or call the signup trigger", () => {
-  const sql = fs.readFileSync(path.join(root, "supabase/migrations/0028_client_access.sql"), "utf8");
+  const sql = fs.readFileSync(path.join(root, "supabase/legacy/migrations/0028_client_access.sql"), "utf8");
   assert.match(sql, /revoke truncate, trigger, references on all tables in schema public from public, anon, authenticated/);
   assert.match(sql, /revoke insert, update, delete on table public\.profiles from public, anon, authenticated/);
   assert.match(sql, /revoke all on function public\.handle_new_user\(\) from public, anon, authenticated/);
