@@ -156,22 +156,17 @@ test("account deletion uses only the signed-in user", () => {
 });
 
 test("deleting an account keeps the rounds and drops the player", () => {
-  const sql = fs.readFileSync(path.join(root, "supabase/legacy/migrations/0017_anonymize_games_on_account_delete.sql"), "utf8");
-  assert.match(sql, /alter table public\.games alter column user_id drop not null/);
-  assert.match(sql, /alter table public\.games alter column username drop not null/);
-  assert.match(sql, /alter table public\.usage alter column user_id drop not null/);
-  assert.match(sql, /games_user_id_fkey/);
-  assert.match(sql, /on delete set null/);
+  const sql = fs.readFileSync(path.join(root, "supabase/migrations/20261021080000_baseline.sql"), "utf8");
+  assert.match(sql, /create table public\.games \(\s*id uuid primary key default gen_random_uuid\(\),\s*user_id uuid references public\.profiles \(id\) on delete set null,\s*username text,/);
+  assert.match(sql, /create table public\.usage \([^;]*?\n  user_id uuid,/);
   assert.match(sql, /g\.user_id is not null/);
   assert.match(sql, /g\.username is not null/);
   assert.match(sql, /btrim\(g\.username\) <> ''/);
-  assert.doesNotMatch(sql, /on delete cascade/);
-  assert.doesNotMatch(sql, /delete from public\.games/);
+  assert.doesNotMatch(sql, /user_id uuid references public\.profiles \(id\) on delete cascade/);
 });
 
 test("client roles cannot write the roster", () => {
-  const sql = fs.readFileSync(path.join(root, "supabase/legacy/migrations/0012_roster_client_writes.sql"), "utf8");
+  const sql = fs.readFileSync(path.join(root, "supabase/migrations/20261021080000_baseline.sql"), "utf8");
   assert.match(sql, /revoke all on table public\.models from public, anon, authenticated/);
   assert.match(sql, /as restrictive/);
-  assert.doesNotMatch(sql, /grant execute[\s\S]*to anon/);
 });

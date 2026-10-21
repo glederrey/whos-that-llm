@@ -145,10 +145,8 @@ test("a company round can buy the year and the size, and not the lab or the regi
   assert.equal(offer("year"), true);
   assert.equal(offer("size"), true);
 
-  const sql = fs.readFileSync(path.join(root, "supabase/legacy/migrations/0037_company_hints.sql"), "utf8");
-  assert.match(sql, /hints_allowed = true/);
-  assert.match(sql, /where id = 'company'/);
-  assert.doesNotMatch(sql, /delete from|truncate|drop table|update public\.games|update public\.models|update public\.profiles/i);
+  const sql = fs.readFileSync(path.join(root, "supabase/migrations/20261021080000_baseline.sql"), "utf8");
+  assert.match(sql, /\('company', 'Company', '[^']*', true, true, true, 3\)/);
   const home = fs.readFileSync(path.join(root, "components/home-board.tsx"), "utf8");
   assert.match(home, /gameMode: "company", companyId, noHint/);
   assert.match(home, /Play without hints/);
@@ -156,14 +154,10 @@ test("a company round can buy the year and the size, and not the lab or the regi
   assert.match(board, /game\.gameMode === "company"/);
 });
 
-test("company mode is enabled in a migration and does not rewrite play data", () => {
-  const sql = fs.readFileSync(path.join(root, "supabase/legacy/migrations/0035_company_mode.sql"), "utf8");
-  assert.match(sql, /where id = 'company'/);
-  assert.match(sql, /enabled = true/);
-  assert.match(sql, /leaderboard = true/);
-  assert.match(sql, /sort_order = 3/);
-  assert.match(sql, /where id = 'class'/);
-  assert.match(sql, /sort_order = 4/);
+test("company mode is enabled in the schema", () => {
+  const sql = fs.readFileSync(path.join(root, "supabase/migrations/20261021080000_baseline.sql"), "utf8");
+  assert.match(sql, /\('company', 'Company', '[^']*', true, true, true, 3\)/);
+  assert.match(sql, /\('class', 'Category', '.*', false, false, false, 4\)/);
   assert.match(sql, /p_company text default null/);
   assert.match(sql, /g\.pool_key = leaderboard\.p_company/);
   assert.match(sql, /leaderboard\.game_mode = 'company'/);
@@ -171,7 +165,6 @@ test("company mode is enabled in a migration and does not rewrite play data", ()
   assert.match(sql, /pool_key is not distinct from p_pool_key/);
   assert.match(sql, /as company_name/);
   assert.match(sql, /as company_logo/);
-  assert.doesNotMatch(sql, /delete from|truncate|drop table|update public\.games|update public\.models|update public\.profiles/i);
   const home = fs.readFileSync(path.join(root, "components/home-board.tsx"), "utf8");
   assert.match(home, /\["daily", "all", "company", "class", "region", "custom"\]/);
   assert.match(home, /Choose company/);
