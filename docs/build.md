@@ -25,7 +25,8 @@ lib/
 components/                     feedback, hints, guess bar, transcript, theme toggle, footer
 app/globals.css                 light and dark tokens. Default follows the system
 public/brand/                   site logo copies. tail_right when the text is on the right, tail_left when it is on the left
-supabase/migrations/            the tables in Data
+supabase/migrations/            timestamped SQL for the tables in Data, run by the Supabase CLI
+supabase/seed.sql               catalog snapshot loaded by `supabase db reset`
 ```
 
 There is no `rules/page.tsx`. There is no `me/page.tsx` in the first build.
@@ -63,7 +64,7 @@ There is no `rules/page.tsx`. There is no `me/page.tsx` in the first build.
 | `SUPABASE_SECRET_KEY` | Server only. The secret key. Bypasses row level security |
 | `OPENROUTER_API_KEY` | Server only |
 
-Those four names are already in `.env.local` at the repo root. Comments in the file do not matter. The values stay in that file: do not open it to check them, and do not copy them into docs, chat, or git. The file stays untracked. Vercel gets the same names. The secret key and the OpenRouter key are sensitive. Do not prefix `SUPABASE_SECRET_KEY` with `NEXT_PUBLIC_`. Admin is `app_metadata.admin === true` on the signed-in user, not an env var.
+Those four names live in untracked env files at the repo root: `.env.development.local` (dev project, loaded by `npm run dev`), `.env.prod.local` (production, loaded by `npm run dev:prod`), and `.env.local` as the shared default. Comments in the file do not matter. The values stay in that file: do not open it to check them, and do not copy them into docs, chat, or git. The file stays untracked. Vercel gets the same names. The secret key and the OpenRouter key are sensitive. Do not prefix `SUPABASE_SECRET_KEY` with `NEXT_PUBLIC_`. Admin is `app_metadata.admin === true` on the signed-in user, not an env var.
 
 In Supabase, set the site URL and the email redirect URLs to the site root `/`, so confirmation and password reset return to the main page.
 

@@ -18,4 +18,5 @@ Game numbers (points, token scale, hint price, no-hint multiplier) live in `lib/
 
 - Public repo: no secrets, no real keys in examples, nothing from work.
 - Env vars: see `.env.example`. Server-only values stay behind `server-only` modules.
-- Database changes go through `supabase/` migrations and must match `docs/data.md`.
+- Database changes are a new timestamped file in `supabase/migrations/` (`npm run db:new <name>`) and must match `docs/data.md`. Never edit a migration that was already applied. A new table gets its explicit `GRANT` and its RLS in the same file. Production migrates only from `deploy.yml` on a release; never run a write against the production project by hand.
+- `npm run dev` uses `.env.development.local` (dev project); `npm run dev:prod` uses `.env.prod.local` (production). The old numbered migrations are gone: `20261021080000_baseline.sql` is the whole schema up to that date.
