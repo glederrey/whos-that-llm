@@ -31,6 +31,7 @@ import {
 import { logoPathForPlay, logoPublicUrl } from "./logos";
 import { countedPlayerId } from "./anonymize-account";
 import { avatarPublicUrl, cleanUsername } from "./profile";
+import { currentUser } from "./session";
 import { publicEnv } from "./supabase/env";
 import { createServiceClient, createSessionClient } from "./supabase/server";
 
@@ -149,9 +150,9 @@ export function difficultyCounts(models: Array<{ difficulty: Difficulty }>): Rec
   return counts;
 }
 
-function first<T>(value: T | T[] | null): T {
-  if (Array.isArray(value)) return value[0] as T;
-  return value as T;
+export function first<T>(value: T | T[] | null): T | null {
+  if (Array.isArray(value)) return (value[0] as T | undefined) ?? null;
+  return value;
 }
 
 export function presentLogo(path: string, companyId: string): string {
@@ -652,13 +653,14 @@ export async function giveUp(gameId: string, userId: string): Promise<ApiFailure
 }
 
 async function scoreFrom(client: SupabaseClient, game: GameRow, guesses: GuessFlags[], namedModel: boolean) {
-  const { data } = await client
+  const { data, error } = await client
     .from("usage")
     .select("input_tokens, output_tokens")
     .eq("game_id", game.id)
     .is("error_code", null)
     .order("created_at", { ascending: true })
     .order("id", { ascending: true });
+  if (error) throw new Error(error.message);
   const tokens = scoreTokens(
     (data ?? []).map((row) => ({
       inputTokens: Number(row.input_tokens ?? 0),
@@ -736,7 +738,8 @@ export async function leaderboard(
   companyId?: string | null,
 ) {
   const client = serviceOrThrow();
-  const { data: row } = await client.from("game_modes").select("leaderboard").eq("id", gameMode).maybeSingle();
+  const { data: row, error: modeError } = await client.from("game_modes").select("leaderboard").eq("id", gameMode).maybeSingle();
+  if (modeError) throw new Error(modeError.message);
   if (!row?.leaderboard) return fail(404, "not_found");
   const since = boardSince(period === "month" || period === "all" ? period : "week");
   const pickedDifficulty = gameMode === "company" || !difficulty || difficulty === "any" ? null : difficultyNumber[difficulty];
@@ -752,6 +755,7 @@ export async function leaderboard(
     const rows = ((fresh.data ?? []) as BoardEntry[]).map((entry) => toBoardRow(entry, Boolean(entry.mine)));
     return { rows };
   }
+  // Databases that have not run the latest migration only have the older leaderboard signatures.
   const previous = await client.rpc("leaderboard", {
     game_mode: gameMode,
     since,
@@ -906,11 +910,12 @@ export async function setUsername(userId: string, raw: string): Promise<ApiFailu
   if (!cleanUsername(raw)) return fail(422, "username");
   const session = await createSessionClient();
   if (!session) return fail(401, "unauthorized");
-  const { data: userData } = await session.auth.getUser();
-  if (!userData.user || userData.user.id !== userId) return fail(401, "unauthorized");
+  const user = await currentUser();
+  if (!user || user.id !== userId) return fail(401, "unauthorized");
   const { data, error } = await session.rpc("set_username", { p_username: raw });
+  if (error) return fail(500, "server");
   const result = data as { ok?: boolean; error?: string } | null;
-  if (error || !result?.ok) {
+  if (!result?.ok) {
     if (result?.error === "unauthorized") return fail(401, "unauthorized");
     return fail(422, "username");
   }
