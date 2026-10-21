@@ -1,21 +1,83 @@
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="public/brand/logo-tail-right-dark.png">
+    <img alt="Who's that LLM?" src="public/brand/logo-tail-right-light.png" width="360">
+  </picture>
+</p>
+
 # Who's that LLM?
 
-A guessing game in the spirit of Who's that Pokémon. A hidden language model answers in a chat. The player has ten messages. They can name a model after a reply, send another message, or give up. Naming the model is worth a base of 2000. If they never name it, the base is 100 for the right region and 300 for the right company. A wrong name costs 100, and company, region, year, and size are hints that cost 600, 400, 100, and 100. Penalties come off the base, then the token factor (10,000 divided by the tokens used, capped at 20) applies, then 2× for a no-hint round. The score is rounded and never below 0.
+**Who's that Pokémon, but for language models.**
 
-The first build is **All models**. The other game modes are in the spec and come later.
+A hidden model answers you in a chat. You get ten messages to work out who you are talking to: Claude, GPT, DeepSeek, Mistral, something else? Name it early for a bigger score, buy hints if you are stuck, or give up and see the reveal.
 
-The spec is in [`docs/`](docs/README.md). That spec is not a public page on the site.
+Fewer tokens, fewer hints and fewer wrong names mean more points. The exact numbers live in [`lib/config.ts`](lib/config.ts) and the reasoning is in [`docs/rules.md`](docs/rules.md).
 
-The first playable build is All models, with six small models enabled: Claude Haiku 4.5, Claude Haiku 5.5, GPT-5.6 Luna, GPT-5.6 Luna Pro, GPT-6 Luna, and DeepSeek V4 Flash. Opus, Sonnet, the larger GPTs, DeepSeek Pro, and Mistral stay off. Other game modes come later.
+## What is in the game
+
+- **All models** and **Daily** rounds. Company, region, custom and class modes are specified in [`docs/`](docs/README.md) and are coming.
+- A leaderboard, a profile page, and a shareable result card for every finished round.
+- Hints (company, region, year, size) that cost points, or a no-hint round that doubles the score.
+- An owner-only admin to manage the model roster and watch the OpenRouter bill.
+
+## Stack
+
+Next.js (App Router) · Supabase (Auth, Postgres, Storage) · OpenRouter through the Vercel AI SDK · Vercel.
 
 ## Run it locally
 
+You need Node 22 or newer, a free [Supabase](https://supabase.com) project and an [OpenRouter](https://openrouter.ai) key.
+
 1. `npm install`
-2. In the Supabase SQL editor, run [`supabase/v0.4.sql`](supabase/v0.4.sql) once. That script is the baseline for a fresh database. It already includes the migrations through [`0038_public_data_api_grants.sql`](supabase/migrations/0038_public_data_api_grants.sql). v0.4.sql grants Data API access before it creates tables, so a fresh database still has those privileges after 30 Oct 2026. Do not run the scripts in [`supabase/migrations/`](supabase/migrations/) after it. [`supabase/v0.3.sql`](supabase/v0.3.sql), [`supabase/v0.2.sql`](supabase/v0.2.sql), and [`supabase/v0.1.sql`](supabase/v0.1.sql) stay in the repo as the previous baselines. A database created from `v0.3.sql` still needs the migration scripts from `0033` through `0038`, in filename order.
-3. Put the keys in `.env.local`. The names are in [`.env.example`](.env.example). Do not commit that file.
-4. In Supabase Auth, set the site URL and the redirect URLs to the site root, including `http://localhost:3000/` for local play. Confirmation and password reset both return to `/`.
-5. `npm run dev`, then open `http://localhost:3000`.
+2. Create the database. In the Supabase SQL editor, run [`supabase/v0.4.sql`](supabase/v0.4.sql) once. It is the baseline for a fresh project and already includes every migration up to `0038`. Do not run the files in [`supabase/migrations/`](supabase/migrations/) after it.
+3. Copy [`.env.example`](.env.example) to `.env.local` and fill it in. Never commit that file.
+4. In Supabase Auth, set the site URL and the redirect URLs to the site root, including `http://localhost:3000/`.
+5. `npm run dev`, then open <http://localhost:3000>. Sign up, pick a username, start a round.
 
-Sign up, pick a username, and start an All models round. A credit error from OpenRouter pauses the game for everyone. Top up, then set `app_settings.paused` back to false in the database. The owner account sees **Admin** in the account menu, which opens `/admin`. Other accounts do not see that link, and those URLs look like a missing page. A signed-in player can delete only their own account from the profile page, after confirming. An unchecked click stays on the page. That removes their profile and their name on the leaderboard. Their rounds stay, without their name. The app does not apply the SQL files.
+Handy things to know:
 
-Stack: Next.js, Supabase (auth and Postgres), OpenRouter, hosted on Vercel later.
+- A credit error from OpenRouter pauses the game for everyone. Top up, then set `app_settings.paused` back to `false`.
+- The owner account is the one whose Supabase `app_metadata` has `admin: true`. It sees **Admin** in the account menu. For everyone else `/admin` looks like a missing page.
+- The app never applies SQL files for you.
+
+```bash
+npm test            # unit tests
+npm run typecheck   # tsc --noEmit
+```
+
+Run both before opening a pull request.
+
+## Where things live
+
+| Path | What is there |
+|---|---|
+| [`docs/`](docs/README.md) | The spec. The source of truth for rules, pages, data, server and admin |
+| `app/` | Pages and API route handlers. The handlers are the whole backend |
+| `lib/` | Game logic, scoring, OpenRouter calls, Supabase clients, and the tests next to them |
+| `components/` | React components |
+| `supabase/` | Database baseline and migrations |
+
+`lib/game.ts` is the one place that decides a match, a hint or a score. Components render what the server sends and never re-implement the rules.
+
+## Contributing
+
+Anyone is welcome, and nobody pushes straight to `main`. The way in is either:
+
+- **An issue**: a bug, an idea, a model that should be on the roster, a rule that feels unfair. A short description is enough.
+- **A pull request**: fork, branch, change, open the PR. [`CONTRIBUTING.md`](CONTRIBUTING.md) has the short checklist.
+
+Found a security problem? Please do not open a public issue. Use GitHub's private vulnerability reporting on the Security tab of this repo.
+
+## Working with an AI coding agent
+
+This repo is set up for agents as well as humans. Point yours at these, in order:
+
+1. [`CLAUDE.md`](CLAUDE.md): commands, rules and pitfalls.
+2. [`docs/README.md`](docs/README.md): the spec. If the code and a doc disagree, change one of them in the same pass so they match again.
+3. [`lib/config.ts`](lib/config.ts): every game number. A round copies them onto `games.rules` when it starts, so editing them never rewrites a game in progress.
+
+Ground rules for agents and humans alike: no secrets or real keys anywhere in the repo, server-only values stay behind `server-only` modules, database changes go through `supabase/` and must match [`docs/data.md`](docs/data.md), and new test files must be added to the `test` script in `package.json`.
+
+## License
+
+No license has been chosen yet, which means the code is all rights reserved by default. If you would like to reuse something, open an issue and ask.
