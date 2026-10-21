@@ -130,7 +130,7 @@ export function LoginForm({
             Send request to change password
           </button>
         </form>
-        {note ? <p className="muted">{note}</p> : null}
+        {note ? <p className="muted auth-note">{note}</p> : null}
         <button type="button" className="text-link forgot" onClick={closeForgot}>
           Back to sign in
         </button>
