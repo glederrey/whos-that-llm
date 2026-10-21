@@ -210,10 +210,11 @@ html[data-theme="dark"] a.back:hover { color: var(--text); }
 a.kofi { display: inline-flex; align-items: center; gap: 6px; text-decoration: none; white-space: nowrap; }
 a.kofi span { text-decoration: underline; text-underline-offset: 3px; }
 .kofi-mark { width: 18px; height: 18px; flex: none; }
-.credit { margin: 0; white-space: nowrap; }
-.credit a { display: inline-flex; align-items: center; gap: 6px; vertical-align: middle; }
-.cursor-mark { width: 16px; height: 16px; }
-.claude-mark { width: 28px; height: 28px; margin: -6px 0; }
+.credit { display: inline-flex; align-items: center; flex-wrap: wrap; justify-content: center; gap: 4px 8px; margin: 0; }
+.credit a { display: inline-flex; align-items: center; padding: 6px 2px; }
+.credit-avatar { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; }
+.cursor-mark { width: 24px; height: 24px; }
+.claude-mark { width: 28px; height: 28px; }
 
 /* Type */
 h1 { font-size: 40px; line-height: 1.1; letter-spacing: -0.025em; margin: 8px 0 12px; }
@@ -1856,7 +1857,6 @@ html[data-theme="dark"] .history-score[data-best="true"] { color: var(--teal); }
     gap: 8px;
     padding: 16px 0 calc(28px + env(safe-area-inset-bottom));
   }
-  .credit { white-space: normal; }
   .thread > header { position: sticky; top: 0; z-index: 10; margin: 0 -12px; padding: 8px 12px; background: var(--canvas); }
   .round-bar {
     display: grid;
