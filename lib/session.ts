@@ -1,3 +1,4 @@
+import { apiJson } from "./http";
 import { currentAvatarUrl } from "./profile-data";
 import { createSessionClient } from "./supabase/server";
 
@@ -6,6 +7,12 @@ export async function currentUser() {
   if (!supabase) return null;
   const { data } = await supabase.auth.getUser();
   return data.user;
+}
+
+export async function requireUser() {
+  const user = await currentUser();
+  if (!user) return { response: apiJson({ error: "unauthorized" }, 401) };
+  return { user };
 }
 
 export async function currentProfile() {
