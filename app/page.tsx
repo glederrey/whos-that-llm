@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { BoardControls } from "@/components/board-controls";
 import { BoardTable } from "@/components/board-table";
-import { ResetPassword } from "@/components/reset-password";
 import { allCompanies } from "@/lib/company";
 import { anyDifficulty } from "@/lib/difficulty";
 import { boardChoice, boardHref, boardModes, selectedCompany } from "@/lib/board-query";
@@ -20,13 +19,12 @@ export const metadata: Metadata = {
 export default async function HomePage({
   searchParams,
 }: {
-  searchParams: Promise<{ reset?: string; error?: string; gameMode?: string; period?: string; difficulty?: string; company?: string }>;
+  searchParams: Promise<{ error?: string; gameMode?: string; period?: string; difficulty?: string; company?: string }>;
 }) {
   const params = await searchParams;
   if (params.error === "access_denied") redirect("/login?error=cancelled");
   const { user, username } = await currentProfile();
-  const resetting = params.reset === "1";
-  if (user && !username && !resetting) redirect("/welcome");
+  if (user && !username) redirect("/welcome");
   const signedIn = Boolean(user && username);
   const [snapshot, gameModes, options] = await Promise.all([landingSnapshot(), listGameModes(), listBoardOptions()]);
   const modes = boardModes(gameModes);
@@ -47,7 +45,6 @@ export default async function HomePage({
   return (
     <div className="stack landing">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }} />
-      {resetting && user ? <ResetPassword hasUsername={Boolean(username)} /> : null}
       <section className="hero">
         <img className="hero-logo for-light" src="/brand/logo-tail-right-light.png" alt="" />
         <img className="hero-logo for-dark" src="/brand/logo-tail-right-dark.png" alt="" />

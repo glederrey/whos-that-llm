@@ -79,7 +79,11 @@ Import server code from `@/lib/rounds`. The `rounds-*` files behind it are an im
 
 Those four names live in untracked env files at the repo root: `.env.development.local` (dev project, loaded by `npm run dev`), `.env.prod.local` (production, loaded by `npm run dev:prod`), and `.env.local` as the shared default. Comments in the file do not matter. The values stay in that file: do not open it to check them, and do not copy them into docs, chat, or git. The file stays untracked. Vercel gets the same names. The secret key and the OpenRouter key are sensitive. Do not prefix `SUPABASE_SECRET_KEY` with `NEXT_PUBLIC_`. Admin is `app_metadata.admin === true` on the signed-in user, not an env var.
 
-In Supabase, set the site URL and the email redirect URLs to the site root `/`, so confirmation and password reset return to the main page.
+In Supabase, set the site URL to the site root (each project: production, and `http://localhost:3000` for dev). Confirmation returns to the main page.
+
+The two auth emails are custom, in `supabase/templates/`. Supabase does not read them from the repo: paste each file into Authentication → Emails → Templates on both projects, and set the subject. `confirm-signup.html` goes in **Confirm sign up** (subject: `Confirm your email`). `reset-password.html` goes in **Reset Password** (subject: `Reset your password`).
+
+The reset template is not cosmetic. Its link is `{{ .SiteURL }}/reset-password?token_hash={{ .TokenHash }}&type=recovery`, so opening it signs nobody in before the new password is chosen. The default `{{ .ConfirmationURL }}` signs the visitor in on arrival and must not stay.
 
 ## First roster
 

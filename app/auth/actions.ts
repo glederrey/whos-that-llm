@@ -60,14 +60,28 @@ export async function signInWithEmail(email: string, password: string): Promise<
 export async function sendPasswordReset(email: string): Promise<void> {
   const supabase = await createSessionClient();
   if (!supabase || !email.trim()) return;
-  await supabase.auth.resetPasswordForEmail(email, { redirectTo: `${await redirectOrigin()}/?reset=1` });
+  await supabase.auth.resetPasswordForEmail(email);
 }
 
-export async function updatePassword(password: string): Promise<AuthNotice | null> {
+// The reset mail links to /reset-password?token_hash=...&type=recovery (the
+// "Reset Password" template, docs/build.md). The token is only spent here, in
+// the same call that sets the new password, so opening the link signs nobody in.
+export async function resetPassword(tokenHash: string, password: string): Promise<AuthNotice | { rules: string } | "expired" | null> {
+  const problem = passwordProblem(password);
+  if (problem) return { rules: problem };
   const supabase = await createSessionClient();
-  if (!supabase) return "auth";
+  if (!supabase || !tokenHash) return "auth";
+  const { error: verifyError } = await supabase.auth.verifyOtp({ type: "recovery", token_hash: tokenHash });
+  if (verifyError) return "expired";
   const { error } = await supabase.auth.updateUser({ password });
-  return error ? "invalid" : null;
+  await supabase.auth.signOut();
+  // Supabase refuses a password equal to the current one. It is already the
+  // password the player typed, so that counts as saved.
+  if (error && error.code !== "same_password") {
+    const weak = weakPasswordNotice(password, error);
+    return weak ? { rules: weak } : "invalid";
+  }
+  return null;
 }
 
 export async function signOut(): Promise<void> {

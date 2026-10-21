@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ next?: string; error?: string; tab?: string }>;
+  searchParams: Promise<{ next?: string; error?: string; tab?: string; notice?: string }>;
 }) {
   const params = await searchParams;
   const next = safeNext(params.next);
@@ -16,5 +16,5 @@ export default async function LoginPage({
   if (user && username) redirect(next);
   if (user && !username) redirect(`/welcome?next=${encodeURIComponent(next)}`);
 
-  return <LoginForm next={next} cancelled={params.error === "cancelled"} startOnCreate={params.tab === "create"} />;
+  return <LoginForm next={next} cancelled={params.error === "cancelled"} startOnCreate={params.tab === "create"} passwordChanged={params.notice === "password-changed"} />;
 }

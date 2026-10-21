@@ -56,7 +56,7 @@ No VPS, no extra email service, no second database.
 
 Ko-fi does not price a page in francs, so euros avoids a second conversion on a European card. Stripe pays out to the Swiss account. A tip is not an account on this site, and it buys nothing in the game. The API bill stays on the OpenRouter cap until tips actually cover it.
 
-Supabase sends confirmation and password-reset mail. Both links return to the main page. That quota is enough to start. Custom SMTP is the fix if those emails start failing.
+Supabase sends confirmation and password-reset mail. The confirmation link returns to the main page and the reset link to `/reset-password`, which sets the new password without signing the player in. That quota is enough to start. Custom SMTP is the fix if those emails start failing.
 
 Admin is not a role you hand out. The admin pages render only when the signed-in Supabase user has `app_metadata.admin === true`. A missing flag matches nobody. Everyone else gets the same 404 as a missing page. The account menu shows **Admin** only for that session. Other sessions have no link.
 
@@ -66,7 +66,7 @@ Players sign up or log in before they can play. The main page is public. Every p
 
 Both methods stay on, and both write into `auth.users`. Link identities that share an email, so one person does not get two accounts.
 
-Email confirmation stays on. Confirmation and password-reset links return to `/`. The main page completes the session from that return. The first session with no username goes to `/welcome`.
+Email confirmation stays on. The confirmation link returns to `/` and the password-reset link to `/reset-password`. The main page completes the session from that return; the reset page never leaves one open. The first session with no username goes to `/welcome`.
 
 A username is 3–20 characters after trimming. Capitals and punctuation are allowed. It does not have to be unique. An empty name is rejected. `profiles.id` is the internal id that links the auth user (and therefore the email) to the username. A rename updates `profiles.username` and every `games.username` for that user id, so the leaderboard and past games show the new name. The old name is not kept.
 

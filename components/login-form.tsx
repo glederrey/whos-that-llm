@@ -3,26 +3,28 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { sendPasswordReset, signInWithEmail, signUpWithEmail, startGoogleSignIn, type AuthNotice } from "@/app/auth/actions";
-import { passwordChecks, passwordProblem } from "@/lib/password-rules";
+import { PasswordField } from "@/components/password-field";
+import { passwordProblem } from "@/lib/password-rules";
 import { safeNext } from "@/lib/paths";
 
 export function LoginForm({
   next,
   cancelled,
   startOnCreate,
+  passwordChanged,
 }: {
   next: string;
   cancelled: boolean;
   startOnCreate: boolean;
+  passwordChanged: boolean;
 }) {
   const router = useRouter();
   const [tab, setTab] = useState<"sign-in" | "create">(startOnCreate ? "create" : "sign-in");
   const [storedOpen, setStoredOpen] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState(cancelled ? "Google sign-in was cancelled." : "");
-  const [note, setNote] = useState("");
+  const [note, setNote] = useState(passwordChanged ? "Password updated. Sign in with it." : "");
   const [busy, setBusy] = useState(false);
   const [forgotOpen, setForgotOpen] = useState(false);
 
@@ -164,43 +166,13 @@ export function LoginForm({
           Email
           <input type="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} required />
         </label>
-        <div className="password-block">
-          <label htmlFor="account-password">Password</label>
-          <div className="password-field">
-            <input
-              id="account-password"
-              type={showPassword ? "text" : "password"}
-              autoComplete={signingIn ? "current-password" : "new-password"}
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              required
-            />
-            <button
-              type="button"
-              className="password-eye"
-              aria-pressed={showPassword}
-              aria-controls="account-password"
-              aria-label={showPassword ? "Hide password" : "Show password"}
-              onClick={() => setShowPassword((shown) => !shown)}
-            >
-              {showPassword ? <EyeOffIcon /> : <EyeIcon />}
-            </button>
-          </div>
-          {signingIn ? null : (
-            <div className="must-contain">
-              <p>Must contain</p>
-              <ul>
-                {passwordChecks(password).map((rule) => (
-                  <li key={rule.label} data-met={rule.met ? "true" : "false"}>
-                    {rule.met ? <CheckIcon /> : <CrossIcon />}
-                    <span className="sr-only">{rule.met ? "Met, " : "Needed, "}</span>
-                    {rule.label}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-        </div>
+        <PasswordField
+          id="account-password"
+          value={password}
+          onChange={setPassword}
+          autoComplete={signingIn ? "current-password" : "new-password"}
+          showRules={!signingIn}
+        />
         {signingIn ? null : (
           <div>
             <button
@@ -242,41 +214,5 @@ export function LoginForm({
       {note ? <p className="muted auth-note">{note}</p> : null}
       {error ? <p className="error auth-error">{error}</p> : null}
     </div>
-  );
-}
-
-function CheckIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" d="m5 12 5 5L20 7" />
-    </svg>
-  );
-}
-
-function CrossIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" d="M6 6l12 12M18 6 6 18" />
-    </svg>
-  );
-}
-
-function EyeIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" />
-      <circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" strokeWidth="2" />
-    </svg>
-  );
-}
-
-function EyeOffIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M3 3l18 18" />
-      <path fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M10.5 10.7a3 3 0 0 0 4.2 4.2" />
-      <path fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M9.9 5.2A10.4 10.4 0 0 1 12 5c6.5 0 10 7 10 7a17 17 0 0 1-3.1 4.1" />
-      <path fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M6.1 6.1C3.6 7.9 2 12 2 12a18 18 0 0 0 6.2 5.7 10.6 10.6 0 0 0 5.1 1.1" />
-    </svg>
   );
 }
