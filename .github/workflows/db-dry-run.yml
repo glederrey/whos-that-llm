@@ -1,9 +1,10 @@
 name: Database dry run
 
-# Run by hand from the Actions tab. It links the production Supabase project and
-# previews the pending migrations with `supabase db push --dry-run`. It changes
-# nothing and never touches Vercel. Use it to check the three Supabase secrets
-# and the token permissions before a release.
+# Run by hand from the Actions tab. It connects to the production database with
+# the SUPABASE_DB_URL secret (the session pooler string, which works over IPv4)
+# and previews the pending migrations with `supabase db push --dry-run`. It
+# changes nothing and never touches Vercel. Use it to check the secret before a
+# release.
 
 on:
   workflow_dispatch:
@@ -26,15 +27,7 @@ jobs:
         with:
           version: 2.121.0
 
-      - name: Link the production Supabase project
-        run: supabase link --project-ref "$SUPABASE_PROJECT_REF"
-        env:
-          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
-          SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
-
       - name: Preview the database migrations
-        run: supabase db push --dry-run
+        run: supabase db push --dry-run --db-url "$SUPABASE_DB_URL"
         env:
-          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
