@@ -175,6 +175,7 @@ test("the admin chat reuses the play send path and writes nothing", () => {
   const page = fs.readFileSync(path.join(root, "app/admin/chat/page.tsx"), "utf8");
   const chat = fs.readFileSync(path.join(root, "components/admin-chat.tsx"), "utf8");
   const board = fs.readFileSync(path.join(root, "components/round-board.tsx"), "utf8");
+  const round = fs.readFileSync(path.join(root, "components/use-round.ts"), "utf8");
   const result = fs.readFileSync(path.join(root, "app/play/[gameId]/result/page.tsx"), "utf8");
   assert.match(route, /streamPlayedReply/);
   assert.match(game, /streamPlayedReply/);
@@ -192,7 +193,7 @@ test("the admin chat reuses the play send path and writes nothing", () => {
   assert.doesNotMatch(chat, /ReplyTokenTip|reply-tooltip/);
   assert.doesNotMatch(chat, /sessionStorage|localStorage|messageLimit|maxUserChars|admin-access|admin-roster/);
   assert.match(board, /MessageBubble/);
-  assert.match(board, /readReplyEvents/);
+  assert.match(round, /readReplyEvents/);
   assert.match(result, /MessageBubble/);
   assert.match(openrouter, /inputTokens: usage\.inputTokens \?\? numberFrom\(accounted\.promptTokens\)/);
   assert.match(openrouter, /outputTokens: usage\.outputTokens \?\? numberFrom\(accounted\.completionTokens\)/);

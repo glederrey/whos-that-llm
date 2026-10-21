@@ -557,12 +557,12 @@ test("a wrong guess keeps the model and names the traits it missed", () => {
   assert.deepEqual(named[1]?.wrong, ["company"]);
   assert.equal(named[1]?.message, 1);
   assert.deepEqual(missedGuesses(traits, guesses, true)[0]?.wrong, []);
-  const board = fs.readFileSync(path.join(root, "components/round-board.tsx"), "utf8");
+  const history = fs.readFileSync(path.join(root, "components/guess-history.tsx"), "utf8");
   const css = fs.readFileSync(path.join(root, "app/globals.css"), "utf8");
-  assert.match(board, /!game\.noHint && index === 0/);
-  assert.match(board, /className="past-message">Message \{guess\.message\}/);
+  assert.match(history, /!noHint && index === 0/);
+  assert.match(history, /className="past-message">Message \{guess\.message\}/);
   assert.match(css, /\.past-message \{ margin-left: auto;/);
-  assert.match(board, /Wrong model/);
+  assert.match(history, /Wrong model/);
 });
 
 test("the header counts the message about to be written", () => {
@@ -571,6 +571,7 @@ test("the header counts the message about to be written", () => {
   assert.equal(upcomingMessageNumber(9, 10), 10);
   assert.equal(upcomingMessageNumber(10, 10), 10);
   const board = fs.readFileSync(path.join(root, "components/round-board.tsx"), "utf8");
+  const fit = fs.readFileSync(path.join(root, "components/use-guess-fit.ts"), "utf8");
   const css = fs.readFileSync(path.join(root, "app/globals.css"), "utf8");
   assert.match(board, /upcomingMessageNumber\(game\.messageNumber, game\.messageLimit\)/);
   assert.match(board, /className="round-pool muted"/);
@@ -589,10 +590,10 @@ test("the header counts the message about to be written", () => {
   assert.match(css, /\.guess-history \{ --fit: 1; \}/);
   assert.match(css, /\.guess-history h2 \{ font-size: 16px; margin-bottom: 4px; \}/);
   assert.doesNotMatch(css, /\.guess-history h2 \{[^}]*var\(--fit\)/);
-  assert.match(board, /setProperty\("--fit"/);
-  assert.doesNotMatch(board, /side\.style\.height/);
-  assert.match(board, /Math\.max\(stickyTop, threadTop\)/);
-  assert.match(board, /Math\.min\(window\.innerHeight - gap, composerBottom\)/);
+  assert.match(fit, /setProperty\("--fit"/);
+  assert.doesNotMatch(fit, /side\.style\.height/);
+  assert.match(fit, /Math\.max\(stickyTop, threadTop\)/);
+  assert.match(fit, /Math\.min\(window\.innerHeight - gap, composerBottom\)/);
   assert.match(css, /\.page \{ flex: 1; padding: 20px 0 0; \}/);
 });
 
