@@ -95,7 +95,8 @@ test("sign-up checks the rules before the auth call and sign-in stays generic", 
   assert.match(form, /signingIn \|\| confirmationSent \? null : <p className="auth-confirm">Supabase will email you a confirmation link\.<\/p>/);
   assert.match(form, /An account with this email already exists\./);
   assert.equal(form.includes("That email is already registered."), false);
-  assert.match(form, /signingIn \? "error" : "error auth-error"/);
+  assert.match(form, /<p className="error auth-error">\{error\}<\/p>/);
+  assert.match(form, /<p className="muted auth-note">\{note\}<\/p>/);
   const css = fs.readFileSync(path.join(root, "app/globals.css"), "utf8");
   assert.match(css, /\.auth-confirm \{ color: var\(--mute\); font-size: 14px; font-weight: 500; text-align: center; \}/);
   assert.match(css, /\.auth-error \{ text-align: center; \}/);

@@ -239,8 +239,8 @@ export function LoginForm({
         ) : null}
         {signingIn || confirmationSent ? null : <p className="auth-confirm">Supabase will email you a confirmation link.</p>}
       </form>
-      {note ? <p className="muted">{note}</p> : null}
-      {error ? <p className={signingIn ? "error" : "error auth-error"}>{error}</p> : null}
+      {note ? <p className="muted auth-note">{note}</p> : null}
+      {error ? <p className="error auth-error">{error}</p> : null}
     </div>
   );
 }
