@@ -104,7 +104,7 @@ test("sign-up checks the rules before the auth call and sign-in stays generic", 
   assert.match(css, /@media \(max-width: 560px\) \{[\s\S]*\.auth-screen \{ margin-top: auto; margin-bottom: auto; \}/);
   assert.match(css, /@media \(max-width: 560px\) \{[\s\S]*\.page:has\(\.auth-screen\) \+ \.footer \{ margin-top: 0; \}/);
   assert.match(css, /@media \(max-width: 560px\) \{[\s\S]*\.footer-inner \{[^}]*align-items: center;[^}]*text-align: center;/);
-  assert.match(css, /@media \(max-width: 560px\) \{[\s\S]*\.credit \{ justify-content: center; \}/);
+  assert.match(css, /\.credit \{[^}]*flex-wrap: wrap; justify-content: center;[^}]*\}/);
   assert.match(form, /className="auth auth-screen"/);
   assert.match(form, /passwordChecks\(password\)/);
   assert.equal(form.includes("passwordRulesText"), false);

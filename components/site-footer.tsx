@@ -18,18 +18,20 @@ export function SiteFooter() {
         <p className="kofi">The models invoice the developer. A Ko-fi will sit here when you feel like covering a round.</p>
       )}
       <p className="credit">
-        <span>Created by</span>
-        <a href="https://github.com/glederrey" target="_blank" rel="noreferrer">
-          Gael Lederrey
+        Created by one human and two AIs:
+        <a href="https://github.com/glederrey" target="_blank" rel="noreferrer" aria-label="Gael Lederrey" title="Gael Lederrey">
+          <svg className="gael-mark" viewBox="225 225 560 685" aria-hidden="true">
+            <path fill="currentColor" fillRule="evenodd" d="M316,235 L299,260 L288,294 L278,315 L270,345 L270,352 L278,373 L295,401 L297,416 L289,433 L241,496 L236,509 L238,519 L246,528 L265,536 L277,550 L291,550 L297,562 L300,577 L298,584 L292,584 L271,576 L262,585 L264,592 L270,599 L294,602 L299,607 L299,611 L293,614 L272,610 L269,615 L269,628 L274,639 L288,647 L296,655 L287,673 L287,682 L292,694 L303,703 L362,712 L374,711 L393,700 L415,696 L419,692 L425,676 L421,671 L408,673 L404,669 L400,642 L409,637 L444,639 L450,636 L461,639 L478,637 L486,641 L489,640 L505,623 L512,609 L527,604 L543,585 L540,562 L543,556 L548,556 L564,596 L566,628 L558,650 L528,660 L523,667 L521,683 L533,690 L534,697 L515,717 L503,721 L491,732 L468,741 L446,754 L438,755 L417,748 L405,750 L399,759 L396,774 L399,804 L409,829 L429,856 L446,870 L474,885 L494,892 L519,897 L549,896 L603,885 L640,869 L663,856 L683,841 L728,799 L754,762 L775,708 L773,699 L767,693 L705,668 L696,662 L689,654 L674,615 L664,600 L659,575 L671,536 L674,504 L680,484 L679,463 L673,446 L638,410 L630,412 L617,421 L597,421 L591,414 L589,404 L584,399 L577,400 L568,408 L561,406 L554,400 L547,415 L541,421 L533,421 L513,403 L504,386 L506,376 L504,363 L513,361 L518,356 L518,351 L506,345 L502,339 L501,323 L507,313 L508,305 L501,284 L493,275 L490,262 L475,259 L463,250 L454,251 L409,240 L358,238 L335,233Z M322,596 L332,596 L339,603 L341,611 L337,617 L324,617 L319,612 L319,599Z M617,571 L612,580 L599,583 L591,581 L588,576 L602,565 L612,565Z M321,389 L329,383 L342,381 L376,394 L410,414 L419,422 L419,433 L426,442 L427,448 L424,451 L406,449 L399,446 L389,436 L379,434 L373,440 L379,451 L378,455 L365,465 L357,463 L350,452 L349,436 L335,421 L331,408 L320,394Z" />
+          </svg>
         </a>
-        <span>with</span>
-        <a href="https://cursor.com" target="_blank" rel="noreferrer">
-          Cursor
+        <a href="https://cursor.com" target="_blank" rel="noreferrer" aria-label="Cursor" title="Cursor">
           <svg className="cursor-mark" viewBox="0 0 466.73 532.09" aria-hidden="true">
-            <path
-              fill="currentColor"
-              d="M457.43 125.94 244.42 2.96c-6.84-3.95-15.28-3.95-22.12 0L9.3 125.94C3.55 129.26 0 135.4 0 142.05v247.99c0 6.65 3.55 12.79 9.3 16.11l213.01 122.98c6.84 3.95 15.28 3.95 22.12 0l213.01-122.98c5.75-3.32 9.3-9.46 9.3-16.11V142.05c0-6.65-3.55-12.79-9.3-16.11ZM444.05 151.99 238.42 508.15c-1.39 2.4-5.06 1.42-5.06-1.36V273.58c0-4.66-2.49-8.97-6.53-11.31L24.87 145.67c-2.4-1.39-1.42-5.06 1.36-5.06h411.26c5.84 0 9.49 6.33 6.56 11.38Z"
-            />
+            <path fill="currentColor" d="M457.43 125.94 244.42 2.96c-6.84-3.95-15.28-3.95-22.12 0L9.3 125.94C3.55 129.26 0 135.4 0 142.05v247.99c0 6.65 3.55 12.79 9.3 16.11l213.01 122.98c6.84 3.95 15.28 3.95 22.12 0l213.01-122.98c5.75-3.32 9.3-9.46 9.3-16.11V142.05c0-6.65-3.55-12.79-9.3-16.11ZM444.05 151.99 238.42 508.15c-1.39 2.4-5.06 1.42-5.06-1.36V273.58c0-4.66-2.49-8.97-6.53-11.31L24.87 145.67c-2.4-1.39-1.42-5.06 1.36-5.06h411.26c5.84 0 9.49 6.33 6.56 11.38Z" />
+          </svg>
+        </a>
+        <a href="https://claude.com/product/claude-code" target="_blank" rel="noreferrer" aria-label="Claude Code" title="Claude Code">
+          <svg className="claude-mark" viewBox="0 0 24 24" aria-hidden="true">
+            <path fill="currentColor" fillRule="evenodd" clipRule="evenodd" d="M20.998 10.949H24v3.102h-3v3.028h-1.487V20H18v-2.921h-1.487V20H15v-2.921H9V20H7.488v-2.921H6V20H4.487v-2.921H3V14.05H0V10.95h3V5h17.998v5.949zM6 10.949h1.488V8.102H6v2.847zm10.51 0H18V8.102h-1.49v2.847z" />
           </svg>
         </a>
       </p>
