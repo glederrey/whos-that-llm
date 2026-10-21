@@ -201,11 +201,7 @@ export function LoginForm({
             </div>
           )}
         </div>
-        {signingIn ? (
-          <button type="button" className="text-link forgot" onClick={openForgot} disabled={busy}>
-            Forgot password
-          </button>
-        ) : (
+        {signingIn ? null : (
           <div>
             <button
               type="button"
@@ -236,6 +232,11 @@ export function LoginForm({
         <button type="submit" className="button" disabled={busy}>
           {signingIn ? "Sign in" : "Create account"}
         </button>
+        {signingIn ? (
+          <button type="button" className="text-link forgot" onClick={openForgot} disabled={busy}>
+            Forgot password
+          </button>
+        ) : null}
         {signingIn || confirmationSent ? null : <p className="auth-confirm">Supabase will email you a confirmation link.</p>}
       </form>
       {note ? <p className="muted">{note}</p> : null}

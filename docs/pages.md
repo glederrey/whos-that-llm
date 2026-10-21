@@ -89,7 +89,7 @@ A confirmation or password-reset link returns here. If the URL carries a session
 
 ## Login (`/login`)
 
-One narrow card. The heading is **Sign in** or **Create account**. A text link under it switches to the other. **Continue with Google** is first, then a divider, then email and password. **Forgot password** sits under the password field on sign-in, as a text link.
+One narrow card. The heading is **Sign in** or **Create account**. A text link under it switches to the other. **Continue with Google** is first, then a divider, then email and password. **Forgot password** sits under the **Sign in** button on sign-in, as a centered text link.
 
 - Button: **Continue with Google**
 - Fields: email, password
