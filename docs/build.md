@@ -127,6 +127,6 @@ Step 4 is allowed to set models `enabled = false`. It is not allowed to add a me
 
 ## Security headers and CI
 
-`next.config.ts` sets `X-Content-Type-Options`, `Referrer-Policy`, `X-Frame-Options: DENY`, HSTS, `Permissions-Policy`, and a Content-Security-Policy on every route. `script-src` is `'self' 'unsafe-inline'`, because Next streams inline bootstrap scripts and the theme snippet is inline; nonces would make every page dynamic. `connect-src` allows the Supabase origin. Images may come from any `https:` host (Supabase storage, markdown). There is no `form-action`, since sign-in forms redirect to Google and Supabase.
+`next.config.ts` sets `X-Content-Type-Options`, `Referrer-Policy`, `X-Frame-Options: DENY`, `Permissions-Policy`, and a Content-Security-Policy on every route. HSTS is not set here: Vercel sends it on its own, and a header from the app would make browsers force HTTPS on `localhost` during development. `script-src` is `'self' 'unsafe-inline'`, because Next streams inline bootstrap scripts and the theme snippet is inline; nonces would make every page dynamic. `connect-src` allows the Supabase origin. Images may come from any `https:` host (Supabase storage, markdown). There is no `form-action`, since sign-in forms redirect to Google and Supabase.
 
 `.github/workflows/ci.yml` runs typecheck and tests on pull requests and on pushes to `main`. `deploy.yml` pins the Vercel CLI and the actions, and gives the Vercel secrets only to the steps that call it. Dependabot proposes weekly npm and Actions updates, grouped by minor and patch.
