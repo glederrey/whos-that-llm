@@ -7,7 +7,8 @@
     "start": "next start",
     "test": "tsx --test \"lib/**/*.test.ts\"",
     "typecheck": "tsc --noEmit",
-    "db:new": "supabase migration new"
+    "db:new": "supabase migration new",
+    "db:copy-logos": "tsx scripts/copy-logos.ts"
   },
   "dependencies": {
     "@openrouter/ai-sdk-provider": "^3.1.0",
