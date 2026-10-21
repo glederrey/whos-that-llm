@@ -41,7 +41,7 @@ export function SiteFooter() {
             Claude Code
             <svg className="claude-mark" viewBox="0 0 22 15" aria-hidden="true">
               <path
-                fill="#D97757"
+                fill="currentColor"
                 d="M3 1h16v10H3zM0 4h3v3H0zM19 4h3v3h-3zM5 11h2v3H5zM8 11h2v3H8zM12 11h2v3h-2zM15 11h2v3h-2z"
               />
               <path fill="var(--canvas)" d="M7 4h2v3H7zM13 4h2v3h-2z" />
