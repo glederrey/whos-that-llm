@@ -89,13 +89,13 @@ A confirmation or password-reset link returns here. If the URL carries a session
 
 ## Login (`/login`)
 
-One narrow card. The heading is **Sign in** or **Create account**. A text link under it switches to the other. **Continue with Google** is first, then a divider, then email and password. **Forgot password** sits under the password field on sign-in, as a text link.
+One narrow card. The heading is **Sign in** or **Create account**. A text link under it switches to the other. **Continue with Google** is first, then a divider, then email and password. **Forgot password** sits under the **Sign in** button on sign-in, as a centered text link.
 
 - Button: **Continue with Google**
 - Fields: email, password
 - Create-account note, before the account is created: **Supabase will email you a confirmation link.** After the account is created, that note is gone and the page says **The confirmation email has been sent.**
 - Button: **What we store.** Closed until clicked. Then: we keep the username and the games (messages, replies, and guesses), for research, because the developer is a data scientist. Nothing else is kept. The email is not saved with the game. Sign-in goes through Supabase, which uses it only to confirm the account and to keep automated sign-ups out.
-- Link: **Forgot password**. Asks for an email. Supabase sends the reset. The page says **Check your email.** either way, so it does not reveal whether the address exists.
+- Link: **Forgot password**. It replaces the card with a **Reset your password** card: one email field (filled with what was typed), a **Send request to change password** button, and a **Back to sign in** link. Supabase sends the reset. The card says **Check your email.** either way, so it does not reveal whether the address exists.
 - The confirmation link and the reset link both open `/`.
 - Errors, under the form, one at a time:
   - **Wrong email or password.** Sign-in, when the email or password does not match.
@@ -369,6 +369,10 @@ Private. The account menu shows **Profile** once the player has a username. No s
 The account menu does not link to delete. The form is on the profile page. `/account/delete` still has the same form for a direct visit. No session goes to `/login?next=/account/delete`. There is no control that names another player.
 
 The copy says this removes the profile and picture, and the name on the leaderboard. It does not say the games are removed. The server uses the session id. A user id in the form is ignored. It sets `user_id` and `username` to null on that user's games, and `user_id` to null on that user's usage rows. Messages and guesses stay on the games. The picture in the `avatars` bucket is removed, then the auth user is deleted, which removes the profile. If the anonymize step fails, the auth user stays. The session ends on `/`. On the profile page, an unchecked box shows **Confirm that you want to delete your account.** in place, without leaving the scroll position. On `/account/delete`, an unchecked box stays on that page with the same sentence. A failed delete stays there with **Could not delete this account.** Run [`0017_anonymize_games_on_account_delete.sql`](../supabase/migrations/0017_anonymize_games_on_account_delete.sql) so `games.user_id` can be null and the leaderboard skips those rounds.
+
+## Not found
+
+Any URL that does not exist, and any `/admin` URL for a visitor who is not the owner, shows the same page with a 404 status: a big 404, the line **Who's that page?**, a short fake chat in which the page refuses to be identified, and two links, **Back to the game** and **See the leaderboard**. It is not indexed. The copy never says whether a hidden URL exists.
 
 ## Private pages
 

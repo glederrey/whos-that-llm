@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { parseSize } from "@/lib/admin-model";
+import { requireOwner } from "@/lib/admin-access";
 import { parseDifficulty } from "@/lib/difficulty";
 import {
   createCategory,
@@ -83,26 +84,32 @@ function finishCategory(notice: string | null) {
 }
 
 export async function addModel(formData: FormData) {
+  await requireOwner();
   finish(formData, await createRosterModel(fields(formData)));
 }
 
 export async function saveModel(formData: FormData) {
+  await requireOwner();
   finish(formData, await updateRosterModel({ id: text(formData, "id"), ...fields(formData) }));
 }
 
 export async function setModelEnabled(formData: FormData) {
+  await requireOwner();
   finish(formData, await setRosterEnabled(text(formData, "id"), text(formData, "enabled") === "1"));
 }
 
 export async function addCategory(formData: FormData) {
+  await requireOwner();
   finishCategory(await createCategory(categoryFields(formData)));
 }
 
 export async function saveCategory(formData: FormData) {
+  await requireOwner();
   finishCategory(await updateCategory({ id: text(formData, "id"), ...categoryFields(formData) }));
 }
 
 export async function deleteCategory(formData: FormData) {
+  await requireOwner();
   const message = await removeCategory(text(formData, "id"));
   revalidatePath("/admin/categories");
   revalidatePath("/admin/models");
@@ -110,12 +117,14 @@ export async function deleteCategory(formData: FormData) {
 }
 
 export async function clearProvider(formData: FormData) {
+  await requireOwner();
   const ok = await clearProviderBlacklist(text(formData, "slug"));
   revalidatePath("/admin/providers");
   redirect(ok ? "/admin/providers" : "/admin/providers?notice=save");
 }
 
 export async function updateRosterPrices(): Promise<PriceSyncResult> {
+  await requireOwner();
   const catalog = await loadOpenRouterCatalog();
   if (!catalog.ok) return { ok: false, error: catalog.error };
   const { rows } = await loadRoster();
@@ -133,6 +142,7 @@ export async function updateRosterPrices(): Promise<PriceSyncResult> {
 }
 
 export async function checkRosterAvailability(): Promise<AvailabilityResult> {
+  await requireOwner();
   const catalog = await loadOpenRouterCatalog();
   if (!catalog.ok) return { ok: false, error: catalog.error };
   const { rows } = await loadRoster();
@@ -153,6 +163,7 @@ export async function checkRosterAvailability(): Promise<AvailabilityResult> {
 }
 
 export async function searchNewModels(): Promise<NewModelsResult> {
+  await requireOwner();
   const catalog = await loadOpenRouterCatalog();
   if (!catalog.ok) return { ok: false, error: catalog.error };
   const { rows } = await loadRoster();
@@ -160,6 +171,7 @@ export async function searchNewModels(): Promise<NewModelsResult> {
 }
 
 export async function addNewRosterModels(picks: { id: string; size: string; difficulty: string }[]): Promise<AddModelsResult> {
+  await requireOwner();
   if (!Array.isArray(picks) || picks.length > 200 || picks.some((pick) => !pick || typeof pick !== "object")) {
     return { ok: false, error: "Could not add those models." };
   }

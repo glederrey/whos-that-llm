@@ -16,3 +16,9 @@ export function safeNext(value: string | undefined, fallback = "/"): string {
   if (!url.pathname.startsWith("/") || url.pathname.startsWith("//")) return fallback;
   return `${url.pathname}${url.search}${url.hash}`;
 }
+
+const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+export function isUuid(value: string): boolean {
+  return uuidPattern.test(value);
+}

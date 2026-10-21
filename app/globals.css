@@ -515,9 +515,10 @@ html[data-theme="dark"] .segmented a[aria-pressed="true"] { color: #062e2e; }
   text-underline-offset: 3px;
 }
 html[data-theme="dark"] .text-link { color: var(--teal); }
-.forgot { justify-self: start; font-size: 14px; }
+.forgot { justify-self: center; font-size: 14px; }
 .auth-confirm { color: var(--mute); font-size: 14px; font-weight: 500; text-align: center; }
 .auth-error { text-align: center; }
+.auth-note { text-align: center; }
 .or {
   display: flex;
   align-items: center;
@@ -2019,3 +2020,10 @@ html[data-theme="dark"] .history-score[data-best="true"] { color: var(--teal); }
 @media (hover: none) and (pointer: coarse) {
   .share-network-menu .share-message { display: flex; }
 }
+
+.not-found { justify-items: center; text-align: center; gap: 32px; padding-top: 24px; }
+.not-found h1 { margin: -16px 0 -16px; }
+.not-found .lede { margin: 0; }
+.not-found-code { margin: 0; font-size: 72px; font-weight: 700; line-height: 1; color: var(--teal); }
+.not-found-chat { width: min(460px, 100%); text-align: left; }
+.not-found .row { justify-content: center; }

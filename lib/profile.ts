@@ -2,6 +2,13 @@ import type { GameStatus } from "./game";
 
 const maxAvatarBytes = 1024 * 1024;
 
+/** The multipart envelope adds a little to the file, so allow some slack. */
+export function avatarBodyTooLarge(contentLength: string | null): boolean {
+  const length = Number(contentLength);
+  if (!contentLength || !Number.isFinite(length) || length < 0) return true;
+  return length > maxAvatarBytes + 16 * 1024;
+}
+
 /** One year. Avatar paths include a timestamp, so a new upload is a new URL. */
 export const publicImageCacheControl = "31536000";
 

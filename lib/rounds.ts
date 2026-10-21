@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { config, currentRules, rulesForGameMode, type Rules } from "./config";
+import { boardSeed } from "./board-seed";
 import { boardSince } from "./board-query";
 import { companyModelCounts } from "./company";
 import { dailyRoundKey, startDailyRound, utcDayKey, type DailyRound } from "./daily";
@@ -718,7 +719,7 @@ function toBoardRow(entry: BoardEntry, mine: boolean): BoardRow {
     score: Number(entry.score),
     mine,
     avatarUrl: avatarPublicUrl(publicEnv()?.url ?? "", entry.avatar_path ?? null),
-    seed: userId || entry.name,
+    seed: boardSeed(userId, entry.name, mine),
     difficulty: difficultyFromStored(entry.difficulty),
     noHint: Boolean(entry.no_hint),
     companyId: typeof entry.company_id === "string" ? entry.company_id : null,
