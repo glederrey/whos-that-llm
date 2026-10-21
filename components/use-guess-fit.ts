@@ -7,6 +7,8 @@ export function useGuessFit(roundRef: RefObject<HTMLDivElement | null>) {
     if (!round) return;
     const gap = 16;
     const stickyTop = 16;
+    // Smallest room worth keeping: the title plus one entry.
+    const minAvailable = 120;
     let frame = 0;
     let applied = "";
     const fit = () => {
@@ -33,7 +35,11 @@ export function useGuessFit(roundRef: RefObject<HTMLDivElement | null>) {
       let used = 0;
       if (feedback) used += feedback.offsetHeight + gap;
       if (guessBox) used += guessBox.offsetHeight + gap;
-      const available = Math.max(0, Math.round(limit - top - used));
+      let available = Math.max(0, Math.round(limit - top - used));
+      // A short thread puts the composer too high for the card: use the window.
+      if (available < minAvailable) {
+        available = Math.max(0, Math.round(window.innerHeight - gap - top - used));
+      }
       const mark = `${available}:${history.childElementCount}`;
       if (mark === applied) return;
       side.style.maxHeight = "none";
