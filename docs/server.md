@@ -76,7 +76,7 @@ Do not tell the client which traits the highlighted row would hit. That preview 
 | `POST /api/games/:id/give-up` | End the round, show the model, stay off the leaderboard |
 | `GET /api/leaderboard?category=&period=week\|all` | Rank, name, score |
 | `PATCH /api/me` | Set `{ username }`. Also rewrites `games.username` for that user id |
-| `POST /api/me/avatar` | Upload a picture. Field `avatar`. JPEG, PNG, or WebP, at most 1 MB. Anything else is `422` `avatar` |
+| `POST /api/me/avatar` | Upload a picture. Field `avatar`. JPEG, PNG, or WebP, at most 1 MB. Anything else is `422` `avatar`. A body over 1 MB plus a little multipart slack, or one without `Content-Length`, is `413` before it is read |
 | `GET /api/admin/spend` | Admin, later |
 | `GET /api/admin/stats` | Admin, later |
 | `PATCH /api/admin/settings` | Admin, later. `{ paused }` |
@@ -190,7 +190,7 @@ JSON body `{ error: string, ... }`. The page copy for each code is in [Pages](pa
 | HTTP | `error` | When |
 |---|---|---|
 | 401 | `unauthorized` | No session |
-| 404 | `not_found` | Wrong owner, missing round, unknown category, or not the admin email |
+| 404 | `not_found` | Wrong owner, missing round, unknown category, a game id that is not a UUID, or not an admin (`app_metadata.admin`) |
 | 503 | `paused` | `app_settings.paused` is true |
 | 409 | `active_game` | This mode and difficulty already has an open round |
 | 409 | `daily_done` | Daily already started today |
@@ -204,6 +204,6 @@ JSON body `{ error: string, ... }`. The page copy for each code is in [Pages](pa
 
 ## Leaderboard and profile
 
-`GET /api/leaderboard` calls `leaderboard(category, since)` with the user-scoped client. The function is granted to `anon` and `authenticated`. A category with `leaderboard` false is `404`. `period=week` sets `since` to Monday 00:00 UTC of the current week. `period=all` uses no lower bound. The columns are rank, name, and score. The name is shown with that player's profile picture.
+`GET /api/leaderboard` calls `leaderboard(category, since)` with the user-scoped client. The function is granted to `anon` and `authenticated`. A category with `leaderboard` false is `404`. `period=week` sets `since` to Monday 00:00 UTC of the current week. `period=all` uses no lower bound. The columns are rank, name, and score. The name is shown with that player's profile picture. Each row carries an avatar `seed` for the generated mark: the viewer's own row keeps their id so it matches the header, every other row gets a short hash. The API never returns another player's account id.
 
 `PATCH /api/me` calls `set_username` as the signed-in user. It sets `profiles.username` and every `games.username` for that user id. Empty, and any name outside 3–20 characters after trim, is `422` `username`. `POST /api/me/avatar` stores the file in the public `avatars` bucket and saves `profiles.avatar_path`. Only a JPEG, PNG, or WebP of at most 1 MB is accepted. The header shows that picture. Until then it keeps the generated mark.
