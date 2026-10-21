@@ -8,7 +8,7 @@ const root = path.resolve(import.meta.dirname, "..");
 function files(dir: string): string[] {
   const out: string[] = [];
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-    if (entry.name === "node_modules" || entry.name === ".next" || entry.name === ".git") continue;
+    if (entry.name === "node_modules" || entry.name === ".next" || entry.name === ".git" || entry.name === ".claude") continue;
     const full = path.join(dir, entry.name);
     if (entry.isDirectory()) out.push(...files(full));
     else if (/\.(ts|tsx|js|jsx|css|md|sql|json|yml|yaml)$/.test(entry.name)) out.push(full);
