@@ -1857,6 +1857,7 @@ html[data-theme="dark"] .history-score[data-best="true"] { color: var(--teal); }
     gap: 8px;
     padding: 16px 0 calc(28px + env(safe-area-inset-bottom));
   }
+  .credit { order: -1; }
   .thread > header { position: sticky; top: 0; z-index: 10; margin: 0 -12px; padding: 8px 12px; background: var(--canvas); }
   .round-bar {
     display: grid;
