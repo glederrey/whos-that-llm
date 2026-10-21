@@ -1,0 +1,19 @@
+# Supabase CLI config, used for `supabase start` (CI replay) and
+# `supabase link` / `db push`. Only what the app uses is on.
+project_id = "whos-that-llm"
+
+[db]
+major_version = 17
+
+[db.seed]
+enabled = true
+sql_paths = ["./seed.sql"]
+
+[realtime]
+enabled = false
+
+[studio]
+enabled = false
+
+[local_smtp]
+enabled = false
