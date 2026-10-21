@@ -49,12 +49,12 @@ const numberWords = [
   "Twenty",
 ];
 
-export function capSentence(cap: number): string {
+function capSentence(cap: number): string {
   const count = numberWords[cap] ?? String(cap);
   return `${count} ${cap === 1 ? "game" : "games"} an hour. One more, and the developer goes broke.`;
 }
 
-export function lineup(gameModes: HomeGameMode[]): HomeGameMode[] {
+function lineup(gameModes: HomeGameMode[]): HomeGameMode[] {
   const byId = new Map(gameModes.filter((gameMode) => !hidden.has(gameMode.id)).map((gameMode) => [gameMode.id, gameMode]));
   if (!byId.has("class")) {
     byId.set("class", {

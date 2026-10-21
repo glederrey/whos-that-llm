@@ -8,7 +8,7 @@ import { ChatComposer } from "./chat-composer";
 import { CompanyLogo } from "./company-logo";
 import { MessageBubble } from "./message-bubble";
 
-export type ChatModelChoice = {
+type ChatModelChoice = {
   id: string;
   name: string;
   companyName: string;

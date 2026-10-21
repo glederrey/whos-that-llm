@@ -8,7 +8,7 @@ import { CompanyLogo } from "./company-logo";
 import { ScoreCard } from "./score-card";
 import { RoundFacts } from "./round-facts";
 
-export type HistoryItem = {
+type HistoryItem = {
   id: string;
   when: string;
   status: string;
@@ -71,7 +71,7 @@ export function HistoryList({ items }: { items: HistoryItem[] }) {
   );
 }
 
-export function HistoryFacts({ item }: { item: HistoryItem }) {
+function HistoryFacts({ item }: { item: HistoryItem }) {
   return (
     <span className="history-facts">
       <span className="board-chip history-mode">{item.mode}</span>
