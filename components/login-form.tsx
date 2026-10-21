@@ -24,6 +24,7 @@ export function LoginForm({
   const [error, setError] = useState(cancelled ? "Google sign-in was cancelled." : "");
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
+  const [forgotOpen, setForgotOpen] = useState(false);
 
   function showTab(next: "sign-in" | "create") {
     setTab(next);
@@ -90,14 +91,23 @@ export function LoginForm({
     router.refresh();
   }
 
-  async function forgot() {
+  function openForgot() {
     setError("");
     setNote("");
-    if (!email.trim()) {
-      setError("Wrong email or password.");
-      return;
-    }
+    setForgotOpen(true);
+  }
+
+  function closeForgot() {
+    setError("");
+    setNote("");
+    setForgotOpen(false);
+  }
+
+  async function requestReset(event: React.FormEvent) {
+    event.preventDefault();
     setBusy(true);
+    setError("");
+    setNote("");
     await sendPasswordReset(email);
     setBusy(false);
     setNote("Check your email.");
@@ -105,6 +115,28 @@ export function LoginForm({
 
   const signingIn = tab === "sign-in";
   const confirmationSent = note === "The confirmation email has been sent.";
+
+  if (forgotOpen) {
+    return (
+      <div className="auth auth-screen">
+        <h1>Reset your password</h1>
+        <p className="muted">Enter your email and we will send you a link to choose a new password.</p>
+        <form className="stack" onSubmit={requestReset}>
+          <label>
+            Email
+            <input type="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} required />
+          </label>
+          <button type="submit" className="button" disabled={busy}>
+            Send request to change password
+          </button>
+        </form>
+        {note ? <p className="muted">{note}</p> : null}
+        <button type="button" className="text-link forgot" onClick={closeForgot}>
+          Back to sign in
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="auth auth-screen">
@@ -170,7 +202,7 @@ export function LoginForm({
           )}
         </div>
         {signingIn ? (
-          <button type="button" className="text-link forgot" onClick={forgot} disabled={busy}>
+          <button type="button" className="text-link forgot" onClick={openForgot} disabled={busy}>
             Forgot password
           </button>
         ) : (

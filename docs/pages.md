@@ -95,7 +95,7 @@ One narrow card. The heading is **Sign in** or **Create account**. A text link u
 - Fields: email, password
 - Create-account note, before the account is created: **Supabase will email you a confirmation link.** After the account is created, that note is gone and the page says **The confirmation email has been sent.**
 - Button: **What we store.** Closed until clicked. Then: we keep the username and the games (messages, replies, and guesses), for research, because the developer is a data scientist. Nothing else is kept. The email is not saved with the game. Sign-in goes through Supabase, which uses it only to confirm the account and to keep automated sign-ups out.
-- Link: **Forgot password**. Asks for an email. Supabase sends the reset. The page says **Check your email.** either way, so it does not reveal whether the address exists.
+- Link: **Forgot password**. It replaces the card with a **Reset your password** card: one email field (filled with what was typed), a **Send request to change password** button, and a **Back to sign in** link. Supabase sends the reset. The card says **Check your email.** either way, so it does not reveal whether the address exists.
 - The confirmation link and the reset link both open `/`.
 - Errors, under the form, one at a time:
   - **Wrong email or password.** Sign-in, when the email or password does not match.
