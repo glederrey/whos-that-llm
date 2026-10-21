@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { updatePassword } from "@/app/auth/actions";
+import { resetPassword } from "@/app/auth/actions";
+import { PasswordField } from "@/components/password-field";
 
-export function ResetPassword({ hasUsername }: { hasUsername: boolean }) {
+export function ResetPassword({ tokenHash }: { tokenHash: string }) {
   const router = useRouter();
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -14,27 +15,26 @@ export function ResetPassword({ hasUsername }: { hasUsername: boolean }) {
     event.preventDefault();
     setBusy(true);
     setError("");
-    const result = await updatePassword(password);
-    setBusy(false);
+    const result = await resetPassword(tokenHash, password);
     if (result) {
-      setError("Wrong email or password.");
+      setBusy(false);
+      setError(typeof result === "object" ? result.rules : result === "expired" ? "This link has expired or was already used. Request a new one from the sign-in page." : "Could not save that password. Request a new link from the sign-in page.");
       return;
     }
-    router.push(hasUsername ? "/play" : "/welcome");
+    router.push("/login?notice=password-changed");
     router.refresh();
   }
 
   return (
-    <form className="auth" onSubmit={submit}>
-      <h2>Choose a new password</h2>
-      <label>
-        New password
-        <input type="password" autoComplete="new-password" value={password} onChange={(event) => setPassword(event.target.value)} required />
-      </label>
-      <button type="submit" className="button" disabled={busy}>
-        Save password
-      </button>
-      {error ? <p className="error">{error}</p> : null}
-    </form>
+    <div className="auth auth-screen">
+      <h1>Choose a new password</h1>
+      <form className="stack" onSubmit={submit}>
+        <PasswordField id="new-password" value={password} onChange={setPassword} autoComplete="new-password" showRules />
+        <button type="submit" className="button" disabled={busy}>
+          Save password
+        </button>
+      </form>
+      {error ? <p className="error auth-error">{error}</p> : null}
+    </div>
   );
 }

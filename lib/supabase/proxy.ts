@@ -42,10 +42,11 @@ export async function updateSession(request: NextRequest) {
     },
   });
 
-  // Only "/": Google sign-in, email confirmation and password reset all return
-  // to the site root (app/auth/actions.ts, docs/build.md), and there is no
-  // callback route. The PKCE exchange needs the verifier cookie set when the
-  // flow started, so a code planted by someone else does not sign the visitor in.
+  // Only "/": Google sign-in and email confirmation return to the site root
+  // (app/auth/actions.ts, docs/build.md), and there is no callback route.
+  // Password reset does not come through here: it never signs the visitor in.
+  // The PKCE exchange needs the verifier cookie set when the flow started, so a
+  // code planted by someone else does not sign the visitor in.
   const code = request.nextUrl.searchParams.get("code");
   if (code && request.nextUrl.pathname === "/") {
     await supabase.auth.exchangeCodeForSession(code);

@@ -85,7 +85,7 @@ Two columns. On a narrow screen they stack.
 - Signed in: **Start playing** goes to `/play`. Scoring is the header link.
 - On a wide screen, **Start playing**, **Sign up**, and **Sign in** are taller, with rounder corners. On a phone they keep the original size.
 
-A confirmation or password-reset link returns here. If the URL carries a session and the profile has no username, send the player to `/welcome`.
+A confirmation link returns here. If the URL carries a session and the profile has no username, send the player to `/welcome`.
 
 ## Login (`/login`)
 
@@ -96,13 +96,17 @@ One narrow card. The heading is **Sign in** or **Create account**. A text link u
 - Create-account note, before the account is created: **Supabase will email you a confirmation link.** After the account is created, that note is gone and the page says **The confirmation email has been sent.**
 - Button: **What we store.** Closed until clicked. Then: we keep the username and the games (messages, replies, and guesses), for research, because the developer is a data scientist. Nothing else is kept. The email is not saved with the game. Sign-in goes through Supabase, which uses it only to confirm the account and to keep automated sign-ups out.
 - Link: **Forgot password**. It replaces the card with a **Reset your password** card: one email field (filled with what was typed), a **Send request to change password** button, and a **Back to sign in** link. Supabase sends the reset. The card says **Check your email.** either way, so it does not reveal whether the address exists.
-- The confirmation link and the reset link both open `/`.
+- The confirmation link opens `/`. The reset link opens `/reset-password?token_hash=…`.
 - Errors, under the form, one at a time:
   - **Wrong email or password.** Sign-in, when the email or password does not match.
   - **Confirm your email, then come back.**
   - **An account with this email already exists.** Create account, when that email is already registered. A second try while the confirmation is still going out is the same case.
   - **The confirmation email could not be sent. Try again in a minute.**
   - **Google sign-in was cancelled.**
+
+## Reset password `/reset-password`
+
+The reset link does not sign anyone in. Opening it only shows this page; the link's token is spent when **Save password** is pressed, in the same server call that sets the password. Without `token_hash` the page redirects to `/login`. One narrow card, **Choose a new password**, with the same password field as sign-up (show/hide eye and the **Must contain** checklist) and **Save password**. The new password must meet the same rules as sign-up, checked before and by Supabase. Typing the current password counts as saved. A spent or expired link says so and points back to sign-in. Saving ends the session that call created and goes to `/login?notice=password-changed`, which shows **Password updated. Sign in with it.** With no session (expired or reused link) the page sends the player to `/login`.
 
 ## Lobby (`/play`)
 

@@ -79,6 +79,7 @@ test("a met rule turns green and an unmet rule stays grey", () => {
 
 test("sign-up checks the rules before the auth call and sign-in stays generic", () => {
   const form = fs.readFileSync(path.join(root, "components/login-form.tsx"), "utf8");
+  const field = fs.readFileSync(path.join(root, "components/password-field.tsx"), "utf8");
   const actions = fs.readFileSync(path.join(root, "app/auth/actions.ts"), "utf8");
   const create = form.slice(form.indexOf('if (tab === "create")'), form.indexOf("await signInWithEmail"));
   assert.ok(create.indexOf("passwordProblem(password)") !== -1);
@@ -88,7 +89,8 @@ test("sign-up checks the rules before the auth call and sign-in stays generic", 
   assert.match(tabs, /setNote\(""\)/);
   assert.match(form, /showTab\("sign-in"\)/);
   assert.match(form, /showTab\("create"\)/);
-  assert.match(form, /Must contain/);
+  assert.match(field, /Must contain/);
+  assert.match(form, /<PasswordField/);
   assert.ok(form.indexOf('className="auth-confirm"') > form.indexOf('type="submit"'));
   assert.match(form, /setNote\("The confirmation email has been sent\."\)/);
   assert.equal(form.includes("Supabase will email you a confirmation link. Check your email."), false);
@@ -106,12 +108,12 @@ test("sign-up checks the rules before the auth call and sign-in stays generic", 
   assert.match(css, /@media \(max-width: 560px\) \{[\s\S]*\.footer-inner \{[^}]*align-items: center;[^}]*text-align: center;/);
   assert.match(css, /\.credit \{[^}]*flex-wrap: wrap; justify-content: center;[^}]*\}/);
   assert.match(form, /className="auth auth-screen"/);
-  assert.match(form, /passwordChecks\(password\)/);
-  assert.equal(form.includes("passwordRulesText"), false);
-  assert.equal(form.includes('role="meter"'), false);
-  assert.match(form, /data-met=\{rule\.met \? "true" : "false"\}/);
-  assert.match(form, /Show password/);
-  assert.match(form, /Hide password/);
+  assert.match(field, /passwordChecks\(value\)/);
+  assert.equal(field.includes("passwordRulesText"), false);
+  assert.equal(field.includes('role="meter"'), false);
+  assert.match(field, /data-met=\{rule\.met \? "true" : "false"\}/);
+  assert.match(field, /Show password/);
+  assert.match(field, /Hide password/);
   assert.equal(form.includes("Wrong mail"), false);
 
   const signup = actions.slice(actions.indexOf("function signUpWithEmail"), actions.indexOf("function signInWithEmail"));
@@ -124,4 +126,14 @@ test("sign-up checks the rules before the auth call and sign-in stays generic", 
   assert.equal(signin.includes("weakPasswordNotice"), false);
   assert.equal(signin.includes("signUpFailureNotice"), false);
   assert.match(signin, /return "invalid"/);
+});
+
+test("the password reset applies the sign-up rules and spends the token with the new password", () => {
+  const actions = fs.readFileSync(path.join(root, "app/auth/actions.ts"), "utf8");
+  const reset = actions.slice(actions.indexOf("function resetPassword"), actions.indexOf("function signOut"));
+  assert.ok(reset.indexOf("passwordProblem(password)") < reset.indexOf("auth.verifyOtp"));
+  assert.ok(reset.indexOf("auth.verifyOtp") < reset.indexOf("auth.updateUser"));
+  assert.ok(reset.indexOf("auth.updateUser") < reset.indexOf("auth.signOut"));
+  assert.match(reset, /weakPasswordNotice/);
+  assert.match(reset, /code !== "same_password"/);
 });
