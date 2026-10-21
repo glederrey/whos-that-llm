@@ -66,8 +66,8 @@ test("username create, update, and lookup bind the value", () => {
   assert.match(lookup, /select username into profile_name from public\.profiles where id = p_user_id/);
   assert.equal(bindsParameter(lookup, "profile_name"), true);
   assert.doesNotMatch(lookup, /execute|format\s*\(/i);
-  const source = fs.readFileSync(path.join(root, "lib/rounds.ts"), "utf8");
-  const setter = sourceFunction(source, "setUsername");
+  const source = fs.readFileSync(path.join(root, "lib/rounds-queries.ts"), "utf8");
+  const setter = sourceFunction(source, "saveUsername");
   assert.equal(valueIsBound(setter, "raw"), true);
   assert.match(setter, /rpc\("set_username", \{ p_username: raw \}\)/);
 });
@@ -81,7 +81,7 @@ test("a chat message and a guess are bound on the way in, out, and when saved", 
   assert.equal(bindsParameter(guess, "p_model_id"), true);
   assert.doesNotMatch(guess, /execute|format\s*\(/i);
 
-  const rounds = fs.readFileSync(path.join(root, "lib/rounds.ts"), "utf8");
+  const rounds = fs.readFileSync(path.join(root, "lib/rounds-play.ts"), "utf8");
   const save = sourceFunction(rounds, "saveReply");
   const submit = sourceFunction(rounds, "submitGuess");
   const hidden = sourceFunction(rounds, "hiddenCall");

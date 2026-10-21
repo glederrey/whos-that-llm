@@ -20,9 +20,20 @@ lib/
   config.ts                     the numbers, imported by POST /api/games
   prompt.ts                     the system prompt
   game.ts                       pool, frozen traits, filter, compare, score
+  game-labels.ts                the words around a round: region, size and pool labels, the score explanation
+  rounds.ts                     barrel: the one import for everything below
+  rounds-shape.ts               pure: row mappers, failures, transcript and guess shaping
+  rounds-score.ts               pure: guess finish and the inputs to scoreRound
+  rounds-board-rows.ts          pure: leaderboard rows, filters, public stats parsing
+  rounds-queries.ts             reads and rpc calls that take the client as an argument
+  rounds-start.ts               game modes, lobby, starting a round
+  rounds-play.ts                reading a round, claim, reply, guess, hint, give up
+  rounds-board.ts, rounds-user.ts  leaderboard and landing counts, username
   openrouter.ts                 one streaming call, usage parsed out
   supabase/server.ts            session client and service-role client
 components/                     feedback, hints, guess bar, transcript, theme toggle, footer
+  round-board.tsx               the round screen. State and requests live in use-round.ts
+  use-round.ts, use-guess-fit.ts  the round hook, and the sizing of the previous guesses card
 app/globals.css                 light and dark tokens. Default follows the system
 public/brand/                   site logo copies. tail_right when the text is on the right, tail_left when it is on the left
 supabase/migrations/            timestamped SQL for the tables in Data, run by the Supabase CLI
@@ -31,7 +42,9 @@ supabase/seed.sql               catalog snapshot loaded by `supabase db reset`
 
 There is no `rules/page.tsx`. There is no `me/page.tsx` in the first build.
 
-`lib/game.ts` is the only place that decides a match, a hint, a filter, or a score. Routes load rows and call it. Components render the public object and do not reimplement the rules.
+`lib/game.ts` is the only place that decides a match, a hint, a filter, or a score. Routes load rows and call it. Components render the public object and do not reimplement the rules. `lib/game-labels.ts` only words what `game.ts` decided.
+
+Import server code from `@/lib/rounds`. The `rounds-*` files behind it are an implementation detail: the pure ones have unit tests with no database, and `rounds-queries.ts` takes the Supabase client as an argument so a test can pass a small fake. The previous guesses card shrinks to fit between the writing box and the window; when a short thread leaves it under 120px, it uses the window bottom instead (`components/use-guess-fit.ts`).
 
 `lib/config.ts` exports the object stored on `games.rules`, plus `hourlyCap: 20` and `tipUrl`. Category flags (`leaderboard`, `hints_allowed`, `enabled`) are seeded into `categories`. A round copies `hintsAllowed` off the category row and the numbers off config, then freezes traits, so an admin edit does not rewrite a game in progress.
 

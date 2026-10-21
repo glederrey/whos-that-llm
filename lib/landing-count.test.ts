@@ -40,7 +40,7 @@ test("games today on the main page counts the UTC day the round finished", () =>
   );
   assert.doesNotMatch(latest, /started_at/);
   assert.doesNotMatch(latest, /status in/);
-  const rounds = fs.readFileSync(path.join(root, "lib/rounds.ts"), "utf8");
+  const rounds = ["rounds-board", "rounds-queries"].map((name) => fs.readFileSync(path.join(root, `lib/${name}.ts`), "utf8")).join("\n");
   assert.match(rounds, /landingSnapshot\(\)/);
   assert.match(rounds, /\.gte\("finished_at", start\)\s*\.lt\("finished_at", end\)/);
   assert.doesNotMatch(rounds, /\.gte\("started_at", start\)/);
@@ -62,7 +62,7 @@ test("players on the main page are distinct accounts with a finished game", () =
     /finished_at < \(date_trunc\('day', now\(\) at time zone 'utc'\) at time zone 'utc'\) \+ interval '1 day'/,
   );
   assert.doesNotMatch(today, /started_at/);
-  const rounds = fs.readFileSync(path.join(root, "lib/rounds.ts"), "utf8");
+  const rounds = ["rounds-board", "rounds-queries"].map((name) => fs.readFileSync(path.join(root, `lib/${name}.ts`), "utf8")).join("\n");
   assert.match(
     rounds,
     /from\("games"\)\s*\.select\("user_id"\)\s*\.not\("finished_at", "is", null\)\s*\.not\("user_id", "is", null\)/,
@@ -83,7 +83,7 @@ test("companies on the phone homepage are labs with a model in play", () => {
   const sql = publicStats();
   assert.match(sql, companies);
   assert.match(sql, /'models', \(select count\(\*\)::int from public\.models where enabled\)/);
-  const rounds = fs.readFileSync(path.join(root, "lib/rounds.ts"), "utf8");
+  const rounds = ["rounds-board", "rounds-queries"].map((name) => fs.readFileSync(path.join(root, `lib/${name}.ts`), "utf8")).join("\n");
   assert.match(rounds, /\.from\("models"\)\s*\.select\("company_id"\)\s*\.eq\("enabled", true\)/);
   const home = fs.readFileSync(path.join(root, "app/page.tsx"), "utf8");
   assert.match(home, /className="stat-companies"/);
