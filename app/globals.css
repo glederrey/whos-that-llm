@@ -2019,3 +2019,8 @@ html[data-theme="dark"] .history-score[data-best="true"] { color: var(--teal); }
 @media (hover: none) and (pointer: coarse) {
   .share-network-menu .share-message { display: flex; }
 }
+
+.not-found { align-items: center; text-align: center; padding-top: 24px; }
+.not-found-code { margin: 0; font-size: 72px; font-weight: 700; line-height: 1; color: var(--teal); }
+.not-found-chat { width: min(460px, 100%); text-align: left; }
+.not-found .row { justify-content: center; }

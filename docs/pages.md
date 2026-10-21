@@ -370,6 +370,10 @@ The account menu does not link to delete. The form is on the profile page. `/acc
 
 The copy says this removes the profile and picture, and the name on the leaderboard. It does not say the games are removed. The server uses the session id. A user id in the form is ignored. It sets `user_id` and `username` to null on that user's games, and `user_id` to null on that user's usage rows. Messages and guesses stay on the games. The picture in the `avatars` bucket is removed, then the auth user is deleted, which removes the profile. If the anonymize step fails, the auth user stays. The session ends on `/`. On the profile page, an unchecked box shows **Confirm that you want to delete your account.** in place, without leaving the scroll position. On `/account/delete`, an unchecked box stays on that page with the same sentence. A failed delete stays there with **Could not delete this account.** Run [`0017_anonymize_games_on_account_delete.sql`](../supabase/migrations/0017_anonymize_games_on_account_delete.sql) so `games.user_id` can be null and the leaderboard skips those rounds.
 
+## Not found
+
+Any URL that does not exist, and any `/admin` URL for a visitor who is not the owner, shows the same page with a 404 status: a big 404, the line **Who's that page?**, a short fake chat in which the page refuses to be identified, and two links, **Back to the game** and **See the leaderboard**. It is not indexed. The copy never says whether a hidden URL exists.
+
 ## Private pages
 
 `/admin` and `/admin/models` are linked from the account menu only when the signed-in Supabase user has `app_metadata.admin === true`. Players cannot write `app_metadata`. A missing flag matches nobody. The footer, the landing page, and every other session have no admin link. Anyone else, including a signed-out visitor and a player who edits their profile, gets the same not-found page as a missing URL. There is no role column and no client flag.
