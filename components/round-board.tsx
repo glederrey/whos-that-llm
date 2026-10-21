@@ -268,68 +268,82 @@ export function RoundBoard({ initial }: { initial: PublicGame }) {
     const guessedId = selected;
     setGuessBusy(true);
     setNotice("");
-    const response = await fetch(`/api/games/${game.id}/guesses`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ modelId: selected }),
-    });
-    setGuessBusy(false);
-    if (response.status === 401) {
-      login();
-      return;
+    try {
+      const response = await fetch(`/api/games/${game.id}/guesses`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ modelId: selected }),
+      });
+      if (response.status === 401) {
+        login();
+        return;
+      }
+      const body = await readJson(response);
+      if (!response.ok) {
+        setNotice("That model is not in the list.");
+        return;
+      }
+      if (body.status && body.status !== "active") {
+        router.push(`/play/${game.id}/result`);
+        router.refresh();
+        return;
+      }
+      setFreshGuessId(guessedId);
+      setGame(body);
+      setSelected(null);
+      setSearch("");
+      setListOpen(false);
+    } catch {
+      setNotice("The reply failed. Send it again.");
+    } finally {
+      setGuessBusy(false);
     }
-    const body = await readJson(response);
-    if (!response.ok) {
-      setNotice("That model is not in the list.");
-      return;
-    }
-    if (body.status && body.status !== "active") {
-      router.push(`/play/${game.id}/result`);
-      router.refresh();
-      return;
-    }
-    setFreshGuessId(guessedId);
-    setGame(body);
-    setSelected(null);
-    setSearch("");
-    setListOpen(false);
   }
 
   async function buy(key: HintKey) {
     setHintBusy(key);
     setNotice("");
-    const response = await fetch(`/api/games/${game.id}/hints`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ key }),
-    });
-    setHintBusy(null);
-    if (response.status === 401) {
-      login();
-      return;
+    try {
+      const response = await fetch(`/api/games/${game.id}/hints`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ key }),
+      });
+      if (response.status === 401) {
+        login();
+        return;
+      }
+      const body = await readJson(response);
+      if (!response.ok) {
+        setNotice("That hint is not available.");
+        return;
+      }
+      setGame(body);
+      setSelected(null);
+    } catch {
+      setNotice("The reply failed. Send it again.");
+    } finally {
+      setHintBusy(null);
     }
-    const body = await readJson(response);
-    if (!response.ok) {
-      setNotice("That hint is not available.");
-      return;
-    }
-    setGame(body);
-    setSelected(null);
   }
 
   async function giveUp() {
     dialogRef.current?.close();
-    const response = await fetch(`/api/games/${game.id}/give-up`, { method: "POST" });
-    if (response.status === 401) {
-      login();
-      return;
-    }
-    if (!response.ok) {
+    try {
+      const response = await fetch(`/api/games/${game.id}/give-up`, { method: "POST" });
+      if (response.status === 401) {
+        login();
+        return;
+      }
+      if (!response.ok) {
+        setNotice("The reply failed. Send it again.");
+        return;
+      }
+      router.push(`/play/${game.id}/result`);
+      router.refresh();
+    } catch {
       setNotice("The reply failed. Send it again.");
-      return;
     }
-    router.push(`/play/${game.id}/result`);
-    router.refresh();
   }
 
   return (

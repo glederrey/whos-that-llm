@@ -132,11 +132,18 @@ export function HomeBoard({
     setBusy(true);
     setNotice("");
     setResumeId(null);
-    const response = await fetch("/api/games", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ gameMode, noHint, difficulty }),
-    });
+    let response: Response;
+    try {
+      response = await fetch("/api/games", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ gameMode, noHint, difficulty }),
+      });
+    } catch {
+      setBusy(false);
+      setNotice("Try again.");
+      return;
+    }
     const body = (await response.json().catch(() => ({}))) as { gameId?: string; error?: string; nextAt?: string };
     setBusy(false);
     if (response.status === 401) {
@@ -194,11 +201,18 @@ export function HomeBoard({
     setBusy(true);
     setNotice("");
     setResumeId(null);
-    const response = await fetch("/api/games", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ gameMode: "company", companyId, noHint }),
-    });
+    let response: Response;
+    try {
+      response = await fetch("/api/games", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ gameMode: "company", companyId, noHint }),
+      });
+    } catch {
+      setBusy(false);
+      setNotice("Try again.");
+      return;
+    }
     const body = (await response.json().catch(() => ({}))) as { gameId?: string; error?: string; nextAt?: string };
     setBusy(false);
     if (response.status === 401) {
