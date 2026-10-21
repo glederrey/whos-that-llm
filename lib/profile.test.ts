@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { avatarError, avatarFileError, avatarPublicUrl, bestScore, cleanUsername, isBestGame, profileStats, publicImageCacheControl, readImage, traitFound } from "./profile";
+import { avatarBodyTooLarge, avatarError, avatarFileError, avatarPublicUrl, bestScore, cleanUsername, isBestGame, profileStats, publicImageCacheControl, readImage, traitFound } from "./profile";
 
 test("a username trims and rejects an empty name", () => {
   assert.equal(cleanUsername("  Ada  "), "Ada");
@@ -85,4 +85,12 @@ test("a picture has to be a jpeg, png, or webp under 1 MB", () => {
   assert.equal(avatarFileError({ size: 1024 * 1024 + 1, type: "image/png" }), avatarError);
   assert.equal(avatarFileError({ size: 100, type: "image/gif" }), avatarError);
   assert.equal(avatarFileError({ size: 100, type: "image/webp" }), null);
+});
+
+test("an avatar upload is refused by Content-Length before the body is read", () => {
+  assert.equal(avatarBodyTooLarge("500000"), false);
+  assert.equal(avatarBodyTooLarge("1048576"), false);
+  assert.equal(avatarBodyTooLarge("2000000"), true);
+  assert.equal(avatarBodyTooLarge(null), true);
+  assert.equal(avatarBodyTooLarge("abc"), true);
 });
