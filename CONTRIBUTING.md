@@ -6,8 +6,6 @@ Thanks for helping. Direct pushes to `main` are not possible: everything goes th
 
 Open one for a bug, an idea, or a model you would like to see. For a bug, say what you did, what happened and what you expected. Do not paste keys or tokens.
 
-Security problems go through GitHub's private vulnerability reporting (Security tab), not a public issue.
-
 ## Pull requests
 
 1. Fork the repo and branch from `main`.

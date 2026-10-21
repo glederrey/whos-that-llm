@@ -66,8 +66,6 @@ Anyone is welcome, and nobody pushes straight to `main`. The way in is either:
 - **An issue**: a bug, an idea, a model that should be on the roster, a rule that feels unfair. A short description is enough.
 - **A pull request**: fork, branch, change, open the PR. [`CONTRIBUTING.md`](CONTRIBUTING.md) has the short checklist.
 
-Found a security problem? Please do not open a public issue. Use GitHub's private vulnerability reporting on the Security tab of this repo.
-
 ## Working with an AI coding agent
 
 This repo is set up for agents as well as humans. Point yours at these, in order:
@@ -80,4 +78,4 @@ Ground rules for agents and humans alike: no secrets or real keys anywhere in th
 
 ## License
 
-No license has been chosen yet, which means the code is all rights reserved by default. If you would like to reuse something, open an issue and ask.
+[MIT](LICENSE).
