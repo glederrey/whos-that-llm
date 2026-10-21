@@ -24,17 +24,17 @@ export function SiteFooter() {
         </a>
         ,{" "}
         <a href="https://cursor.com" target="_blank" rel="noreferrer">
-          Cursor
           <svg className="cursor-mark" viewBox="0 0 466.73 532.09" aria-hidden="true">
             <path fill="currentColor" d="M457.43 125.94 244.42 2.96c-6.84-3.95-15.28-3.95-22.12 0L9.3 125.94C3.55 129.26 0 135.4 0 142.05v247.99c0 6.65 3.55 12.79 9.3 16.11l213.01 122.98c6.84 3.95 15.28 3.95 22.12 0l213.01-122.98c5.75-3.32 9.3-9.46 9.3-16.11V142.05c0-6.65-3.55-12.79-9.3-16.11ZM444.05 151.99 238.42 508.15c-1.39 2.4-5.06 1.42-5.06-1.36V273.58c0-4.66-2.49-8.97-6.53-11.31L24.87 145.67c-2.4-1.39-1.42-5.06 1.36-5.06h411.26c5.84 0 9.49 6.33 6.56 11.38Z" />
           </svg>
+          Cursor
         </a>{" "}
         and{" "}
         <a href="https://claude.com/product/claude-code" target="_blank" rel="noreferrer">
-          Claude Code
           <svg className="claude-mark" viewBox="0 0 24 24" aria-hidden="true">
             <path fill="currentColor" fillRule="evenodd" clipRule="evenodd" d="M20.998 10.949H24v3.102h-3v3.028h-1.487V20H18v-2.921h-1.487V20H15v-2.921H9V20H7.488v-2.921H6V20H4.487v-2.921H3V14.05H0V10.95h3V5h17.998v5.949zM6 10.949h1.488V8.102H6v2.847zm10.51 0H18V8.102h-1.49v2.847z" />
           </svg>
+          Claude Code
         </a>
       </p>
       </div>
