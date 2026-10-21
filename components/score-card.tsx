@@ -8,7 +8,7 @@ import { scoreSteps, type ScoreLine } from "@/lib/game";
 import { difficultyText } from "@/lib/round-facts";
 import { difficultyColor } from "@/lib/share-card";
 
-export type ScoreCardModel = {
+type ScoreCardModel = {
   name: string;
   logoPath: string;
   facts: string[];

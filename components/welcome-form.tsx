@@ -29,8 +29,8 @@ export function WelcomeForm({ next }: { next: string }) {
       }
       const body = new FormData();
       body.set("avatar", file);
-      const uploaded = await fetch("/api/me/avatar", { method: "POST", body });
-      if (!uploaded.ok) {
+      const uploaded = await fetch("/api/me/avatar", { method: "POST", body }).catch(() => null);
+      if (!uploaded?.ok) {
         setBusy(false);
         setError(avatarError);
         return;
@@ -40,8 +40,12 @@ export function WelcomeForm({ next }: { next: string }) {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ username: name }),
-    });
+    }).catch(() => null);
     setBusy(false);
+    if (!response) {
+      setError("Try again.");
+      return;
+    }
     if (response.status === 401) {
       router.push(`/login?next=${encodeURIComponent(next)}`);
       return;

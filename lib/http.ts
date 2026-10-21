@@ -12,3 +12,7 @@ export function apiError(failure: ApiFailure) {
   if (failure.gameId) body.gameId = failure.gameId;
   return apiJson(body, failure.status);
 }
+
+export async function readJsonBody(request: Request): Promise<unknown> {
+  return request.json().catch(() => ({}));
+}

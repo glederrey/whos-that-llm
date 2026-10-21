@@ -1,7 +1,7 @@
 import { requireOwner } from "@/lib/admin-access";
 import { chatTurns, parseAdminChat } from "@/lib/admin-chat";
 import { config } from "@/lib/config";
-import { apiJson } from "@/lib/http";
+import { apiJson, readJsonBody } from "@/lib/http";
 import { streamPlayedReply } from "@/lib/openrouter";
 import { sseResponse } from "@/lib/reply-events";
 import { serviceOrThrow } from "@/lib/rounds";
@@ -11,7 +11,7 @@ export const maxDuration = 300;
 
 export async function POST(request: Request) {
   await requireOwner();
-  const parsed = parseAdminChat(await request.json().catch(() => null));
+  const parsed = parseAdminChat(await readJsonBody(request));
   if (!parsed) return apiJson({ error: "invalid" }, 422);
 
   const client = serviceOrThrow();

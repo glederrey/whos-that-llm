@@ -11,7 +11,7 @@ Game numbers (points, token scale, hint price, no-hint multiplier) live in `lib/
 ## Commands
 
 - `npm run dev`: local server.
-- `npm test`: unit tests (`tsx --test`, listed explicitly in `package.json`; add new test files to that list).
+- `npm test`: unit tests (`tsx --test "lib/**/*.test.ts"`; any new `lib/**/*.test.ts` file is picked up).
 - `npm run typecheck`: `tsc --noEmit`. Run it and the tests before calling a change done.
 
 ## Rules

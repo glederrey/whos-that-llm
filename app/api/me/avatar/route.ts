@@ -1,10 +1,11 @@
 import { apiJson } from "@/lib/http";
 import { saveAvatar } from "@/lib/profile-data";
-import { currentUser } from "@/lib/session";
+import { requireUser } from "@/lib/session";
 
 export async function POST(request: Request) {
-  const user = await currentUser();
-  if (!user) return apiJson({ error: "unauthorized" }, 401);
+  const auth = await requireUser();
+  if ("response" in auth) return auth.response;
+  const { user } = auth;
   const form = await request.formData().catch(() => null);
   const file = form?.get("avatar");
   if (!(file instanceof File)) return apiJson({ error: "avatar" }, 422);
