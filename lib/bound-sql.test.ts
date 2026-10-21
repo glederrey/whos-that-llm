@@ -15,7 +15,7 @@ function bindsParameter(body: string, parameter: string): boolean {
 }
 
 function latestFunction(name: string): string {
-  const dir = path.join(root, "supabase/migrations");
+  const dir = path.join(root, "supabase/legacy/migrations");
   const files = fs.readdirSync(dir).filter((file) => file.endsWith(".sql")).sort();
   const pattern = new RegExp(`create (?:or replace )?function public\\.${name}\\b[\\s\\S]*?\\$\\$;`, "gi");
   let body = "";

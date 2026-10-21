@@ -37,7 +37,7 @@ export default async function ProvidersPage({
       </p>
       {failed ? (
         <p className="error" role="alert">
-          Could not read providers. Apply supabase/migrations/0032_openrouter_providers.sql, then reload.
+          Could not read providers. Run the database migrations (supabase db push), then reload.
         </p>
       ) : null}
       {params.notice === "save" ? (
