@@ -215,7 +215,7 @@ a.kofi span { text-decoration: underline; text-underline-offset: 3px; }
 .credit a { display: inline-flex; align-items: center; gap: 6px; }
 .credit-then { margin-left: -6px; }
 .cursor-mark { width: 16px; height: 16px; }
-.claude-mark { width: 18px; height: 12px; }
+.claude-mark { width: 20px; height: 20px; }
 
 /* Type */
 h1 { font-size: 40px; line-height: 1.1; letter-spacing: -0.025em; margin: 8px 0 12px; }
