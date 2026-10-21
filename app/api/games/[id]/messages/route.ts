@@ -1,3 +1,4 @@
+import { isUuid } from "@/lib/paths";
 import { apiError, apiJson } from "@/lib/http";
 import { streamPlayedReply } from "@/lib/openrouter";
 import { sseResponse } from "@/lib/reply-events";
@@ -10,6 +11,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
   const user = await currentUser();
   if (!user) return apiJson({ error: "unauthorized" }, 401);
   const { id } = await context.params;
+  if (!isUuid(id)) return apiJson({ error: "not_found" }, 404);
   const body = (await request.json().catch(() => ({}))) as { text?: string };
   const text = typeof body.text === "string" ? body.text : "";
   const trimmed = text.trim();

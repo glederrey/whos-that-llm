@@ -1,3 +1,4 @@
+import { isUuid } from "@/lib/paths";
 import { apiError, apiJson } from "@/lib/http";
 import { readPublicGame, submitGuess } from "@/lib/rounds";
 import { currentUser } from "@/lib/session";
@@ -6,6 +7,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
   const user = await currentUser();
   if (!user) return apiJson({ error: "unauthorized" }, 401);
   const { id } = await context.params;
+  if (!isUuid(id)) return apiJson({ error: "not_found" }, 404);
   const body = (await request.json().catch(() => ({}))) as { modelId?: string };
   if (!body.modelId) return apiJson({ error: "conflict" }, 409);
   const failure = await submitGuess(id, user.id, body.modelId);
