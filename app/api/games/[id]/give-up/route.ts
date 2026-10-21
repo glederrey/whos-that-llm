@@ -1,11 +1,12 @@
 import { isUuid } from "@/lib/paths";
 import { apiError, apiJson } from "@/lib/http";
 import { giveUp, readPublicGame } from "@/lib/rounds";
-import { currentUser } from "@/lib/session";
+import { requireUser } from "@/lib/session";
 
 export async function POST(_request: Request, context: { params: Promise<{ id: string }> }) {
-  const user = await currentUser();
-  if (!user) return apiJson({ error: "unauthorized" }, 401);
+  const auth = await requireUser();
+  if ("response" in auth) return auth.response;
+  const { user } = auth;
   const { id } = await context.params;
   if (!isUuid(id)) return apiJson({ error: "not_found" }, 404);
   const failure = await giveUp(id, user.id);

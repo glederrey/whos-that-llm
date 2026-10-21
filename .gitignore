@@ -44,3 +44,6 @@ Thumbs.db
 *.pem
 *Zone.Identifier
 *:Zone.Identifier
+
+# claude code
+/.claude/

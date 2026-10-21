@@ -35,11 +35,18 @@ export function ProfileForm({
       setError(avatarError);
       return;
     }
-    const response = await fetch("/api/me", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username: name }),
-    });
+    let response: Response;
+    try {
+      response = await fetch("/api/me", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username: name }),
+      });
+    } catch {
+      setBusy(false);
+      setError("Try again.");
+      return;
+    }
     if (response.status === 401) {
       router.push("/login?next=/profile");
       return;
@@ -52,8 +59,8 @@ export function ProfileForm({
     if (file) {
       const body = new FormData();
       body.set("avatar", file);
-      const uploaded = await fetch("/api/me/avatar", { method: "POST", body });
-      if (!uploaded.ok) {
+      const uploaded = await fetch("/api/me/avatar", { method: "POST", body }).catch(() => null);
+      if (!uploaded?.ok) {
         setBusy(false);
         setError(avatarError);
         router.refresh();

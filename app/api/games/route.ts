@@ -1,13 +1,14 @@
 import { allCompanies, parseBoardCompany } from "@/lib/company";
 import { parseDifficulty } from "@/lib/difficulty";
-import { apiError, apiJson } from "@/lib/http";
+import { apiError, apiJson, readJsonBody } from "@/lib/http";
 import { startAllModels, startCompany, startDaily } from "@/lib/rounds";
-import { currentUser } from "@/lib/session";
+import { requireUser } from "@/lib/session";
 
 export async function POST(request: Request) {
-  const user = await currentUser();
-  if (!user) return apiJson({ error: "unauthorized" }, 401);
-  const body = (await request.json().catch(() => ({}))) as {
+  const auth = await requireUser();
+  if ("response" in auth) return auth.response;
+  const { user } = auth;
+  const body = (await readJsonBody(request)) as {
     gameMode?: string;
     poolKey?: string | null;
     noHint?: boolean;

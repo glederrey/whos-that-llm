@@ -32,7 +32,7 @@ import { companyLogoPath } from "./logos";
 import { enabledModelCounts } from "./model-counts";
 import { companyForOrg, type CompanyChoice } from "./openrouter-draft";
 import { countedPlayerId } from "./anonymize-account";
-import { presentLogo, serviceOrThrow } from "./rounds";
+import { first, presentLogo, serviceOrThrow } from "./rounds";
 
 export type AdminStats = {
   roster: number;
@@ -556,9 +556,4 @@ async function countPlayers(client: SupabaseClient): Promise<number> {
 function utcDayStart(): string {
   const now = new Date();
   return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate())).toISOString();
-}
-
-function first<T>(value: T | T[] | null): T | null {
-  if (Array.isArray(value)) return (value[0] as T | undefined) ?? null;
-  return value;
 }
