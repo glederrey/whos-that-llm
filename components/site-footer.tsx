@@ -24,6 +24,7 @@ export function SiteFooter() {
             Gael Lederrey
           </a>
         </p>
+        <span className="credit-sep" aria-hidden="true">·</span>
         <p>
           <span>Started with</span>
           <a href="https://cursor.com" target="_blank" rel="noreferrer">
@@ -38,6 +39,13 @@ export function SiteFooter() {
           <span className="credit-then">, finished with</span>
           <a href="https://claude.com/product/claude-code" target="_blank" rel="noreferrer">
             Claude Code
+            <svg className="claude-mark" viewBox="0 0 22 15" aria-hidden="true">
+              <path
+                fill="#D97757"
+                d="M3 1h16v10H3zM0 4h3v3H0zM19 4h3v3h-3zM5 11h2v3H5zM8 11h2v3H8zM12 11h2v3h-2zM15 11h2v3h-2z"
+              />
+              <path fill="var(--canvas)" d="M7 4h2v3H7zM13 4h2v3h-2z" />
+            </svg>
           </a>
         </p>
       </div>
