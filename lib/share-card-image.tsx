@@ -124,7 +124,7 @@ export function shareCardImage(
         box(
           { flexDirection: "column" },
           text(display.scoreLabel, {
-            fontSize: 22,
+            fontSize: 28,
             fontWeight: 500,
             letterSpacing: 2,
             textTransform: "uppercase",
@@ -132,7 +132,7 @@ export function shareCardImage(
           }),
           text(display.score, {
             marginTop: 4,
-            fontSize: display.score === "—" ? 84 : 112,
+            fontSize: display.score === "—" ? 104 : 136,
             fontWeight: 700,
             lineHeight: 0.9,
             letterSpacing: display.score === "—" ? 0 : -3,
