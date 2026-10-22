@@ -2031,12 +2031,15 @@ html[data-theme="dark"] .history-score[data-best="true"] { color: var(--teal); }
 .not-found .row { justify-content: center; }
 
 .category-emoji { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; font-size: 20px; line-height: 1; flex: none; }
+/* The size and look rules for logo images around it must not grab a Twemoji picture. */
+img.twemoji { width: 1em !important; height: 1em !important; border: 0 !important; border-radius: 0 !important; vertical-align: -0.1em; }
 .roster.categories td:nth-child(1) img { width: 28px; height: 28px; border-radius: 6px; border: 1px solid var(--line-strong); object-fit: contain; vertical-align: middle; }
 .icon-picker { display: grid; gap: 8px; border: 0; margin: 0; padding: 0; }
 .icon-picker legend { padding: 0; margin-bottom: 4px; }
 .icon-picker-option { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .icon-picker-option input[type="text"], .icon-picker-option select { max-width: 16rem; }
 .emoji-field { position: relative; display: inline-flex; align-items: center; gap: 8px; }
+.emoji-preview { font-size: 24px; line-height: 1; min-width: 1em; }
 .emoji-popover { position: absolute; top: calc(100% + 6px); left: 0; z-index: 20; box-shadow: var(--lift); border-radius: var(--radius-sm); }
 .emoji-picker {
   --background: var(--card);
