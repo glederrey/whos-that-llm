@@ -1298,6 +1298,7 @@ html[data-theme="dark"] .hit { color: var(--teal); }
   font-size: 76px;
   margin: 2px 0 0;
 }
+.score-stats { margin: 8px 0 0; color: var(--mute); font-size: 14px; line-height: 1.4; font-variant-numeric: tabular-nums; }
 .score-card .breakdown { margin-top: 28px; }
 .score {
   font-size: 56px;
@@ -1884,6 +1885,7 @@ html[data-theme="dark"] .history-score[data-best="true"] { color: var(--teal); }
   .score-head { align-items: center; gap: 8px 10px; }
   .score-card .score { font-size: 44px; white-space: nowrap; }
   .score-head > :first-child { flex: none; }
+  .score-stats { max-width: 10em; font-size: 13px; }
   .score-meta { flex: 1 1 auto; gap: 4px; min-width: 0; }
   .score-meta .status {
     max-width: 100%;

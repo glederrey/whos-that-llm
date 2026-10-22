@@ -48,6 +48,8 @@ export type ShareCard = {
   messages: number;
   /** Tokens the score counted. Null when this round has no score line. */
   tokens: number | null;
+  /** Wrong guesses the score counted. Null when this round has no score line. */
+  wrongGuesses: number | null;
   /** Hidden on a Daily until the UTC day after that puzzle. Other modes may name the model. */
   modelName: string | null;
   /** Today's Daily on the public page. The player's own result and profile still name the model. */
@@ -137,6 +139,51 @@ export function tokensFromBreakdown(lines: ScoreLine[] | null | undefined): numb
   return null;
 }
 
+/** The wrong-guess count stored on the `Wrong guesses · N` score line. Null when there is no breakdown, 0 when no such line. */
+export function wrongGuessesFromBreakdown(lines: ScoreLine[] | null | undefined): number | null {
+  if (!lines) return null;
+  for (const line of lines) {
+    const match = /^Wrong guesses · ([\d,]+)$/.exec(line.label);
+    if (!match) continue;
+    const count = Number(match[1].replaceAll(",", ""));
+    return Number.isFinite(count) ? count : 0;
+  }
+  return 0;
+}
+
+const plural = (count: number, one: string, many: string) => `${formatShareNumber(count)} ${count === 1 ? one : many}`;
+
+/**
+ * The muted line under the big score: `3 messages · 362 tokens · 2 wrong guesses`.
+ * Tokens and wrong guesses are the numbers on the score table. A part that is
+ * unknown, zero messages, or zero wrong guesses is left out. Null when nothing is left.
+ */
+export function scoreStatsLine(input: {
+  messages: number | null;
+  tokens: number | null;
+  wrongGuesses: number | null;
+}): string | null {
+  const parts: string[] = [];
+  if (input.messages !== null && input.messages > 0) parts.push(plural(input.messages, "message", "messages"));
+  if (input.tokens !== null && input.tokens > 0) parts.push(plural(input.tokens, "token", "tokens"));
+  if (input.wrongGuesses !== null && input.wrongGuesses > 0) {
+    parts.push(plural(input.wrongGuesses, "wrong guess", "wrong guesses"));
+  }
+  return parts.length > 0 ? parts.join(" · ") : null;
+}
+
+const scoreLabelNameMax = 20;
+
+/** `Your score` for the player. `Gael's score` for a shared round. `Score` when the name is gone. */
+export function scoreLabel(playerName: string | null | undefined, own: boolean): string {
+  if (own) return "Your score";
+  const name = playerName?.trim() ?? "";
+  if (name.length === 0) return "Score";
+  const chars = Array.from(name);
+  const shown = chars.length > scoreLabelNameMax ? `${chars.slice(0, scoreLabelNameMax).join("").trimEnd()}…` : name;
+  return `${shown}'s score`;
+}
+
 export function shareModeLine(input: {
   gameMode: string;
   poolKey: string | null;
@@ -205,6 +252,7 @@ export function buildShareCard(input: ShareCardInput): ShareCard | null {
     score: input.score,
     messages: input.messageCount,
     tokens: tokensFromBreakdown(input.breakdown),
+    wrongGuesses: wrongGuessesFromBreakdown(input.breakdown),
     modelName: model?.name ?? null,
     modelLogoPath: model?.logoPath ?? null,
     modelFacts: model?.facts ?? [],
@@ -277,6 +325,10 @@ export type ShareCardDisplay = {
   /** Set only when the variant is a difficulty name. */
   variantColor: string | null;
   score: string;
+  /** Gael's score, or Score when the name is gone. The card draws it uppercase. */
+  scoreLabel: string;
+  /** 3 messages · 362 tokens · 2 wrong guesses. Null when no part applies. */
+  stats: string | null;
   outcome: ShareOutcome;
   /** Solved on message 2. Failed. Given up. */
   status: string;
@@ -318,6 +370,11 @@ export function shareCardDisplay(card: ShareCard): ShareCardDisplay {
     variant,
     variantColor: colored,
     score: card.score === null ? "—" : formatShareNumber(card.score),
+    scoreLabel: scoreLabel(card.playerName, false),
+    stats:
+      card.score === null
+        ? null
+        : scoreStatsLine({ messages: card.messages, tokens: card.tokens, wrongGuesses: card.wrongGuesses }),
     outcome: card.outcome,
     status,
     meta,

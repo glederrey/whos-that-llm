@@ -123,7 +123,7 @@ export function shareCardImage(
         { alignItems: "center", justifyContent: "space-between", marginTop: display.modelName || card.modelHidden ? 76 : 0 },
         box(
           { flexDirection: "column" },
-          text("Your score", {
+          text(display.scoreLabel, {
             fontSize: 22,
             fontWeight: 500,
             letterSpacing: 2,
@@ -138,6 +138,7 @@ export function shareCardImage(
             letterSpacing: display.score === "—" ? 0 : -3,
             color: tone.score,
           }),
+          display.stats ? text(display.stats, { marginTop: 14, fontSize: 26, color: tone.mute }) : null,
         ),
         box(
           { flexDirection: "column", alignItems: "flex-end" },

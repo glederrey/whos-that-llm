@@ -7,7 +7,7 @@ import type { Difficulty } from "@/lib/difficulty";
 import { scoreSteps, type ScoreLine } from "@/lib/game";
 import { poolSizeLabel } from "@/lib/game-labels";
 import { difficultyText } from "@/lib/round-facts";
-import { difficultyColor } from "@/lib/share-card";
+import { difficultyColor, scoreStatsLine, tokensFromBreakdown, wrongGuessesFromBreakdown } from "@/lib/share-card";
 
 type ScoreCardModel = {
   name: string;
@@ -52,6 +52,13 @@ export function ScoreCard({
       : state === "miss"
         ? "Failed."
         : "Given up. This round is not on the leaderboard.";
+  const stats = scored
+    ? scoreStatsLine({
+        messages,
+        tokens: tokensFromBreakdown(breakdown),
+        wrongGuesses: wrongGuessesFromBreakdown(breakdown),
+      })
+    : null;
   const shown = state === "given_up" ? "given-up" : state;
 
   return (
@@ -80,6 +87,7 @@ export function ScoreCard({
             <div>
               <p className="score-label">Your score</p>
               <p className="score">{score.toLocaleString("en-US")}</p>
+              {stats ? <p className="score-stats">{stats}</p> : null}
             </div>
           ) : (
             <div />

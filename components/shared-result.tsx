@@ -61,8 +61,9 @@ export function SharedResult({ card }: { card: ShareCard }) {
         <div className="score-head">
           {scored ? (
             <div>
-              <p className="score-label">Score</p>
+              <p className="score-label">{display.scoreLabel}</p>
               <p className="score">{display.score}</p>
+              {display.stats ? <p className="score-stats">{display.stats}</p> : null}
             </div>
           ) : (
             <div />
