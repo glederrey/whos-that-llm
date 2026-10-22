@@ -1631,6 +1631,7 @@ html[data-theme="dark"] .history-score[data-best="true"] { color: var(--teal); }
 .roster.categories td:last-child { text-align: right; }
 .roster.categories td:nth-child(2),
 .roster.categories td:nth-child(3) { overflow-wrap: anywhere; }
+.roster.categories td[colspan] { width: auto; text-align: center; white-space: normal; }
 .roster.categories .roster-buttons .button-on,
 .roster.categories .roster-buttons .button-off,
 .roster.categories .roster-buttons .button-quiet { padding: 6px 10px; }
