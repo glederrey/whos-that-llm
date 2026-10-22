@@ -199,13 +199,14 @@ on conflict (id) do update set
 
 update public.models set available = false where id = 'claude-sonnet-4';
 
-insert into public.categories (id, name, description, company_id) values
-  ('opus', 'Opus', 'Can you guess which Opus model it is?', 'anthropic'),
-  ('sonnet', 'Sonnet', 'Can you guess which Sonnet model it is?', 'anthropic')
+insert into public.categories (id, name, description, icon_kind, icon_value) values
+  ('opus', 'Opus', 'Can you guess which Opus model it is?', 'company', 'anthropic'),
+  ('sonnet', 'Sonnet', 'Can you guess which Sonnet model it is?', 'company', 'anthropic')
 on conflict (id) do update set
   name = excluded.name,
   description = excluded.description,
-  company_id = excluded.company_id;
+  icon_kind = excluded.icon_kind,
+  icon_value = excluded.icon_value;
 
 insert into public.model_categories (model_id, category_id) values
   ('claude-opus-4-5', 'opus'),
