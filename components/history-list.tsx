@@ -26,6 +26,8 @@ type HistoryItem = {
   difficulty: Difficulty | null;
   /** Company rounds put this name where a difficulty chip would be. */
   companyPlace?: string | null;
+  /** Models in the round's pool. Null hides the row. */
+  poolSize?: number | null;
   noHint: boolean;
   /** The stored score. The closed row uses the formatted `score` string. */
   scoreValue: number | null;
@@ -103,6 +105,7 @@ export function HistoryDetail({ item, panel }: { item: HistoryItem; panel?: stri
           mode={item.mode}
           difficulty={item.difficulty}
           company={item.companyPlace}
+          poolSize={item.poolSize ?? null}
           noHint={item.noHint}
           breakdown={item.breakdown}
           share={item.shareText ? { gameId: item.id, text: item.shareText } : null}

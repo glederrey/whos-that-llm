@@ -1290,12 +1290,12 @@ html[data-theme="dark"] .hit { color: var(--teal); }
 .score-meta .status { text-align: right; }
 .score-meta dl { display: grid; grid-template-columns: auto auto; gap: 4px 14px; margin: 0; justify-content: end; }
 .score-meta dt { color: var(--mute); font-weight: 500; }
-.score-meta dd { margin: 0; font-weight: 700; }
+.score-meta dd { margin: 0; font-weight: 700; text-align: left; }
 .score-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px 16px; margin-top: 18px; flex-wrap: wrap; }
 .score-link { margin: 0 0 0 auto; }
-.score-label { color: var(--mute); font-size: 12px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.06em; }
+.score-label { color: var(--mute); font-size: 15px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.06em; }
 .score-card .score {
-  font-size: 76px;
+  font-size: 100px;
   margin: 2px 0 0;
 }
 .score-card .breakdown { margin-top: 28px; }

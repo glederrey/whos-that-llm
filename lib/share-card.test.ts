@@ -16,6 +16,7 @@ import {
   isShareGameId,
   dailyModelVisible,
   shareCardAlt,
+  scoreLabel,
   shareCardDisplay,
   shareBrand,
   shareCardTheme,
@@ -157,6 +158,24 @@ test("difficulty words use the leaderboard colors", () => {
   assert.equal(display.variant, "Impossible");
   assert.equal(display.variantColor, "#a78bfa");
   assert.equal(shareCardDisplay(card({ gameMode: "company", poolKey: "anthropic", difficulty: null })).variantColor, null);
+});
+
+test("the pool size comes from the stored snapshot and is the last meta row", () => {
+  const sized = shareCardDisplay(card({ poolModelIds: ["a", "b", "c"] }));
+  assert.equal(card({ poolModelIds: ["a", "b", "c"] }).poolSize, 3);
+  assert.deepEqual(
+    sized.meta.map((row) => [row.label, row.value]),
+    [
+      ["Game mode", "All models"],
+      ["Difficulty", "Hard"],
+      ["Pool", "3 models"],
+    ],
+  );
+  for (const missing of [undefined, null, [], "x"]) {
+    const bare = card({ poolModelIds: missing });
+    assert.equal(bare.poolSize, null);
+    assert.equal(shareCardDisplay(bare).meta.some((row) => row.label === "Pool"), false);
+  }
 });
 
 test("share text names the round and hides a daily model", () => {
@@ -342,9 +361,9 @@ test("the public picture and the download are the same card", () => {
 });
 
 test("the public result is the score table and a link home", () => {
-  const named = card();
+  const named = card({ playerName: "Gael" });
   const html = renderToStaticMarkup(createElement(SharedResult, { card: named }));
-  assert.match(html, />Score</);
+  assert.match(html, />Gael&#x27;s score</);
   assert.equal(html.includes("Your score"), false);
   assert.equal(html.includes("hidden until the next day"), false);
   assert.match(html, /1,240/);
@@ -493,11 +512,22 @@ test("the public card is drawn from the game row and is not stored", () => {
   const load = fs.readFileSync(path.join(root, "lib/share-card-load.ts"), "utf8");
   const route = fs.readFileSync(path.join(root, "app/r/[gameId]/card.png/route.tsx"), "utf8");
   const page = fs.readFileSync(path.join(root, "app/r/[gameId]/page.tsx"), "utf8");
-  assert.match(load, /id, status, game_mode, pool_key, difficulty, message_count, score, score_breakdown, model_id, traits, daily_key, username, finished_at/);
+  assert.match(load, /id, status, game_mode, pool_key, pool_model_ids, difficulty, message_count, score, score_breakdown, model_id, traits, daily_key, username, finished_at/);
   assert.doesNotMatch(load, /from\("messages"\)/);
   assert.doesNotMatch(load, /from\("usage"\)/);
   assert.doesNotMatch(load, /from\("guesses"\)/);
   assert.doesNotMatch(`${load}\n${route}\n${page}`, /\.storage|writeFile/);
   assert.doesNotMatch(page, /MessageBubble|transcript|SharePicture|ShareActions/);
   assert.match(route, /card\.png|ImageResponse|shareCardImage/);
+});
+
+test("the score label names the player on a shared round and truncates long names", () => {
+  assert.equal(scoreLabel("Gael", true), "Your score");
+  assert.equal(scoreLabel("Gael", false), "Gael's score");
+  assert.equal(scoreLabel("Chris", false), "Chris's score");
+  assert.equal(scoreLabel(null, false), "Score");
+  assert.equal(scoreLabel("  ", false), "Score");
+  assert.equal(scoreLabel("a".repeat(30), false), `${"a".repeat(20)}…'s score`);
+  const html = renderToStaticMarkup(createElement(SharedResult, { card: card({ playerName: "<b>x</b>" }) }));
+  assert.equal(html.includes("<b>x"), false);
 });

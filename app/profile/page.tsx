@@ -110,6 +110,7 @@ export default async function ProfilePage({
               mode: row.mode,
               difficulty: row.difficulty,
               companyPlace: row.companyPlace,
+              poolSize: row.poolSize,
               noHint: row.noHint,
               scoreValue: row.score,
               modelFacts: row.modelFacts,
