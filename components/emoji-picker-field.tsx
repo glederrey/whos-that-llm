@@ -3,16 +3,17 @@
 import { useEffect, useRef, useState } from "react";
 import { Twemoji } from "./twemoji";
 
-// The emoji text input of the category icon picker, plus a button that opens a
-// searchable grid. The picker is loaded on first open, in the browser only, and
-// reads its data from /emoji-data (see scripts/copy-emoji-data.mjs), not a CDN.
-// The picker grid and the text input draw the OS emoji font; the preview beside
-// them shows the saved emoji as Twemoji, which is how the site will draw it.
+// The emoji of the category icon picker: a button that opens a searchable grid,
+// a preview, and a hidden input that carries the choice. The picker is loaded on
+// first open, in the browser only, and reads its data from /emoji-data (see
+// scripts/copy-emoji-data.mjs), not a CDN. The grid draws the OS emoji font; the
+// preview shows the chosen emoji as Twemoji, which is how the site will draw it.
+// It opens upward so it does not grow the edit dialog.
 export function EmojiPickerField({ defaultValue }: { defaultValue: string }) {
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState(defaultValue);
   const wrapRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
   const hostRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -24,12 +25,9 @@ export function EmojiPickerField({ defaultValue }: { defaultValue: string }) {
     let cancelled = false;
 
     const choose = (event: Event) => {
-      const input = inputRef.current;
-      if (!input) return;
-      input.value = (event as CustomEvent<{ unicode?: string }>).detail.unicode ?? "";
-      setValue(input.value);
+      setValue((event as CustomEvent<{ unicode?: string }>).detail.unicode ?? "");
       setOpen(false);
-      input.focus();
+      buttonRef.current?.focus();
     };
     import("emoji-picker-element").then(({ Picker }) => {
       if (cancelled) return;
@@ -60,13 +58,13 @@ export function EmojiPickerField({ defaultValue }: { defaultValue: string }) {
 
   return (
     <div className="emoji-field" ref={wrapRef}>
-      <input ref={inputRef} type="text" name="emoji" aria-label="Emoji" defaultValue={defaultValue} size={4} onChange={(e) => setValue(e.target.value)} />
+      <input type="hidden" name="emoji" value={value} />
       {value.trim() ? (
         <span className="emoji-preview" aria-hidden="true">
           <Twemoji emoji={value.trim()} />
         </span>
       ) : null}
-      <button type="button" className="button-quiet" aria-label="Pick an emoji" aria-expanded={open} onClick={() => setOpen((v) => !v)}>
+      <button ref={buttonRef} type="button" className="button-quiet" aria-label="Pick an emoji" aria-expanded={open} onClick={() => setOpen((v) => !v)}>
         Pick
       </button>
       {open ? <div className="emoji-popover" ref={hostRef} /> : null}
