@@ -89,6 +89,53 @@ The table shows the live list price beside average `cost_usd` and average `reaso
 
 `provider_settings` is a JSON textarea. The route rejects invalid JSON. It does not interpret the vendor's schema beyond "this object is what we pass through". Play one round and read `reasoning_tokens` before leaving a thinking model enabled.
 
+### Availability API
+
+`POST /api/admin/availability` lets a bot run the daily model-availability check without a session. It uses the same code as the **Check availability** button.
+
+**What it does.** It reads the whole OpenRouter catalog, then compares it with the roster. Models with `available = true` that the catalog lacks are **newly unavailable**. Models with `available = false` that the catalog lists again are **back available**.
+
+**Dry run by default.** A plain call writes nothing and only reports. Only the query `?apply=true` (exactly that value; `1`, `TRUE`, or anything else is a dry run) writes. An apply fetches the catalog again and runs the guard again. It never trusts an earlier dry run. A write does three things: newly unavailable models get `available = false` and `enabled = false`; back-available models get `available = true` and nothing else; `reasoning` flags are refreshed from the catalog, as the button does.
+
+**The endpoint can only mark models unavailable or available. It never turns a model on.** A returning model keeps `enabled = false` (the database constraint `models_unavailable_stays_off` also requires that while it is unavailable). You turn it on by hand on Models.
+
+**Flow.** The bot calls the dry run every day and reports what it would change. You read the report, then apply with the `?apply=true` curl below or with the **Check availability** button, which always applies. Running an apply twice in a row changes nothing the second time.
+
+Anyone who holds the token can apply. The dry-run default guards against mistakes. It is not an auth boundary. There is no rate limit.
+
+**Response** (`200`):
+
+```json
+{
+  "applied": false,
+  "checked": 120,
+  "newlyUnavailable": [{ "id": "some-model", "openrouterId": "org/some-model", "name": "Some Model" }],
+  "backAvailable": [{ "id": "other-model", "openrouterId": "org/other-model", "name": "Other Model" }]
+}
+```
+
+`checked` is the number of roster models. `applied` is true only after an apply.
+
+**The guard.** The call answers `502` with `{ "error": "..." }` and writes nothing when any catalog page fails, the catalog is empty, or the catalog has fewer than 70% of the roster's available-model count (exactly 70% passes). A write that fails in the database answers `500`.
+
+**Auth.** `Authorization: Bearer <token>`, compared in constant time with `AVAILABILITY_TOKEN`. A missing header, a wrong token, or an unset `AVAILABILITY_TOKEN` all answer `404` with no body, like any admin route. The token is never logged.
+
+**Generate the token.** `openssl rand -hex 32`
+
+**Where to set it.** Vercel project env var `AVAILABILITY_TOKEN` for Production, and the bot's secret store. For dev, put it in `.env.development.local`. `.env.example` lists the name with an empty value. Never commit the value.
+
+**Rotate it.** Generate a new value, set it in both places (Vercel and the bot's secret store), and redeploy. The old token stops working on the redeploy.
+
+**Examples** (placeholder token):
+
+```sh
+# Dry run: report only
+curl -X POST -H "Authorization: Bearer $AVAILABILITY_TOKEN" https://<site>/api/admin/availability
+
+# Apply: write the changes
+curl -X POST -H "Authorization: Bearer $AVAILABILITY_TOKEN" "https://<site>/api/admin/availability?apply=true"
+```
+
 ## Categories (`/admin/categories`)
 
 The built-ins are seeded: Daily, All models, Class, Company, Region, Custom. Latest, Origin, and Family are not rows. Size is not a row. All models starts enabled. The others start disabled. Class is that disabled card, before Company.

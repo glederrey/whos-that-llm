@@ -210,8 +210,8 @@ export async function setRosterEnabled(idRaw: string, enabled: boolean): Promise
   return null;
 }
 
+/** No owner check. Only the availability core calls this, after its own authorization. */
 export async function writeReasoningFlags(catalog: CatalogModel[]): Promise<boolean> {
-  await requireOwner();
   const client = serviceOrThrow();
   const { data, error } = await client.from("models").select("id, openrouter_id, reasoning, provider_settings");
   if (error) return false;
@@ -238,8 +238,8 @@ export async function writeReasoningFlags(catalog: CatalogModel[]): Promise<bool
   return true;
 }
 
+/** No owner check. Only the availability core calls this, after its own authorization. */
 export async function markRosterUnavailable(ids: string[]): Promise<boolean> {
-  await requireOwner();
   if (ids.length === 0) return true;
   const clean: string[] = [];
   for (const raw of ids) {
@@ -253,6 +253,19 @@ export async function markRosterUnavailable(ids: string[]): Promise<boolean> {
     .from("models")
     .update({ available: false, enabled: false, updated_at: new Date().toISOString() })
     .in("id", clean);
+  return !error;
+}
+
+/** Only `available`. `enabled` stays false: the constraint keeps it off and the admin turns it on by hand. No owner check. */
+export async function markRosterAvailable(ids: string[]): Promise<boolean> {
+  if (ids.length === 0) return true;
+  const clean: string[] = [];
+  for (const raw of ids) {
+    const id = parseModelId(raw);
+    if (!id) return false;
+    clean.push(id);
+  }
+  const { error } = await serviceOrThrow().from("models").update({ available: true }).in("id", clean).eq("available", false);
   return !error;
 }
 

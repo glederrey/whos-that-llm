@@ -25,18 +25,19 @@ export type SyncModel = {
   available: boolean;
 };
 
-export type UnavailableModel = {
+export type AvailabilityChange = {
   id: string;
+  openrouterId: string;
   name: string;
 };
 
 export type AvailabilityPlan = {
-  unavailable: UnavailableModel[];
-  markIds: string[];
+  newlyUnavailable: AvailabilityChange[];
+  backAvailable: AvailabilityChange[];
 };
 
 export type AvailabilityResult =
-  | { ok: true; unavailable: UnavailableModel[] }
+  | { ok: true; applied: boolean; checked: number; newlyUnavailable: AvailabilityChange[]; backAvailable: AvailabilityChange[] }
   | { ok: false; error: string };
 
 export function formatSyncPrice(value: number | null): string {
@@ -142,14 +143,22 @@ export function withListPrices(rows: RosterRow[], catalog: CatalogModel[] | null
   });
 }
 
-/** Models still listed on OpenRouter stay as they are, including ones that are already off. Models already marked unavailable are left alone. An empty catalog is refused. */
-export function planUnavailable(roster: SyncModel[], catalog: CatalogModel[]): AvailabilityPlan | null {
-  if (catalog.length === 0) return null;
+/** A catalog smaller than this share of the available roster is treated as a broken fetch, not a real shrink. */
+const minCatalogShare = 0.7;
+
+/**
+ * Available models the catalog lacks become unavailable. Unavailable models the catalog lists come back as available only;
+ * they stay off. An empty catalog, or one that shrank by more than 30% against the available roster, is refused.
+ */
+export function planAvailability(roster: SyncModel[], catalog: CatalogModel[]): AvailabilityPlan | null {
   const ids = new Set(catalogById(catalog).keys());
-  const unavailable = roster.filter((model) => model.available && !ids.has(model.openrouterId.trim()));
+  if (ids.size === 0) return null;
+  const availableCount = roster.filter((model) => model.available).length;
+  if (ids.size < availableCount * minCatalogShare) return null;
+  const change = (model: SyncModel): AvailabilityChange => ({ id: model.id, openrouterId: model.openrouterId, name: model.name });
   return {
-    unavailable: unavailable.map((model) => ({ id: model.id, name: model.name })),
-    markIds: unavailable.map((model) => model.id),
+    newlyUnavailable: roster.filter((model) => model.available && !ids.has(model.openrouterId.trim())).map(change),
+    backAvailable: roster.filter((model) => !model.available && ids.has(model.openrouterId.trim())).map(change),
   };
 }
 

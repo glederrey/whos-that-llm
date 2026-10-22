@@ -86,6 +86,7 @@ Do not tell the client which traits the highlighted row would hit. That preview 
 | `PATCH /api/admin/categories/:id` | Admin, later. Name, blurb, enabled, leaderboard, hints_allowed, sort |
 | `POST /api/admin/companies` | Admin, later. `{ id, name, region }` plus a logo upload or a logo URL |
 | `POST /api/admin/logos` | Admin, later. Upload to Supabase Storage. The response is the path to store |
+| `POST /api/admin/availability` | Bot. `Authorization: Bearer $AVAILABILITY_TOKEN`, no session. A dry run unless the query is exactly `?apply=true`. Wrong or missing token, or no token set: `404` with no body. See Availability API in `admin.md` |
 
 The roster pages check `app_metadata.admin === true` on the signed-in Supabase user in a server-only module. Players cannot write `app_metadata`. A missing flag matches nobody. Anyone else gets `404`, the same shape as a missing route. The account menu includes **Admin** only for that session, rendered on the server, with no admin flag in client JavaScript. Roster edits are server actions that repeat the check, then write with the server key. anon and authenticated cannot write the roster tables. The counts on `/admin` are not granted to the public API. Spend on `/admin/costs` is read on the server with the OpenRouter key. There is no admin client flag. The `/api/admin` routes in the table above wait until the rest of admin is built. The pause flag itself is written from the first build, by a credit error.
 

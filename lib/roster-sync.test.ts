@@ -12,7 +12,7 @@ import {
   parseOpenRouterCatalog,
   planNewModels,
   planReasoningUpdates,
-  planUnavailable,
+  planAvailability,
   sameRosterModel,
   type CatalogModel,
   type SyncModel,
@@ -219,28 +219,57 @@ test("a catalog reasoning object marks the model, and a missing one does not", (
   ]);
 });
 
-test("availability moves models OpenRouter no longer lists, and skips ones already unavailable", () => {
-  const catalog: CatalogModel[] = [
-    listed("openai/still", 1, 2),
-    listed("openai/off-but-listed", 1, 2),
-  ];
-  const plan = planUnavailable(
+test("availability moves models OpenRouter no longer lists, and brings back ones that returned", () => {
+  const catalog = [listed("openai/still", 1, 2), listed("openai/off-but-listed", 1, 2), listed("openai/back", 1, 2)];
+  const plan = planAvailability(
     [
       model({ id: "still", name: "Still", openrouterId: "openai/still", enabled: true }),
       model({ id: "resting", name: "Resting", openrouterId: "openai/off-but-listed", enabled: false }),
       model({ id: "gone", name: "Gone", openrouterId: "openai/gone", enabled: true }),
-      model({ id: "old", name: "Old", openrouterId: "openai/old", enabled: false }),
       model({ id: "parked", name: "Parked", openrouterId: "openai/parked", enabled: false, available: false }),
+      model({ id: "back", name: "Back", openrouterId: "openai/back", enabled: false, available: false }),
     ],
     catalog,
   );
-  assert.deepEqual(plan?.unavailable.map((row) => row.name), ["Gone", "Old"]);
-  assert.deepEqual(plan?.markIds, ["gone", "old"]);
-  assert.equal(planUnavailable([model({ id: "still", openrouterId: "openai/still" })], []), null);
-  assert.deepEqual(
-    planUnavailable([model({ id: "parked", openrouterId: "openai/parked", available: false })], [listed("openai/other", 1, 2)])?.markIds,
-    [],
-  );
+  assert.deepEqual(plan?.newlyUnavailable, [{ id: "gone", openrouterId: "openai/gone", name: "Gone" }]);
+  assert.deepEqual(plan?.backAvailable, [{ id: "back", openrouterId: "openai/back", name: "Back" }]);
+});
+
+test("an empty catalog is refused", () => {
+  assert.equal(planAvailability([model({ id: "a", openrouterId: "o/a" })], []), null);
+});
+
+test("the shrink guard passes at exactly 70% of the available roster and refuses below", () => {
+  const roster = Array.from({ length: 10 }, (_, i) => model({ id: `m${i}`, openrouterId: `o/m${i}` }));
+  const some = (n: number) => roster.slice(0, n).map((row) => listed(row.openrouterId, 1, 2));
+  assert.equal(planAvailability(roster, some(7))?.newlyUnavailable.length, 3);
+  assert.equal(planAvailability(roster, some(6)), null);
+});
+
+test("the shrink guard counts only available roster models", () => {
+  const roster = [
+    model({ id: "a", openrouterId: "o/a" }),
+    ...Array.from({ length: 9 }, (_, i) => model({ id: `p${i}`, openrouterId: `o/p${i}`, enabled: false, available: false })),
+  ];
+  assert.deepEqual(planAvailability(roster, [listed("o/a", 1, 2)])?.newlyUnavailable, []);
+});
+
+test("planning over the result of an earlier plan changes nothing", () => {
+  const catalog = [listed("o/a", 1, 2), listed("o/c", 1, 2)];
+  const roster = [
+    model({ id: "a", openrouterId: "o/a" }),
+    model({ id: "b", openrouterId: "o/b" }),
+    model({ id: "c", openrouterId: "o/c", enabled: false, available: false }),
+  ];
+  const first = planAvailability(roster, catalog);
+  assert.equal(first?.newlyUnavailable.length, 1);
+  assert.equal(first?.backAvailable.length, 1);
+  const after = roster.map((row) => {
+    if (first?.newlyUnavailable.some((m) => m.id === row.id)) return { ...row, available: false, enabled: false };
+    if (first?.backAvailable.some((m) => m.id === row.id)) return { ...row, available: true };
+    return row;
+  });
+  assert.deepEqual(planAvailability(after, catalog), { newlyUnavailable: [], backAvailable: [] });
 });
 
 test("a catalog row keeps the name, description, created time, and text outputs", () => {
@@ -413,10 +442,9 @@ test("the model page loads live prices and keeps availability apart", () => {
   const search = between(actions, "export async function searchNewModels", "export async function addNewRosterModels");
   const add = actions.slice(actions.indexOf("export async function addNewRosterModels"));
   assert.match(availability, /loadOpenRouterCatalog\(\)/);
-  assert.match(availability, /planUnavailable\(rows, catalog\.models\)/);
-  assert.match(availability, /markRosterUnavailable\(plan\.markIds\)/);
+  assert.match(availability, /await requireOwner\(\)/);
+  assert.match(availability, /checkAvailability\(catalog\.models, true\)/);
   assert.match(availability, /catalog\.error/);
-  assert.match(availability, /writeReasoningFlags\(catalog\.models\)/);
   assert.doesNotMatch(availability, /redirect\(/);
   assert.match(search, /loadOpenRouterCatalog\(\)/);
   assert.match(search, /planNewModels\(rows, catalog\.models/);
@@ -435,12 +463,11 @@ test("the model page loads live prices and keeps availability apart", () => {
   assert.match(buttons, /Moved to Unavailable on OpenRouter/);
 
   const turnOn = between(roster, "export async function setRosterEnabled", "export async function writeReasoningFlags");
-  const disable = between(roster, "export async function markRosterUnavailable", "export async function insertDiscoveredModels");
+  const disable = between(roster, "export async function markRosterUnavailable", "export async function markRosterAvailable");
   assert.match(turnOn, /available === false/);
   assert.match(turnOn, /return "unavailable"/);
   assert.doesNotMatch(turnOn, /\.delete\(/);
   const insert = between(roster, "export async function insertDiscoveredModels", "async function resolveCompany");
-  assert.match(disable, /await requireOwner\(\)/);
   assert.match(disable, /available: false/);
   assert.match(disable, /enabled: false/);
   assert.doesNotMatch(disable, /\.delete\(/);

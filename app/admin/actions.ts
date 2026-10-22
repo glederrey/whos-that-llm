@@ -8,20 +8,18 @@ import { parseDifficulty } from "@/lib/difficulty";
 import {
   createCategory,
   createRosterModel,
-  markRosterUnavailable,
   insertDiscoveredModels,
   loadRoster,
   removeCategory,
   setRosterEnabled,
   updateCategory,
   updateRosterModel,
-  writeReasoningFlags,
 } from "@/lib/admin-roster";
+import { checkAvailability } from "@/lib/availability-check";
 import { loadOpenRouterCatalog } from "@/lib/openrouter-catalog";
 import { clearProviderBlacklist } from "@/lib/openrouter-providers";
 import {
   planNewModels,
-  planUnavailable,
   type AddModelsResult,
   type AvailabilityResult,
   type NewModelsResult,
@@ -122,21 +120,13 @@ export async function checkRosterAvailability(): Promise<AvailabilityResult> {
   await requireOwner();
   const catalog = await loadOpenRouterCatalog();
   if (!catalog.ok) return { ok: false, error: catalog.error };
-  const { rows } = await loadRoster();
-  const plan = planUnavailable(rows, catalog.models);
-  if (!plan) return { ok: false, error: "OpenRouter returned models in a shape this page does not read." };
-  if (plan.markIds.length > 0) {
-    const saved = await markRosterUnavailable(plan.markIds);
-    if (!saved) return { ok: false, error: "Could not mark those models unavailable." };
-    revalidatePath("/admin");
-    revalidatePath("/admin/models");
-    revalidatePath("/admin/categories");
-    revalidatePath("/admin/companies");
-  }
-  const reasoning = await writeReasoningFlags(catalog.models);
-  if (!reasoning) return { ok: false, error: "Could not save which models can reason." };
+  const outcome = await checkAvailability(catalog.models, true);
+  if (!outcome.ok) return { ok: false, error: outcome.error };
+  revalidatePath("/admin");
   revalidatePath("/admin/models");
-  return { ok: true, unavailable: plan.unavailable };
+  revalidatePath("/admin/categories");
+  revalidatePath("/admin/companies");
+  return outcome;
 }
 
 export async function searchNewModels(): Promise<NewModelsResult> {
