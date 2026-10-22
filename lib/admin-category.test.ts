@@ -51,6 +51,10 @@ test("an emoji is one grapheme with a pictograph or a flag", () => {
   assert.equal(parseEmoji("👨‍👩‍👧"), "👨‍👩‍👧");
   assert.equal(parseEmoji("🇨🇭"), "🇨🇭");
   assert.equal(parseEmoji("🧪🧪"), null);
+  assert.equal(parseEmoji("1️⃣"), "1️⃣");
+  assert.equal(parseEmoji("#️⃣"), "#️⃣");
+  assert.equal(parseEmoji("🇨"), null);
+  assert.equal(parseEmoji("1"), null);
   assert.equal(parseEmoji("a"), null);
   assert.equal(parseEmoji("1"), null);
   assert.equal(parseEmoji(undefined), null);

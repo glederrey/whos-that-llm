@@ -65,9 +65,13 @@ function isWebp(bytes: Uint8Array) {
   );
 }
 
+/** The whole file is scanned: a script, an event handler, or embedded content can sit anywhere in it. */
+const unsafeSvg = /<script|<foreignobject|<iframe|<embed|<object|javascript:|[\s"'\/]on[a-z]+\s*=/;
+
 function isSvg(bytes: Uint8Array) {
-  const text = new TextDecoder("utf-8", { fatal: false }).decode(bytes.slice(0, 400)).trimStart().toLowerCase();
-  if (text.includes("<script")) return false;
-  if (text.startsWith("<svg")) return true;
-  return text.startsWith("<?xml") && text.includes("<svg");
+  const text = new TextDecoder("utf-8", { fatal: false }).decode(bytes).toLowerCase();
+  if (unsafeSvg.test(text)) return false;
+  const head = text.slice(0, 400).trimStart();
+  if (head.startsWith("<svg")) return true;
+  return head.startsWith("<?xml") && head.includes("<svg");
 }

@@ -36,13 +36,13 @@ export function parseCategoryId(value: string): string | null {
   return id;
 }
 
-/** One emoji: a single grapheme that holds a pictograph or a flag. */
+/** One emoji: a single grapheme that is a pictograph, a keycap, or a flag (a pair of regional indicators). */
 export function parseEmoji(value: string | undefined): string | null {
   const emoji = value?.trim() ?? "";
   if (!emoji || emoji.length > 32) return null;
   const parts = [...new Intl.Segmenter("en", { granularity: "grapheme" }).segment(emoji)];
   if (parts.length !== 1) return null;
-  return /\p{Extended_Pictographic}|\p{Regional_Indicator}/u.test(emoji) ? emoji : null;
+  return /\p{Extended_Pictographic}|^\p{Regional_Indicator}{2}$|^[0-9#*]\uFE0F?\u20E3$/u.test(emoji) ? emoji : null;
 }
 
 export function parseCategoryFields(raw: { name?: string; description?: string }): CategoryFields | null {
