@@ -5,7 +5,7 @@ import { filterPickerModels, selectShown, type PickerModel } from "@/lib/admin-c
 import { CompanyLogo } from "./company-logo";
 
 // The models of a category, in the category form: a search box, a scrollable list of every model with a
-// checkbox, the selection as removable chips, and one hidden `modelId` input per selected model. The selection
+// checkbox, the selection as removable chips under the list, and one hidden `modelId` input per selected model. The selection
 // lives in state, so a model the filter hides is still submitted.
 export function CategoryModelPicker({ models, defaultIds }: { models: PickerModel[]; defaultIds: string[] }) {
   const [selected, setSelected] = useState<string[]>(defaultIds);
@@ -44,6 +44,18 @@ export function CategoryModelPicker({ models, defaultIds }: { models: PickerMode
           {chosen.length} selected
         </span>
       </div>
+      <div className="model-picker-list">
+        {shown.length === 0 ? <p className="muted">No model matches.</p> : null}
+        {shown.map((model) => (
+          <label key={model.id} className={model.enabled ? "check model-option" : "check model-option is-off"}>
+            <input type="checkbox" checked={selected.includes(model.id)} onChange={() => toggle(model.id)} />
+            <CompanyLogo src={model.logoUrl} />
+            <span>{model.name}</span>
+            <span className="muted">{model.companyName}</span>
+            {model.enabled ? null : <span className="tag">off</span>}
+          </label>
+        ))}
+      </div>
       {chosen.length > 0 ? (
         <ul className="model-chips" aria-label="Selected models">
           {chosen.map((model) => (
@@ -60,18 +72,6 @@ export function CategoryModelPicker({ models, defaultIds }: { models: PickerMode
           ))}
         </ul>
       ) : null}
-      <div className="model-picker-list">
-        {shown.length === 0 ? <p className="muted">No model matches.</p> : null}
-        {shown.map((model) => (
-          <label key={model.id} className={model.enabled ? "check model-option" : "check model-option is-off"}>
-            <input type="checkbox" checked={selected.includes(model.id)} onChange={() => toggle(model.id)} />
-            <CompanyLogo src={model.logoUrl} />
-            <span>{model.name}</span>
-            <span className="muted">{model.companyName}</span>
-            {model.enabled ? null : <span className="tag">off</span>}
-          </label>
-        ))}
-      </div>
     </fieldset>
   );
 }
