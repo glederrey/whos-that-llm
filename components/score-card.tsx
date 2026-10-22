@@ -5,6 +5,7 @@ import { CompanyLogo } from "@/components/company-logo";
 import { ShareActions } from "@/components/share-actions";
 import type { Difficulty } from "@/lib/difficulty";
 import { scoreSteps, type ScoreLine } from "@/lib/game";
+import { poolSizeLabel } from "@/lib/game-labels";
 import { difficultyText } from "@/lib/round-facts";
 import { difficultyColor } from "@/lib/share-card";
 
@@ -23,6 +24,7 @@ export function ScoreCard({
   mode,
   difficulty,
   company = null,
+  poolSize = null,
   noHint,
   breakdown,
   share,
@@ -36,6 +38,8 @@ export function ScoreCard({
   difficulty: Difficulty | null;
   /** When set, this name takes the place difficulty occupies. */
   company?: string | null;
+  /** Models in the round's pool. Null hides the row. */
+  poolSize?: number | null;
   noHint: boolean;
   breakdown: ScoreLine[] | null;
   share: { gameId: string; text: string } | null;
@@ -98,6 +102,12 @@ export function ScoreCard({
                   <dd style={difficulty ? { color: difficultyColor[difficulty] } : undefined}>{difficultyText(difficulty)}</dd>
                 </>
               )}
+              {poolSize !== null ? (
+                <>
+                  <dt>{poolSizeLabel}</dt>
+                  <dd>{poolSize.toLocaleString("en-US")}</dd>
+                </>
+              ) : null}
               {noHint ? (
                 <>
                   <dt>Hints</dt>

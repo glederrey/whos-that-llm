@@ -61,6 +61,7 @@ export default async function ResultPage({ params }: { params: Promise<{ gameId:
         mode={facts.mode}
         difficulty={facts.difficulty}
         company={game.gameMode === "company" ? game.model.companyName : null}
+        poolSize={card?.poolSize ?? null}
         noHint={game.noHint}
         breakdown={game.breakdown ?? null}
         share={card ? { gameId: card.id, text: shareText(card) } : null}

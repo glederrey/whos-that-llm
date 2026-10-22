@@ -3,6 +3,7 @@ import { regionLabel, sizeLabel, type FrozenModel, type GameStatus, type ScoreLi
 import { avatarPublicUrl, profileStats, publicImageCacheControl, readImage, traitFound, type ProfileStats } from "./profile";
 import { presentLogo, serviceOrThrow } from "./rounds";
 import { playedRoundFacts } from "./round-facts";
+import { poolSizeFrom } from "./game-labels";
 import { buildShareCard, shareText } from "./share-card";
 import { publicEnv } from "./supabase/env";
 
@@ -22,6 +23,7 @@ export type HistoryRow = {
   difficulty: Difficulty | null;
   companyPlace: string | null;
   noHint: boolean;
+  poolSize: number | null;
   modelFacts: string[];
   breakdown: ScoreLine[] | null;
   shareText: string | null;
@@ -70,7 +72,7 @@ export async function loadHistory(userId: string, page: number) {
     client
       .from("games")
       .select(
-        "id, status, score, message_count, started_at, traits, game_mode, pool_key, difficulty, no_hint, model_id, daily_key, score_breakdown, models(name, company_id, logo_path, size, released_on, companies(name, region, logo_path))",
+        "id, status, score, message_count, started_at, traits, game_mode, pool_key, pool_model_ids, difficulty, no_hint, model_id, daily_key, score_breakdown, models(name, company_id, logo_path, size, released_on, companies(name, region, logo_path))",
       )
       .eq("user_id", userId)
       .order("started_at", { ascending: false })
@@ -143,6 +145,7 @@ export async function loadHistory(userId: string, page: number) {
           gameMode: row.game_mode as string,
           poolKey: typeof row.pool_key === "string" ? row.pool_key : null,
           difficulty: row.difficulty,
+          poolModelIds: row.pool_model_ids,
           status,
           messageCount: Number(row.message_count ?? 0),
           score: row.score as number | null,
@@ -184,6 +187,7 @@ export async function loadHistory(userId: string, page: number) {
       difficulty: facts.difficulty,
       companyPlace: row.game_mode === "company" ? (frozen?.companyName ?? company?.name ?? null) : null,
       noHint: Boolean(row.no_hint),
+      poolSize: poolSizeFrom(row.pool_model_ids),
     };
   });
   return { rows, total, page: safePage };

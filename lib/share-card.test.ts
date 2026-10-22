@@ -159,6 +159,24 @@ test("difficulty words use the leaderboard colors", () => {
   assert.equal(shareCardDisplay(card({ gameMode: "company", poolKey: "anthropic", difficulty: null })).variantColor, null);
 });
 
+test("the pool size comes from the stored snapshot and is the last meta row", () => {
+  const sized = shareCardDisplay(card({ poolModelIds: ["a", "b", "c"] }));
+  assert.equal(card({ poolModelIds: ["a", "b", "c"] }).poolSize, 3);
+  assert.deepEqual(
+    sized.meta.map((row) => [row.label, row.value]),
+    [
+      ["Game mode", "All models"],
+      ["Difficulty", "Hard"],
+      ["Models", "3"],
+    ],
+  );
+  for (const missing of [undefined, null, [], "x"]) {
+    const bare = card({ poolModelIds: missing });
+    assert.equal(bare.poolSize, null);
+    assert.equal(shareCardDisplay(bare).meta.some((row) => row.label === "Models"), false);
+  }
+});
+
 test("share text names the round and hides a daily model", () => {
   const link = "https://www.whos-that-llm.com/r/11111111-1111-4111-8111-111111111111";
   const daily = card({ gameMode: "daily", difficulty: "easy" });
@@ -493,7 +511,7 @@ test("the public card is drawn from the game row and is not stored", () => {
   const load = fs.readFileSync(path.join(root, "lib/share-card-load.ts"), "utf8");
   const route = fs.readFileSync(path.join(root, "app/r/[gameId]/card.png/route.tsx"), "utf8");
   const page = fs.readFileSync(path.join(root, "app/r/[gameId]/page.tsx"), "utf8");
-  assert.match(load, /id, status, game_mode, pool_key, difficulty, message_count, score, score_breakdown, model_id, traits, daily_key, username, finished_at/);
+  assert.match(load, /id, status, game_mode, pool_key, pool_model_ids, difficulty, message_count, score, score_breakdown, model_id, traits, daily_key, username, finished_at/);
   assert.doesNotMatch(load, /from\("messages"\)/);
   assert.doesNotMatch(load, /from\("usage"\)/);
   assert.doesNotMatch(load, /from\("guesses"\)/);
