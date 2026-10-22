@@ -17,8 +17,6 @@ import {
   dailyModelVisible,
   shareCardAlt,
   scoreLabel,
-  scoreStatsLine,
-  wrongGuessesFromBreakdown,
   shareCardDisplay,
   shareBrand,
   shareCardTheme,
@@ -521,27 +519,6 @@ test("the public card is drawn from the game row and is not stored", () => {
   assert.doesNotMatch(`${load}\n${route}\n${page}`, /\.storage|writeFile/);
   assert.doesNotMatch(page, /MessageBubble|transcript|SharePicture|ShareActions/);
   assert.match(route, /card\.png|ImageResponse|shareCardImage/);
-});
-
-test("the stats line: plural, singular, and parts left out", () => {
-  assert.equal(scoreStatsLine({ messages: 3, tokens: 362, wrongGuesses: 2 }), "3 messages · 362 tokens · 2 wrong guesses");
-  assert.equal(scoreStatsLine({ messages: 1, tokens: 1, wrongGuesses: 1 }), "1 message · 1 token · 1 wrong guess");
-  assert.equal(scoreStatsLine({ messages: 4, tokens: 1420, wrongGuesses: 0 }), "4 messages · 1,420 tokens");
-  assert.equal(scoreStatsLine({ messages: 4, tokens: null, wrongGuesses: null }), "4 messages");
-  assert.equal(scoreStatsLine({ messages: 0, tokens: null, wrongGuesses: 0 }), null);
-});
-
-test("wrong guesses and tokens come from the score lines", () => {
-  const lines = [
-    { label: "Wrong guesses · 2", points: -200 },
-    { label: "Tokens · 1,420 tokens", points: null, multiplier: "×7.042" },
-  ];
-  assert.equal(wrongGuessesFromBreakdown(lines), 2);
-  assert.equal(wrongGuessesFromBreakdown([{ label: "Company", points: 600 }]), 0);
-  assert.equal(wrongGuessesFromBreakdown(null), null);
-  const display = shareCardDisplay(card({ breakdown: lines, messageCount: 3 }));
-  assert.equal(display.stats, "3 messages · 1,420 tokens · 2 wrong guesses");
-  assert.equal(shareCardDisplay(card({ score: null, breakdown: null })).stats, null);
 });
 
 test("the score label names the player on a shared round and truncates long names", () => {

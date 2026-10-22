@@ -7,7 +7,7 @@ import type { Difficulty } from "@/lib/difficulty";
 import { scoreSteps, type ScoreLine } from "@/lib/game";
 import { poolSizeLabel } from "@/lib/game-labels";
 import { difficultyText } from "@/lib/round-facts";
-import { difficultyColor, scoreStatsLine, tokensFromBreakdown, wrongGuessesFromBreakdown } from "@/lib/share-card";
+import { difficultyColor } from "@/lib/share-card";
 
 type ScoreCardModel = {
   name: string;
@@ -52,13 +52,6 @@ export function ScoreCard({
       : state === "miss"
         ? "Failed."
         : "Given up. This round is not on the leaderboard.";
-  const stats = scored
-    ? scoreStatsLine({
-        messages,
-        tokens: tokensFromBreakdown(breakdown),
-        wrongGuesses: wrongGuessesFromBreakdown(breakdown),
-      })
-    : null;
   const shown = state === "given_up" ? "given-up" : state;
 
   return (
@@ -83,19 +76,18 @@ export function ScoreCard({
       {actions}
       <section className="card score-card">
         <div className="score-head">
-          {scored ? (
-            <div>
-              <p className="score-label">Your score</p>
-              <p className="score">{score.toLocaleString("en-US")}</p>
-              {stats ? <p className="score-stats">{stats}</p> : null}
-            </div>
-          ) : (
-            <div />
-          )}
-          <div className="score-meta">
+          <div>
+            {scored ? (
+              <>
+                <p className="score-label">Your score</p>
+                <p className="score">{score.toLocaleString("en-US")}</p>
+              </>
+            ) : null}
             <p className="status" data-state={shown}>
               {status}
             </p>
+          </div>
+          <div className="score-meta">
             <dl>
               <dt>Game mode</dt>
               <dd>{mode}</dd>

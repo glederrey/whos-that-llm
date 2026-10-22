@@ -1285,9 +1285,9 @@ html[data-theme="dark"] .hit { color: var(--teal); }
 .status[data-state="solved"] { background: #1c7c43; color: #fff; border-color: transparent; }
 .status[data-state="miss"] { background: #c41b15; color: #fff; border-color: transparent; }
 .score-card { padding: 22px 24px; }
-.score-head { display: flex; justify-content: space-between; align-items: center; gap: 16px 32px; }
+.score-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px 32px; }
 .score-meta { margin-left: auto; display: grid; justify-items: end; gap: 8px; text-align: right; }
-.score-meta .status { text-align: right; }
+.score-head .status { margin-top: 14px; }
 .score-meta dl { display: grid; grid-template-columns: auto auto; gap: 4px 14px; margin: 0; justify-content: end; }
 .score-meta dt { color: var(--mute); font-weight: 500; }
 .score-meta dd { margin: 0; font-weight: 700; text-align: left; }
@@ -1298,7 +1298,6 @@ html[data-theme="dark"] .hit { color: var(--teal); }
   font-size: 76px;
   margin: 2px 0 0;
 }
-.score-stats { margin: 8px 0 0; color: var(--mute); font-size: 14px; line-height: 1.4; font-variant-numeric: tabular-nums; }
 .score-card .breakdown { margin-top: 28px; }
 .score {
   font-size: 56px;
@@ -1882,18 +1881,17 @@ html[data-theme="dark"] .history-score[data-best="true"] { color: var(--teal); }
   .candidate { padding: 10px 8px; }
   .score { font-size: 44px; }
   .score-card { padding: 18px 16px; }
-  .score-head { align-items: center; gap: 8px 10px; }
+  .score-head { gap: 8px 10px; }
   .score-card .score { font-size: 44px; white-space: nowrap; }
-  .score-head > :first-child { flex: none; }
-  .score-stats { max-width: 10em; font-size: 13px; }
-  .score-meta { flex: 1 1 auto; gap: 4px; min-width: 0; }
-  .score-meta .status {
+  .score-head > :first-child { flex: 0 1 auto; max-width: 56%; min-width: 0; }
+  .score-meta { flex: 1 1 0; gap: 4px; min-width: 0; }
+  .score-head .status {
     max-width: 100%;
+    margin-top: 8px;
     font-size: 12px;
     line-height: 1.25;
     padding: 4px 10px;
     white-space: normal;
-    justify-content: flex-end;
   }
   .score-meta dl { font-size: 13px; gap: 2px 8px; }
   .score-foot { display: block; }
