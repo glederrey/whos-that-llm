@@ -5,6 +5,7 @@ import { requireOwner } from "./admin-access";
 import {
   categoryDeleteMessage,
   categoryIdFromName,
+  chooseCategoryIcon,
   parseCategoryFields,
   parseCategoryId,
   parseCategoryIds,
@@ -411,10 +412,10 @@ type CategoryInput = {
   id?: string;
   name?: string;
   description?: string;
-  iconKind?: string;
   companyId?: string;
   emoji?: string;
   image?: File | null;
+  removeIcon?: boolean;
 };
 
 export async function createCategory(raw: CategoryInput): Promise<CategoryNotice | null> {
@@ -424,7 +425,7 @@ export async function createCategory(raw: CategoryInput): Promise<CategoryNotice
   const id = categoryIdFromName(fields.name);
   if (!id) return "invalid";
   const client = serviceOrThrow();
-  const icon = await resolveIcon(client, id, fields, raw.image, null);
+  const icon = await resolveIcon(client, id, raw, null);
   if (typeof icon === "string") return icon;
   const { error } = await client.from("categories").insert({
     id,
@@ -454,7 +455,7 @@ export async function updateCategory(raw: CategoryInput): Promise<CategoryNotice
     .maybeSingle();
   if (readError || !current) return "save";
   const stored = current.icon_kind === "image" ? (current.icon_value as string) : null;
-  const icon = await resolveIcon(client, id, fields, raw.image, stored);
+  const icon = await resolveIcon(client, id, raw, { kind: current.icon_kind as string, value: current.icon_value as string });
   if (typeof icon === "string") return icon;
   const { error } = await client
     .from("categories")
@@ -474,6 +475,18 @@ export async function updateCategory(raw: CategoryInput): Promise<CategoryNotice
   return null;
 }
 
+export async function setCategoryEnabled(idRaw: string, enabled: boolean): Promise<CategoryNotice | null> {
+  await requireOwner();
+  const id = parseCategoryId(idRaw);
+  if (!id) return "save";
+  const client = serviceOrThrow();
+  const { error } = await client
+    .from("categories")
+    .update({ enabled, updated_at: new Date().toISOString() })
+    .eq("id", id);
+  return error ? "save" : null;
+}
+
 export async function removeCategory(idRaw: string): Promise<string | null> {
   await requireOwner();
   const id = parseCategoryId(idRaw);
@@ -491,25 +504,30 @@ export async function removeCategory(idRaw: string): Promise<string | null> {
 
 type ResolvedIcon = { kind: string; value: string; uploaded: boolean };
 
-/** The icon to store. An upload goes to the logos bucket. An image category with no new file keeps its stored one. */
+/** The icon to store, by the order in `chooseCategoryIcon`. An upload goes to the logos bucket. */
 async function resolveIcon(
   client: SupabaseClient,
   categoryId: string,
-  fields: { iconKind: string; iconValue: string | null },
-  image: File | null | undefined,
-  stored: string | null,
+  raw: CategoryInput,
+  stored: { kind: string; value: string } | null,
 ): Promise<ResolvedIcon | CategoryNotice> {
-  if (fields.iconKind !== "image") {
-    if (fields.iconKind === "company") {
-      const company = await knownCompany(client, fields.iconValue);
-      if (company) return company;
-    }
-    return { kind: fields.iconKind, value: fields.iconValue ?? "", uploaded: false };
+  const hasImage = Boolean(raw.image && raw.image.size > 0);
+  const choice = chooseCategoryIcon({
+    hasImage,
+    emoji: raw.emoji,
+    companyId: raw.companyId,
+    removeCurrent: raw.removeIcon,
+    stored,
+  });
+  if (!choice) return "icon";
+  if (choice.kind === "company") {
+    const company = await knownCompany(client, choice.value);
+    if (company) return company;
   }
-  if (!image || image.size === 0) {
-    return stored ? { kind: "image", value: stored, uploaded: false } : "icon";
+  if (choice.kind !== "image" || choice.value !== null) {
+    return { kind: choice.kind, value: choice.value ?? "", uploaded: false };
   }
-  const bytes = new Uint8Array(await image.arrayBuffer());
+  const bytes = new Uint8Array(await raw.image!.arrayBuffer());
   const found = readLogo(bytes);
   if (!found) return "icon";
   const path = categoryImagePath(categoryId, found.ext, randomBytes(4).toString("hex"));

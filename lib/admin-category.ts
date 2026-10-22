@@ -1,12 +1,12 @@
-export type CategoryIconKind = "company" | "image" | "emoji";
+export type CategoryIconKind = "company" | "image" | "emoji" | "default";
 
-/** `iconValue` is null for `image`: the upload, or the file already stored, supplies it. */
 export type CategoryFields = {
   name: string;
   description: string;
-  iconKind: CategoryIconKind;
-  iconValue: string | null;
 };
+
+/** `value` is null for a new upload: the stored path comes once the file is in the bucket. */
+export type CategoryIconChoice = { kind: CategoryIconKind; value: string | null };
 
 export type CategoryNotice = "invalid" | "taken" | "company" | "icon" | "save";
 
@@ -16,7 +16,7 @@ const notices: Record<CategoryNotice, string> = {
   invalid: "Check the name and the description.",
   taken: "That category name is already in the list.",
   company: "Pick a company from the list.",
-  icon: "Pick a company logo, upload an SVG, PNG, or WebP under 1 MB, or type one emoji.",
+  icon: "Upload an SVG, PNG, or WebP under 1 MB, or type one emoji.",
   save: "Could not save that category.",
 };
 
@@ -47,29 +47,39 @@ export function parseEmoji(value: string | undefined): string | null {
   return /\p{Extended_Pictographic}|\p{Regional_Indicator}/u.test(emoji) ? emoji : null;
 }
 
-export function parseCategoryFields(raw: {
-  name?: string;
-  description?: string;
-  iconKind?: string;
-  companyId?: string;
-  emoji?: string;
-}): CategoryFields | null {
+export function parseCategoryFields(raw: { name?: string; description?: string }): CategoryFields | null {
   const name = raw.name?.trim() ?? "";
   const description = raw.description?.trim() ?? "";
   if (name.length < 1 || name.length > 80) return null;
   if (description.length > maxCategoryDescription) return null;
   if (!categoryIdFromName(name)) return null;
-  if (raw.iconKind === "company") {
-    const companyId = raw.companyId?.trim() ?? "";
-    if (!/^[a-z0-9-]{2,32}$/.test(companyId)) return null;
-    return { name, description, iconKind: "company", iconValue: companyId };
+  return { name, description };
+}
+
+/**
+ * The icon to store, in this order: an uploaded image, the emoji, the image already stored, the company logo,
+ * the default logo. Removing the current icon skips the emoji field and the stored image. Null when the emoji
+ * or the company id is malformed.
+ */
+export function chooseCategoryIcon(raw: {
+  hasImage: boolean;
+  emoji?: string;
+  companyId?: string;
+  removeCurrent?: boolean;
+  stored?: { kind: string; value: string } | null;
+}): CategoryIconChoice | null {
+  const typed = raw.emoji?.trim() ?? "";
+  const emoji = parseEmoji(typed);
+  if (typed && !emoji) return null;
+  const companyId = raw.companyId?.trim() ?? "";
+  if (companyId && !/^[a-z0-9-]{2,32}$/.test(companyId)) return null;
+  if (raw.hasImage) return { kind: "image", value: null };
+  if (!raw.removeCurrent) {
+    if (emoji) return { kind: "emoji", value: emoji };
+    if (raw.stored?.kind === "image") return { kind: "image", value: raw.stored.value };
   }
-  if (raw.iconKind === "emoji") {
-    const emoji = parseEmoji(raw.emoji);
-    return emoji ? { name, description, iconKind: "emoji", iconValue: emoji } : null;
-  }
-  if (raw.iconKind === "image") return { name, description, iconKind: "image", iconValue: null };
-  return null;
+  if (companyId) return { kind: "company", value: companyId };
+  return { kind: "default", value: "" };
 }
 
 export function parseCategoryIds(values: string[]): string[] | null {

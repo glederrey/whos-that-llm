@@ -28,7 +28,7 @@ export async function listBoardOptions() {
   if (!categories) throw new Error("Could not read categories.");
   if (companies.error) throw new Error(companies.error.message);
   return {
-    categories: categories.map((row) => ({ id: row.id, name: row.name, icon: row.icon })),
+    categories: categories.filter((row) => row.enabled).map((row) => ({ id: row.id, name: row.name, icon: row.icon })),
     companies: (companies.data ?? []).map((row) => ({
       id: row.id as string,
       name: row.name as string,
@@ -75,6 +75,7 @@ export async function lobbyState(userId: string) {
     categoryCounts.set(link.category_id as string, (categoryCounts.get(link.category_id as string) ?? 0) + 1);
   }
   const categories = categoryEntries
+    .filter((row) => row.enabled)
     .map((row) => ({ id: row.id, name: row.name, description: row.description, icon: row.icon, models: categoryCounts.get(row.id) ?? 0 }))
     .filter((row) => row.models >= 2);
   const logos = new Map(
@@ -163,14 +164,14 @@ export async function startCategory(userId: string, categoryId: string, noHint =
   const [{ data: gameMode, error }, { data: category, error: categoryError }, { data: links, error: linkError }, catalog] =
     await Promise.all([
       client.from("game_modes").select("id, enabled, hints_allowed").eq("id", "class").maybeSingle(),
-      client.from("categories").select("id").eq("id", id).maybeSingle(),
+      client.from("categories").select("id, enabled").eq("id", id).maybeSingle(),
       client.from("model_categories").select("model_id").eq("category_id", id),
       loadCatalog(client),
     ]);
   if (error) throw new Error(error.message);
   if (categoryError) throw new Error(categoryError.message);
   if (linkError) throw new Error(linkError.message);
-  if (!gameMode?.enabled || !category) return fail(404, "not_found");
+  if (!gameMode?.enabled || !category?.enabled) return fail(404, "not_found");
   const members = new Set((links ?? []).map((link) => link.model_id as string));
   const pool = catalog.filter((model) => members.has(model.id));
   const modelId = pool[Math.floor(Math.random() * pool.length)]?.id ?? null;

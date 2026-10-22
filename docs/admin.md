@@ -28,7 +28,7 @@ A subnav sits on every one of those pages: **Stats, Costs, Games, Modes, Models,
 
 `/admin/models` shows the display name, company, region, year, size, difficulty, input price, output price, then the classes, then active. Difficulty is the name: Easy, Medium, Hard, or Impossible. The column sorts Easy to Impossible. Input and output are the live OpenRouter list price in dollars per 1 million tokens. They are not stored on the model. The page asks OpenRouter on each load, and a price shows a dash when OpenRouter has none or does not answer. Clicking one of those headers sorts both tables ascending. Clicking it again sorts descending. A third click clears the sort and returns the default order. Clicking a different column starts that column at ascending. The turn-on and edit controls are not a sort column. Saving an edit keeps the current search. **Reset** shows only while a search is active and clears it. Add starts with an OpenRouter id. The lookup fills the display name, the company when that org is one of ours, and the release date. Size, difficulty, and classes stay empty. OpenRouter does not set the difficulty. A new model stays off. Class membership is a set of checkboxes from the classes that already exist, and a model can have more than one. **On** is green. **Off** is red.
 
-`/admin/categories` creates, edits, and deletes a category: name, a short description, and an icon (a company logo, an uploaded image, or an emoji).
+`/admin/categories` creates, edits, turns on or off, and deletes a category: name, a short description, and an icon (an uploaded image, an emoji, a company logo, or the default logo).
 
 The game still pauses for everyone when OpenRouter returns 402 or an explicit credit error. The pause switch on this page is later. Until then, clear `app_settings.paused` in the database after topping up credits on OpenRouter. The site does not take a payment for credits.
 
@@ -144,13 +144,13 @@ Turning a mode off hides its card. Old rounds stay on the leaderboard as long as
 
 ## Categories (`/admin/categories`)
 
-Create, edit, and delete. The fields are:
+Create, edit, turn on or off, and delete. The fields are:
 
 - **Name**, required. The id is a slug taken from the name when the row is created, and a rename does not change it.
 - **Description**, short, at most 140 characters. Players see it in the Category dropdown on `/play`.
-- **Icon**, one of three, picked with a radio: **Company logo** (a select of the companies), **Upload image** (an SVG, PNG, or WebP of at most 1 MB, stored in the `logos` bucket under `categories/`), or **Emoji** (exactly one emoji). On edit, leaving the file empty keeps the current image.
+- **Icon**, computed on save, no radio. The first one filled wins: an **uploaded image** (an SVG, PNG, or WebP of at most 1 MB, stored in the `logos` bucket under `categories/`), then an **emoji** (exactly one emoji; a text field you can paste into, plus a Pick button that opens a searchable emoji grid and fills the field, loaded on first open and served from `public/emoji-data/`, never a third-party CDN; `npm run emoji:copy` refreshes that file after bumping `emoji-picker-element-data`), then the **company logo** (a select of the companies), then the **default**, the Who's that LLM logo. The form says so in one hint line. On edit it shows the current icon. An image or emoji already stored stays unless a new one is given or **Remove current icon** is ticked, which falls back to the company logo or the default and, best effort, deletes the stored image.
 
-The table shows the icon, name, description, and the count of models that are turned on. Deleting a category removes its links to models and, best effort, its stored image. The models stay. The model page attaches existing categories. It does not create them. A model can be in Opus and in Latest Anthropic at the same time.
+Like Models, the page has two tables, **Active** and **Inactive**, with an **OFF**/**ON** button per row. A category that is off is not on the play page, not startable (the start route answers 404), not in the leaderboard Category dropdown, and left out of the statistics. It keeps its models, links, and games; past games stay in profile history with the name. Each table shows the icon, name, description, and the count of models that are turned on. Deleting a category removes its links to models and, best effort, its stored image. The models stay. The model page attaches existing categories. It does not create them. A model can be in Opus and in Latest Anthropic at the same time.
 
 Upload is a server action that repeats the owner check. It sniffs the bytes (`readLogo`), not the file name. A category needs at least two turned-on models before players can pick it.
 
