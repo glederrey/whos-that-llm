@@ -30,7 +30,9 @@ export default async function ResultPage({ params }: { params: Promise<{ gameId:
   const leaderboardHref =
     game.gameMode === "company"
       ? `/leaderboard?gameMode=company${game.poolKey ? `&company=${encodeURIComponent(game.poolKey)}` : ""}&period=week`
-      : `/leaderboard?gameMode=${game.gameMode}${game.difficulty ? `&difficulty=${game.difficulty}` : ""}&period=week`;
+      : game.gameMode === "class"
+        ? `/leaderboard?gameMode=class${game.poolKey ? `&category=${encodeURIComponent(game.poolKey)}` : ""}&period=week`
+        : `/leaderboard?gameMode=${game.gameMode}${game.difficulty ? `&difficulty=${game.difficulty}` : ""}&period=week`;
 
   const nextRound = (
     <div className="row result-actions">

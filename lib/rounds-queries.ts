@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { currentRules } from "./config";
+import { loadCategoryEntries } from "./category-data";
 import { countedPlayerId } from "./anonymize-account";
 import { difficultyNumber, type BoardDifficulty, type Difficulty } from "./difficulty";
 import { playableHints, type GuessFlags } from "./game";
@@ -69,7 +70,23 @@ export async function scoreFrom(client: SupabaseClient, game: GameRow, guesses: 
   return scoreGame(game, guesses, namedModel, data ?? []);
 }
 
+/** `companyId` narrows a Company board, and a Category board to one category. */
 export async function leaderboardWith(
+  client: SupabaseClient,
+  gameMode: string,
+  period: string,
+  viewerId?: string | null,
+  difficulty?: BoardDifficulty | null,
+  companyId?: string | null,
+): Promise<{ rows: BoardRow[] } | ApiFailure> {
+  const result = await leaderboardRows(client, gameMode, period, viewerId, difficulty, companyId);
+  if (gameMode !== "class" || !("rows" in result) || result.rows.length === 0) return result;
+  const categories = await loadCategoryEntries(client);
+  const icons = new Map((categories ?? []).map((item) => [item.id, item.icon]));
+  return { rows: result.rows.map((row) => ({ ...row, categoryIcon: row.companyId ? (icons.get(row.companyId) ?? null) : null })) };
+}
+
+async function leaderboardRows(
   client: SupabaseClient,
   gameMode: string,
   period: string,

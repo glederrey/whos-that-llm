@@ -4,7 +4,7 @@ import { BoardControls } from "@/components/board-controls";
 import { BoardTable } from "@/components/board-table";
 import { allCompanies } from "@/lib/company";
 import { anyDifficulty } from "@/lib/difficulty";
-import { boardChoice, boardHref, boardModes, selectedCompany } from "@/lib/board-query";
+import { boardChoice, boardHref, boardModes, boardPool, isPoolBoard, selectedCategory, selectedCompany } from "@/lib/board-query";
 import { landingSnapshot, leaderboard, listBoardOptions, listGameModes } from "@/lib/rounds";
 import { currentProfile } from "@/lib/session";
 import { organizationJsonLd } from "@/lib/site";
@@ -19,7 +19,7 @@ export const metadata: Metadata = {
 export default async function HomePage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string; gameMode?: string; period?: string; difficulty?: string; company?: string }>;
+  searchParams: Promise<{ error?: string; gameMode?: string; period?: string; difficulty?: string; company?: string; category?: string }>;
 }) {
   const params = await searchParams;
   if (params.error === "access_denied") redirect("/login?error=cancelled");
@@ -32,13 +32,14 @@ export default async function HomePage({
   const view = {
     ...choice,
     company: choice.gameMode === "company" ? selectedCompany(choice.company, options.companies) : allCompanies,
+    category: choice.gameMode === "class" ? selectedCategory(choice.category, options.categories) : allCompanies,
   };
   const board = await leaderboard(
     view.gameMode,
     view.period,
     user?.id,
     view.difficulty,
-    view.gameMode === "company" && view.company !== allCompanies ? view.company : null,
+    boardPool(view),
   );
   const top = "rows" in board ? board.rows.slice(0, 5) : [];
 
@@ -125,8 +126,8 @@ export default async function HomePage({
         ) : (
           <BoardTable
             rows={top}
-            showDifficulty={view.gameMode !== "company" && view.difficulty === anyDifficulty}
-            showCompany={view.gameMode === "company"}
+            showDifficulty={!isPoolBoard(view.gameMode) && view.difficulty === anyDifficulty}
+            showCompany={isPoolBoard(view.gameMode)}
           />
         )}
       </section>

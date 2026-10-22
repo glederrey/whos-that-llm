@@ -1,10 +1,13 @@
+import { CategoryIcon } from "@/components/category-icon";
 import { DeleteCategoryForm } from "@/components/delete-category-form";
 import { SectionNav } from "@/components/section-nav";
 import { addCategory, saveCategory } from "@/app/admin/actions";
-import { categoryDeleteMessage, categoryNotice } from "@/lib/admin-category";
+import { categoryDeleteMessage, categoryNotice, maxCategoryDescription } from "@/lib/admin-category";
 import { loadCategoryList, type CategoryListRow } from "@/lib/admin-roster";
 
 export const dynamic = "force-dynamic";
+
+type Company = { id: string; name: string };
 
 export default async function CategoriesPage({
   searchParams,
@@ -22,8 +25,8 @@ export default async function CategoriesPage({
       <h1>Categories</h1>
       <p className="muted">
         A category is a set we define, not a lab&apos;s line. One model can be in several: only Opus, only the nano
-        models, or a pile of obscure ones. Company is optional. A category has no logo of its own. The model count is
-        models that are turned on.
+        models, or a pile of obscure ones. Players pick one on the play page. A category needs at least two models
+        that are turned on to be playable. The icon is a company logo, an uploaded image, or an emoji.
       </p>
       {notice ? (
         <p className="error" role="alert">
@@ -50,9 +53,9 @@ export default async function CategoriesPage({
         <table className="roster compact categories">
           <thead>
             <tr>
+              <th>Icon</th>
               <th>Name</th>
               <th>Description</th>
-              <th>Company</th>
               <th>Models</th>
               <th></th>
             </tr>
@@ -74,14 +77,15 @@ export default async function CategoriesPage({
   );
 }
 
-function CategoryRowView({ row, companies }: { row: CategoryListRow; companies: { id: string; name: string }[] }) {
+function CategoryRowView({ row, companies }: { row: CategoryListRow; companies: Company[] }) {
   const panel = `edit-category-${row.id}`;
-  const choices = companies;
   return (
     <tr>
+      <td>
+        <CategoryIcon icon={row.icon} />
+      </td>
       <td>{row.name}</td>
       <td>{row.description || "—"}</td>
-      <td>{row.companyName ?? "None"}</td>
       <td>{row.modelCount.toLocaleString("en-US")}</td>
       <td>
         <div className="roster-buttons">
@@ -97,8 +101,9 @@ function CategoryRowView({ row, companies }: { row: CategoryListRow; companies: 
             <CategoryFields
               name={row.name}
               description={row.description}
-              companyId={row.companyId ?? ""}
-              companies={choices}
+              iconKind={row.iconKind}
+              iconValue={row.iconValue}
+              companies={companies}
             />
             <div className="row">
               <button className="button" type="submit">
@@ -118,13 +123,15 @@ function CategoryRowView({ row, companies }: { row: CategoryListRow; companies: 
 function CategoryFields({
   name = "",
   description = "",
-  companyId = "",
+  iconKind = "company",
+  iconValue = "",
   companies,
 }: {
   name?: string;
   description?: string;
-  companyId?: string;
-  companies: { id: string; name: string }[];
+  iconKind?: string;
+  iconValue?: string;
+  companies: Company[];
 }) {
   return (
     <div className="roster-form">
@@ -132,21 +139,42 @@ function CategoryFields({
         Name
         <input name="name" defaultValue={name} required />
       </label>
-      <label>
-        Company
-        <select name="companyId" defaultValue={companyId}>
-          <option value="">None</option>
-          {companies.map((company) => (
-            <option key={company.id} value={company.id}>
-              {company.name}
-            </option>
-          ))}
-        </select>
-      </label>
       <label className="span-2">
-        Description
-        <textarea name="description" defaultValue={description} maxLength={500} />
+        Description (up to {maxCategoryDescription} characters)
+        <textarea name="description" defaultValue={description} maxLength={maxCategoryDescription} />
       </label>
+      <fieldset className="icon-picker span-2">
+        <legend>Icon</legend>
+        <div className="icon-picker-option">
+          <label className="check">
+            <input type="radio" name="iconKind" value="company" defaultChecked={iconKind === "company"} />
+            <span>Company logo</span>
+          </label>
+          <select name="companyId" aria-label="Company" defaultValue={iconKind === "company" ? iconValue : ""}>
+            <option value="">Choose a company</option>
+            {companies.map((company) => (
+              <option key={company.id} value={company.id}>
+                {company.name}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="icon-picker-option">
+          <label className="check">
+            <input type="radio" name="iconKind" value="image" defaultChecked={iconKind === "image"} />
+            <span>Upload image</span>
+          </label>
+          <input type="file" name="image" accept="image/svg+xml,image/png,image/webp" aria-label="Image file" />
+          <span className="muted">{iconKind === "image" ? "Leave empty to keep the current image. " : ""}SVG, PNG, or WebP, 1 MB at most.</span>
+        </div>
+        <div className="icon-picker-option">
+          <label className="check">
+            <input type="radio" name="iconKind" value="emoji" defaultChecked={iconKind === "emoji"} />
+            <span>Emoji</span>
+          </label>
+          <input type="text" name="emoji" aria-label="Emoji" defaultValue={iconKind === "emoji" ? iconValue : ""} size={4} />
+        </div>
+      </fieldset>
     </div>
   );
 }

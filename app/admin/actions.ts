@@ -49,7 +49,10 @@ function categoryFields(formData: FormData) {
   return {
     name: text(formData, "name"),
     description: text(formData, "description"),
+    iconKind: text(formData, "iconKind"),
     companyId: text(formData, "companyId"),
+    emoji: text(formData, "emoji"),
+    image: formData.get("image") instanceof File ? (formData.get("image") as File) : null,
   };
 }
 

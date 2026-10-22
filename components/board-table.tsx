@@ -1,5 +1,7 @@
 import { difficultyLabel, type Difficulty } from "@/lib/difficulty";
 import { Avatar } from "./avatar";
+import type { CategoryIconData } from "@/lib/category-icon";
+import { CategoryIcon } from "./category-icon";
 import { CompanyLogo } from "./company-logo";
 
 export type BoardRow = {
@@ -13,6 +15,7 @@ export type BoardRow = {
   noHint?: boolean;
   companyName?: string | null;
   companyLogo?: string | null;
+  categoryIcon?: CategoryIconData | null;
 };
 
 export function BoardTable({
@@ -68,7 +71,7 @@ export function BoardTable({
                       {showCompany ? (
                         row.companyName ? (
                           <span className="board-chip company-chip">
-                            {row.companyLogo ? <CompanyLogo src={row.companyLogo} /> : null}
+                            {row.categoryIcon ? <CategoryIcon icon={row.categoryIcon} /> : row.companyLogo ? <CompanyLogo src={row.companyLogo} /> : null}
                             {row.companyName}
                           </span>
                         ) : (

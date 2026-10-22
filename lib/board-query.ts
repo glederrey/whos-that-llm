@@ -9,6 +9,8 @@ export type BoardChoice = {
   difficulty: BoardDifficulty;
   /** `all` or a company id. Used when Company is the selected mode. */
   company: string;
+  /** `all` or a category id. Used when Category is the selected mode. */
+  category: string;
 };
 
 export type BoardMode = {
@@ -30,7 +32,7 @@ const difficultyModeIds = new Set(["daily", "all"]);
 
 /** The same choice on the home top 5 and the full leaderboard. A mode that is not open cannot be selected. */
 export function boardChoice(
-  params: { gameMode?: string; period?: string; difficulty?: string; company?: string },
+  params: { gameMode?: string; period?: string; difficulty?: string; company?: string; category?: string },
   modes: BoardMode[],
 ): BoardChoice {
   const open = modes.filter((mode) => mode.open).map((mode) => mode.id);
@@ -42,6 +44,7 @@ export function boardChoice(
     period,
     difficulty: parseBoardDifficulty(params.difficulty),
     company: parseBoardCompany(params.company),
+    category: parseBoardCompany(params.category),
   };
 }
 
@@ -80,6 +83,7 @@ export function boardHref(base: "/" | "/leaderboard", choice: BoardChoice, page 
     period: choice.period,
   });
   if (choice.company && choice.company !== allCompanies) params.set("company", choice.company);
+  if (choice.category && choice.category !== allCompanies) params.set("category", choice.category);
   if (page > 1) params.set("page", String(page));
   const query = params.toString();
   return base === "/" ? `/?${query}` : `/leaderboard?${query}`;
@@ -88,4 +92,21 @@ export function boardHref(base: "/" | "/leaderboard", choice: BoardChoice, page 
 /** A company id that is on the list. Anything else, including a closed mode, is All companies. */
 export function selectedCompany(company: string, companies: readonly { id: string }[]): string {
   return companies.some((item) => item.id === company) ? company : allCompanies;
+}
+
+/** A category id that is on the list. Anything else is All categories. */
+export function selectedCategory(category: string, categories: readonly { id: string }[]): string {
+  return categories.some((item) => item.id === category) ? category : allCompanies;
+}
+
+/** Company and Category boards list one row per player with the pool they played. */
+export function isPoolBoard(gameMode: string): boolean {
+  return gameMode === "company" || gameMode === "class";
+}
+
+/** The company or category id the board is narrowed to, or null for all of them. */
+export function boardPool(choice: Pick<BoardChoice, "gameMode" | "company" | "category">): string | null {
+  if (choice.gameMode === "company" && choice.company !== allCompanies) return choice.company;
+  if (choice.gameMode === "class" && choice.category !== allCompanies) return choice.category;
+  return null;
 }

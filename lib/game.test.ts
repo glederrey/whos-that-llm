@@ -597,12 +597,13 @@ test("the header counts the message about to be written", () => {
   assert.match(css, /\.page \{ flex: 1; padding: 20px 0 0; \}/);
 });
 
-test("hints are possible on daily, all models, company, and custom", () => {
+test("hints are possible on daily, all models, company, category, and custom", () => {
   assert.equal(gameModeAllowsHints("daily"), true);
   assert.equal(gameModeAllowsHints("all"), true);
   assert.equal(gameModeAllowsHints("company"), true);
+  assert.equal(gameModeAllowsHints("class"), true);
   assert.equal(gameModeAllowsHints("custom"), true);
-  for (const gameMode of ["class", "region", "latest"]) {
+  for (const gameMode of ["region", "latest"]) {
     assert.equal(gameModeAllowsHints(gameMode), false, gameMode);
   }
 });

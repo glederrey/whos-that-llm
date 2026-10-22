@@ -1,15 +1,22 @@
+export type CategoryIconKind = "company" | "image" | "emoji";
+
+/** `iconValue` is null for `image`: the upload, or the file already stored, supplies it. */
 export type CategoryFields = {
   name: string;
   description: string;
-  companyId: string | null;
+  iconKind: CategoryIconKind;
+  iconValue: string | null;
 };
 
-export type CategoryNotice = "invalid" | "taken" | "company" | "save";
+export type CategoryNotice = "invalid" | "taken" | "company" | "icon" | "save";
+
+export const maxCategoryDescription = 140;
 
 const notices: Record<CategoryNotice, string> = {
   invalid: "Check the name and the description.",
   taken: "That category name is already in the list.",
-  company: "Pick a company from the list, or leave it blank.",
+  company: "Pick a company from the list.",
+  icon: "Pick a company logo, upload an SVG, PNG, or WebP under 1 MB, or type one emoji.",
   save: "Could not save that category.",
 };
 
@@ -31,19 +38,38 @@ export function categoryDeleteMessage(message: string | undefined): string | nul
   return cleaned.slice(0, 240);
 }
 
+/** One emoji: a single grapheme that holds a pictograph or a flag. */
+export function parseEmoji(value: string | undefined): string | null {
+  const emoji = value?.trim() ?? "";
+  if (!emoji || emoji.length > 32) return null;
+  const parts = [...new Intl.Segmenter("en", { granularity: "grapheme" }).segment(emoji)];
+  if (parts.length !== 1) return null;
+  return /\p{Extended_Pictographic}|\p{Regional_Indicator}/u.test(emoji) ? emoji : null;
+}
+
 export function parseCategoryFields(raw: {
   name?: string;
   description?: string;
+  iconKind?: string;
   companyId?: string;
+  emoji?: string;
 }): CategoryFields | null {
   const name = raw.name?.trim() ?? "";
   const description = raw.description?.trim() ?? "";
   if (name.length < 1 || name.length > 80) return null;
-  if (description.length > 500) return null;
+  if (description.length > maxCategoryDescription) return null;
   if (!categoryIdFromName(name)) return null;
-  const companyId = raw.companyId?.trim() ?? "";
-  if (companyId && !/^[a-z0-9-]{2,32}$/.test(companyId)) return null;
-  return { name, description, companyId: companyId || null };
+  if (raw.iconKind === "company") {
+    const companyId = raw.companyId?.trim() ?? "";
+    if (!/^[a-z0-9-]{2,32}$/.test(companyId)) return null;
+    return { name, description, iconKind: "company", iconValue: companyId };
+  }
+  if (raw.iconKind === "emoji") {
+    const emoji = parseEmoji(raw.emoji);
+    return emoji ? { name, description, iconKind: "emoji", iconValue: emoji } : null;
+  }
+  if (raw.iconKind === "image") return { name, description, iconKind: "image", iconValue: null };
+  return null;
 }
 
 export function parseCategoryIds(values: string[]): string[] | null {

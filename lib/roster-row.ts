@@ -1,3 +1,4 @@
+import type { CategoryIconData } from "./category-icon";
 import type { Difficulty } from "./difficulty";
 import type { Region, Size } from "./game";
 
@@ -23,6 +24,7 @@ export type CategoryRow = {
   id: string;
   name: string;
   description: string;
-  companyId: string | null;
-  companyName: string | null;
+  iconKind: string;
+  iconValue: string;
+  icon: CategoryIconData | null;
 };

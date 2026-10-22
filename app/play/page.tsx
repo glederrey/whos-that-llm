@@ -28,6 +28,7 @@ export default async function PlayPage() {
       poolSize={state.poolSize}
       difficultyCounts={state.difficultyCounts}
       companies={state.companies}
+      categories={state.categories}
       nextAt={state.nextAt}
       gameModes={gameModes.map((gameMode) => ({
         id: gameMode.id,

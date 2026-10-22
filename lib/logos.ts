@@ -29,6 +29,16 @@ export function logoPublicUrl(baseUrl: string, path: string): string {
   return `${baseUrl.replace(/\/$/, "")}/storage/v1/object/public/logos/${safe}`;
 }
 
+/** Where an uploaded category image lives in the logos bucket. */
+export function categoryImagePath(categoryId: string, ext: string, token: string): string {
+  return `categories/${categoryId}-${token}.${ext}`;
+}
+
+/** The bucket path of a stored image, with or without the `logos/` prefix. */
+export function logoBucketPath(path: string): string {
+  return path.replace(/^\/+/, "").replace(/^logos\//, "");
+}
+
 export function readLogo(bytes: Uint8Array): { mime: string; ext: string } | null {
   if (bytes.byteLength === 0 || bytes.byteLength > maxLogoBytes) return null;
   if (isPng(bytes)) return { mime: "image/png", ext: "png" };
