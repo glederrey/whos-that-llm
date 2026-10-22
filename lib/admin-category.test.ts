@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
 import test from "node:test";
-import { categoryDeleteMessage, categoryIdFromName, categoryNotice, maxCategoryDescription, parseCategoryFields, parseCategoryId, parseCategoryIds, parseEmoji } from "./admin-category";
+import { categoryDeleteMessage, chooseCategoryIcon, categoryIdFromName, categoryNotice, maxCategoryDescription, parseCategoryFields, parseCategoryId, parseCategoryIds, parseEmoji } from "./admin-category";
 
 test("a category id is a slug from the name", () => {
   assert.equal(categoryIdFromName("Opus"), "opus");
@@ -12,34 +12,38 @@ test("a category id is a slug from the name", () => {
   assert.equal(categoryIdFromName("  "), null);
 });
 
-test("a category icon is a company logo, an image, or one emoji", () => {
-  assert.deepEqual(parseCategoryFields({ name: "Opus", description: "The Opus line.", iconKind: "company", companyId: "anthropic" }), {
-    name: "Opus",
-    description: "The Opus line.",
-    iconKind: "company",
-    iconValue: "anthropic",
-  });
-  assert.equal(parseCategoryFields({ name: "Opus", iconKind: "company", companyId: "" }), null);
-  assert.equal(parseCategoryFields({ name: "Opus", iconKind: "company", companyId: "nope!" }), null);
-  assert.equal(parseCategoryFields({ name: "Nano", iconKind: "emoji", emoji: " 🔬 " })?.iconValue, "🔬");
-  assert.equal(parseCategoryFields({ name: "Nano", iconKind: "emoji", emoji: "" }), null);
-  assert.equal(parseCategoryFields({ name: "Nano", iconKind: "emoji", emoji: "ab" }), null);
-  assert.deepEqual(parseCategoryFields({ name: "Nano", iconKind: "image" }), {
-    name: "Nano",
-    description: "",
-    iconKind: "image",
-    iconValue: null,
-  });
-  assert.equal(parseCategoryFields({ name: "Nano" }), null);
-  assert.equal(parseCategoryFields({ name: "Nano", iconKind: "url" }), null);
-  assert.equal(parseCategoryFields({ name: "", description: "Missing name.", iconKind: "image" }), null);
+test("the icon is the upload, the emoji, the stored image, the company logo, then the default", () => {
+  const stored = { kind: "image", value: "categories/opus-ab12.png" };
+  assert.deepEqual(chooseCategoryIcon({ hasImage: true, emoji: "🔬", companyId: "anthropic" }), { kind: "image", value: null });
+  assert.deepEqual(chooseCategoryIcon({ hasImage: false, emoji: " 🔬 ", companyId: "anthropic", stored }), { kind: "emoji", value: "🔬" });
+  assert.deepEqual(chooseCategoryIcon({ hasImage: false, emoji: "", companyId: "anthropic", stored }), stored);
+  assert.deepEqual(chooseCategoryIcon({ hasImage: false, companyId: "anthropic" }), { kind: "company", value: "anthropic" });
+  assert.deepEqual(chooseCategoryIcon({ hasImage: false }), { kind: "default", value: "" });
+});
+
+test("removing the current icon falls back to the next one, and a new upload still wins", () => {
+  const stored = { kind: "image", value: "categories/opus-ab12.png" };
+  assert.deepEqual(chooseCategoryIcon({ hasImage: false, emoji: "🔬", removeCurrent: true }), { kind: "default", value: "" });
+  assert.deepEqual(chooseCategoryIcon({ hasImage: false, companyId: "anthropic", removeCurrent: true, stored }), { kind: "company", value: "anthropic" });
+  assert.deepEqual(chooseCategoryIcon({ hasImage: true, removeCurrent: true, stored }), { kind: "image", value: null });
+});
+
+test("a malformed emoji or company id is refused", () => {
+  assert.equal(chooseCategoryIcon({ hasImage: false, emoji: "ab" }), null);
+  assert.equal(chooseCategoryIcon({ hasImage: false, companyId: "nope!" }), null);
+});
+
+test("a category needs a name and a short description", () => {
+  assert.deepEqual(parseCategoryFields({ name: " Opus ", description: " The Opus line. " }), { name: "Opus", description: "The Opus line." });
+  assert.equal(parseCategoryFields({ name: "", description: "Missing name." }), null);
+  assert.equal(parseCategoryFields({ name: "A" }), null);
 });
 
 test("the description stays short", () => {
   const long = "x".repeat(maxCategoryDescription + 1);
   assert.equal(maxCategoryDescription, 140);
-  assert.equal(parseCategoryFields({ name: "Opus", description: long, iconKind: "image" }), null);
-  assert.ok(parseCategoryFields({ name: "Opus", description: "x".repeat(140), iconKind: "image" }));
+  assert.equal(parseCategoryFields({ name: "Opus", description: long }), null);
+  assert.ok(parseCategoryFields({ name: "Opus", description: "x".repeat(140) }));
 });
 
 test("an emoji is one grapheme with a pictograph or a flag", () => {
@@ -139,7 +143,26 @@ test("an image category is stored in the logos bucket and cleaned up", () => {
   assert.match(roster, /storage\.from\("logos"\)\.upload\(path/);
   assert.match(roster, /storage\.from\("logos"\)\.remove/);
   assert.match(page, /type="file" name="image"/);
-  assert.match(page, /name="iconKind" value="emoji"/);
+  assert.match(page, /name="removeIcon"/);
+  assert.doesNotMatch(page, /type="radio"/);
   assert.match(migration, /icon_kind in \('company', 'image', 'emoji'\)/);
   assert.match(migration, /update public\.game_modes\s+set enabled = true, leaderboard = true, hints_allowed = true\s+where id = 'class'/);
+});
+
+test("a category can be turned off and stays out of play, the board, and the statistics", () => {
+  const root = path.resolve(import.meta.dirname, "..");
+  const migration = fs.readFileSync(path.join(root, "supabase/migrations/20261022185816_category_enabled_default_icon.sql"), "utf8");
+  const start = fs.readFileSync(path.join(root, "lib/rounds-start.ts"), "utf8");
+  const stats = fs.readFileSync(path.join(root, "lib/public-stats-data.ts"), "utf8");
+  const page = fs.readFileSync(path.join(root, "app/admin/categories/page.tsx"), "utf8");
+  const css = fs.readFileSync(path.join(root, "app/globals.css"), "utf8");
+  assert.match(migration, /add column enabled boolean not null default true/);
+  assert.match(migration, /'default'/);
+  assert.match(start, /category\?\.enabled\) return fail\(404, "not_found"\)/);
+  assert.match(start, /categories\.filter\(\(row\) => row\.enabled\)/);
+  assert.match(start, /\.filter\(\(row\) => row\.enabled\)\s*\.map/);
+  assert.match(stats, /row\.enabled \? \[/);
+  assert.match(page, /title="Inactive"/);
+  assert.match(page, /action=\{toggleCategory\}/);
+  assert.match(css, /\.roster-edit\.card \{\s*text-align: left;/);
 });

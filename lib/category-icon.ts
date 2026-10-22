@@ -2,13 +2,14 @@ import { logoPublicUrl } from "./logos";
 import { presentLogo } from "./rounds-shape";
 import { publicEnv } from "./supabase/env";
 
-/** What the page needs to draw a category icon. `src` is a logo URL, or the emoji itself. */
-export type CategoryIconData = { kind: "logo" | "emoji"; src: string };
+/** What the page needs to draw a category icon. `src` is a logo URL, or the emoji itself. `default` is the site logo. */
+export type CategoryIconData = { kind: "logo" | "emoji" | "default"; src: string };
 
 export function presentCategoryIcon(
   row: { icon_kind: string; icon_value: string },
   companyLogoPath: string | undefined,
 ): CategoryIconData | null {
+  if (row.icon_kind === "default") return { kind: "default", src: "" };
   if (row.icon_kind === "emoji") return { kind: "emoji", src: row.icon_value };
   if (row.icon_kind === "company") {
     return companyLogoPath === undefined ? null : { kind: "logo", src: presentLogo(companyLogoPath, row.icon_value) };

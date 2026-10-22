@@ -98,7 +98,7 @@ export const statisticModes = [
   { id: "daily", name: "Daily", enabled: true },
   { id: "all", name: "All models", enabled: true },
   { id: "company", name: "Company", enabled: true },
-  { id: "class", name: "Category", enabled: false },
+  { id: "class", name: "Category", enabled: true },
   { id: "region", name: "Region", enabled: false },
   { id: "custom", name: "Custom", enabled: false },
 ] as const;

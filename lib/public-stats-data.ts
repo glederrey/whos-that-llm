@@ -21,7 +21,7 @@ export async function loadPublicStats(): Promise<PublicStatsPayload> {
     readAll(client, "guesses", "id, game_id, guessed_model_id, model_correct, region_correct"),
     readAll(client, "game_modes", "id, name, sort_order"),
     readAll(client, "models", "id, name"),
-    readAll(client, "categories", "id, name"),
+    readAll(client, "categories", "id, name, enabled"),
     readAll(client, "model_categories", "model_id, category_id", ["model_id", "category_id"]),
   ]);
   const names: Record<string, string> = {};
@@ -30,7 +30,8 @@ export async function loadPublicStats(): Promise<PublicStatsPayload> {
     .map((row) => ({ id: row.id as string, name: row.name as string, sort: Number(row.sort_order ?? 0) }))
     .sort((a, b) => a.sort - b.sort || a.id.localeCompare(b.id))
     .map(({ id, name }) => ({ id, name }));
-  const categoryNames: NamedCategory[] = categories.map((row) => ({ id: row.id as string, name: row.name as string }));
+  // A category that is turned off is left out; its games stay in the other tables.
+  const categoryNames: NamedCategory[] = categories.flatMap((row) => (row.enabled ? [{ id: row.id as string, name: row.name as string }] : []));
   const categoriesByModel = new Map<string, string[]>();
   for (const row of memberships) {
     const modelId = row.model_id as string;
