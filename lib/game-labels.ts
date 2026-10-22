@@ -17,7 +17,7 @@ export function sizeLabel(size: Size): string {
 }
 
 /** Label of the score card row that counts the models a round drew from. */
-export const poolSizeLabel = "Guessing from";
+export const poolSizeLabel = "Pool";
 
 /** Value of that row: the pool size with its unit, so the number reads as the choices on offer. */
 export function poolSizeValue(size: number): string {
