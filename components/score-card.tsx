@@ -76,14 +76,10 @@ export function ScoreCard({
       {actions}
       <section className="card score-card">
         <div className="score-head">
-          {scored ? (
-            <div>
-              <p className="score-label">Your score</p>
-              <p className="score">{score.toLocaleString("en-US")}</p>
-            </div>
-          ) : (
-            <div />
-          )}
+          <div>
+            <p className="score-label">Your score</p>
+            <p className="score">{scored ? score.toLocaleString("en-US") : "—"}</p>
+          </div>
           <div className="score-meta">
             <p className="status" data-state={shown}>
               {status}
