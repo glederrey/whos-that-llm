@@ -1,12 +1,13 @@
 import type { CategoryIconData } from "@/lib/category-icon";
 import { CompanyLogo } from "./company-logo";
+import { Twemoji } from "./twemoji";
 
 export function CategoryIcon({ icon }: { icon: CategoryIconData | null }) {
   if (!icon) return null;
   if (icon.kind === "emoji") {
     return (
       <span className="category-emoji" aria-hidden="true">
-        {icon.src}
+        <Twemoji emoji={icon.src} />
       </span>
     );
   }

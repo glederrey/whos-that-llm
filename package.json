@@ -16,6 +16,7 @@
     "@openrouter/ai-sdk-provider": "^3.1.0",
     "@supabase/ssr": "^0.12.7",
     "@supabase/supabase-js": "^2.118.0",
+    "@twemoji/svg": "15.0.0",
     "@vercel/analytics": "^2.0.1",
     "ai": "^7.0.143",
     "emoji-picker-element": "1.29.1",

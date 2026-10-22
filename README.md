@@ -89,3 +89,7 @@ Ground rules for agents and humans alike: no secrets or real keys anywhere in th
 ## License
 
 This project is released under the [MIT License](LICENSE). You are free to use, copy, modify and share it, as long as the copyright notice and the license text stay with it. The software comes as is, without warranty.
+
+## Credits
+
+Emoji icons are drawn with [Twemoji](https://github.com/jdecked/twemoji) graphics (`@twemoji/svg`), copyright 2020 Twitter, Inc and other contributors, licensed [CC-BY 4.0](https://creativecommons.org/licenses/by/4.0/). They are served from this site, not from a CDN.
