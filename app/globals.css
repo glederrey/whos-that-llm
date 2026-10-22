@@ -2035,6 +2035,28 @@ html[data-theme="dark"] .history-score[data-best="true"] { color: var(--teal); }
 .icon-picker legend { padding: 0; margin-bottom: 4px; }
 .icon-picker-option { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .icon-picker-option input[type="text"], .icon-picker-option select { max-width: 16rem; }
+.emoji-field { position: relative; display: inline-flex; align-items: center; gap: 8px; }
+.emoji-popover { position: absolute; top: calc(100% + 6px); left: 0; z-index: 20; box-shadow: var(--lift); border-radius: var(--radius-sm); }
+.emoji-picker {
+  --background: var(--card);
+  --border-color: var(--line);
+  --border-size: 1px;
+  --border-radius: var(--radius-sm);
+  --input-border-color: var(--line-strong);
+  --input-font-color: var(--text);
+  --input-placeholder-color: var(--mute);
+  --indicator-color: var(--teal);
+  --outline-color: var(--teal);
+  --button-hover-background: var(--soft);
+  --button-active-background: var(--teal-wash);
+  --category-font-color: var(--mute);
+  --num-columns: 8;
+  --emoji-size: 1.4rem;
+  height: 22rem;
+  max-width: calc(100vw - 32px);
+  color-scheme: inherit;
+}
+html[data-theme="dark"] .emoji-picker { color-scheme: dark; }
 .category-combo { position: relative; }
 .category-combo-input { width: 100%; }
 .category-combo-list {
