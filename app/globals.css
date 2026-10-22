@@ -2092,3 +2092,16 @@ html[data-theme="dark"] .emoji-picker { color-scheme: dark; }
 .category-combo-empty { padding: 8px 10px; }
 .company-menu summary .category-emoji, .company-menu-list .category-emoji { width: 20px; height: 20px; font-size: 16px; }
 .board-chip.company-chip .category-emoji { width: 16px; height: 16px; font-size: 12px; }
+.model-picker { display: grid; gap: 8px; border: 0; margin: 0; padding: 0; min-width: 0; }
+.model-picker legend { padding: 0; margin-bottom: 4px; }
+.model-picker-bar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.model-picker-bar input[type="search"] { flex: 1 1 12rem; min-width: 0; }
+.model-chips { display: flex; flex-wrap: wrap; gap: 6px; list-style: none; margin: 0; padding: 0; }
+.model-chip { border: 1px solid var(--line-strong); border-radius: 999px; background: var(--soft); color: var(--text); padding: 2px 10px; font: inherit; font-size: 13px; cursor: pointer; }
+.model-chip.is-off { color: var(--mute); }
+.model-picker-list { max-height: 240px; overflow-y: auto; border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 4px 8px; }
+.model-option { align-items: center; padding: 3px 0; }
+.model-option input { margin-top: 0; }
+.model-option img { width: 20px; height: 20px; object-fit: contain; flex: none; }
+.model-option.is-off, .model-option.is-off span { color: var(--mute); }
+.model-option .tag { font-size: 11px; border: 1px solid var(--line-strong); border-radius: 4px; padding: 0 4px; }

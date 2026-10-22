@@ -1,8 +1,9 @@
 import { CategoryIcon } from "@/components/category-icon";
+import { CategoryModelPicker } from "@/components/category-model-picker";
 import { EmojiPickerField } from "@/components/emoji-picker-field";
 import { SectionNav } from "@/components/section-nav";
 import { addCategory, saveCategory, toggleCategory } from "@/app/admin/actions";
-import { categoryNotice, maxCategoryDescription } from "@/lib/admin-category";
+import { categoryNotice, maxCategoryDescription, type PickerModel } from "@/lib/admin-category";
 import { loadCategoryList, type CategoryListRow } from "@/lib/admin-roster";
 
 export const dynamic = "force-dynamic";
@@ -16,7 +17,7 @@ export default async function CategoriesPage({
 }) {
   const params = await searchParams;
   const notice = categoryNotice(params.notice);
-  const { categories, companies } = await loadCategoryList();
+  const { categories, companies, models } = await loadCategoryList();
 
   return (
     <div className="stack">
@@ -36,7 +37,7 @@ export default async function CategoriesPage({
       <details className="card roster-add">
         <summary>Add a category</summary>
         <form action={addCategory} className="stack">
-          <CategoryFields companies={companies} />
+          <CategoryFields companies={companies} models={models} />
           <div>
             <button className="button" type="submit">
               Add category
@@ -44,8 +45,8 @@ export default async function CategoriesPage({
           </div>
         </form>
       </details>
-      <CategoryTable title="Active" rows={categories.filter((row) => row.enabled)} companies={companies} empty="No active categories." />
-      <CategoryTable title="Inactive" rows={categories.filter((row) => !row.enabled)} companies={companies} empty="No inactive categories." />
+      <CategoryTable title="Active" rows={categories.filter((row) => row.enabled)} companies={companies} models={models} empty="No active categories." />
+      <CategoryTable title="Inactive" rows={categories.filter((row) => !row.enabled)} companies={companies} models={models} empty="No inactive categories." />
     </div>
   );
 }
@@ -54,11 +55,13 @@ function CategoryTable({
   title,
   rows,
   companies,
+  models,
   empty,
 }: {
   title: string;
   rows: CategoryListRow[];
   companies: Company[];
+  models: PickerModel[];
   empty: string;
 }) {
   return (
@@ -83,7 +86,7 @@ function CategoryTable({
                 </td>
               </tr>
             ) : (
-              rows.map((row) => <CategoryRowView key={row.id} row={row} companies={companies} />)
+              rows.map((row) => <CategoryRowView key={row.id} row={row} companies={companies} models={models} />)
             )}
           </tbody>
         </table>
@@ -92,7 +95,7 @@ function CategoryTable({
   );
 }
 
-function CategoryRowView({ row, companies }: { row: CategoryListRow; companies: Company[] }) {
+function CategoryRowView({ row, companies, models }: { row: CategoryListRow; companies: Company[]; models: PickerModel[] }) {
   const panel = `edit-category-${row.id}`;
   return (
     <tr className={row.enabled ? undefined : "is-off"}>
@@ -126,6 +129,8 @@ function CategoryRowView({ row, companies }: { row: CategoryListRow; companies: 
               iconValue={row.iconValue}
               icon={row.icon}
               companies={companies}
+              models={models}
+              modelIds={row.modelIds}
             />
             <div className="row">
               <button className="button" type="submit">
@@ -149,6 +154,8 @@ function CategoryFields({
   iconValue = "",
   icon = null,
   companies,
+  models,
+  modelIds = [],
 }: {
   name?: string;
   description?: string;
@@ -156,6 +163,8 @@ function CategoryFields({
   iconValue?: string;
   icon?: CategoryListRow["icon"];
   companies: Company[];
+  models: PickerModel[];
+  modelIds?: string[];
 }) {
   const removable = iconKind === "image" || iconKind === "emoji";
   return (
@@ -168,6 +177,7 @@ function CategoryFields({
         Description (up to {maxCategoryDescription} characters)
         <textarea name="description" defaultValue={description} maxLength={maxCategoryDescription} />
       </label>
+      <CategoryModelPicker models={models} defaultIds={modelIds} />
       <fieldset className="icon-picker span-2">
         <legend>Icon</legend>
         <p className="muted">

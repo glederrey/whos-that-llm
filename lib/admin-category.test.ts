@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
 import test from "node:test";
-import { chooseCategoryIcon, categoryIdFromName, categoryNotice, maxCategoryDescription, parseCategoryFields, parseCategoryId, parseCategoryIds, parseEmoji } from "./admin-category";
+import { chooseCategoryIcon, categoryIdFromName, categoryNotice, maxCategoryDescription, parseCategoryFields, parseCategoryId, parseCategoryIds, parseEmoji, parseModelIds, filterPickerModels, selectShown, diffModelIds, type PickerModel } from "./admin-category";
 
 test("a category id is a slug from the name", () => {
   assert.equal(categoryIdFromName("Opus"), "opus");
@@ -135,4 +135,33 @@ test("a category can be turned off and stays out of play, the board, and the sta
   assert.match(page, /title="Inactive"/);
   assert.match(page, /action=\{toggleCategory\}/);
   assert.match(css, /\.roster-edit\.card \{\s*text-align: left;/);
+});
+
+const picker: PickerModel[] = [
+  { id: "claude-opus", name: "Claude Opus", companyName: "Anthropic", logoUrl: "", enabled: true },
+  { id: "gpt-nano", name: "GPT Nano", companyName: "OpenAI", logoUrl: "", enabled: false },
+  { id: "grok", name: "Grok", companyName: "xAI", logoUrl: "", enabled: true },
+];
+
+test("model ids from a form are deduplicated and checked", () => {
+  assert.deepEqual(parseModelIds(["claude-opus", " grok ", "claude-opus", ""]), ["claude-opus", "grok"]);
+  assert.deepEqual(parseModelIds([]), []);
+  assert.equal(parseModelIds(["Bad Id"]), null);
+});
+
+test("the picker filter matches the model or company name, ignoring case", () => {
+  assert.deepEqual(filterPickerModels(picker, "").map((m) => m.id), ["claude-opus", "gpt-nano", "grok"]);
+  assert.deepEqual(filterPickerModels(picker, " OPUS ").map((m) => m.id), ["claude-opus"]);
+  assert.deepEqual(filterPickerModels(picker, "openai").map((m) => m.id), ["gpt-nano"]);
+  assert.deepEqual(filterPickerModels(picker, "zzz"), []);
+});
+
+test("select shown adds the filtered models and keeps the hidden selection", () => {
+  assert.deepEqual(selectShown(["grok"], filterPickerModels(picker, "gpt")), ["grok", "gpt-nano"]);
+  assert.deepEqual(selectShown(["grok"], picker), ["grok", "claude-opus", "gpt-nano"]);
+});
+
+test("a selection change is a diff of links", () => {
+  assert.deepEqual(diffModelIds(["a1", "b2"], ["b2", "c3"]), { add: ["c3"], remove: ["a1"] });
+  assert.deepEqual(diffModelIds(["a1"], ["a1"]), { add: [], remove: [] });
 });

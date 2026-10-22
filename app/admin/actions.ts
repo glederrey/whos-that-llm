@@ -53,6 +53,7 @@ function categoryFields(formData: FormData) {
     emoji: text(formData, "emoji"),
     image: formData.get("image") instanceof File ? (formData.get("image") as File) : null,
     removeIcon: formData.get("removeIcon") === "1",
+    modelIds: formData.getAll("modelId").flatMap((value) => (typeof value === "string" ? [value] : [])),
   };
 }
 
