@@ -4,9 +4,9 @@ One Supabase Postgres database. The catalog, the rounds, and the cost ledger are
 
 ## Migrations
 
-The schema is the timestamped files in `supabase/migrations/`, run by the Supabase CLI in name order. `20261021080000_baseline.sql` is the whole schema as it stood on 21 Oct 2026: a fresh database (local, CI, a new project) runs it first, and production is marked as already applied: its 35 old history rows are first marked reverted, then `supabase migration repair --status applied 20261021080000`. `20261021090000_hardening.sql` revokes every table privilege from `anon` and `authenticated` on the tables they must never touch. `supabase/seed.sql` is a snapshot of the production catalog (roster, companies, categories, `openrouter_providers` slugs, `app_settings`) with no player data; it upserts, so it is safe on top of the baseline's own rows, and `supabase db reset` runs it after the migrations. A change is a new file from `npm run db:new <name>`. An applied file is never edited. A new table gets its explicit `GRANT` and its row level security in the same file. Production receives migrations only from the deploy workflow on a release. The bucket rows for `avatars` and `logos` are created by the baseline, not by `config.toml`.
+The schema is the timestamped files in `supabase/migrations/`, run by the Supabase CLI in name order. `20261021080000_baseline.sql` is the whole schema as it stood on 21 Oct 2026: a fresh database (local, CI, a new project) runs it first, and production is marked as already applied: its 35 old history rows are first marked reverted, then `supabase migration repair --status applied 20261021080000`. `20261022151319_category_icons.sql` gives `categories` an icon and opens the Category mode. `20261021090000_hardening.sql` revokes every table privilege from `anon` and `authenticated` on the tables they must never touch. `supabase/seed.sql` is a snapshot of the production catalog (roster, companies, categories, `openrouter_providers` slugs, `app_settings`) with no player data; it upserts, so it is safe on top of the baseline's own rows, and `supabase db reset` runs it after the migrations. A change is a new file from `npm run db:new <name>`. An applied file is never edited. A new table gets its explicit `GRANT` and its row level security in the same file. Production receives migrations only from the deploy workflow on a release. The bucket rows for `avatars` and `logos` are created by the baseline, not by `config.toml`.
 
-The browser may read `companies` and the view `models_public`. Those rows are the roster a player is allowed to see. `models_public` is `models` where `enabled` is true, and the columns are `id`, `name`, `company_id`, and `logo_path`. It omits `openrouter_id`, `provider_settings`, `size`, `released_on`, `open_weights`, and `reasoning`. The guess list for a round does not come from this view. The server sends logo, company, and name for the models that are still legal. `classes` and `model_classes` are admin tables. The public statistics page reads class membership on the server. The browser does not read those tables. The class game mode is not built.
+The browser may read `companies` and the view `models_public`. Those rows are the roster a player is allowed to see. `models_public` is `models` where `enabled` is true, and the columns are `id`, `name`, `company_id`, and `logo_path`. It omits `openrouter_id`, `provider_settings`, `size`, `released_on`, `open_weights`, and `reasoning`. The guess list for a round does not come from this view. The server sends logo, company, and name for the models that are still legal. `categories` and `model_categories` are admin tables. The lobby, the leaderboard, and the share card read them on the server. The browser does not read those tables. The Category game mode (`game_modes.id = 'class'`) is open.
 
 The secret of an open round is `games.model_id`. The browser never queries `games`. Server routes use the secret key, which bypasses row level security. Row level security denies `anon` and `authenticated` on `games`, `messages`, `guesses`, and `usage`.
 
@@ -30,11 +30,11 @@ The table is part of the baseline migration, with its comments, row level securi
 
 | Table | `anon` / `authenticated` | Service role |
 |---|---|---|
-| `companies`, `models_public`, `categories` where `enabled` | `select`. The table grant is required as well as the policy. A new Supabase project does not add it | write on the base tables |
-| `classes`, `model_classes` | no privileges | read and write |
+| `companies`, `models_public`, `game_modes` | `select`. The table grant is required as well as the policy. A new Supabase project does not add it | write on the base tables |
+| `categories`, `model_categories` | no privileges | read and write |
 | `profiles` | `select` own row. `update` own row only while `username` is null. A later rename goes through `set_username` | write |
 | `games`, `messages`, `guesses`, `usage` | no privileges | read and write |
-| `leaderboard(category, since)` | `execute` | execute |
+| `leaderboard(game_mode, since, viewer, p_difficulty, p_company)` | `execute` | execute |
 
 `leaderboard` is a security definer function, not a view of game rows. It returns rank, name, score, whether the row is the signed-in player, and that player's `avatar_path`. The page shows the public picture, or the generated mark when there is no file. It does not show the account id. `anon` can call it, so the landing page can show the top 5 before login.
 
@@ -54,27 +54,30 @@ The table is part of the baseline migration, with its comments, row level securi
 
 The uploaded objects are `anthropic.png`, `openai.png`, `deepseek.png`, and `mistral.png`. The bucket also accepts SVG and WebP, at most 1 MB. The game reads `logo_path`. A missing file shows no image. The bucket is public, so those URLs load. There is no SELECT policy, so clients cannot list the objects. Each object is cached for a year. The URL stays the same between visits.
 
-### `classes`
+### `categories`
 
-A class is a group of models for a later game mode. It is not a game category. Opus can be one class. GPT vs Claude can be another. There is no logo column. When a class has a company, a later screen uses that company's logo. When it has none, that screen uses the site logo.
+A category is a group of models for the Category game mode (`game_modes.id = 'class'`; the id stays `class`). Opus can be one category. GPT vs Claude can be another. It is not a row of `game_modes`. A category carries its own icon, one of three kinds.
 
 | Column | Type | Notes |
 |---|---|---|
-| `id` | text, pk | Slug from the name at create, such as `opus` or `gpt-vs-claude`. It does not change when the name is edited |
+| `id` | text, pk | Slug from the name at create, such as `opus` or `gpt-vs-claude`. It does not change when the name is edited. `games.pool_key` stores it for a Category round |
 | `name` | text, unique | Display name |
-| `description` | text | Can be empty |
-| `company_id` | text, null, fk `companies` | Optional. Set null on company delete |
+| `description` | text | Short, at most 140 characters (the admin form enforces it). Can be empty |
+| `icon_kind` | text | `company`, `image`, or `emoji`. Check constraint |
+| `icon_value` | text | `company`: a `companies.id`. `image`: a path in the public `logos` bucket, `categories/{id}-{random}.{ext}`. `emoji`: the emoji. Not empty, at most 200 characters. The app checks that a company id exists, there is no foreign key |
 | `created_at` | timestamptz | |
 | `updated_at` | timestamptz | |
 
-### `model_classes`
+An uploaded image is an SVG, PNG, or WebP of at most 1 MB, stored by the admin route under `logos/categories/`. Deleting the category, or replacing its image, removes the old file. The category count on a card is models that are turned on. A category with fewer than two such models is not offered to players.
 
-A model can belong to several classes. There is no class column on `models`.
+### `model_categories`
+
+A model can belong to several categories. There is no category column on `models`. The rows cascade when a model or a category is deleted.
 
 | Column | Type | Notes |
 |---|---|---|
 | `model_id` | text, fk `models` | on delete cascade. Part of the primary key |
-| `class_id` | text, fk `classes` | on delete cascade. Part of the primary key |
+| `category_id` | text, fk `categories` | on delete cascade. Part of the primary key |
 
 anon and authenticated cannot read or write these two tables. The server key does that after the owner check.
 
@@ -133,22 +136,22 @@ One row per OpenRouter provider slug that has served a reply, in a normal game o
 | `created_at` | timestamptz | First time this slug was stored |
 | `updated_at` | timestamptz | Last verdict. Clearing a blacklist updates this and leaves `reason` in place |
 
-### `categories`
+### `game_modes`
 
 The lobby and the leaderboard read this table. The built-in rows are seeded and cannot be deleted.
 
 | Column | Type | Notes |
 |---|---|---|
-| `id` | text, pk | `daily`, `all`, `class`, `company`, `region`, `custom`. Never changes. `games.category` stores it |
+| `id` | text, pk | `daily`, `all`, `class`, `company`, `region`, `custom`. Never changes. `games.game_mode` stores it |
 | `name` | text | Card title |
 | `blurb` | text | The one sentence on the main page and on the card |
 | `enabled` | boolean | False hides the lobby card. The main page still shows the blurb, with **Coming soon.** Past rounds stay |
-| `leaderboard` | boolean | True for `all` and `daily`. False for the others. A class leaderboard is one board per class, and it is not built |
-| `hints_allowed` | boolean | True only for `daily`, `all`, and `custom`. False for `company`, `region`, and every other row |
+| `leaderboard` | boolean | True for `all`, `daily`, `company`, and `class`. False for the others. A Company or Category board lists one row per player and can be narrowed to one company or category through `p_company` |
+| `hints_allowed` | boolean | True for `daily`, `all`, `company`, `class`, and `custom`. False for `region` and every other row |
 | `sort_order` | int | Main page and lobby order |
 | `created_at` | timestamptz | |
 
-Seed `enabled` true only for `all`. The baseline turns `daily` on. The others stay false until they are built. Seed `leaderboard` true for `all` and `daily`. The leaderboard bar shows Daily, All models, Class, and Company. Daily and All models can be selected. Class and Company stay grayed out. Region and Custom are not on that bar.
+`daily`, `all`, `company`, and `class` are enabled and have a leaderboard. The category_icons migration turned `class` on. `region` and `custom` stay off until they are built. The leaderboard bar shows Daily, All models, Company, and Category. Region and Custom are not on that bar.
 
 Every scored round uses the formula in [Rules](rules.md). The category row does not store a multiplier.
 
@@ -181,8 +184,8 @@ One row per round.
 | `id` | uuid, pk | default `gen_random_uuid()` |
 | `user_id` | uuid, null, fk `profiles` | on delete set null, so deleting the account clears this and `username`. The round stays. A null `user_id` is off the leaderboard |
 | `username` | text, null | Copied at insert, then rewritten when that user renames. Cleared when the account is deleted. Leaderboard name for that round |
-| `category` | text, fk `categories` | |
-| `pool_key` | text, null | `anthropic`, `opus`, `us`, `cn`, or `eu`. Null for `all`, `daily`, and `custom` |
+| `game_mode` | text, fk `game_modes` | |
+| `pool_key` | text, null | A company id for `company`, a `categories.id` for `class`, `us`, `cn`, or `eu` for `region`. Null for `all`, `daily`, and `custom` |
 | `difficulty` | smallint, null | `1` easy, `2` medium, `3` hard, `4` impossible. The difficulty the round was played at. Null for a round that has no difficulty, including Custom and rounds from before difficulties |
 | `pool_model_ids` | text[] | The models that were legal when the round started |
 | `model_id` | text, fk `models` | |
@@ -208,7 +211,8 @@ Indexes:
 - `(user_id, started_at desc)` for the hourly count and, later, the profile history
 - unique `(user_id, game_mode, difficulty)` where `status = 'active'`. One unfinished round per mode and difficulty. Easy can stay open while Medium starts. It replaces the older unique `(user_id)` index.
 - unique `(user_id, daily_key)` where `daily_key is not null`. One Daily round per account per difficulty per UTC day, because the key includes the difficulty. `start_game` writes `daily_key` only for `daily`
-- `(category, status, finished_at)` for the leaderboard
+- unique `(user_id, game_mode, pool_key)` where `status = 'active'` and `game_mode` is `company` or `class`. One unfinished Company round per company, one unfinished Category round per category
+- `(game_mode, status, finished_at)` for the leaderboard
 
 ### `daily_models`
 
@@ -245,7 +249,7 @@ The first start of that day and difficulty inserts the row. The inserted model m
 }
 ```
 
-`hintsAllowed` is copied from `categories.hints_allowed` at start. The other fields are copied from config. Scoring reads the current config numbers when the round ends, so a stored copy from an older version does not change the score. `hints` may only contain `company`, `region`, `year`, and `size`, each once. The route checks that.
+`hintsAllowed` is copied from `game_modes.hints_allowed` at start. The other fields are copied from config. Scoring reads the current config numbers when the round ends, so a stored copy from an older version does not change the score. `hints` may only contain `company`, `region`, `year`, and `size`, each once. The route checks that.
 
 `traits` shape:
 
@@ -346,7 +350,7 @@ for each row execute function public.handle_new_user();
 
 ## Queries
 
-Leaderboard, one category, one period. The function body is this query. `since` is the start of the window, or `-infinity` for all time. Rank is the row number of the final order.
+Leaderboard, one game mode, one period (the Daily and All models shape; Company and Category boards filter on `pool_key` in place of the difficulty). The function body is this query. `since` is the start of the window, or `-infinity` for all time. Rank is the row number of the final order.
 
 ```sql
 with best as (
@@ -357,9 +361,9 @@ with best as (
          g.message_count,
          g.finished_at
   from games g
-  join categories c on c.id = g.category
+  join game_modes c on c.id = g.game_mode
   where c.leaderboard
-    and g.category = category
+    and g.game_mode = game_mode
     and g.status in ('solved', 'miss')
     and g.score is not null
     and g.finished_at is not null
