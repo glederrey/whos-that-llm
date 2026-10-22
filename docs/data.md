@@ -69,7 +69,7 @@ A category is a group of models for the Category game mode (`game_modes.id = 'cl
 | `created_at` | timestamptz | |
 | `updated_at` | timestamptz | |
 
-An uploaded image is an SVG, PNG, or WebP of at most 1 MB, stored by the admin route under `logos/categories/`. Deleting the category, or replacing its image, removes the old file. The category count on a card is models that are turned on. A category with fewer than two such models is not offered to players.
+An uploaded image is an SVG, PNG, or WebP of at most 1 MB, stored by the admin route under `logos/categories/`. Replacing its image, or ticking **Remove current icon**, removes the old file. A category is turned off, not deleted. The category count on a card is models that are turned on. A category with fewer than two such models is not offered to players.
 
 ### `model_categories`
 
