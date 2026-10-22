@@ -138,7 +138,7 @@ export function shareCardImage(
             letterSpacing: display.score === "—" ? 0 : -3,
             color: tone.score,
           }),
-          display.stats ? text(display.stats, { marginTop: 14, fontSize: 26, color: tone.mute }) : null,
+          display.stats ? text(display.stats, { marginTop: 14, fontSize: 24, maxWidth: 540, color: tone.mute }) : null,
         ),
         box(
           { flexDirection: "column", alignItems: "flex-end" },
