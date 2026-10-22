@@ -135,19 +135,36 @@ function AvailabilityCard({ result }: { result: AvailabilityResult }) {
     <>
       <h2>Check availability</h2>
       {result.ok ? (
-        result.unavailable.length === 0 ? (
+        result.newlyUnavailable.length === 0 && result.backAvailable.length === 0 ? (
           <p>Every roster model is still on OpenRouter.</p>
         ) : (
           <>
-            <h3>No longer available</h3>
-            <ul className="roster-sync-list">
-              {result.unavailable.map((model) => (
-                <li key={model.id}>
-                  <strong>{model.name}</strong>
-                </li>
-              ))}
-            </ul>
-            <p className="muted">Moved to Unavailable on OpenRouter. They stay in the database, and past games keep them.</p>
+            {result.newlyUnavailable.length > 0 ? (
+              <>
+                <h3>No longer available</h3>
+                <ul className="roster-sync-list">
+                  {result.newlyUnavailable.map((model) => (
+                    <li key={model.id}>
+                      <strong>{model.name}</strong>
+                    </li>
+                  ))}
+                </ul>
+                <p className="muted">Moved to Unavailable on OpenRouter. They stay in the database, and past games keep them.</p>
+              </>
+            ) : null}
+            {result.backAvailable.length > 0 ? (
+              <>
+                <h3>Back on OpenRouter</h3>
+                <ul className="roster-sync-list">
+                  {result.backAvailable.map((model) => (
+                    <li key={model.id}>
+                      <strong>{model.name}</strong>
+                    </li>
+                  ))}
+                </ul>
+                <p className="muted">Available again. They stay off until you turn them on.</p>
+              </>
+            ) : null}
           </>
         )
       ) : (

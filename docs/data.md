@@ -93,6 +93,7 @@ anon and authenticated cannot read or write these two tables. The server key doe
 | `provider_settings` | jsonb | default `{}`. Passed through on the call. Not a player-facing trait |
 | `released_on` | date | Required while `enabled`. The year hint reads the calendar year |
 | `enabled` | boolean | default false. False keeps the row and pulls the model out of every draw |
+| `available` | boolean | default true. False when OpenRouter no longer lists the model, and `enabled` must then be false (`models_unavailable_stays_off`). The availability check sets it false (and `enabled` false) when the model leaves the catalog, and sets it back to true, alone, when it returns. A returning model stays off until the admin turns it on |
 | `logo_path` | text, null | Overrides the company logo. Storage path or `https` URL |
 | `updated_at` | timestamptz | The seed will not clobber a newer edit |
 

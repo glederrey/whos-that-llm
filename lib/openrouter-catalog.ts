@@ -6,8 +6,15 @@ import { readServerEnv } from "./server-env";
 
 const firstPage = "https://openrouter.ai/api/v1/models";
 
-export async function loadOpenRouterCatalog(): Promise<{ ok: true; models: CatalogModel[] } | { ok: false; error: string }> {
+type CatalogResult = { ok: true; models: CatalogModel[] } | { ok: false; error: string };
+
+export async function loadOpenRouterCatalog(): Promise<CatalogResult> {
   await requireOwner();
+  return fetchOpenRouterCatalog();
+}
+
+/** No owner check. The caller has already authorized the request. */
+export async function fetchOpenRouterCatalog(): Promise<CatalogResult> {
   const key = readServerEnv("OPENROUTER_API_KEY");
   if (!key) return { ok: false, error: "OPENROUTER_API_KEY is not set on the server." };
   try {
