@@ -59,18 +59,18 @@ export function SharedResult({ card }: { card: ShareCard }) {
       ) : null}
       <section className="card score-card">
         <div className="score-head">
-          <div>
-            {scored ? (
-              <>
-                <p className="score-label">{display.scoreLabel}</p>
-                <p className="score">{display.score}</p>
-              </>
-            ) : null}
+          {scored ? (
+            <div>
+              <p className="score-label">{display.scoreLabel}</p>
+              <p className="score">{display.score}</p>
+            </div>
+          ) : (
+            <div />
+          )}
+          <div className="score-meta">
             <p className="status" data-state={state}>
               {display.status}
             </p>
-          </div>
-          <div className="score-meta">
             <dl>
               {display.meta.map((row) => (
                 <Fragment key={row.label}>

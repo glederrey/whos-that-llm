@@ -120,7 +120,7 @@ export function shareCardImage(
             )
           : null,
       box(
-        { alignItems: "flex-start", justifyContent: "space-between", marginTop: display.modelName || card.modelHidden ? 76 : 0 },
+        { alignItems: "center", justifyContent: "space-between", marginTop: display.modelName || card.modelHidden ? 76 : 0 },
         box(
           { flexDirection: "column" },
           text(display.scoreLabel, {
@@ -138,20 +138,20 @@ export function shareCardImage(
             letterSpacing: display.score === "—" ? 0 : -3,
             color: tone.score,
           }),
-          box(
-            { marginTop: 22 },
-            text(display.status, {
-              fontSize: 36,
-              fontWeight: 700,
-              color: status.color,
-              background: status.background,
-              borderRadius: 999,
-              padding: "12px 22px",
-              ...(status.border ? { border: status.border } : {}),
-            }),
-          ),
         ),
-        metaTable(display.meta, tone),
+        box(
+          { flexDirection: "column", alignItems: "flex-end" },
+          text(display.status, {
+            fontSize: 36,
+            fontWeight: 700,
+            color: status.color,
+            background: status.background,
+            borderRadius: 999,
+            padding: "12px 22px",
+            ...(status.border ? { border: status.border } : {}),
+          }),
+          metaTable(display.meta, tone),
+        ),
       ),
       display.steps.length > 0 || display.score !== "—"
         ? box(
@@ -191,9 +191,9 @@ function factLine(facts: string[], tone: Tone): ReactElement {
 
 /** Labels right-aligned in one column, values left-aligned in the next, like the score card on the page. */
 function metaTable(rows: ShareMeta[], tone: Tone): ReactElement {
-  const cell = { height: 36, alignItems: "center", marginBottom: 8 } as const;
+  const cell = { height: 36, alignItems: "center", marginTop: 8 } as const;
   return box(
-    {},
+    { marginTop: 8 },
     box(
       { flexDirection: "column", alignItems: "flex-end", marginRight: 16 },
       ...rows.map((row) => text(row.label, { ...cell, fontSize: 26, color: tone.mute })),
