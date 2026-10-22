@@ -11,6 +11,19 @@ export function difficultyText(value: Difficulty | null | undefined): string {
   return value ? difficultyLabel[value] : "—";
 }
 
+/** A company or category round names that where the difficulty would go. A category with no name left shows a dash. */
+export type RoundPlace = { label: "Company" | "Category"; value: string | null };
+
+export function roundPlace(
+  gameMode: string,
+  companyName: string | null | undefined,
+  categoryName: string | null | undefined,
+): RoundPlace | null {
+  if (gameMode === "company") return companyName ? { label: "Company", value: companyName } : null;
+  if (gameMode === "class") return { label: "Category", value: categoryName?.trim() || null };
+  return null;
+}
+
 export function playedRoundFacts(input: {
   gameModeId: string;
   gameModeName: string | null | undefined;

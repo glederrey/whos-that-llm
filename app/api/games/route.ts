@@ -1,7 +1,8 @@
+import { parseCategoryId } from "@/lib/admin-category";
 import { allCompanies, parseBoardCompany } from "@/lib/company";
 import { parseDifficulty } from "@/lib/difficulty";
 import { apiError, apiJson, readJsonBody } from "@/lib/http";
-import { startAllModels, startCompany, startDaily } from "@/lib/rounds";
+import { startAllModels, startCategory, startCompany, startDaily } from "@/lib/rounds";
 import { requireUser } from "@/lib/session";
 
 export async function POST(request: Request) {
@@ -19,6 +20,13 @@ export async function POST(request: Request) {
     const companyId = parseBoardCompany(body.companyId);
     if (companyId === allCompanies) return apiJson({ error: "company" }, 422);
     const result = await startCompany(user.id, companyId, Boolean(body.noHint));
+    if ("error" in result) return apiError(result);
+    return apiJson({ gameId: result.gameId });
+  }
+  if (body.gameMode === "class") {
+    const categoryId = parseCategoryId(body.poolKey ?? "");
+    if (!categoryId) return apiJson({ error: "category" }, 422);
+    const result = await startCategory(user.id, categoryId, Boolean(body.noHint));
     if ("error" in result) return apiError(result);
     return apiJson({ gameId: result.gameId });
   }

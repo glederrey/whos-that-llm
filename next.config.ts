@@ -35,6 +35,11 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   agentRules: false,
+  // The category form carries an image of up to 1 MB.
+  experimental: { serverActions: { bodySizeLimit: "2mb" } },
+  // app/emoji/[code]/route.ts reads a Twemoji file by a computed name, which
+  // file tracing cannot see, so ship the whole set (17 MB) with that route.
+  outputFileTracingIncludes: { "/emoji/[code]": ["./node_modules/@twemoji/svg/*.svg"] },
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },

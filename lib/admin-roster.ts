@@ -3,12 +3,15 @@ import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { requireOwner } from "./admin-access";
 import {
-  categoryDeleteMessage,
   categoryIdFromName,
+  chooseCategoryIcon,
   parseCategoryFields,
   parseCategoryId,
   parseCategoryIds,
+  diffModelIds,
+  parseModelIds,
   type CategoryNotice,
+  type PickerModel,
 } from "./admin-category";
 import {
   canTurnOn,
@@ -27,7 +30,10 @@ import type { CategoryRow, RosterRow } from "./roster-row";
 
 export type { CategoryRow, RosterRow } from "./roster-row";
 import { planReasoningUpdates, type CatalogModel } from "./roster-sync";
-import { companyLogoPath } from "./logos";
+import { randomBytes } from "node:crypto";
+import { categoryImagePath, companyLogoPath, logoBucketPath, readLogo } from "./logos";
+import { loadCategoryEntries } from "./category-data";
+import { publicImageCacheControl } from "./profile";
 import { enabledModelCounts } from "./model-counts";
 import { companyForOrg, type CompanyChoice } from "./openrouter-draft";
 import { countedPlayerId } from "./anonymize-account";
@@ -43,7 +49,7 @@ export type AdminStats = {
 
 type CompanyRow = { id: string; name: string; region: Region };
 
-export type CategoryListRow = CategoryRow & { modelCount: number };
+export type CategoryListRow = CategoryRow & { modelCount: number; modelIds: string[] };
 export type CompanyListRow = CompanyRow & { modelCount: number };
 
 export async function loadAdminStats(): Promise<AdminStats> {
@@ -381,18 +387,48 @@ async function loadEnabledCounts(client: SupabaseClient) {
   return enabledModelCounts(memberships);
 }
 
-export async function loadCategoryList(): Promise<{ categories: CategoryListRow[]; companies: CompanyRow[] }> {
+export async function loadCategoryList(): Promise<{
+  categories: CategoryListRow[];
+  companies: CompanyRow[];
+  models: PickerModel[];
+}> {
   await requireOwner();
   const client = serviceOrThrow();
-  const [categories, companies, counts] = await Promise.all([
+  const [categories, companies, { data, error }] = await Promise.all([
     loadCategories(client),
     loadCompanies(client),
-    loadEnabledCounts(client),
+    client
+      .from("models")
+      .select("id, name, enabled, logo_path, company_id, companies(name, logo_path), model_categories(category_id)")
+      .order("name"),
   ]);
-  if (!categories || !companies || !counts) throw new Error("Could not read categories.");
+  if (!categories || !companies || error) throw new Error("Could not read categories.");
+  const rows = (data ?? []).map((row) => {
+    const company = first(row.companies as { name: string; logo_path: string } | { name: string; logo_path: string }[] | null);
+    const companyId = typeof row.company_id === "string" ? row.company_id : "";
+    return {
+      model: {
+        id: row.id as string,
+        name: row.name as string,
+        companyName: company?.name ?? companyId,
+        logoUrl: presentLogo((row.logo_path as string | null) || company?.logo_path || "", companyId),
+        enabled: Boolean(row.enabled),
+      },
+      companyId,
+      categoryIds: membershipIds(row.model_categories),
+    };
+  });
+  const counts = enabledModelCounts(
+    rows.map((row) => ({ enabled: row.model.enabled, companyId: row.companyId, categoryIds: row.categoryIds })),
+  );
   return {
-    categories: categories.map((row) => ({ ...row, modelCount: counts.byCategory.get(row.id) ?? 0 })),
+    categories: categories.map((row) => ({
+      ...row,
+      modelCount: counts.byCategory.get(row.id) ?? 0,
+      modelIds: rows.filter((item) => item.categoryIds.includes(row.id)).map((item) => item.model.id),
+    })),
     companies,
+    models: rows.map((row) => row.model),
   };
 }
 
@@ -404,73 +440,144 @@ export async function loadCompanyList(): Promise<CompanyListRow[]> {
   return companies.map((company) => ({ ...company, modelCount: counts.byCompany.get(company.id) ?? 0 }));
 }
 
-export async function createCategory(raw: {
-  name?: string;
-  description?: string;
-  companyId?: string;
-}): Promise<CategoryNotice | null> {
-  await requireOwner();
-  const fields = parseCategoryFields(raw);
-  if (!fields) return "invalid";
-  const id = categoryIdFromName(fields.name);
-  if (!id) return "invalid";
-  const client = serviceOrThrow();
-  const company = await knownCompany(client, fields.companyId);
-  if (company) return company;
-  const { error } = await client.from("categories").insert({
-    id,
-    name: fields.name,
-    description: fields.description,
-    company_id: fields.companyId,
-    updated_at: new Date().toISOString(),
-  });
-  if (error?.code === "23505") return "taken";
-  if (error?.code === "23503") return "company";
-  if (error) return "save";
-  return null;
-}
-
-export async function updateCategory(raw: {
+type CategoryInput = {
   id?: string;
   name?: string;
   description?: string;
   companyId?: string;
-}): Promise<CategoryNotice | null> {
+  emoji?: string;
+  image?: File | null;
+  removeIcon?: boolean;
+  modelIds?: string[];
+};
+
+export async function createCategory(raw: CategoryInput): Promise<CategoryNotice | null> {
+  await requireOwner();
+  const fields = parseCategoryFields(raw);
+  if (!fields) return "invalid";
+  const id = categoryIdFromName(fields.name);
+  const modelIds = parseModelIds(raw.modelIds ?? []);
+  if (!id || !modelIds) return "invalid";
+  const client = serviceOrThrow();
+  const unknown = await unknownModels(client, modelIds);
+  if (unknown) return unknown;
+  const icon = await resolveIcon(client, id, raw, null);
+  if (typeof icon === "string") return icon;
+  const { error } = await client.from("categories").insert({
+    id,
+    name: fields.name,
+    description: fields.description,
+    icon_kind: icon.kind,
+    icon_value: icon.value,
+    updated_at: new Date().toISOString(),
+  });
+  if (error) {
+    if (icon.uploaded) await removeStoredImage(client, icon.value);
+    return error.code === "23505" ? "taken" : "save";
+  }
+  const linked = await setCategoryModels(client, id, [], modelIds);
+  if (linked) {
+    // No half state: a category whose links failed is taken back out, with its image.
+    await client.from("categories").delete().eq("id", id);
+    if (icon.uploaded) await removeStoredImage(client, icon.value);
+    return linked;
+  }
+  return null;
+}
+
+export async function updateCategory(raw: CategoryInput): Promise<CategoryNotice | null> {
   await requireOwner();
   const id = categoryIdFromName(raw.id ?? "") ? raw.id?.trim() : null;
   const fields = parseCategoryFields(raw);
-  if (!id || !/^[a-z0-9-]{2,48}$/.test(id) || !fields) return "invalid";
+  const modelIds = parseModelIds(raw.modelIds ?? []);
+  if (!id || !/^[a-z0-9-]{2,48}$/.test(id) || !fields || !modelIds) return "invalid";
   const client = serviceOrThrow();
-  const company = await knownCompany(client, fields.companyId);
-  if (company) return company;
+  const unknown = await unknownModels(client, modelIds);
+  if (unknown) return unknown;
+  const { data: current, error: readError } = await client
+    .from("categories")
+    .select("icon_kind, icon_value")
+    .eq("id", id)
+    .maybeSingle();
+  if (readError || !current) return "save";
+  const stored = current.icon_kind === "image" ? (current.icon_value as string) : null;
+  const icon = await resolveIcon(client, id, raw, { kind: current.icon_kind as string, value: current.icon_value as string });
+  if (typeof icon === "string") return icon;
   const { error } = await client
     .from("categories")
     .update({
       name: fields.name,
       description: fields.description,
-      company_id: fields.companyId,
+      icon_kind: icon.kind,
+      icon_value: icon.value,
       updated_at: new Date().toISOString(),
     })
     .eq("id", id);
-  if (error?.code === "23505") return "taken";
-  if (error?.code === "23503") return "company";
-  if (error) return "save";
-  return null;
+  if (error) {
+    if (icon.uploaded) await removeStoredImage(client, icon.value);
+    return error.code === "23505" ? "taken" : "save";
+  }
+  if (stored && stored !== icon.value) await removeStoredImage(client, stored);
+  const linked = await readCategoryModelIds(client, id);
+  if (!linked) return "save";
+  return setCategoryModels(client, id, linked, modelIds);
 }
 
-export async function removeCategory(idRaw: string): Promise<string | null> {
+export async function setCategoryEnabled(idRaw: string, enabled: boolean): Promise<CategoryNotice | null> {
   await requireOwner();
   const id = parseCategoryId(idRaw);
-  if (!id) return "Could not delete that category.";
+  if (!id) return "save";
   const client = serviceOrThrow();
-  // model_categories.category_id cascades, so the links go and the models stay.
-  const { error } = await client.from("categories").delete().eq("id", id);
-  if (!error) return null;
-  return categoryDeleteMessage(error.message) ?? "Could not delete that category.";
+  const { error } = await client
+    .from("categories")
+    .update({ enabled, updated_at: new Date().toISOString() })
+    .eq("id", id);
+  return error ? "save" : null;
+}
+
+type ResolvedIcon = { kind: string; value: string; uploaded: boolean };
+
+/** The icon to store, by the order in `chooseCategoryIcon`. An upload goes to the logos bucket. */
+async function resolveIcon(
+  client: SupabaseClient,
+  categoryId: string,
+  raw: CategoryInput,
+  stored: { kind: string; value: string } | null,
+): Promise<ResolvedIcon | CategoryNotice> {
+  const hasImage = Boolean(raw.image && raw.image.size > 0);
+  const choice = chooseCategoryIcon({
+    hasImage,
+    emoji: raw.emoji,
+    companyId: raw.companyId,
+    removeCurrent: raw.removeIcon,
+    stored,
+  });
+  if (!choice) return "icon";
+  if (choice.kind === "company") {
+    const company = await knownCompany(client, choice.value);
+    if (company) return company;
+  }
+  if (choice.kind !== "image" || choice.value !== null) {
+    return { kind: choice.kind, value: choice.value ?? "", uploaded: false };
+  }
+  const bytes = new Uint8Array(await raw.image!.arrayBuffer());
+  const found = readLogo(bytes);
+  if (!found) return "icon";
+  const path = categoryImagePath(categoryId, found.ext, randomBytes(4).toString("hex"));
+  const { error } = await client.storage.from("logos").upload(path, new Blob([bytes as BlobPart], { type: found.mime }), {
+    contentType: found.mime,
+    cacheControl: publicImageCacheControl,
+  });
+  if (error) return "save";
+  return { kind: "image", value: path, uploaded: true };
+}
+
+async function removeStoredImage(client: SupabaseClient, path: string) {
+  await client.storage.from("logos").remove([logoBucketPath(path)]);
 }
 
 async function knownCompany(client: SupabaseClient, companyId: string | null): Promise<CategoryNotice | null> {
-  if (!companyId) return null;
+  if (!companyId) return "company";
   const { data, error } = await client.from("companies").select("id").eq("id", companyId).maybeSingle();
   if (error) return "save";
   if (!data) return "company";
@@ -478,21 +585,7 @@ async function knownCompany(client: SupabaseClient, companyId: string | null): P
 }
 
 async function loadCategories(client: SupabaseClient): Promise<CategoryRow[] | null> {
-  const { data, error } = await client
-    .from("categories")
-    .select("id, name, description, company_id, companies(name)")
-    .order("name");
-  if (error) return null;
-  return (data ?? []).map((row) => {
-    const company = first(row.companies as { name: string } | { name: string }[] | null);
-    return {
-      id: row.id as string,
-      name: row.name as string,
-      description: row.description as string,
-      companyId: (row.company_id as string | null) ?? null,
-      companyName: company?.name ?? null,
-    };
-  });
+  return loadCategoryEntries(client);
 }
 
 async function replaceModelCategories(client: SupabaseClient, modelId: string, categoryIds: string[]): Promise<RosterNotice | null> {
@@ -506,6 +599,40 @@ async function replaceModelCategories(client: SupabaseClient, modelId: string, c
   if (categoryIds.length === 0) return null;
   const inserted = await client.from("model_categories").insert(categoryIds.map((categoryId) => ({ model_id: modelId, category_id: categoryId })));
   if (inserted.error) return "save";
+  return null;
+}
+
+async function unknownModels(client: SupabaseClient, modelIds: string[]): Promise<CategoryNotice | null> {
+  if (modelIds.length === 0) return null;
+  const { data, error } = await client.from("models").select("id").in("id", modelIds);
+  if (error) return "save";
+  return (data ?? []).length === modelIds.length ? null : "models";
+}
+
+async function readCategoryModelIds(client: SupabaseClient, categoryId: string): Promise<string[] | null> {
+  const { data, error } = await client.from("model_categories").select("model_id").eq("category_id", categoryId);
+  if (error) return null;
+  return (data ?? []).map((row) => row.model_id as string);
+}
+
+/** Only the links that changed are written, so a save with the same models touches no row. */
+async function setCategoryModels(
+  client: SupabaseClient,
+  categoryId: string,
+  current: string[],
+  wanted: string[],
+): Promise<CategoryNotice | null> {
+  const { add, remove } = diffModelIds(current, wanted);
+  if (remove.length > 0) {
+    const removed = await client.from("model_categories").delete().eq("category_id", categoryId).in("model_id", remove);
+    if (removed.error) return "save";
+  }
+  if (add.length > 0) {
+    const inserted = await client
+      .from("model_categories")
+      .insert(add.map((modelId) => ({ model_id: modelId, category_id: categoryId })));
+    if (inserted.error) return "save";
+  }
   return null;
 }
 

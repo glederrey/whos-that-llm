@@ -94,7 +94,7 @@ Deleting an account is a server action, not a route that accepts an account id. 
 
 ### `POST /api/games`
 
-Body: `{ category, poolKey: string | null, noHint: boolean, difficulty }`. `difficulty` is `easy`, `medium`, `hard`, or `impossible`. All models requires it. The server stores `1`, `2`, `3`, or `4`.
+Body: `{ gameMode, poolKey: string | null, noHint: boolean, difficulty, companyId }`. `gameMode` is `daily`, `all`, `company`, or `class`. `difficulty` is `easy`, `medium`, `hard`, or `impossible`. Daily and All models require it. The server stores `1`, `2`, `3`, or `4`. Company takes `companyId` and no difficulty. Category (`class`) takes `poolKey`, the category id, and no difficulty: the server checks that the category exists and has at least 2 enabled models (`422 pool_too_small` otherwise, `422 category` for a bad id), builds the pool from `model_categories`, and stores the id in `games.pool_key`.
 
 In one transaction:
 

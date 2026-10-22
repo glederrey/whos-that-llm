@@ -4,7 +4,7 @@ import { BoardControls } from "@/components/board-controls";
 import { BoardTable } from "@/components/board-table";
 import { allCompanies } from "@/lib/company";
 import { anyDifficulty } from "@/lib/difficulty";
-import { boardChoice, boardHref, boardModes, selectedCompany } from "@/lib/board-query";
+import { boardChoice, boardHref, boardModes, boardPool, isPoolBoard, selectedCategory, selectedCompany } from "@/lib/board-query";
 import { leaderboard, listBoardOptions, listGameModes } from "@/lib/rounds";
 import { currentProfile } from "@/lib/session";
 
@@ -20,7 +20,7 @@ const pageSize = 20;
 export default async function LeaderboardPage({
   searchParams,
 }: {
-  searchParams: Promise<{ gameMode?: string; period?: string; page?: string; difficulty?: string; company?: string }>;
+  searchParams: Promise<{ gameMode?: string; period?: string; page?: string; difficulty?: string; company?: string; category?: string }>;
 }) {
   const params = await searchParams;
   const { user } = await currentProfile();
@@ -30,13 +30,14 @@ export default async function LeaderboardPage({
   const view = {
     ...choice,
     company: choice.gameMode === "company" ? selectedCompany(choice.company, options.companies) : allCompanies,
+    category: choice.gameMode === "class" ? selectedCategory(choice.category, options.categories) : allCompanies,
   };
   const result = await leaderboard(
     view.gameMode,
     view.period,
     user?.id,
     view.difficulty,
-    view.gameMode === "company" && view.company !== allCompanies ? view.company : null,
+    boardPool(view),
   );
   const rows = "rows" in result ? result.rows : [];
   const pageCount = Math.max(1, Math.ceil(rows.length / pageSize));
@@ -62,8 +63,8 @@ export default async function LeaderboardPage({
         <>
           <BoardTable
             rows={slice}
-            showDifficulty={view.gameMode !== "company" && view.difficulty === anyDifficulty}
-            showCompany={view.gameMode === "company"}
+            showDifficulty={!isPoolBoard(view.gameMode) && view.difficulty === anyDifficulty}
+            showCompany={isPoolBoard(view.gameMode)}
           />
           <div className="row pager">
             <div className="row">

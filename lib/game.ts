@@ -430,9 +430,9 @@ export type ScoreInput = {
 
 const hintKeyList: readonly HintKey[] = ["company", "region", "year", "size"];
 
-/** Hints exist on Daily, All models, Company, and Custom. Class and region have none. */
+/** Hints exist on Daily, All models, Company, Category, and Custom. Region has none. */
 export function gameModeAllowsHints(gameMode: string): boolean {
-  return gameMode === "daily" || gameMode === "all" || gameMode === "company" || gameMode === "custom";
+  return gameMode === "daily" || gameMode === "all" || gameMode === "company" || gameMode === "class" || gameMode === "custom";
 }
 
 /** Company already names the lab and its region, so only the year and the size can be bought. */

@@ -1,15 +1,26 @@
+export type CategoryIconKind = "company" | "image" | "emoji" | "default";
+
 export type CategoryFields = {
   name: string;
   description: string;
-  companyId: string | null;
 };
 
-export type CategoryNotice = "invalid" | "taken" | "company" | "save";
+/** `value` is null for a new upload: the stored path comes once the file is in the bucket. */
+export type CategoryIconChoice = { kind: CategoryIconKind; value: string | null };
+
+export type CategoryNotice = "invalid" | "taken" | "company" | "icon" | "models" | "save";
+
+/** One model in the category form's picker. */
+export type PickerModel = { id: string; name: string; companyName: string; logoUrl: string; enabled: boolean };
+
+export const maxCategoryDescription = 140;
 
 const notices: Record<CategoryNotice, string> = {
   invalid: "Check the name and the description.",
   taken: "That category name is already in the list.",
-  company: "Pick a company from the list, or leave it blank.",
+  company: "Pick a company from the list.",
+  icon: "Upload an SVG, PNG, or WebP under 1 MB, or type one emoji.",
+  models: "Pick models from the list.",
   save: "Could not save that category.",
 };
 
@@ -25,25 +36,48 @@ export function parseCategoryId(value: string): string | null {
   return id;
 }
 
-export function categoryDeleteMessage(message: string | undefined): string | null {
-  const cleaned = message?.replace(/\s+/g, " ").trim() ?? "";
-  if (!cleaned) return null;
-  return cleaned.slice(0, 240);
+/** One emoji: a single grapheme that is a pictograph, a keycap, or a flag (a pair of regional indicators). */
+export function parseEmoji(value: string | undefined): string | null {
+  const emoji = value?.trim() ?? "";
+  if (!emoji || emoji.length > 32) return null;
+  const parts = [...new Intl.Segmenter("en", { granularity: "grapheme" }).segment(emoji)];
+  if (parts.length !== 1) return null;
+  return /\p{Extended_Pictographic}|^\p{Regional_Indicator}{2}$|^[0-9#*]\uFE0F?\u20E3$/u.test(emoji) ? emoji : null;
 }
 
-export function parseCategoryFields(raw: {
-  name?: string;
-  description?: string;
-  companyId?: string;
-}): CategoryFields | null {
+export function parseCategoryFields(raw: { name?: string; description?: string }): CategoryFields | null {
   const name = raw.name?.trim() ?? "";
   const description = raw.description?.trim() ?? "";
   if (name.length < 1 || name.length > 80) return null;
-  if (description.length > 500) return null;
+  if (description.length > maxCategoryDescription) return null;
   if (!categoryIdFromName(name)) return null;
+  return { name, description };
+}
+
+/**
+ * The icon to store, in this order: an uploaded image, the emoji, the image already stored, the company logo,
+ * the default logo. Removing the current icon skips the emoji field and the stored image. Null when the emoji
+ * or the company id is malformed.
+ */
+export function chooseCategoryIcon(raw: {
+  hasImage: boolean;
+  emoji?: string;
+  companyId?: string;
+  removeCurrent?: boolean;
+  stored?: { kind: string; value: string } | null;
+}): CategoryIconChoice | null {
+  const typed = raw.emoji?.trim() ?? "";
+  const emoji = parseEmoji(typed);
+  if (typed && !emoji) return null;
   const companyId = raw.companyId?.trim() ?? "";
   if (companyId && !/^[a-z0-9-]{2,32}$/.test(companyId)) return null;
-  return { name, description, companyId: companyId || null };
+  if (raw.hasImage) return { kind: "image", value: null };
+  if (!raw.removeCurrent) {
+    if (emoji) return { kind: "emoji", value: emoji };
+    if (raw.stored?.kind === "image") return { kind: "image", value: raw.stored.value };
+  }
+  if (companyId) return { kind: "company", value: companyId };
+  return { kind: "default", value: "" };
 }
 
 export function parseCategoryIds(values: string[]): string[] | null {
@@ -55,6 +89,39 @@ export function parseCategoryIds(values: string[]): string[] | null {
     if (!ids.includes(id)) ids.push(id);
   }
   return ids;
+}
+
+export function parseModelIds(values: string[]): string[] | null {
+  const ids: string[] = [];
+  for (const value of values) {
+    const id = value.trim();
+    if (!id) continue;
+    if (!/^[a-z0-9-]{2,64}$/.test(id)) return null;
+    if (!ids.includes(id)) ids.push(id);
+  }
+  return ids;
+}
+
+/** Case-insensitive match on the model name or the company name. An empty query shows every model. */
+export function filterPickerModels(models: readonly PickerModel[], query: string): PickerModel[] {
+  const needle = query.trim().toLowerCase();
+  if (!needle) return [...models];
+  return models.filter((model) => model.name.toLowerCase().includes(needle) || model.companyName.toLowerCase().includes(needle));
+}
+
+/** The selection plus every shown model, keeping the order already chosen. */
+export function selectShown(selected: readonly string[], shown: readonly PickerModel[]): string[] {
+  const next = [...selected];
+  for (const model of shown) if (!next.includes(model.id)) next.push(model.id);
+  return next;
+}
+
+/** The links to add and to remove to go from the current model ids to the wanted ones. */
+export function diffModelIds(current: readonly string[], wanted: readonly string[]): { add: string[]; remove: string[] } {
+  return {
+    add: wanted.filter((id) => !current.includes(id)),
+    remove: current.filter((id) => !wanted.includes(id)),
+  };
 }
 
 export function categoryNotice(code: string | undefined): string | null {

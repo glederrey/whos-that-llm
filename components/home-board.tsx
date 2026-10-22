@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { CategoryCombobox, type LobbyCategory } from "@/components/category-combobox";
 import { CompanyLogo } from "@/components/company-logo";
 import { canStartMode, presentDailyCard } from "@/lib/daily";
 import { difficulties, difficultyBlurb, difficultyLabel, type Difficulty } from "@/lib/difficulty";
@@ -9,6 +10,7 @@ import {
   difficultyAside,
   difficultyBlocked,
   modeToOpen,
+  openCategoryOn,
   openCompanyOn,
   openGameOn,
   unfinishedLine,
@@ -89,6 +91,7 @@ export function HomeBoard({
   poolSize,
   difficultyCounts,
   companies,
+  categories,
   nextAt,
   gameModes,
 }: {
@@ -100,6 +103,7 @@ export function HomeBoard({
   poolSize: number;
   difficultyCounts: Record<Difficulty, number>;
   companies: Array<{ id: string; name: string; logoUrl: string; models: number }>;
+  categories: LobbyCategory[];
   nextAt: string | null;
   gameModes: HomeGameMode[];
 }) {
@@ -192,8 +196,8 @@ export function HomeBoard({
     setNotice("Not enough models.");
   }
 
-  async function startCompany(companyId: string) {
-    const open = openCompanyOn(openGames, companyId);
+  async function startPool(mode: "company" | "class", poolId: string) {
+    const open = mode === "class" ? openCategoryOn(openGames, poolId) : openCompanyOn(openGames, poolId);
     if (open) {
       router.push(`/play/${open.id}`);
       return;
@@ -206,7 +210,7 @@ export function HomeBoard({
       response = await fetch("/api/games", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ gameMode: "company", companyId, noHint }),
+        body: JSON.stringify(mode === "class" ? { gameMode: mode, poolKey: poolId, noHint } : { gameMode: mode, companyId: poolId, noHint }),
       });
     } catch {
       setBusy(false);
@@ -220,7 +224,7 @@ export function HomeBoard({
       return;
     }
     if (body.error === "active_game") {
-      const known = openCompanyOn(openGames, companyId);
+      const known = mode === "class" ? openCategoryOn(openGames, poolId) : openCompanyOn(openGames, poolId);
       setResumeId(body.gameId ?? known?.id ?? null);
       setNotice("You already have a game open.");
       return;
@@ -248,6 +252,10 @@ export function HomeBoard({
     }
     if (body.error === "company") {
       setNotice("Choose a company.");
+      return;
+    }
+    if (body.error === "category") {
+      setNotice("Choose a category.");
       return;
     }
     setNotice("Not enough models.");
@@ -310,6 +318,16 @@ export function HomeBoard({
                 <div className="difficulty-panel">
                   {custom ? (
                     <p className="muted">The player chooses that pool.</p>
+                  ) : gameMode.id === "class" ? (
+                    <>
+                      <p className="difficulty-heading">Choose category</p>
+                      <CategoryCombobox
+                        categories={categories}
+                        openIds={openGames.flatMap((game) => (game.mode === "class" && game.categoryId ? [game.categoryId] : []))}
+                        disabled={!playable || paused || busy || full}
+                        onPick={(id) => void startPool("class", id)}
+                      />
+                    </>
                   ) : gameMode.id === "company" ? (
                     <>
                       <p className="difficulty-heading">Choose company</p>
@@ -347,7 +365,7 @@ export function HomeBoard({
                               type="button"
                               className="difficulty-choice company-choice"
                               disabled={blocked}
-                              onClick={() => void startCompany(company.id)}
+                              onClick={() => void startPool("company", company.id)}
                             >
                               {choice}
                             </button>

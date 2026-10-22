@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { boardChoice, boardHref, boardMiddle, boardModes, boardSince, type BoardMode } from "./board-query";
+import { boardChoice, boardHref, boardMiddle, boardModes, boardPool, boardSince, isPoolBoard, selectedCategory, type BoardMode } from "./board-query";
 
 const modes: BoardMode[] = [
   { id: "daily", name: "Daily", open: false },
@@ -11,9 +11,9 @@ const modes: BoardMode[] = [
 
 test("home and the leaderboard share one board choice", () => {
   const opening = boardChoice({}, modes);
-  assert.deepEqual(opening, { gameMode: "all", period: "week", difficulty: "any", company: "all" });
+  assert.deepEqual(opening, { gameMode: "all", period: "week", difficulty: "any", company: "all", category: "all" });
   const picked = boardChoice({ gameMode: "all", period: "all", difficulty: "hard" }, modes);
-  assert.deepEqual(picked, { gameMode: "all", period: "all", difficulty: "hard", company: "all" });
+  assert.deepEqual(picked, { gameMode: "all", period: "all", difficulty: "hard", company: "all", category: "all" });
   assert.equal(boardHref("/", picked), "/?gameMode=all&difficulty=hard&period=all");
   assert.equal(boardHref("/leaderboard", picked), "/leaderboard?gameMode=all&difficulty=hard&period=all");
   assert.equal(boardHref("/leaderboard", opening, 2), "/leaderboard?gameMode=all&difficulty=any&period=week&page=2");
@@ -61,7 +61,7 @@ test("this month is the current UTC calendar month", () => {
 
 test("the month filter is one board choice", () => {
   const month = boardChoice({ gameMode: "all", period: "month", difficulty: "hard" }, modes);
-  assert.deepEqual(month, { gameMode: "all", period: "month", difficulty: "hard", company: "all" });
+  assert.deepEqual(month, { gameMode: "all", period: "month", difficulty: "hard", company: "all", category: "all" });
   assert.equal(boardHref("/", month), "/?gameMode=all&difficulty=hard&period=month");
   assert.equal(boardHref("/leaderboard", month), "/leaderboard?gameMode=all&difficulty=hard&period=month");
   assert.equal(boardChoice({ period: "year" }, modes).period, "week");
@@ -75,6 +75,7 @@ test("an open daily can be selected", () => {
     period: "week",
     difficulty: "hard",
     company: "all",
+    category: "all",
   });
   assert.equal(boardModes([
     { id: "daily", name: "Daily", enabled: true, sort_order: 1 },
@@ -105,6 +106,7 @@ test("the middle slot is the selected mode's control", () => {
     period: "month",
     difficulty: "any",
     company: "anthropic",
+    category: "all",
   });
   assert.equal(
     boardHref("/leaderboard", boardChoice({ gameMode: "company", company: "anthropic" }, companyOpen)),
@@ -113,4 +115,17 @@ test("the middle slot is the selected mode's control", () => {
   assert.equal(boardHref("/", boardChoice({ gameMode: "company" }, companyOpen)), "/?gameMode=company&difficulty=any&period=week");
   assert.deepEqual(boardMiddle("company", companyOpen), { kind: "company", disabled: false });
   assert.deepEqual(boardMiddle("all", companyOpen), { kind: "difficulty" });
+});
+
+test("a category board narrows to one category and unknown ids fall back to all", () => {
+  const open = modes.map((mode) => (mode.id === "class" ? { ...mode, open: true } : mode));
+  const picked = boardChoice({ gameMode: "class", category: "opus" }, open);
+  assert.equal(picked.category, "opus");
+  assert.equal(boardPool(picked), "opus");
+  assert.equal(boardHref("/leaderboard", picked), "/leaderboard?gameMode=class&difficulty=any&period=week&category=opus");
+  assert.equal(boardPool(boardChoice({ gameMode: "class" }, open)), null);
+  assert.equal(selectedCategory("nope", [{ id: "opus" }]), "all");
+  assert.equal(selectedCategory("opus", [{ id: "opus" }]), "opus");
+  assert.equal(isPoolBoard("class"), true);
+  assert.equal(isPoolBoard("all"), false);
 });

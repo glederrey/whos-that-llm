@@ -24,6 +24,11 @@ test("a logo file is an svg, png, or webp under 1 MB", () => {
   const svg = new TextEncoder().encode('<svg xmlns="http://www.w3.org/2000/svg"></svg>');
   assert.deepEqual(readLogo(svg), { mime: "image/svg+xml", ext: "svg" });
   assert.equal(readLogo(new TextEncoder().encode("<svg><script>alert(1)</script></svg>")), null);
+  const late = `<svg xmlns="http://www.w3.org/2000/svg">${" ".repeat(600)}<script>alert(1)</script></svg>`;
+  assert.equal(readLogo(new TextEncoder().encode(late)), null);
+  for (const bad of ['<svg onload="x()"></svg>', "<svg><a href='javascript:x()'/></svg>", "<svg><foreignObject/></svg>", '<svg><rect onclick = "x()"/></svg>']) {
+    assert.equal(readLogo(new TextEncoder().encode(bad)), null, bad);
+  }
   const png = new Uint8Array(16);
   png.set([0x89, 0x50, 0x4e, 0x47]);
   assert.deepEqual(readLogo(png), { mime: "image/png", ext: "png" });

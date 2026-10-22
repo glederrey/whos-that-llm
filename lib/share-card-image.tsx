@@ -1,8 +1,11 @@
 import { createElement, type CSSProperties, type ReactElement } from "react";
-import { hiddenModelNote, hiddenModelTitle, shareCardDisplay, type ShareCard, type ShareCardTheme, type ShareMeta } from "./share-card";
+import { clipText, hiddenModelNote, hiddenModelTitle, shareCardDisplay, type ShareCard, type ShareCardTheme, type ShareMeta } from "./share-card";
 
 export const shareCardWidth = 1080;
 export const shareCardHeight = 1350;
+
+/** A long category name is cut with an ellipsis so the right column stays inside the card. */
+const metaValueMax = 26;
 
 const playLink = "https://whos-that-llm.com";
 
@@ -123,8 +126,8 @@ export function shareCardImage(
         { alignItems: "center", justifyContent: "space-between", marginTop: display.modelName || card.modelHidden ? 76 : 0 },
         box(
           { flexDirection: "column" },
-          text("Your score", {
-            fontSize: 22,
+          text(display.scoreLabel, {
+            fontSize: 28,
             fontWeight: 500,
             letterSpacing: 2,
             textTransform: "uppercase",
@@ -132,7 +135,7 @@ export function shareCardImage(
           }),
           text(display.score, {
             marginTop: 4,
-            fontSize: display.score === "—" ? 84 : 112,
+            fontSize: display.score === "—" ? 104 : 136,
             fontWeight: 700,
             lineHeight: 0.9,
             letterSpacing: display.score === "—" ? 0 : -3,
@@ -150,7 +153,7 @@ export function shareCardImage(
             padding: "12px 22px",
             ...(status.border ? { border: status.border } : {}),
           }),
-          ...display.meta.map((row) => metaRow(row, tone)),
+          metaTable(display.meta, tone),
         ),
       ),
       display.steps.length > 0 || display.score !== "—"
@@ -189,11 +192,19 @@ function factLine(facts: string[], tone: Tone): ReactElement {
   return box({ alignItems: "center", marginTop: 4 }, ...children);
 }
 
-function metaRow(row: ShareMeta, tone: Tone): ReactElement {
+/** Labels right-aligned in one column, values left-aligned in the next, like the score card on the page. */
+function metaTable(rows: ShareMeta[], tone: Tone): ReactElement {
+  const cell = { height: 36, alignItems: "center", marginTop: 8 } as const;
   return box(
-    { alignItems: "center", marginTop: 8 },
-    text(row.label, { fontSize: 26, color: tone.mute, marginRight: 16 }),
-    text(row.value, { fontSize: 28, fontWeight: 700, color: row.color ?? tone.ink }),
+    { marginTop: 8 },
+    box(
+      { flexDirection: "column", alignItems: "flex-end", marginRight: 16 },
+      ...rows.map((row) => text(row.label, { ...cell, fontSize: 26, color: tone.mute })),
+    ),
+    box(
+      { flexDirection: "column", alignItems: "flex-start" },
+      ...rows.map((row) => text(clipText(row.value, metaValueMax), { ...cell, fontSize: 28, fontWeight: 700, color: row.color ?? tone.ink })),
+    ),
   );
 }
 

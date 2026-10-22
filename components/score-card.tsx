@@ -5,7 +5,8 @@ import { CompanyLogo } from "@/components/company-logo";
 import { ShareActions } from "@/components/share-actions";
 import type { Difficulty } from "@/lib/difficulty";
 import { scoreSteps, type ScoreLine } from "@/lib/game";
-import { difficultyText } from "@/lib/round-facts";
+import { poolSizeLabel, poolSizeValue } from "@/lib/game-labels";
+import { difficultyText, type RoundPlace } from "@/lib/round-facts";
 import { difficultyColor } from "@/lib/share-card";
 
 type ScoreCardModel = {
@@ -22,7 +23,8 @@ export function ScoreCard({
   state,
   mode,
   difficulty,
-  company = null,
+  place = null,
+  poolSize = null,
   noHint,
   breakdown,
   share,
@@ -35,7 +37,9 @@ export function ScoreCard({
   mode: string;
   difficulty: Difficulty | null;
   /** When set, this name takes the place difficulty occupies. */
-  company?: string | null;
+  place?: RoundPlace | null;
+  /** Models in the round's pool. Null hides the row. */
+  poolSize?: number | null;
   noHint: boolean;
   breakdown: ScoreLine[] | null;
   share: { gameId: string; text: string } | null;
@@ -47,7 +51,7 @@ export function ScoreCard({
       ? `Solved on message ${messages}.`
       : state === "miss"
         ? "Failed."
-        : "Given up. This round is not on the leaderboard.";
+        : "Given up.";
   const shown = state === "given_up" ? "given-up" : state;
 
   return (
@@ -72,14 +76,10 @@ export function ScoreCard({
       {actions}
       <section className="card score-card">
         <div className="score-head">
-          {scored ? (
-            <div>
-              <p className="score-label">Your score</p>
-              <p className="score">{score.toLocaleString("en-US")}</p>
-            </div>
-          ) : (
-            <div />
-          )}
+          <div>
+            <p className="score-label">Your score</p>
+            <p className="score">{scored ? score.toLocaleString("en-US") : "—"}</p>
+          </div>
           <div className="score-meta">
             <p className="status" data-state={shown}>
               {status}
@@ -87,10 +87,10 @@ export function ScoreCard({
             <dl>
               <dt>Game mode</dt>
               <dd>{mode}</dd>
-              {company ? (
+              {place ? (
                 <>
-                  <dt>Company</dt>
-                  <dd>{company}</dd>
+                  <dt>{place.label}</dt>
+                  <dd>{place.value ?? "—"}</dd>
                 </>
               ) : (
                 <>
@@ -98,6 +98,12 @@ export function ScoreCard({
                   <dd style={difficulty ? { color: difficultyColor[difficulty] } : undefined}>{difficultyText(difficulty)}</dd>
                 </>
               )}
+              {poolSize !== null ? (
+                <>
+                  <dt>{poolSizeLabel}</dt>
+                  <dd>{poolSizeValue(poolSize)}</dd>
+                </>
+              ) : null}
               {noHint ? (
                 <>
                   <dt>Hints</dt>

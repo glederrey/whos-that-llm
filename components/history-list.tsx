@@ -3,7 +3,7 @@
 import { useState } from "react";
 import type { Difficulty } from "@/lib/difficulty";
 import type { ScoreLine } from "@/lib/game";
-import { difficultyText } from "@/lib/round-facts";
+import { difficultyText, type RoundPlace } from "@/lib/round-facts";
 import { CompanyLogo } from "./company-logo";
 import { ScoreCard } from "./score-card";
 import { RoundFacts } from "./round-facts";
@@ -24,8 +24,10 @@ type HistoryItem = {
   regionFound: boolean;
   mode: string;
   difficulty: Difficulty | null;
-  /** Company rounds put this name where a difficulty chip would be. */
-  companyPlace?: string | null;
+  /** Company and category rounds put this name where a difficulty chip would be. */
+  place?: RoundPlace | null;
+  /** Models in the round's pool. Null hides the row. */
+  poolSize?: number | null;
   noHint: boolean;
   /** The stored score. The closed row uses the formatted `score` string. */
   scoreValue: number | null;
@@ -76,8 +78,8 @@ function HistoryFacts({ item }: { item: HistoryItem }) {
     <span className="history-facts">
       <span className="board-chip history-mode">{item.mode}</span>
       <span className="history-level">
-        {item.companyPlace ? (
-          <span className="board-chip company-chip">{item.companyPlace}</span>
+        {item.place?.value ? (
+          <span className="board-chip company-chip">{item.place.value}</span>
         ) : item.difficulty ? (
           <span className={`board-chip difficulty-${item.difficulty}`}>{difficultyText(item.difficulty)}</span>
         ) : null}
@@ -102,7 +104,8 @@ export function HistoryDetail({ item, panel }: { item: HistoryItem; panel?: stri
           state={item.state}
           mode={item.mode}
           difficulty={item.difficulty}
-          company={item.companyPlace}
+          place={item.place}
+          poolSize={item.poolSize ?? null}
           noHint={item.noHint}
           breakdown={item.breakdown}
           share={item.shareText ? { gameId: item.id, text: item.shareText } : null}
@@ -131,8 +134,8 @@ export function HistoryDetail({ item, panel }: { item: HistoryItem; panel?: stri
         <dd>{item.when}</dd>
         <RoundFacts
           mode={item.mode}
-          difficulty={item.companyPlace ?? difficultyText(item.difficulty)}
-          label={item.companyPlace ? "Company" : "Difficulty"}
+          difficulty={item.place ? (item.place.value ?? "—") : difficultyText(item.difficulty)}
+          label={item.place?.label ?? "Difficulty"}
         />
         {item.noHint ? (
           <>

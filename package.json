@@ -9,14 +9,18 @@
     "test": "tsx --test \"lib/**/*.test.ts\"",
     "typecheck": "tsc --noEmit",
     "db:new": "supabase migration new",
+    "emoji:copy": "node scripts/copy-emoji-data.mjs",
     "db:copy-logos": "tsx scripts/copy-logos.ts"
   },
   "dependencies": {
     "@openrouter/ai-sdk-provider": "^3.1.0",
     "@supabase/ssr": "^0.12.7",
     "@supabase/supabase-js": "^2.118.0",
+    "@twemoji/svg": "15.0.0",
     "@vercel/analytics": "^2.0.1",
     "ai": "^7.0.143",
+    "emoji-picker-element": "1.29.1",
+    "emoji-picker-element-data": "1.8.0",
     "gpt-tokenizer": "^4.1.0",
     "next": "^16.4.2",
     "react": "^19.3.1",

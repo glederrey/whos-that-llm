@@ -16,11 +16,13 @@ Hints are the year and the size only. The company and its region are already kno
 
 Categories are created by hand and stored in the database. Do not automatically create All US models, All Chinese models, or All European models. If those sets are wanted, they are ordinary categories created in the admin.
 
-A category has a logo instead of a company. The logo is chosen from an emoji, the Who's that LLM logo, or a company logo already stored in the database. The same choice is what the lobby and the leaderboard show.
+A category has a name, a short description, and an icon in place of a company logo. The icon is a company logo already stored in the database, an uploaded image, or one emoji. The same icon is what the lobby and the leaderboard show.
 
-A category can be turned on or off, in the database and on the Category admin page. A turned-off category stays in the database and is left out of the lobby and the leaderboard choices. A turned-off model does not count in a category.
+On `/play`, choosing Category swaps the usual list for a searchable dropdown. Each option shows the icon, the name, the description, and the number of turned-on models. Typing filters by name and description, and the arrow keys, Enter, and Escape work. A category with fewer than 2 turned-on models is not listed. A turned-off model does not count in a category. Choosing one starts the round at once. A round already open on that category resumes instead.
 
-The leaderboard lists the categories that are turned on. The default is All categories, and the chip stays on the right. Choosing one category removes that chip. This applies to the leaderboard on the main page and on the leaderboard page.
+Hints can be bought as in All models: company, region, year, and size, because a category can mix labs. A round can also be played with no hints, and the no-hint multiplier applies. There is no difficulty. A player can have one open round per category.
+
+The leaderboard lists every category with finished rounds. The default is All categories, and the chip on the right of a row shows the category icon and name. Choosing one category narrows the board to it. This applies to the leaderboard on the main page and on the leaderboard page.
 
 ## Region
 

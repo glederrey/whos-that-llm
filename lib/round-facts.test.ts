@@ -4,7 +4,7 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { HistoryDetail, HistoryList } from "../components/history-list";
 import { ResultSummary } from "../components/round-facts";
-import { difficultyText, playedRoundFacts } from "./round-facts";
+import { difficultyText, playedRoundFacts, roundPlace } from "./round-facts";
 import { siteName } from "./site";
 
 const item = {
@@ -120,4 +120,24 @@ test("an open round still names the mode and the difficulty", () => {
   assert.ok(html.includes("—"));
   assert.ok(html.includes("Continue"));
   assert.ok(html.includes("Hidden until the round ends."));
+});
+
+test("a category round names the category, a company round the company, others neither", () => {
+  assert.deepEqual(roundPlace("class", null, "Opus"), { label: "Category", value: "Opus" });
+  assert.deepEqual(roundPlace("class", "Anthropic", undefined), { label: "Category", value: null });
+  assert.deepEqual(roundPlace("company", "Anthropic", null), { label: "Company", value: "Anthropic" });
+  assert.equal(roundPlace("company", null, null), null);
+  assert.equal(roundPlace("all", "Anthropic", "Opus"), null);
+});
+
+test("a category round shows its name in the closed row and on the score card", () => {
+  const category = { ...item, mode: "Category", difficulty: null, place: { label: "Category" as const, value: "Opus" } };
+  const html = renderToStaticMarkup(createElement(HistoryList, { items: [category] }));
+  assert.match(html, /company-chip">Opus</);
+  const detail = renderToStaticMarkup(createElement(HistoryDetail, { item: category }));
+  assert.match(detail, /<dt>Category<\/dt><dd>Opus<\/dd>/);
+  assert.doesNotMatch(detail, /Difficulty/);
+  const gone = { ...category, place: { label: "Category" as const, value: null } };
+  assert.match(renderToStaticMarkup(createElement(HistoryDetail, { item: gone })), /<dt>Category<\/dt><dd>—<\/dd>/);
+  assert.doesNotMatch(renderToStaticMarkup(createElement(HistoryList, { items: [gone] })), /company-chip/);
 });

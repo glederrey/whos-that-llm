@@ -10,7 +10,7 @@ The name on the site is **Who's that LLM?**.
 
 The playable roster is six small models: Claude Haiku 4.5, Claude Haiku 5.5, GPT-5.6 Luna, GPT-5.6 Luna Pro, GPT-6 Luna, and DeepSeek V4 Flash. Every other seeded model stays off. OpenRouter lists no other small Anthropic model, so Haiku 4.5 is the only extra Anthropic row. Adding more is an admin job, and admin comes later.
 
-Daily uses the same rules as All models, once per account per difficulty per UTC day. Company, region, custom, and class are specified in [Rules](rules.md) and come later. The home page lists those cards. Daily and All models can be started. Class is a coming-soon card before Company. Each class will have its own leaderboard. That mode is not built. Hints are possible only on Daily, All models, and Custom. Size is a hint, not a category. The profile page is in this prototype. The home weekly top 5, daily result stats, and the admin screens come later. The pause flag exists from the first build, because a credit error pauses everyone.
+Daily uses the same rules as All models, once per account per difficulty per UTC day. Company and Category are specified in [Rules](rules.md) and are open. Region and custom come later. The home page lists those cards. Daily, All models, Company, and Category can be started. Hints are possible on Daily, All models, Company, Category, and Custom. Size is a hint, not a category. The profile page is in this prototype. The home weekly top 5, daily result stats, and the admin screens come later. The pause flag exists from the first build, because a credit error pauses everyone.
 
 ## Stack
 

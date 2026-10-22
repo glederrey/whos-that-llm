@@ -1,3 +1,4 @@
+import type { CategoryIconData } from "./category-icon";
 import { boardSeed } from "./board-seed";
 import { boardSince } from "./board-query";
 import { difficultyFromStored, difficultyNumber, type BoardDifficulty, type Difficulty } from "./difficulty";
@@ -17,6 +18,8 @@ export type BoardRow = {
   companyId: string | null;
   companyName: string | null;
   companyLogo: string | null;
+  /** Category rounds only. Set after the rpc, from the category id in `companyId`. */
+  categoryIcon?: CategoryIconData | null;
 };
 
 export type BoardEntry = {
@@ -58,7 +61,7 @@ export function boardRows(data: unknown): BoardRow[] {
   return ((data ?? []) as BoardEntry[]).map((entry) => toBoardRow(entry, Boolean(entry.mine)));
 }
 
-/** Filters for the leaderboard rpc: period start, difficulty number, company id. */
+/** Filters for the leaderboard rpc: period start, difficulty number, company or category id. */
 export function boardFilters(
   gameMode: string,
   period: string,
@@ -67,8 +70,8 @@ export function boardFilters(
 ) {
   return {
     since: boardSince(period === "month" || period === "all" ? period : "week"),
-    difficulty: gameMode === "company" || !difficulty || difficulty === "any" ? null : difficultyNumber[difficulty],
-    company: gameMode === "company" && companyId ? companyId : null,
+    difficulty: gameMode === "company" || gameMode === "class" || !difficulty || difficulty === "any" ? null : difficultyNumber[difficulty],
+    company: (gameMode === "company" || gameMode === "class") && companyId ? companyId : null,
   };
 }
 

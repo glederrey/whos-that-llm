@@ -1,6 +1,6 @@
 # Admin
 
-This build has six pages: `/admin`, `/admin/costs`, `/admin/games`, `/admin/modes`, `/admin/models`, and `/admin/classes`. The rest of this document is the later cockpit.
+This build has six pages: `/admin`, `/admin/costs`, `/admin/games`, `/admin/modes`, `/admin/models`, and `/admin/categories`. The rest of this document is the later cockpit.
 
 The server reads the signed-in Supabase user and allows admin only when `app_metadata.admin === true`. Players cannot write `app_metadata`. A profile edit cannot grant access. There is no role column and no client flag. A missing flag matches nobody.
 
@@ -10,9 +10,9 @@ The server reads the signed-in Supabase user and allows admin only when `app_met
 
 Google and email/password both work when that session has the flag. A second person does not get access by editing their username.
 
-Roster changes are server actions. Each one repeats the check, then writes with the server key. anon and authenticated cannot insert, update, or delete `models`, `companies`, `classes`, or `model_classes`. The counts on `/admin` are not a public function.
+Roster changes are server actions. Each one repeats the check, then writes with the server key. anon and authenticated cannot insert, update, or delete `models`, `companies`, `categories`, or `model_categories`. The counts on `/admin` are not a public function.
 
-A subnav sits on every one of those pages: **Stats, Costs, Games, Modes, Models, Classes.**
+A subnav sits on every one of those pages: **Stats, Costs, Games, Modes, Models, Categories.**
 
 `/admin` is the headline. It shows five counts: models in the roster, active models, players, games today (UTC), and total games. Players are accounts that have started a game. It does not load OpenRouter, and it does not list game results or modes.
 
@@ -28,7 +28,7 @@ A subnav sits on every one of those pages: **Stats, Costs, Games, Modes, Models,
 
 `/admin/models` shows the display name, company, region, year, size, difficulty, input price, output price, then the classes, then active. Difficulty is the name: Easy, Medium, Hard, or Impossible. The column sorts Easy to Impossible. Input and output are the live OpenRouter list price in dollars per 1 million tokens. They are not stored on the model. The page asks OpenRouter on each load, and a price shows a dash when OpenRouter has none or does not answer. Clicking one of those headers sorts both tables ascending. Clicking it again sorts descending. A third click clears the sort and returns the default order. Clicking a different column starts that column at ascending. The turn-on and edit controls are not a sort column. Saving an edit keeps the current search. **Reset** shows only while a search is active and clears it. Add starts with an OpenRouter id. The lookup fills the display name, the company when that org is one of ours, and the release date. Size, difficulty, and classes stay empty. OpenRouter does not set the difficulty. A new model stays off. Class membership is a set of checkboxes from the classes that already exist, and a model can have more than one. **On** is green. **Off** is red.
 
-`/admin/classes` creates and edits a class: name, description, and an optional company. There is no logo field. The class game mode is not on this page.
+`/admin/categories` creates, edits, and turns on or off a category: name, a short description, and an icon (an uploaded image, an emoji, a company logo, or the default logo).
 
 The game still pauses for everyone when OpenRouter returns 402 or an explicit credit error. The pause switch on this page is later. Until then, clear `app_settings.paused` in the database after topping up credits on OpenRouter. The site does not take a payment for credits.
 
@@ -42,7 +42,7 @@ One home page for the picture, and the rest for the work. A subnav sits on every
 |---|---|
 | `/admin` | The picture. Spend, volume, and the pause switch |
 | `/admin/models` | Add a model, or set `enabled` |
-| `/admin/categories` | Show or hide categories |
+| `/admin/categories` | Add, edit, and turn on or off categories with their icon |
 | `/admin/stats` | Confusion, hints, solve rates |
 | `/admin/rounds` | Transcripts, one round at a time |
 | `/admin/rounds/[gameId]` | One transcript |
@@ -136,27 +136,24 @@ curl -X POST -H "Authorization: Bearer $AVAILABILITY_TOKEN" https://<site>/api/a
 curl -X POST -H "Authorization: Bearer $AVAILABILITY_TOKEN" "https://<site>/api/admin/availability?apply=true"
 ```
 
+## Game modes (database)
+
+The built-ins are seeded: Daily, All models, Company, Category (`class`), Region, Custom. Latest, Origin, and Family are not rows. Size is not a row. Daily, All models, Company, and Category are enabled with a leaderboard and hints. Region and Custom are off. The flags (`enabled`, `leaderboard`, `hints_allowed`, `blurb`, `sort_order`) are edited in the database. No admin page edits them. `/admin/modes` only shows counts per mode. You cannot delete a built-in.
+
+Turning a mode off hides its card. Old rounds stay on the leaderboard as long as that mode has `leaderboard` and has counted games. A round already started keeps the `rules.hintsAllowed` it copied. The score formula is the one in [Rules](rules.md), frozen onto the round. A mode has no multiplier of its own.
+
 ## Categories (`/admin/categories`)
 
-The built-ins are seeded: Daily, All models, Class, Company, Region, Custom. Latest, Origin, and Family are not rows. Size is not a row. All models starts enabled. The others start disabled. Class is that disabled card, before Company.
+Create, edit, and turn on or off. There is no delete: turning a category off keeps its games and history. The fields are:
 
-You can rename the card, edit the sentence, change `sort_order`, and set `enabled`. You can set `leaderboard` and `hints_allowed`. The seed already matches [Rules](rules.md): leaderboards for All models and Daily, hints only for Daily, All models, and Custom. Company, region, latest, and every other category have hints off. Custom has no leaderboard. A class leaderboard is one board per class, and it is not built. You cannot delete a built-in.
+- **Name**, required. The id is a slug taken from the name when the row is created, and a rename does not change it.
+- **Description**, short, at most 140 characters. Players see it in the Category dropdown on `/play`.
+- **Models**, a picker in the same form (Add and Edit): a search box (case-insensitive, matches the model name or the company name), a scrollable list of every model with its logo, name, company, and a checkbox, the selection as removable chips under the list with a live "N selected" counter, **Select shown** (ticks every model the filter shows), and **Clear**. A model that is turned off can be selected; it shows in gray with an "off" tag, and it does not count in the Models column until it is turned on. A model the filter hides stays selected and is still saved. Edit starts with the category's current models, Add starts empty. Save writes only the links that changed (the same `model_categories` rows the model form edits, so both directions stay in sync), and an unknown model id is refused. If linking fails on Add, the new category is taken back out so no half-made row stays.
+- **Icon**, computed on save, no radio. The first one filled wins: an **uploaded image** (an SVG, PNG, or WebP of at most 1 MB; an SVG with a script, an event handler, `javascript:`, or embedded content anywhere in the file is refused, stored in the `logos` bucket under `categories/`), then an **emoji** (exactly one emoji, which can be a keycap or a flag; a Pick button that opens a searchable emoji grid above the button, so the dialog does not grow, with a preview of the choice and no text field, loaded on first open and served from `public/emoji-data/`, never a third-party CDN; `npm run emoji:copy` refreshes that file after bumping `emoji-picker-element-data`; the picker grid draws the OS emoji font, so on Windows a flag shows as letters there, and the preview beside the button shows the choice the way the site will draw it), then the **company logo** (a select of the companies), then the **default**, the Who's that LLM logo. The form says so in one hint line. On edit it shows the current icon. An emoji icon is drawn everywhere as a [Twemoji](https://github.com/jdecked/twemoji) picture, never as text, so a flag looks the same on every OS (Windows has no flag glyphs): `<img>` pointing at `/emoji/<code>` (the lowercase hex code points joined by `-`, `fe0f` dropped unless the emoji has a joiner), served by `app/emoji/[code]/route.ts` from the pinned `@twemoji/svg` package with a one-year immutable cache, 404 for an unknown code. If the picture fails to load, the text emoji shows. The stored value stays the emoji itself. An image or emoji already stored stays unless a new one is given or **Remove current icon** is ticked, which falls back to the company logo or the default and, best effort, deletes the stored image.
 
-Turning Daily off hides the card. Old daily rounds stay on the leaderboard as long as that category has `leaderboard` and has counted games. A round already started keeps the `rules.hintsAllowed` it copied.
+Like Models, the page has two tables, **Active** and **Inactive**, with an **OFF**/**ON** button per row. A category that is off is not on the play page, not startable (the start route answers 404), not in the leaderboard Category dropdown, and left out of the statistics. It keeps its models, links, and games; past games stay in profile history with the name. Each table shows the icon, name, description, and the count of models that are turned on. Deleting a category removes its links to models and, best effort, its stored image. The models stay. The model page attaches existing categories. It does not create them. A model can be in Opus and in Latest Anthropic at the same time.
 
-The score formula is the one in [Rules](rules.md), frozen onto the round. Categories do not have their own multiplier.
-
-The player sees the name and the sentence. On a pool picker they also see the count. They do not see the member list before the round.
-
-Reorder with `sort_order`. The lobby follows that order and leaves out categories with `enabled = false`.
-
-## Classes (`/admin/classes`)
-
-Create and edit. The fields are name, description, and an optional company. The id is a slug taken from the name when the row is created, and a rename does not change it. Leave the company blank for a class that is not one lab, such as GPT vs Claude. There is no logo column.
-
-The model page attaches existing classes. It does not create them. A model can be in Opus and in Latest Anthropic at the same time.
-
-This page does not start a round, and it does not show a leaderboard. When the class mode is built, each class has its own leaderboard, and that mode has no hints.
+Upload is a server action that repeats the owner check. It sniffs the bytes (`readLogo`), not the file name. A category needs at least two turned-on models before players can pick it.
 
 ## Stats (`/admin/stats`)
 

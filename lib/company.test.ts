@@ -93,7 +93,7 @@ test("a finished company round scores like all models, and the company takes the
       state: "solved",
       mode: "Company",
       difficulty: null,
-      company: "Anthropic",
+      place: { label: "Company", value: "Anthropic" },
       noHint: false,
       breakdown: company.breakdown,
       share: null,
@@ -148,7 +148,7 @@ test("a company round can buy the year and the size, and not the lab or the regi
   const sql = fs.readFileSync(path.join(root, "supabase/migrations/20261021080000_baseline.sql"), "utf8");
   assert.match(sql, /\('company', 'Company', '[^']*', true, true, true, 3\)/);
   const home = fs.readFileSync(path.join(root, "components/home-board.tsx"), "utf8");
-  assert.match(home, /gameMode: "company", companyId, noHint/);
+  assert.match(home, /gameMode: mode, companyId: poolId, noHint/);
   assert.match(home, /Play without hints/);
   const board = fs.readFileSync(path.join(root, "components/round-board.tsx"), "utf8");
   assert.match(board, /game\.gameMode === "company"/);

@@ -9,6 +9,7 @@ import {
   type ScoreStep,
   type Traits,
 } from "./game";
+import { poolSizeFrom, poolSizeLabel, poolSizeValue } from "./game-labels";
 import { utcDayKey } from "./daily";
 import { siteName, siteOrigin } from "./site";
 
@@ -40,6 +41,8 @@ export type ShareCard = {
   /** Daily · Easy, All models · Hard, Company · Anthropic, Category · Opus. */
   modeLine: string;
   difficulty: Difficulty | null;
+  /** Models in the pool the round drew from, from the snapshot on the game. Null when unknown. */
+  poolSize: number | null;
   outcome: ShareOutcome;
   score: number | null;
   messages: number;
@@ -71,6 +74,8 @@ export type ShareCardInput = {
   gameMode: string;
   poolKey: string | null;
   difficulty: unknown;
+  /** `games.pool_model_ids`. */
+  poolModelIds?: unknown;
   status: string;
   messageCount: number;
   score: number | null;
@@ -130,6 +135,24 @@ export function tokensFromBreakdown(lines: ScoreLine[] | null | undefined): numb
     return Number.isFinite(tokens) ? tokens : null;
   }
   return null;
+}
+
+const scoreLabelNameMax = 20;
+
+/** `Your score` for the player. `Gael's score` for a shared round. `Score` when the name is gone. */
+export function scoreLabel(playerName: string | null | undefined, own: boolean): string {
+  if (own) return "Your score";
+  const name = playerName?.trim() ?? "";
+  if (name.length === 0) return "Score";
+  const chars = Array.from(name);
+  const shown = chars.length > scoreLabelNameMax ? `${chars.slice(0, scoreLabelNameMax).join("").trimEnd()}…` : name;
+  return `${shown}'s score`;
+}
+
+/** Cuts to `max` characters with an ellipsis. */
+export function clipText(value: string, max: number): string {
+  const chars = Array.from(value);
+  return chars.length > max ? `${chars.slice(0, max).join("").trimEnd()}…` : value;
 }
 
 export function shareModeLine(input: {
@@ -195,6 +218,7 @@ export function buildShareCard(input: ShareCardInput): ShareCard | null {
       categoryName: input.categoryName,
     }),
     difficulty,
+    poolSize: poolSizeFrom(input.poolModelIds),
     outcome: outcomeFor(input.status),
     score: input.score,
     messages: input.messageCount,
@@ -271,6 +295,8 @@ export type ShareCardDisplay = {
   /** Set only when the variant is a difficulty name. */
   variantColor: string | null;
   score: string;
+  /** Gael's score, or Score when the name is gone. The card draws it uppercase. */
+  scoreLabel: string;
   outcome: ShareOutcome;
   /** Solved on message 2. Failed. Given up. */
   status: string;
@@ -299,6 +325,7 @@ export function shareCardDisplay(card: ShareCard): ShareCardDisplay {
     const isDifficulty = card.difficulty !== null && variant === difficultyLabel[card.difficulty];
     meta.push({ label: isDifficulty ? "Difficulty" : mode, value: variant, color: isDifficulty ? colored : null });
   }
+  if (card.poolSize !== null) meta.push({ label: poolSizeLabel, value: poolSizeValue(card.poolSize), color: null });
   const status =
     card.outcome === "Solved"
       ? `Solved on message ${formatShareNumber(card.messages)}.`
@@ -311,6 +338,7 @@ export function shareCardDisplay(card: ShareCard): ShareCardDisplay {
     variant,
     variantColor: colored,
     score: card.score === null ? "—" : formatShareNumber(card.score),
+    scoreLabel: scoreLabel(card.playerName, false),
     outcome: card.outcome,
     status,
     meta,

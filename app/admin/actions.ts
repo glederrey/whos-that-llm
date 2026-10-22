@@ -10,7 +10,7 @@ import {
   createRosterModel,
   insertDiscoveredModels,
   loadRoster,
-  removeCategory,
+  setCategoryEnabled,
   setRosterEnabled,
   updateCategory,
   updateRosterModel,
@@ -50,6 +50,10 @@ function categoryFields(formData: FormData) {
     name: text(formData, "name"),
     description: text(formData, "description"),
     companyId: text(formData, "companyId"),
+    emoji: text(formData, "emoji"),
+    image: formData.get("image") instanceof File ? (formData.get("image") as File) : null,
+    removeIcon: formData.get("removeIcon") === "1",
+    modelIds: formData.getAll("modelId").flatMap((value) => (typeof value === "string" ? [value] : [])),
   };
 }
 
@@ -73,6 +77,9 @@ function finish(formData: FormData, notice: string | null) {
 function finishCategory(notice: string | null) {
   revalidatePath("/admin/categories");
   revalidatePath("/admin/models");
+  revalidatePath("/play");
+  revalidatePath("/leaderboard");
+  revalidatePath("/statistics");
   redirect(notice ? `/admin/categories?notice=${notice}` : "/admin/categories");
 }
 
@@ -101,12 +108,9 @@ export async function saveCategory(formData: FormData) {
   finishCategory(await updateCategory({ id: text(formData, "id"), ...categoryFields(formData) }));
 }
 
-export async function deleteCategory(formData: FormData) {
+export async function toggleCategory(formData: FormData) {
   await requireOwner();
-  const message = await removeCategory(text(formData, "id"));
-  revalidatePath("/admin/categories");
-  revalidatePath("/admin/models");
-  redirect(message ? `/admin/categories?error=${encodeURIComponent(message)}` : "/admin/categories");
+  finishCategory(await setCategoryEnabled(text(formData, "id"), text(formData, "enabled") === "1"));
 }
 
 export async function clearProvider(formData: FormData) {
