@@ -8,26 +8,21 @@ import { parseDifficulty } from "@/lib/difficulty";
 import {
   createCategory,
   createRosterModel,
-  markRosterUnavailable,
   insertDiscoveredModels,
   loadRoster,
   removeCategory,
   setRosterEnabled,
   updateCategory,
   updateRosterModel,
-  writeReasoningFlags,
-  writeRosterPrices,
 } from "@/lib/admin-roster";
+import { checkAvailability } from "@/lib/availability-check";
 import { loadOpenRouterCatalog } from "@/lib/openrouter-catalog";
 import { clearProviderBlacklist } from "@/lib/openrouter-providers";
 import {
   planNewModels,
-  planPriceUpdates,
-  planUnavailable,
   type AddModelsResult,
   type AvailabilityResult,
   type NewModelsResult,
-  type PriceSyncResult,
 } from "@/lib/roster-sync";
 import { modelsReturnPath } from "@/lib/roster-list";
 
@@ -46,8 +41,6 @@ function fields(formData: FormData) {
     releasedOn: text(formData, "releasedOn"),
     size: text(formData, "size"),
     difficulty: text(formData, "difficulty"),
-    inputPrice: text(formData, "inputPrice"),
-    outputPrice: text(formData, "outputPrice"),
     categoryIds: formData.getAll("categoryId").flatMap((value) => (typeof value === "string" ? [value] : [])),
   };
 }
@@ -123,43 +116,17 @@ export async function clearProvider(formData: FormData) {
   redirect(ok ? "/admin/providers" : "/admin/providers?notice=save");
 }
 
-export async function updateRosterPrices(): Promise<PriceSyncResult> {
-  await requireOwner();
-  const catalog = await loadOpenRouterCatalog();
-  if (!catalog.ok) return { ok: false, error: catalog.error };
-  const { rows } = await loadRoster();
-  const plan = planPriceUpdates(rows, catalog.models);
-  if (plan.updates.length > 0) {
-    const saved = await writeRosterPrices(plan.updates);
-    if (!saved) return { ok: false, error: "Could not save the new prices." };
-    revalidatePath("/admin");
-    revalidatePath("/admin/models");
-  }
-  const reasoning = await writeReasoningFlags(catalog.models);
-  if (!reasoning) return { ok: false, error: "Could not save which models can reason." };
-  revalidatePath("/admin/models");
-  return { ok: true, changes: plan.changes, notUpdated: plan.notUpdated };
-}
-
 export async function checkRosterAvailability(): Promise<AvailabilityResult> {
   await requireOwner();
   const catalog = await loadOpenRouterCatalog();
   if (!catalog.ok) return { ok: false, error: catalog.error };
-  const { rows } = await loadRoster();
-  const plan = planUnavailable(rows, catalog.models);
-  if (!plan) return { ok: false, error: "OpenRouter returned models in a shape this page does not read." };
-  if (plan.markIds.length > 0) {
-    const saved = await markRosterUnavailable(plan.markIds);
-    if (!saved) return { ok: false, error: "Could not mark those models unavailable." };
-    revalidatePath("/admin");
-    revalidatePath("/admin/models");
-    revalidatePath("/admin/categories");
-    revalidatePath("/admin/companies");
-  }
-  const reasoning = await writeReasoningFlags(catalog.models);
-  if (!reasoning) return { ok: false, error: "Could not save which models can reason." };
+  const outcome = await checkAvailability(catalog.models, true, "owner");
+  if (!outcome.ok) return { ok: false, error: outcome.error };
+  revalidatePath("/admin");
   revalidatePath("/admin/models");
-  return { ok: true, unavailable: plan.unavailable };
+  revalidatePath("/admin/categories");
+  revalidatePath("/admin/companies");
+  return outcome;
 }
 
 export async function searchNewModels(): Promise<NewModelsResult> {
@@ -201,8 +168,6 @@ export async function addNewRosterModels(picks: { id: string; size: string; diff
       id: model.id,
       name: model.name,
       releasedOn: model.releasedOn,
-      inputUsdPerMtok: model.inputUsdPerMtok,
-      outputUsdPerMtok: model.outputUsdPerMtok,
       size: model.size,
       difficulty: model.difficulty,
       reasoning: model.reasoning,

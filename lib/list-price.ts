@@ -1,21 +1,10 @@
-/** OpenRouter quotes a USD price per token. The roster stores dollars per 1M tokens. */
+/** OpenRouter quotes a USD price per token. The roster shows dollars per 1M tokens. */
 export function dollarsPerMillion(perToken: string): number | null {
   const text = perToken.trim();
   if (!/^\d+(\.\d+)?$/.test(text)) return null;
   const [whole, frac = ""] = text.split(".");
   const digits = `${whole}${frac}`.replace(/^0+/, "") || "0";
   return roundListPrice(shiftDecimal(digits, 6 - frac.length));
-}
-
-export function readListPrice(value: unknown): number | null {
-  if (value === null || value === undefined || value === "") return null;
-  const parsed = typeof value === "number" ? value : Number(value);
-  return Number.isFinite(parsed) ? parsed : null;
-}
-
-export function formatPriceInput(value: number | null): string {
-  if (value === null) return "";
-  return String(value);
 }
 
 export function formatListPrice(value: number | null): string {

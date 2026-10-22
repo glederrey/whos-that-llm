@@ -11,8 +11,6 @@ export function ModelFields({
   releasedOn,
   size = "small",
   difficulty = "",
-  inputPrice = "",
-  outputPrice = "",
   categories = [],
   categoryIds = [],
   omitOpenRouterId = false,
@@ -25,8 +23,6 @@ export function ModelFields({
   releasedOn?: string;
   size?: string;
   difficulty?: Difficulty | "";
-  inputPrice?: string;
-  outputPrice?: string;
   categories?: ModelFieldCategory[];
   categoryIds?: string[];
   omitOpenRouterId?: boolean;
@@ -88,14 +84,6 @@ export function ModelFields({
             </option>
           ))}
         </select>
-      </label>
-      <label>
-        Input price
-        <input name="inputPrice" defaultValue={inputPrice} inputMode="decimal" autoComplete="off" />
-      </label>
-      <label>
-        Output price
-        <input name="outputPrice" defaultValue={outputPrice} inputMode="decimal" autoComplete="off" />
       </label>
       <fieldset className="class-picks">
         <legend>Categories</legend>

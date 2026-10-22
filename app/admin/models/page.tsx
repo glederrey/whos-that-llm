@@ -3,7 +3,9 @@ import { RosterSync } from "@/components/roster-sync";
 import { SectionNav } from "@/components/section-nav";
 import { rosterNotice } from "@/lib/admin-model";
 import { loadRoster, type RosterRow } from "@/lib/admin-roster";
+import { loadOpenRouterCatalog } from "@/lib/openrouter-catalog";
 import { pageOf, rosterSortOf, searchRoster, sortRoster } from "@/lib/roster-list";
+import { withListPrices } from "@/lib/roster-sync";
 
 export const dynamic = "force-dynamic";
 
@@ -38,7 +40,10 @@ export default async function ModelsPage({
 }) {
   const params = await searchParams;
   const notice = rosterNotice(params.notice);
-  const { rows, companies, categories } = await loadRoster();
+  const [roster, catalog] = await Promise.all([loadRoster(), loadOpenRouterCatalog()]);
+  const { companies, categories } = roster;
+  // Prices are not stored. When OpenRouter does not answer, the roster still renders with "—".
+  const rows = withListPrices(roster.rows, catalog.ok ? catalog.models : null);
   const query = (params.q ?? "").slice(0, 100);
   const sort = rosterSortOf(params.sort, params.dir);
   const found = sortRoster(searchRoster(rows, query), sort);
@@ -52,8 +57,8 @@ export default async function ModelsPage({
       <h1>Models</h1>
       <p className="muted">
         Turning a model off leaves it out of new rounds. Games already started keep the model they drew. Input and
-        output are the list price in dollars per 1 million tokens. Update prices writes the current OpenRouter list
-        price and skips models already unavailable on OpenRouter. Check availability moves models OpenRouter no longer
+        output are the live OpenRouter list price in dollars per 1 million tokens, and show a dash when OpenRouter
+        does not answer. Check availability moves models OpenRouter no longer
         lists into Unavailable on OpenRouter. Those stay in
         the database and cannot be turned on. Search for new models lists text models OpenRouter added in the last 30
         days that are not already on the roster.

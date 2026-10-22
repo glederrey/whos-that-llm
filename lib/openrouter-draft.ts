@@ -1,5 +1,4 @@
 import type { Region } from "./game";
-import { dollarsPerMillion } from "./list-price";
 
 /** OpenRouter org slug to a company id already on the roster. An org that is not here stays blank. */
 const openRouterOrgCompanyId: Record<string, string> = {
@@ -24,8 +23,6 @@ export type ModelDraft = {
   company: string;
   region: string;
   releasedOn: string;
-  inputPrice: string;
-  outputPrice: string;
 };
 
 export function releasedOnFromCreated(created: unknown): string {
@@ -33,12 +30,6 @@ export function releasedOnFromCreated(created: unknown): string {
   if (!Number.isFinite(seconds) || seconds <= 0) return "";
   const iso = new Date(seconds * 1000).toISOString();
   return iso.slice(0, 10);
-}
-
-export function priceInputFromPerToken(perToken: unknown): string {
-  if (typeof perToken !== "string" && typeof perToken !== "number") return "";
-  const dollars = dollarsPerMillion(String(perToken));
-  return dollars === null ? "" : String(dollars);
 }
 
 export function companyForOrg(org: string, companies: CompanyChoice[]): CompanyChoice | null {
@@ -49,7 +40,7 @@ export function companyForOrg(org: string, companies: CompanyChoice[]): CompanyC
 }
 
 export function draftFromOpenRouter(
-  model: { id?: string; name?: unknown; created?: unknown; pricing?: { prompt?: unknown; completion?: unknown } | null },
+  model: { id?: string; name?: unknown; created?: unknown },
   companies: CompanyChoice[],
 ): ModelDraft {
   const id = typeof model.id === "string" ? model.id : "";
@@ -60,7 +51,5 @@ export function draftFromOpenRouter(
     company: company?.name ?? "",
     region: company?.region ?? "",
     releasedOn: releasedOnFromCreated(model.created),
-    inputPrice: priceInputFromPerToken(model.pricing?.prompt),
-    outputPrice: priceInputFromPerToken(model.pricing?.completion),
   };
 }
