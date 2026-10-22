@@ -9,7 +9,7 @@ import {
   type ScoreStep,
   type Traits,
 } from "./game";
-import { poolSizeFrom, poolSizeLabel } from "./game-labels";
+import { poolSizeFrom, poolSizeLabel, poolSizeValue } from "./game-labels";
 import { utcDayKey } from "./daily";
 import { siteName, siteOrigin } from "./site";
 
@@ -319,7 +319,7 @@ export function shareCardDisplay(card: ShareCard): ShareCardDisplay {
     const isDifficulty = card.difficulty !== null && variant === difficultyLabel[card.difficulty];
     meta.push({ label: isDifficulty ? "Difficulty" : mode, value: variant, color: isDifficulty ? colored : null });
   }
-  if (card.poolSize !== null) meta.push({ label: poolSizeLabel, value: formatShareNumber(card.poolSize), color: null });
+  if (card.poolSize !== null) meta.push({ label: poolSizeLabel, value: poolSizeValue(card.poolSize), color: null });
   const status =
     card.outcome === "Solved"
       ? `Solved on message ${formatShareNumber(card.messages)}.`

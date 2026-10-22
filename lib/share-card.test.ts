@@ -168,13 +168,13 @@ test("the pool size comes from the stored snapshot and is the last meta row", ()
     [
       ["Game mode", "All models"],
       ["Difficulty", "Hard"],
-      ["Models", "3"],
+      ["Guessing from", "3 models"],
     ],
   );
   for (const missing of [undefined, null, [], "x"]) {
     const bare = card({ poolModelIds: missing });
     assert.equal(bare.poolSize, null);
-    assert.equal(shareCardDisplay(bare).meta.some((row) => row.label === "Models"), false);
+    assert.equal(shareCardDisplay(bare).meta.some((row) => row.label === "Guessing from"), false);
   }
 });
 

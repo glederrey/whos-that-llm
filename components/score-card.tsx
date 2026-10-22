@@ -5,7 +5,7 @@ import { CompanyLogo } from "@/components/company-logo";
 import { ShareActions } from "@/components/share-actions";
 import type { Difficulty } from "@/lib/difficulty";
 import { scoreSteps, type ScoreLine } from "@/lib/game";
-import { poolSizeLabel } from "@/lib/game-labels";
+import { poolSizeLabel, poolSizeValue } from "@/lib/game-labels";
 import { difficultyText } from "@/lib/round-facts";
 import { difficultyColor } from "@/lib/share-card";
 
@@ -101,7 +101,7 @@ export function ScoreCard({
               {poolSize !== null ? (
                 <>
                   <dt>{poolSizeLabel}</dt>
-                  <dd>{poolSize.toLocaleString("en-US")}</dd>
+                  <dd>{poolSizeValue(poolSize)}</dd>
                 </>
               ) : null}
               {noHint ? (

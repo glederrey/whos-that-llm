@@ -17,7 +17,12 @@ export function sizeLabel(size: Size): string {
 }
 
 /** Label of the score card row that counts the models a round drew from. */
-export const poolSizeLabel = "Models";
+export const poolSizeLabel = "Guessing from";
+
+/** Value of that row: the pool size with its unit, so the number reads as the choices on offer. */
+export function poolSizeValue(size: number): string {
+  return `${size.toLocaleString("en-US")} ${size === 1 ? "model" : "models"}`;
+}
 
 /** Size of the pool snapshot stored on a game. Null when the snapshot is missing or empty. */
 export function poolSizeFrom(ids: unknown): number | null {
