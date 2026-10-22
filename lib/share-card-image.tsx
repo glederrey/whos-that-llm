@@ -1,8 +1,11 @@
 import { createElement, type CSSProperties, type ReactElement } from "react";
-import { hiddenModelNote, hiddenModelTitle, shareCardDisplay, type ShareCard, type ShareCardTheme, type ShareMeta } from "./share-card";
+import { clipText, hiddenModelNote, hiddenModelTitle, shareCardDisplay, type ShareCard, type ShareCardTheme, type ShareMeta } from "./share-card";
 
 export const shareCardWidth = 1080;
 export const shareCardHeight = 1350;
+
+/** A long category name is cut with an ellipsis so the right column stays inside the card. */
+const metaValueMax = 26;
 
 const playLink = "https://whos-that-llm.com";
 
@@ -200,7 +203,7 @@ function metaTable(rows: ShareMeta[], tone: Tone): ReactElement {
     ),
     box(
       { flexDirection: "column", alignItems: "flex-start" },
-      ...rows.map((row) => text(row.value, { ...cell, fontSize: 28, fontWeight: 700, color: row.color ?? tone.ink })),
+      ...rows.map((row) => text(clipText(row.value, metaValueMax), { ...cell, fontSize: 28, fontWeight: 700, color: row.color ?? tone.ink })),
     ),
   );
 }

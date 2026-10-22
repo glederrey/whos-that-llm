@@ -2,7 +2,7 @@ import type { Difficulty } from "./difficulty";
 import { regionLabel, sizeLabel, type FrozenModel, type GameStatus, type ScoreLine, type Traits } from "./game";
 import { avatarPublicUrl, profileStats, publicImageCacheControl, readImage, traitFound, type ProfileStats } from "./profile";
 import { presentLogo, serviceOrThrow } from "./rounds";
-import { playedRoundFacts } from "./round-facts";
+import { playedRoundFacts, roundPlace, type RoundPlace } from "./round-facts";
 import { poolSizeFrom } from "./game-labels";
 import { buildShareCard, shareText } from "./share-card";
 import { publicEnv } from "./supabase/env";
@@ -21,7 +21,7 @@ export type HistoryRow = {
   regionFound: boolean;
   mode: string;
   difficulty: Difficulty | null;
-  companyPlace: string | null;
+  place: RoundPlace | null;
   noHint: boolean;
   poolSize: number | null;
   modelFacts: string[];
@@ -185,7 +185,11 @@ export async function loadHistory(userId: string, page: number) {
       regionFound: traitFound({ status, given, companyCorrect: seen.company, regionCorrect: seen.region, trait: "region" }),
       mode: facts.mode,
       difficulty: facts.difficulty,
-      companyPlace: row.game_mode === "company" ? (frozen?.companyName ?? company?.name ?? null) : null,
+      place: roundPlace(
+        row.game_mode as string,
+        frozen?.companyName ?? company?.name ?? null,
+        typeof row.pool_key === "string" ? categoryNames.get(row.pool_key) : null,
+      ),
       noHint: Boolean(row.no_hint),
       poolSize: poolSizeFrom(row.pool_model_ids),
     };

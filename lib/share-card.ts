@@ -149,6 +149,12 @@ export function scoreLabel(playerName: string | null | undefined, own: boolean):
   return `${shown}'s score`;
 }
 
+/** Cuts to `max` characters with an ellipsis. */
+export function clipText(value: string, max: number): string {
+  const chars = Array.from(value);
+  return chars.length > max ? `${chars.slice(0, max).join("").trimEnd()}…` : value;
+}
+
 export function shareModeLine(input: {
   gameMode: string;
   poolKey: string | null;

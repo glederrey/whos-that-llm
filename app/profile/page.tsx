@@ -109,7 +109,7 @@ export default async function ProfilePage({
               regionFound: row.regionFound,
               mode: row.mode,
               difficulty: row.difficulty,
-              companyPlace: row.companyPlace,
+              place: row.place,
               poolSize: row.poolSize,
               noHint: row.noHint,
               scoreValue: row.score,

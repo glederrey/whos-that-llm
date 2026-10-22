@@ -1,10 +1,10 @@
 import { notFound, redirect } from "next/navigation";
 import { MessageBubble } from "@/components/message-bubble";
 import { ScoreCard } from "@/components/score-card";
-import { playedRoundFacts } from "@/lib/round-facts";
-import { listGameModes, readPublicGame } from "@/lib/rounds";
+import { playedRoundFacts, roundPlace } from "@/lib/round-facts";
+import { listGameModes, readPublicGame, serviceOrThrow } from "@/lib/rounds";
 import { currentProfile } from "@/lib/session";
-import { readShareCard } from "@/lib/share-card-load";
+import { readCategoryName, readShareCard } from "@/lib/share-card-load";
 import { shareText } from "@/lib/share-card";
 
 export const dynamic = "force-dynamic";
@@ -25,6 +25,8 @@ export default async function ResultPage({ params }: { params: Promise<{ gameId:
     gameModeName: mode?.name,
     difficulty: game.difficulty,
   });
+  const categoryName =
+    game.gameMode === "class" && game.poolKey ? await readCategoryName(serviceOrThrow(), game.poolKey) : null;
   const onBoard = Boolean(mode?.leaderboard);
   const again = game.gameMode === "region" ? `/play/new?gameMode=${game.gameMode}` : "/play";
   const leaderboardHref =
@@ -60,7 +62,7 @@ export default async function ResultPage({ params }: { params: Promise<{ gameId:
         state={game.status === "solved" ? "solved" : game.status === "miss" ? "miss" : "given_up"}
         mode={facts.mode}
         difficulty={facts.difficulty}
-        company={game.gameMode === "company" ? game.model.companyName : null}
+        place={roundPlace(game.gameMode, game.model.companyName, categoryName)}
         poolSize={card?.poolSize ?? null}
         noHint={game.noHint}
         breakdown={game.breakdown ?? null}

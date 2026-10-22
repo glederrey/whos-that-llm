@@ -93,7 +93,7 @@ test("a finished company round scores like all models, and the company takes the
       state: "solved",
       mode: "Company",
       difficulty: null,
-      company: "Anthropic",
+      place: { label: "Company", value: "Anthropic" },
       noHint: false,
       breakdown: company.breakdown,
       share: null,

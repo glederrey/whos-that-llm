@@ -6,7 +6,7 @@ import { ShareActions } from "@/components/share-actions";
 import type { Difficulty } from "@/lib/difficulty";
 import { scoreSteps, type ScoreLine } from "@/lib/game";
 import { poolSizeLabel, poolSizeValue } from "@/lib/game-labels";
-import { difficultyText } from "@/lib/round-facts";
+import { difficultyText, type RoundPlace } from "@/lib/round-facts";
 import { difficultyColor } from "@/lib/share-card";
 
 type ScoreCardModel = {
@@ -23,7 +23,7 @@ export function ScoreCard({
   state,
   mode,
   difficulty,
-  company = null,
+  place = null,
   poolSize = null,
   noHint,
   breakdown,
@@ -37,7 +37,7 @@ export function ScoreCard({
   mode: string;
   difficulty: Difficulty | null;
   /** When set, this name takes the place difficulty occupies. */
-  company?: string | null;
+  place?: RoundPlace | null;
   /** Models in the round's pool. Null hides the row. */
   poolSize?: number | null;
   noHint: boolean;
@@ -87,10 +87,10 @@ export function ScoreCard({
             <dl>
               <dt>Game mode</dt>
               <dd>{mode}</dd>
-              {company ? (
+              {place ? (
                 <>
-                  <dt>Company</dt>
-                  <dd>{company}</dd>
+                  <dt>{place.label}</dt>
+                  <dd>{place.value ?? "—"}</dd>
                 </>
               ) : (
                 <>

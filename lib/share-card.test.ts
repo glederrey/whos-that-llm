@@ -10,6 +10,7 @@ import { rulesForGameMode } from "./config";
 import { scoreRound, type Traits } from "./game";
 import {
   buildShareCard,
+  clipText,
   difficultyColor,
   facebookShareUrl,
   linkedInShareUrl,
@@ -158,6 +159,23 @@ test("difficulty words use the leaderboard colors", () => {
   assert.equal(display.variant, "Impossible");
   assert.equal(display.variantColor, "#a78bfa");
   assert.equal(shareCardDisplay(card({ gameMode: "company", poolKey: "anthropic", difficulty: null })).variantColor, null);
+});
+
+test("a category round names the category in the meta, and a long name is clipped for the image", () => {
+  const meta = shareCardDisplay(card({ gameMode: "class", poolKey: "opus", categoryName: "Opus", difficulty: null })).meta;
+  assert.deepEqual(
+    meta.map((row) => [row.label, row.value, row.color]),
+    [
+      ["Game mode", "Category", null],
+      ["Category", "Opus", null],
+    ],
+  );
+  const bare = shareCardDisplay(card({ gameMode: "class", poolKey: "", categoryName: null, difficulty: null }));
+  assert.deepEqual(bare.meta.map((row) => row.label), ["Game mode"]);
+  assert.equal(clipText("Opus", 26), "Opus");
+  const long = "A".repeat(40);
+  assert.equal(clipText(long, 26), `${"A".repeat(26)}…`);
+  assert.equal(Array.from(clipText(long, 26)).length, 27);
 });
 
 test("the pool size comes from the stored snapshot and is the last meta row", () => {
