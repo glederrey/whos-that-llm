@@ -51,7 +51,7 @@ export function ScoreCard({
       ? `Solved on message ${messages}.`
       : state === "miss"
         ? "Failed."
-        : "Given up. This round is not on the leaderboard.";
+        : "Given up.";
   const shown = state === "given_up" ? "given-up" : state;
 
   return (
