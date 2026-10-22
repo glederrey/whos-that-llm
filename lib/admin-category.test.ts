@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
 import test from "node:test";
-import { categoryDeleteMessage, chooseCategoryIcon, categoryIdFromName, categoryNotice, maxCategoryDescription, parseCategoryFields, parseCategoryId, parseCategoryIds, parseEmoji } from "./admin-category";
+import { chooseCategoryIcon, categoryIdFromName, categoryNotice, maxCategoryDescription, parseCategoryFields, parseCategoryId, parseCategoryIds, parseEmoji } from "./admin-category";
 
 test("a category id is a slug from the name", () => {
   assert.equal(categoryIdFromName("Opus"), "opus");
@@ -76,59 +76,29 @@ test("a category id is the stored slug", () => {
   assert.equal(parseCategoryId(""), null);
 });
 
-test("a refused category delete shows the database error", () => {
-  assert.equal(
-    categoryDeleteMessage('permission denied for table "categories"'),
-    'permission denied for table "categories"',
-  );
-  assert.equal(categoryDeleteMessage("  line one\nline two  "), "line one line two");
-  assert.equal(categoryDeleteMessage("   "), null);
-  assert.equal(categoryDeleteMessage(undefined), null);
-  assert.equal(categoryDeleteMessage("x".repeat(300))?.length, 240);
-});
-
-test("the category row deletes that category and keeps the models", () => {
+test("the category row has on/off and edit, and no delete", () => {
   const root = path.resolve(import.meta.dirname, "..");
   const page = fs.readFileSync(path.join(root, "app/admin/categories/page.tsx"), "utf8");
-  const form = fs.readFileSync(path.join(root, "components/delete-category-form.tsx"), "utf8");
   const action = fs.readFileSync(path.join(root, "app/admin/actions.ts"), "utf8");
-  const roster = fs.readFileSync(path.join(root, "lib/admin-roster.ts"), "utf8");
   const css = fs.readFileSync(path.join(root, "app/globals.css"), "utf8");
-  const schema = fs.readFileSync(path.join(root, "supabase/migrations/20261021080000_baseline.sql"), "utf8");
 
   const buttons = page.indexOf('className="roster-buttons"');
   const edit = page.indexOf("\n            Edit\n", buttons);
-  const deleteForm = page.indexOf("<DeleteCategoryForm", buttons);
-  const panel = page.indexOf('className="roster-edit card"', deleteForm);
-  assert.ok(buttons !== -1 && edit !== -1 && edit < deleteForm && deleteForm < panel);
+  const panel = page.indexOf('className="roster-edit card"', buttons);
+  assert.ok(buttons !== -1 && edit !== -1 && edit < panel);
   assert.match(page, /<button className="button" type="submit"/);
   assert.match(page, /Cancel/);
-  assert.doesNotMatch(page.slice(panel), /DeleteCategoryForm/);
-  assert.match(page, /categoryDeleteMessage\(params\.error\)/);
-
-  assert.match(form, /button-danger/);
-  assert.match(form, />\s*Delete\s*</);
-  assert.match(form, /window\.confirm\(`Delete \$\{name\}\?`\)/);
-  assert.match(form, /preventDefault\(\)/);
-  assert.match(form, /action=\{deleteCategory\}/);
-  assert.doesNotMatch(form, /admin-roster|admin-access/);
-
-  assert.match(action, /const message = await removeCategory\(text\(formData, "id"\)\)/);
-  assert.match(action, /redirect\(message \? `\/admin\/categories\?error=\$\{encodeURIComponent\(message\)\}` : "\/admin\/categories"\)/);
-
-  const start = roster.indexOf("export async function removeCategory");
-  const end = roster.indexOf("async function knownCompany");
-  const fn = roster.slice(start, end);
-  assert.match(fn, /parseCategoryId\(idRaw\)/);
-  assert.match(fn, /\.from\("categories"\)\s*\.delete\(\)\s*\.eq\("id", id\)/);
-  assert.match(fn, /categoryDeleteMessage\(error\.message\)/);
-  assert.doesNotMatch(fn, /from\("models"\)/);
-  assert.match(schema, /category_id text not null references public\.categories \(id\) on delete cascade/);
+  assert.doesNotMatch(page, /Delete/);
+  assert.doesNotMatch(action, /deleteCategory/);
+  assert.equal(fs.existsSync(path.join(root, "components/delete-category-form.tsx")), false);
 
   assert.match(css, /\.roster\.categories \{ min-width: 0; \}/);
   assert.match(css, /\.roster\.categories th:nth-child\(1\),[\s\S]*width: 1%; white-space: nowrap; \}/);
   assert.match(css, /\.roster\.categories th:nth-child\(4\),[\s\S]*text-align: right; \}/);
-  assert.match(css, /\.category-delete \{ margin: 0; flex: none; width: fit-content; max-width: 100%; \}/);
+  assert.match(
+    css,
+    /\.roster\.categories \.roster-buttons \.button-on,\n\.roster\.categories \.roster-buttons \.button-off,\n\.roster\.categories \.roster-buttons \.button-quiet \{ padding: 6px 10px; \}/,
+  );
 });
 
 test("an image category is stored in the logos bucket and cleaned up", () => {

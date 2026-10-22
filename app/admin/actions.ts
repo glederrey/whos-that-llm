@@ -10,7 +10,6 @@ import {
   createRosterModel,
   insertDiscoveredModels,
   loadRoster,
-  removeCategory,
   setCategoryEnabled,
   setRosterEnabled,
   updateCategory,
@@ -111,14 +110,6 @@ export async function saveCategory(formData: FormData) {
 export async function toggleCategory(formData: FormData) {
   await requireOwner();
   finishCategory(await setCategoryEnabled(text(formData, "id"), text(formData, "enabled") === "1"));
-}
-
-export async function deleteCategory(formData: FormData) {
-  await requireOwner();
-  const message = await removeCategory(text(formData, "id"));
-  revalidatePath("/admin/categories");
-  revalidatePath("/admin/models");
-  redirect(message ? `/admin/categories?error=${encodeURIComponent(message)}` : "/admin/categories");
 }
 
 export async function clearProvider(formData: FormData) {

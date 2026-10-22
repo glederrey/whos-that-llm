@@ -32,12 +32,6 @@ export function parseCategoryId(value: string): string | null {
   return id;
 }
 
-export function categoryDeleteMessage(message: string | undefined): string | null {
-  const cleaned = message?.replace(/\s+/g, " ").trim() ?? "";
-  if (!cleaned) return null;
-  return cleaned.slice(0, 240);
-}
-
 /** One emoji: a single grapheme that holds a pictograph or a flag. */
 export function parseEmoji(value: string | undefined): string | null {
   const emoji = value?.trim() ?? "";

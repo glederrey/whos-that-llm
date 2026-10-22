@@ -3,7 +3,6 @@ import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { requireOwner } from "./admin-access";
 import {
-  categoryDeleteMessage,
   categoryIdFromName,
   chooseCategoryIcon,
   parseCategoryFields,
@@ -485,21 +484,6 @@ export async function setCategoryEnabled(idRaw: string, enabled: boolean): Promi
     .update({ enabled, updated_at: new Date().toISOString() })
     .eq("id", id);
   return error ? "save" : null;
-}
-
-export async function removeCategory(idRaw: string): Promise<string | null> {
-  await requireOwner();
-  const id = parseCategoryId(idRaw);
-  if (!id) return "Could not delete that category.";
-  const client = serviceOrThrow();
-  const { data: current } = await client.from("categories").select("icon_kind, icon_value").eq("id", id).maybeSingle();
-  // model_categories.category_id cascades, so the links go and the models stay.
-  const { error } = await client.from("categories").delete().eq("id", id);
-  if (!error) {
-    if (current?.icon_kind === "image") await removeStoredImage(client, current.icon_value as string);
-    return null;
-  }
-  return categoryDeleteMessage(error.message) ?? "Could not delete that category.";
 }
 
 type ResolvedIcon = { kind: string; value: string; uploaded: boolean };

@@ -28,7 +28,7 @@ A subnav sits on every one of those pages: **Stats, Costs, Games, Modes, Models,
 
 `/admin/models` shows the display name, company, region, year, size, difficulty, input price, output price, then the classes, then active. Difficulty is the name: Easy, Medium, Hard, or Impossible. The column sorts Easy to Impossible. Input and output are the live OpenRouter list price in dollars per 1 million tokens. They are not stored on the model. The page asks OpenRouter on each load, and a price shows a dash when OpenRouter has none or does not answer. Clicking one of those headers sorts both tables ascending. Clicking it again sorts descending. A third click clears the sort and returns the default order. Clicking a different column starts that column at ascending. The turn-on and edit controls are not a sort column. Saving an edit keeps the current search. **Reset** shows only while a search is active and clears it. Add starts with an OpenRouter id. The lookup fills the display name, the company when that org is one of ours, and the release date. Size, difficulty, and classes stay empty. OpenRouter does not set the difficulty. A new model stays off. Class membership is a set of checkboxes from the classes that already exist, and a model can have more than one. **On** is green. **Off** is red.
 
-`/admin/categories` creates, edits, turns on or off, and deletes a category: name, a short description, and an icon (an uploaded image, an emoji, a company logo, or the default logo).
+`/admin/categories` creates, edits, and turns on or off a category: name, a short description, and an icon (an uploaded image, an emoji, a company logo, or the default logo).
 
 The game still pauses for everyone when OpenRouter returns 402 or an explicit credit error. The pause switch on this page is later. Until then, clear `app_settings.paused` in the database after topping up credits on OpenRouter. The site does not take a payment for credits.
 
@@ -42,7 +42,7 @@ One home page for the picture, and the rest for the work. A subnav sits on every
 |---|---|
 | `/admin` | The picture. Spend, volume, and the pause switch |
 | `/admin/models` | Add a model, or set `enabled` |
-| `/admin/categories` | Add, edit, and delete categories with their icon |
+| `/admin/categories` | Add, edit, and turn on or off categories with their icon |
 | `/admin/stats` | Confusion, hints, solve rates |
 | `/admin/rounds` | Transcripts, one round at a time |
 | `/admin/rounds/[gameId]` | One transcript |
@@ -144,7 +144,7 @@ Turning a mode off hides its card. Old rounds stay on the leaderboard as long as
 
 ## Categories (`/admin/categories`)
 
-Create, edit, turn on or off, and delete. The fields are:
+Create, edit, and turn on or off. There is no delete: turning a category off keeps its games and history. The fields are:
 
 - **Name**, required. The id is a slug taken from the name when the row is created, and a rename does not change it.
 - **Description**, short, at most 140 characters. Players see it in the Category dropdown on `/play`.

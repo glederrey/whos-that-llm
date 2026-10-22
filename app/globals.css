@@ -1631,11 +1631,11 @@ html[data-theme="dark"] .history-score[data-best="true"] { color: var(--teal); }
 .roster.categories td:last-child { text-align: right; }
 .roster.categories td:nth-child(2),
 .roster.categories td:nth-child(3) { overflow-wrap: anywhere; }
-.roster.categories .roster-buttons .button-quiet,
-.roster.categories .roster-buttons .button-danger { padding: 6px 10px; }
+.roster.categories .roster-buttons .button-on,
+.roster.categories .roster-buttons .button-off,
+.roster.categories .roster-buttons .button-quiet { padding: 6px 10px; }
 .roster-buttons { display: flex; gap: 8px; align-items: center; justify-content: flex-end; flex-wrap: nowrap; }
 .roster-buttons form { margin: 0; }
-.category-delete { margin: 0; flex: none; width: fit-content; max-width: 100%; }
 .roster.companies th:last-child,
 .roster.companies td:last-child { width: 1%; white-space: nowrap; text-align: right; }
 .roster-add > summary { cursor: pointer; font-size: 20px; font-weight: 600; list-style: none; }

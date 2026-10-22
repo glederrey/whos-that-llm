@@ -1,9 +1,8 @@
 import { CategoryIcon } from "@/components/category-icon";
-import { DeleteCategoryForm } from "@/components/delete-category-form";
 import { EmojiPickerField } from "@/components/emoji-picker-field";
 import { SectionNav } from "@/components/section-nav";
 import { addCategory, saveCategory, toggleCategory } from "@/app/admin/actions";
-import { categoryDeleteMessage, categoryNotice, maxCategoryDescription } from "@/lib/admin-category";
+import { categoryNotice, maxCategoryDescription } from "@/lib/admin-category";
 import { loadCategoryList, type CategoryListRow } from "@/lib/admin-roster";
 
 export const dynamic = "force-dynamic";
@@ -13,11 +12,10 @@ type Company = { id: string; name: string };
 export default async function CategoriesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ notice?: string; error?: string }>;
+  searchParams: Promise<{ notice?: string }>;
 }) {
   const params = await searchParams;
   const notice = categoryNotice(params.notice);
-  const failure = categoryDeleteMessage(params.error);
   const { categories, companies } = await loadCategoryList();
 
   return (
@@ -33,11 +31,6 @@ export default async function CategoriesPage({
       {notice ? (
         <p className="error" role="alert">
           {notice}
-        </p>
-      ) : null}
-      {failure ? (
-        <p className="error" role="alert">
-          {failure}
         </p>
       ) : null}
       <details className="card roster-add">
@@ -121,7 +114,6 @@ function CategoryRowView({ row, companies }: { row: CategoryListRow; companies: 
           <button className="button-quiet" type="button" popoverTarget={panel}>
             Edit
           </button>
-          <DeleteCategoryForm id={row.id} name={row.name} />
         </div>
         <div id={panel} popover="auto" className="roster-edit card">
           <form action={saveCategory} className="stack">
