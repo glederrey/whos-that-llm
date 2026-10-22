@@ -1,5 +1,6 @@
 import { CategoryIcon } from "@/components/category-icon";
 import { DeleteCategoryForm } from "@/components/delete-category-form";
+import { EmojiPickerField } from "@/components/emoji-picker-field";
 import { SectionNav } from "@/components/section-nav";
 import { addCategory, saveCategory } from "@/app/admin/actions";
 import { categoryDeleteMessage, categoryNotice, maxCategoryDescription } from "@/lib/admin-category";
@@ -172,7 +173,7 @@ function CategoryFields({
             <input type="radio" name="iconKind" value="emoji" defaultChecked={iconKind === "emoji"} />
             <span>Emoji</span>
           </label>
-          <input type="text" name="emoji" aria-label="Emoji" defaultValue={iconKind === "emoji" ? iconValue : ""} size={4} />
+          <EmojiPickerField defaultValue={iconKind === "emoji" ? iconValue : ""} />
         </div>
       </fieldset>
     </div>

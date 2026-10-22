@@ -148,7 +148,7 @@ Create, edit, and delete. The fields are:
 
 - **Name**, required. The id is a slug taken from the name when the row is created, and a rename does not change it.
 - **Description**, short, at most 140 characters. Players see it in the Category dropdown on `/play`.
-- **Icon**, one of three, picked with a radio: **Company logo** (a select of the companies), **Upload image** (an SVG, PNG, or WebP of at most 1 MB, stored in the `logos` bucket under `categories/`), or **Emoji** (exactly one emoji). On edit, leaving the file empty keeps the current image.
+- **Icon**, one of three, picked with a radio: **Company logo** (a select of the companies), **Upload image** (an SVG, PNG, or WebP of at most 1 MB, stored in the `logos` bucket under `categories/`), or **Emoji** (exactly one emoji; a text field you can paste into, plus a Pick button that opens a searchable emoji grid and fills the field, loaded on first open and served from `public/emoji-data/`, never a third-party CDN; `npm run emoji:copy` refreshes that file after bumping `emoji-picker-element-data`). On edit, leaving the file empty keeps the current image.
 
 The table shows the icon, name, description, and the count of models that are turned on. Deleting a category removes its links to models and, best effort, its stored image. The models stay. The model page attaches existing categories. It does not create them. A model can be in Opus and in Latest Anthropic at the same time.
 
