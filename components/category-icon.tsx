@@ -10,5 +10,13 @@ export function CategoryIcon({ icon }: { icon: CategoryIconData | null }) {
       </span>
     );
   }
+  if (icon.kind === "default") {
+    return (
+      <>
+        <img className="for-light" src="/brand/logo-tail-right-light.png" alt="" />
+        <img className="for-dark" src="/brand/logo-tail-right-dark.png" alt="" />
+      </>
+    );
+  }
   return <CompanyLogo src={icon.src} />;
 }

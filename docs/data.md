@@ -4,7 +4,7 @@ One Supabase Postgres database. The catalog, the rounds, and the cost ledger are
 
 ## Migrations
 
-The schema is the timestamped files in `supabase/migrations/`, run by the Supabase CLI in name order. `20261021080000_baseline.sql` is the whole schema as it stood on 21 Oct 2026: a fresh database (local, CI, a new project) runs it first, and production is marked as already applied: its 35 old history rows are first marked reverted, then `supabase migration repair --status applied 20261021080000`. `20261022151319_category_icons.sql` gives `categories` an icon and opens the Category mode. `20261021090000_hardening.sql` revokes every table privilege from `anon` and `authenticated` on the tables they must never touch. `supabase/seed.sql` is a snapshot of the production catalog (roster, companies, categories, `openrouter_providers` slugs, `app_settings`) with no player data; it upserts, so it is safe on top of the baseline's own rows, and `supabase db reset` runs it after the migrations. A change is a new file from `npm run db:new <name>`. An applied file is never edited. A new table gets its explicit `GRANT` and its row level security in the same file. Production receives migrations only from the deploy workflow on a release. The bucket rows for `avatars` and `logos` are created by the baseline, not by `config.toml`.
+The schema is the timestamped files in `supabase/migrations/`, run by the Supabase CLI in name order. `20261021080000_baseline.sql` is the whole schema as it stood on 21 Oct 2026: a fresh database (local, CI, a new project) runs it first, and production is marked as already applied: its 35 old history rows are first marked reverted, then `supabase migration repair --status applied 20261021080000`. `20261022151319_category_icons.sql` gives `categories` an icon and opens the Category mode. `20261022185816_category_enabled_default_icon.sql` adds `categories.enabled` and the `default` icon kind. `20261021090000_hardening.sql` revokes every table privilege from `anon` and `authenticated` on the tables they must never touch. `supabase/seed.sql` is a snapshot of the production catalog (roster, companies, categories, `openrouter_providers` slugs, `app_settings`) with no player data; it upserts, so it is safe on top of the baseline's own rows, and `supabase db reset` runs it after the migrations. A change is a new file from `npm run db:new <name>`. An applied file is never edited. A new table gets its explicit `GRANT` and its row level security in the same file. Production receives migrations only from the deploy workflow on a release. The bucket rows for `avatars` and `logos` are created by the baseline, not by `config.toml`.
 
 The browser may read `companies` and the view `models_public`. Those rows are the roster a player is allowed to see. `models_public` is `models` where `enabled` is true, and the columns are `id`, `name`, `company_id`, and `logo_path`. It omits `openrouter_id`, `provider_settings`, `size`, `released_on`, `open_weights`, and `reasoning`. The guess list for a round does not come from this view. The server sends logo, company, and name for the models that are still legal. `categories` and `model_categories` are admin tables. The lobby, the leaderboard, and the share card read them on the server. The browser does not read those tables. The Category game mode (`game_modes.id = 'class'`) is open.
 
@@ -56,15 +56,16 @@ The uploaded objects are `anthropic.png`, `openai.png`, `deepseek.png`, and `mis
 
 ### `categories`
 
-A category is a group of models for the Category game mode (`game_modes.id = 'class'`; the id stays `class`). Opus can be one category. GPT vs Claude can be another. It is not a row of `game_modes`. A category carries its own icon, one of three kinds.
+A category is a group of models for the Category game mode (`game_modes.id = 'class'`; the id stays `class`). Opus can be one category. GPT vs Claude can be another. It is not a row of `game_modes`. A category carries its own icon, one of four kinds, and can be turned off.
 
 | Column | Type | Notes |
 |---|---|---|
 | `id` | text, pk | Slug from the name at create, such as `opus` or `gpt-vs-claude`. It does not change when the name is edited. `games.pool_key` stores it for a Category round |
 | `name` | text, unique | Display name |
 | `description` | text | Short, at most 140 characters (the admin form enforces it). Can be empty |
-| `icon_kind` | text | `company`, `image`, or `emoji`. Check constraint |
-| `icon_value` | text | `company`: a `companies.id`. `image`: a path in the public `logos` bucket, `categories/{id}-{random}.{ext}`. `emoji`: the emoji. Not empty, at most 200 characters. The app checks that a company id exists, there is no foreign key |
+| `icon_kind` | text | `company`, `image`, `emoji`, or `default` (the Who's that LLM logo). Check constraint |
+| `icon_value` | text | `company`: a `companies.id`. `image`: a path in the public `logos` bucket, `categories/{id}-{random}.{ext}`. `emoji`: the emoji. `default`: empty. Otherwise not empty. At most 200 characters. The app checks that a company id exists, there is no foreign key |
+| `enabled` | boolean | Default true. Off: not on `/play`, not startable, not in the leaderboard dropdown, left out of the statistics. Rows, links, and games stay |
 | `created_at` | timestamptz | |
 | `updated_at` | timestamptz | |
 

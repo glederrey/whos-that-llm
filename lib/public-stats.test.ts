@@ -326,7 +326,7 @@ test("today's Daily rounds stay in the totals and leave the named breakdowns", (
   assert.equal(all?.regions.find((row) => row.key === "eu")?.games, 1);
 });
 
-test("Daily and Company can be selected, and Category, Region, and Custom stay closed", () => {
+test("Daily, Company, and Category can be selected, and Region and Custom stay closed", () => {
   assert.deepEqual(
     statisticModes.map((mode) => [mode.name, mode.enabled]),
     [
@@ -334,7 +334,7 @@ test("Daily and Company can be selected, and Category, Region, and Custom stay c
       ["Daily", true],
       ["All models", true],
       ["Company", true],
-      ["Category", false],
+      ["Category", true],
       ["Region", false],
       ["Custom", false],
     ],

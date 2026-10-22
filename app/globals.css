@@ -1646,6 +1646,7 @@ html[data-theme="dark"] .history-score[data-best="true"] { color: var(--teal); }
 .roster-search { display: block; }
 .roster-search input { width: 100%; max-width: none; }
 .roster-edit.card {
+  text-align: left;
   margin: auto;
   width: min(920px, calc(100vw - 48px));
   max-height: calc(100vh - 48px);

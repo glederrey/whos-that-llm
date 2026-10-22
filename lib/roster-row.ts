@@ -27,4 +27,5 @@ export type CategoryRow = {
   iconKind: string;
   iconValue: string;
   icon: CategoryIconData | null;
+  enabled: boolean;
 };

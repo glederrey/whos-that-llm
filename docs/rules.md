@@ -281,7 +281,7 @@ The first Daily start of a UTC day, at a difficulty, draws one model from the ro
 
 ### Category
 
-The player picks one category (id `class`) from a searchable dropdown on `/play`. The pool is the category's enabled models, at least 2. No difficulty. Hints and the no-hint mode work as in All models. The leaderboard bar shows Category, with a dropdown of every category that narrows the board, and a chip on each row with the category's icon and name.
+The player picks one category (id `class`) from a searchable dropdown on `/play`. The pool is the category's enabled models, at least 2. A category that is turned off in the admin is not listed and cannot be started. No difficulty. Hints and the no-hint mode work as in All models. The leaderboard bar shows Category, with a dropdown of every category that narrows the board, and a chip on each row with the category's icon and name.
 
 ### Custom
 

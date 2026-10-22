@@ -23,7 +23,6 @@ export function EmojiPickerField({ defaultValue }: { defaultValue: string }) {
       const input = inputRef.current;
       if (!input) return;
       input.value = (event as CustomEvent<{ unicode?: string }>).detail.unicode ?? "";
-      wrap.closest(".icon-picker-option")?.querySelector<HTMLInputElement>('input[type="radio"]')?.click();
       setOpen(false);
       input.focus();
     };

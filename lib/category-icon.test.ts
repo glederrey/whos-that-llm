@@ -11,6 +11,7 @@ const root = path.resolve(import.meta.dirname, "..");
 test("an emoji icon is shown as text and an unknown company gives no icon", () => {
   assert.deepEqual(presentCategoryIcon({ icon_kind: "emoji", icon_value: "🧪" }, undefined), { kind: "emoji", src: "🧪" });
   assert.equal(presentCategoryIcon({ icon_kind: "company", icon_value: "ghost" }, undefined), null);
+  assert.deepEqual(presentCategoryIcon({ icon_kind: "default", icon_value: "" }, undefined), { kind: "default", src: "" });
   assert.equal(presentCategoryIcon({ icon_kind: "nope", icon_value: "x" }, undefined), null);
   assert.equal(presentCategoryIcon({ icon_kind: "company", icon_value: "anthropic" }, "logos/anthropic.png")?.kind, "logo");
   assert.match(presentCategoryIcon({ icon_kind: "image", icon_value: "categories/opus-ab12.png" }, undefined)?.src ?? "", /categories\/opus-ab12\.png$/);

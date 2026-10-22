@@ -41,7 +41,7 @@ export function StatisticsBoard({ stats, names }: { stats: PublicStats; names: R
       {mode === "main" ? (
         <MainStats stats={stats} nameFor={nameFor} />
       ) : mode === "class" ? (
-        <CategoryMode categories={stats.categories} />
+        <CategoryMode categories={stats.categories} report={selected} nameFor={nameFor} />
       ) : (
         <ModeStats report={selected} nameFor={nameFor} />
       )}
@@ -102,15 +102,24 @@ function ModeStats({ report, nameFor }: { report: GameModeReport | undefined; na
   );
 }
 
-function CategoryMode({ categories }: { categories: CategoryStat[] }) {
+function CategoryMode({
+  categories,
+  report,
+  nameFor,
+}: {
+  categories: CategoryStat[];
+  report: GameModeReport | undefined;
+  nameFor: (id: string) => string;
+}) {
   return (
     <>
-      <h2>Category</h2>
+      {report?.outcome ? <ModeStats report={report} nameFor={nameFor} /> : null}
+      <h2>By category</h2>
       <p className="muted">
         By the categories of the hidden model. A round counts in each category that model belongs to. A model with no
         category is left out.
       </p>
-      {categories.length === 0 ? <div className="card empty">No categories yet.</div> : <CategoryTable rows={categories} />}
+      {categories.length === 0 ? <div className="card empty">No categories turned on yet.</div> : <CategoryTable rows={categories} />}
     </>
   );
 }
