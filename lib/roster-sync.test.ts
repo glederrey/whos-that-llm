@@ -443,7 +443,7 @@ test("the model page loads live prices and keeps availability apart", () => {
   const add = actions.slice(actions.indexOf("export async function addNewRosterModels"));
   assert.match(availability, /loadOpenRouterCatalog\(\)/);
   assert.match(availability, /await requireOwner\(\)/);
-  assert.match(availability, /checkAvailability\(catalog\.models, true\)/);
+  assert.match(availability, /checkAvailability\(catalog\.models, true, "owner"\)/);
   assert.match(availability, /catalog\.error/);
   assert.doesNotMatch(availability, /redirect\(/);
   assert.match(search, /loadOpenRouterCatalog\(\)/);
@@ -468,6 +468,12 @@ test("the model page loads live prices and keeps availability apart", () => {
   assert.match(turnOn, /return "unavailable"/);
   assert.doesNotMatch(turnOn, /\.delete\(/);
   const insert = between(roster, "export async function insertDiscoveredModels", "async function resolveCompany");
+  for (const name of ["markRosterUnavailable", "markRosterAvailable", "writeReasoningFlags"]) {
+    const checked = between(roster, `export async function ${name}(`, `export async function ${name}Unchecked(`);
+    assert.match(checked, /await requireOwner\(\)/);
+    assert.match(checked, new RegExp(`${name}Unchecked\\(`));
+    assert.doesNotMatch(between(roster, `export async function ${name}Unchecked(`, "\nexport async function ", ), /requireOwner/);
+  }
   assert.match(disable, /available: false/);
   assert.match(disable, /enabled: false/);
   assert.doesNotMatch(disable, /\.delete\(/);

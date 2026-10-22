@@ -15,7 +15,7 @@ export async function POST(request: Request) {
   const apply = wantsApply(new URL(request.url).searchParams.get("apply"));
   const catalog = await fetchOpenRouterCatalog();
   if (!catalog.ok) return apiJson({ error: catalog.error }, 502);
-  const outcome = await checkAvailability(catalog.models, apply);
+  const outcome = await checkAvailability(catalog.models, apply, "token");
   if (!outcome.ok) return apiJson({ error: outcome.error }, outcome.status);
   return apiJson({
     applied: outcome.applied,

@@ -120,7 +120,7 @@ export async function checkRosterAvailability(): Promise<AvailabilityResult> {
   await requireOwner();
   const catalog = await loadOpenRouterCatalog();
   if (!catalog.ok) return { ok: false, error: catalog.error };
-  const outcome = await checkAvailability(catalog.models, true);
+  const outcome = await checkAvailability(catalog.models, true, "owner");
   if (!outcome.ok) return { ok: false, error: outcome.error };
   revalidatePath("/admin");
   revalidatePath("/admin/models");

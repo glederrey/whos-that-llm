@@ -1,17 +1,28 @@
 import "server-only";
 
-import { markRosterAvailable, markRosterUnavailable, writeReasoningFlags } from "./admin-roster";
+import {
+  markRosterAvailable,
+  markRosterAvailableUnchecked,
+  markRosterUnavailable,
+  markRosterUnavailableUnchecked,
+  writeReasoningFlags,
+  writeReasoningFlagsUnchecked,
+} from "./admin-roster";
 import { runAvailability, type AvailabilityOutcome } from "./availability-run";
 import type { CatalogModel, SyncModel } from "./roster-sync";
 import { serviceOrThrow } from "./rounds";
 
-/** No owner check: the admin action and the token route each authorize before calling. */
-export function checkAvailability(catalog: CatalogModel[], apply: boolean): Promise<AvailabilityOutcome> {
+/**
+ * "owner": the admin action, which has a session, so the checked helpers run. "token": the bot route,
+ * which authorized by token and has no session, so the unchecked helpers run.
+ */
+export function checkAvailability(catalog: CatalogModel[], apply: boolean, caller: "owner" | "token"): Promise<AvailabilityOutcome> {
+  const token = caller === "token";
   return runAvailability(catalog, apply, {
     loadRoster,
-    markUnavailable: markRosterUnavailable,
-    markAvailable: markRosterAvailable,
-    writeReasoning: writeReasoningFlags,
+    markUnavailable: token ? markRosterUnavailableUnchecked : markRosterUnavailable,
+    markAvailable: token ? markRosterAvailableUnchecked : markRosterAvailable,
+    writeReasoning: token ? writeReasoningFlagsUnchecked : writeReasoningFlags,
   });
 }
 

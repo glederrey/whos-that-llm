@@ -210,8 +210,13 @@ export async function setRosterEnabled(idRaw: string, enabled: boolean): Promise
   return null;
 }
 
-/** No owner check. Only the availability core calls this, after its own authorization. */
 export async function writeReasoningFlags(catalog: CatalogModel[]): Promise<boolean> {
+  await requireOwner();
+  return writeReasoningFlagsUnchecked(catalog);
+}
+
+/** No owner check. Only lib/availability-check.ts imports this, after its own authorization. */
+export async function writeReasoningFlagsUnchecked(catalog: CatalogModel[]): Promise<boolean> {
   const client = serviceOrThrow();
   const { data, error } = await client.from("models").select("id, openrouter_id, reasoning, provider_settings");
   if (error) return false;
@@ -238,8 +243,13 @@ export async function writeReasoningFlags(catalog: CatalogModel[]): Promise<bool
   return true;
 }
 
-/** No owner check. Only the availability core calls this, after its own authorization. */
 export async function markRosterUnavailable(ids: string[]): Promise<boolean> {
+  await requireOwner();
+  return markRosterUnavailableUnchecked(ids);
+}
+
+/** No owner check. Only lib/availability-check.ts imports this, after its own authorization. */
+export async function markRosterUnavailableUnchecked(ids: string[]): Promise<boolean> {
   if (ids.length === 0) return true;
   const clean: string[] = [];
   for (const raw of ids) {
@@ -256,8 +266,13 @@ export async function markRosterUnavailable(ids: string[]): Promise<boolean> {
   return !error;
 }
 
-/** Only `available`. `enabled` stays false: the constraint keeps it off and the admin turns it on by hand. No owner check. */
 export async function markRosterAvailable(ids: string[]): Promise<boolean> {
+  await requireOwner();
+  return markRosterAvailableUnchecked(ids);
+}
+
+/** Only `available`. `enabled` stays false: the constraint keeps it off and the admin turns it on by hand. No owner check. Only lib/availability-check.ts imports this. */
+export async function markRosterAvailableUnchecked(ids: string[]): Promise<boolean> {
   if (ids.length === 0) return true;
   const clean: string[] = [];
   for (const raw of ids) {
