@@ -16,18 +16,15 @@ import {
   updateCategory,
   updateRosterModel,
   writeReasoningFlags,
-  writeRosterPrices,
 } from "@/lib/admin-roster";
 import { loadOpenRouterCatalog } from "@/lib/openrouter-catalog";
 import { clearProviderBlacklist } from "@/lib/openrouter-providers";
 import {
   planNewModels,
-  planPriceUpdates,
   planUnavailable,
   type AddModelsResult,
   type AvailabilityResult,
   type NewModelsResult,
-  type PriceSyncResult,
 } from "@/lib/roster-sync";
 import { modelsReturnPath } from "@/lib/roster-list";
 
@@ -46,8 +43,6 @@ function fields(formData: FormData) {
     releasedOn: text(formData, "releasedOn"),
     size: text(formData, "size"),
     difficulty: text(formData, "difficulty"),
-    inputPrice: text(formData, "inputPrice"),
-    outputPrice: text(formData, "outputPrice"),
     categoryIds: formData.getAll("categoryId").flatMap((value) => (typeof value === "string" ? [value] : [])),
   };
 }
@@ -123,24 +118,6 @@ export async function clearProvider(formData: FormData) {
   redirect(ok ? "/admin/providers" : "/admin/providers?notice=save");
 }
 
-export async function updateRosterPrices(): Promise<PriceSyncResult> {
-  await requireOwner();
-  const catalog = await loadOpenRouterCatalog();
-  if (!catalog.ok) return { ok: false, error: catalog.error };
-  const { rows } = await loadRoster();
-  const plan = planPriceUpdates(rows, catalog.models);
-  if (plan.updates.length > 0) {
-    const saved = await writeRosterPrices(plan.updates);
-    if (!saved) return { ok: false, error: "Could not save the new prices." };
-    revalidatePath("/admin");
-    revalidatePath("/admin/models");
-  }
-  const reasoning = await writeReasoningFlags(catalog.models);
-  if (!reasoning) return { ok: false, error: "Could not save which models can reason." };
-  revalidatePath("/admin/models");
-  return { ok: true, changes: plan.changes, notUpdated: plan.notUpdated };
-}
-
 export async function checkRosterAvailability(): Promise<AvailabilityResult> {
   await requireOwner();
   const catalog = await loadOpenRouterCatalog();
@@ -201,8 +178,6 @@ export async function addNewRosterModels(picks: { id: string; size: string; diff
       id: model.id,
       name: model.name,
       releasedOn: model.releasedOn,
-      inputUsdPerMtok: model.inputUsdPerMtok,
-      outputUsdPerMtok: model.outputUsdPerMtok,
       size: model.size,
       difficulty: model.difficulty,
       reasoning: model.reasoning,

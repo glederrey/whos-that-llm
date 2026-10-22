@@ -1,6 +1,7 @@
 import { modelIdFromOpenRouter, validOpenRouterId } from "./admin-model";
 import { dollarsPerMillion } from "./list-price";
 import { releasedOnFromCreated } from "./openrouter-draft";
+import type { RosterRow } from "./roster-row";
 import { lowReasoningSettings, reasoningSettingsNeeded } from "./provider-check";
 
 export type CatalogModel = {
@@ -19,40 +20,9 @@ export type SyncModel = {
   id: string;
   name: string;
   openrouterId: string;
-  inputUsdPerMtok: number | null;
-  outputUsdPerMtok: number | null;
   enabled: boolean;
   /** False once OpenRouter no longer lists the model. Those rows are not checked again. */
   available: boolean;
-};
-
-export type PriceSide = {
-  oldPrice: number | null;
-  newPrice: number;
-};
-
-export type PriceChange = {
-  id: string;
-  name: string;
-  input: PriceSide | null;
-  output: PriceSide | null;
-};
-
-export type NotUpdatedModel = {
-  id: string;
-  name: string;
-};
-
-export type PriceUpdate = {
-  id: string;
-  inputUsdPerMtok: number;
-  outputUsdPerMtok: number;
-};
-
-export type PricePlan = {
-  changes: PriceChange[];
-  notUpdated: NotUpdatedModel[];
-  updates: PriceUpdate[];
 };
 
 export type UnavailableModel = {
@@ -64,10 +34,6 @@ export type AvailabilityPlan = {
   unavailable: UnavailableModel[];
   markIds: string[];
 };
-
-export type PriceSyncResult =
-  | { ok: true; changes: PriceChange[]; notUpdated: NotUpdatedModel[] }
-  | { ok: false; error: string };
 
 export type AvailabilityResult =
   | { ok: true; unavailable: UnavailableModel[] }
@@ -166,33 +132,14 @@ export function mergeCatalogPages(pages: CatalogPage[]): CatalogModel[] | null {
   return models;
 }
 
-/** A roster model with the same list price is left out. A model with no OpenRouter price is not updated. Models already unavailable are not checked. */
-export function planPriceUpdates(roster: SyncModel[], catalog: CatalogModel[]): PricePlan {
+/** Roster rows with the live OpenRouter list price. A model the catalog lacks, or a failed catalog, leaves the price null. */
+export function withListPrices(rows: RosterRow[], catalog: CatalogModel[] | null): RosterRow[] {
+  if (!catalog) return rows;
   const byId = catalogById(catalog);
-  const changes: PriceChange[] = [];
-  const notUpdated: NotUpdatedModel[] = [];
-  const updates: PriceUpdate[] = [];
-  for (const model of roster) {
-    if (!model.available) continue;
-    const remote = byId.get(model.openrouterId.trim());
-    const input = remote?.inputUsdPerMtok ?? null;
-    const output = remote?.outputUsdPerMtok ?? null;
-    if (input === null || output === null) {
-      notUpdated.push({ id: model.id, name: model.name });
-      continue;
-    }
-    const inputChanged = input !== model.inputUsdPerMtok;
-    const outputChanged = output !== model.outputUsdPerMtok;
-    if (!inputChanged && !outputChanged) continue;
-    changes.push({
-      id: model.id,
-      name: model.name,
-      input: inputChanged ? { oldPrice: model.inputUsdPerMtok, newPrice: input } : null,
-      output: outputChanged ? { oldPrice: model.outputUsdPerMtok, newPrice: output } : null,
-    });
-    updates.push({ id: model.id, inputUsdPerMtok: input, outputUsdPerMtok: output });
-  }
-  return { changes, notUpdated, updates };
+  return rows.map((row) => {
+    const remote = byId.get(row.openrouterId.trim());
+    return { ...row, inputUsdPerMtok: remote?.inputUsdPerMtok ?? null, outputUsdPerMtok: remote?.outputUsdPerMtok ?? null };
+  });
 }
 
 /** Models still listed on OpenRouter stay as they are, including ones that are already off. Models already marked unavailable are left alone. An empty catalog is refused. */

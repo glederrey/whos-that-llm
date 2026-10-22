@@ -4,7 +4,7 @@ import type { Region, Size } from "./game";
 export type RosterNotice = "invalid" | "duplicate" | "taken" | "year" | "reasoning" | "categories" | "unavailable" | "save";
 
 const notices: Record<RosterNotice, string> = {
-  invalid: "Check the OpenRouter id, name, company, region, release date, size, difficulty, and prices.",
+  invalid: "Check the OpenRouter id, name, company, region, release date, size, and difficulty.",
   duplicate: "That OpenRouter id is already on a model.",
   taken: "That model is already in the roster.",
   year: "Add a year before turning this model on.",
@@ -78,15 +78,6 @@ export function parseReleasedOn(value: string): string | null {
   return text;
 }
 
-/** Empty is null. A typed number is kept as typed. Anything else is invalid. */
-export function parsePriceInput(value: string | undefined): number | null | undefined {
-  const text = (value ?? "").trim().replace(/^\$/, "");
-  if (!text) return null;
-  if (!/^\d+(\.\d+)?$/.test(text)) return undefined;
-  const parsed = Number(text);
-  return Number.isFinite(parsed) ? parsed : undefined;
-}
-
 export function releasedOnForYear(previous: string | null, year: number): string {
   const match = previous?.match(/^(\d{4})-(\d{2})-(\d{2})/);
   if (match && Number(match[1]) === year) return `${match[1]}-${match[2]}-${match[3]}`;
@@ -117,8 +108,6 @@ export type ModelFields = {
   releasedOn: string | null;
   size: Size;
   difficulty: Difficulty;
-  inputUsdPerMtok: number | null;
-  outputUsdPerMtok: number | null;
 };
 
 export function parseModelFields(raw: {
@@ -130,8 +119,6 @@ export function parseModelFields(raw: {
   releasedOn?: string;
   size?: string;
   difficulty?: string;
-  inputPrice?: string;
-  outputPrice?: string;
 }): ModelFields | null {
   const openrouterId = raw.openrouterId?.trim() ?? "";
   const name = raw.name?.trim() ?? "";
@@ -145,10 +132,8 @@ export function parseModelFields(raw: {
   const year = releasedOn ? Number(releasedOn.slice(0, 4)) : parseYear(raw.year ?? "");
   const size = parseSize(raw.size ?? "");
   const difficulty = parseDifficulty(raw.difficulty);
-  const inputUsdPerMtok = parsePriceInput(raw.inputPrice);
-  const outputUsdPerMtok = parsePriceInput(raw.outputPrice);
-  if (!region || year === null || !size || !difficulty || inputUsdPerMtok === undefined || outputUsdPerMtok === undefined) return null;
-  return { openrouterId, name, company, region, year, releasedOn, size, difficulty, inputUsdPerMtok, outputUsdPerMtok };
+  if (!region || year === null || !size || !difficulty) return null;
+  return { openrouterId, name, company, region, year, releasedOn, size, difficulty };
 }
 
 export function rosterNotice(code: string | undefined): string | null {

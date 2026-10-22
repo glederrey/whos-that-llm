@@ -87,7 +87,7 @@ The reset template is not cosmetic. Its link is `{{ .SiteURL }}/reset-password?t
 
 ## First roster
 
-Verify every slug on OpenRouter before enabling it. Prices and dates below are for seeding, not for billing. Billing uses `usage.cost_usd`. All models can draw any enabled model.
+Verify every slug on OpenRouter before enabling it. Dates below are for seeding. Prices are not stored, and billing uses `usage.cost_usd`. All models can draw any enabled model.
 
 The prototype turns on six small models and leaves every other row disabled. The owner can change that roster from `/admin/models`. This seed is the roster you can try:
 

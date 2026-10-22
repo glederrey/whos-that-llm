@@ -12,7 +12,6 @@ type CatalogModel = {
   id?: string;
   name?: unknown;
   created?: unknown;
-  pricing?: { prompt?: unknown; completion?: unknown } | null;
 };
 
 export async function lookupOpenRouterModel(openrouterId: string): Promise<LookupResult> {

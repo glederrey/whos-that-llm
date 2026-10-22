@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { dollarsPerMillion, formatListPrice, formatPriceInput } from "./list-price";
+import { dollarsPerMillion, formatListPrice } from "./list-price";
 
 test("a per-token price becomes dollars per million tokens", () => {
   assert.equal(dollarsPerMillion("0.00002"), 20);
@@ -24,7 +24,4 @@ test("a list price prints with a dollar sign and no trailing noise", () => {
   assert.equal(formatListPrice(0.02), "$0.02");
   assert.equal(formatListPrice(0), "$0");
   assert.equal(formatListPrice(null), "—");
-  assert.equal(formatPriceInput(20), "20");
-  assert.equal(formatPriceInput(0.02), "0.02");
-  assert.equal(formatPriceInput(null), "");
 });

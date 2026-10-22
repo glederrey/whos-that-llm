@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { companyForOrg, draftFromOpenRouter, priceInputFromPerToken, releasedOnFromCreated, type CompanyChoice } from "./openrouter-draft";
+import { companyForOrg, draftFromOpenRouter, releasedOnFromCreated, type CompanyChoice } from "./openrouter-draft";
 
 const companies: CompanyChoice[] = [
   { id: "anthropic", name: "Anthropic", region: "us" },
@@ -17,22 +17,12 @@ test("the release date is the UTC day of OpenRouter's created timestamp", () => 
   assert.equal(releasedOnFromCreated("nope"), "");
 });
 
-test("list prices use the roster rounding", () => {
-  assert.equal(priceInputFromPerToken("0.000015"), "15");
-  assert.equal(priceInputFromPerToken("0.000075"), "75");
-  assert.equal(priceInputFromPerToken("0.00000005"), "0.1");
-  assert.equal(priceInputFromPerToken("0.000000018"), "0.02");
-  assert.equal(priceInputFromPerToken(""), "");
-  assert.equal(priceInputFromPerToken(null), "");
-});
-
-test("a draft fills name, a known company, the date, and prices", () => {
+test("a draft fills name, a known company, and the date", () => {
   const draft = draftFromOpenRouter(
     {
       id: "anthropic/claude-opus-4.1",
       name: "Anthropic: Claude Opus 4.1",
       created: 1754411591,
-      pricing: { prompt: "0.000015", completion: "0.000075" },
     },
     companies,
   );
@@ -41,8 +31,6 @@ test("a draft fills name, a known company, the date, and prices", () => {
     company: "Anthropic",
     region: "us",
     releasedOn: "2025-08-05",
-    inputPrice: "15",
-    outputPrice: "75",
   });
 });
 
@@ -53,13 +41,11 @@ test("company is filled only when the org is one of ours", () => {
   assert.equal(companyForOrg("nousresearch", companies), null);
   assert.equal(companyForOrg("anthropic", []), null);
   const blank = draftFromOpenRouter(
-    { id: "nousresearch/hermes", name: "Hermes", created: 1754411591, pricing: {} },
+    { id: "nousresearch/hermes", name: "Hermes", created: 1754411591 },
     companies,
   );
   assert.equal(blank.company, "");
   assert.equal(blank.region, "");
-  assert.equal(blank.inputPrice, "");
-  assert.equal(blank.outputPrice, "");
   assert.equal("size" in blank, false);
   assert.equal("difficulty" in blank, false);
 });

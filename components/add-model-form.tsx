@@ -87,14 +87,11 @@ export function AddModelForm({
               region={draft.region}
               releasedOn={draft.releasedOn}
               size=""
-              inputPrice={draft.inputPrice}
-              outputPrice={draft.outputPrice}
               categories={categories}
             />
           </div>
           <p className="muted">
-            Prices are dollars per 1 million tokens. Leave a price blank when OpenRouter has none. A new model stays off
-            until you turn it on. A new company name is added to the list.
+            A new model stays off until you turn it on. A new company name is added to the list.
           </p>
           <div>
             <button className="button" type="submit">
@@ -108,5 +105,5 @@ export function AddModelForm({
 }
 
 function emptyDraft(): ModelDraft {
-  return { name: "", company: "", region: "", releasedOn: "", inputPrice: "", outputPrice: "" };
+  return { name: "", company: "", region: "", releasedOn: "" };
 }

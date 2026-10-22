@@ -26,7 +26,6 @@ import type { Region, Size } from "./game";
 import type { CategoryRow, RosterRow } from "./roster-row";
 
 export type { CategoryRow, RosterRow } from "./roster-row";
-import { readListPrice } from "./list-price";
 import { planReasoningUpdates, type CatalogModel } from "./roster-sync";
 import { companyLogoPath } from "./logos";
 import { enabledModelCounts } from "./model-counts";
@@ -67,7 +66,7 @@ export async function loadRoster(): Promise<{ rows: RosterRow[]; companies: Comp
   const [{ data, error }, companies, categories] = await Promise.all([
     client
       .from("models")
-      .select("id, openrouter_id, name, size, difficulty, released_on, enabled, available, input_usd_per_mtok, output_usd_per_mtok, logo_path, company_id, companies(name, region, logo_path), model_categories(category_id)")
+      .select("id, openrouter_id, name, size, difficulty, released_on, enabled, available, logo_path, company_id, companies(name, region, logo_path), model_categories(category_id)")
       .order("enabled", { ascending: false })
       .order("name"),
     loadCompanies(client),
@@ -88,8 +87,8 @@ export async function loadRoster(): Promise<{ rows: RosterRow[]; companies: Comp
       year: String(row.released_on ?? "").slice(0, 4),
       size: row.size as Size,
       difficulty: difficultyFromStored(row.difficulty),
-      inputUsdPerMtok: readListPrice(row.input_usd_per_mtok),
-      outputUsdPerMtok: readListPrice(row.output_usd_per_mtok),
+      inputUsdPerMtok: null,
+      outputUsdPerMtok: null,
       enabled: Boolean(row.enabled),
       available: row.available !== false,
       logoUrl: presentLogo((row.logo_path as string | null) || company?.logo_path || "", companyId),
@@ -109,8 +108,6 @@ export async function createRosterModel(raw: {
   releasedOn?: string;
   size?: string;
   difficulty?: string;
-  inputPrice?: string;
-  outputPrice?: string;
   categoryIds?: string[];
 }): Promise<RosterNotice | null> {
   await requireOwner();
@@ -139,8 +136,6 @@ export async function createRosterModel(raw: {
     reasoning: false,
     provider_settings: {},
     released_on: fields.releasedOn ?? releasedOnForYear(null, fields.year),
-    input_usd_per_mtok: fields.inputUsdPerMtok,
-    output_usd_per_mtok: fields.outputUsdPerMtok,
     enabled: false,
     logo_path: null,
     updated_at: new Date().toISOString(),
@@ -159,8 +154,6 @@ export async function updateRosterModel(raw: {
   releasedOn?: string;
   size?: string;
   difficulty?: string;
-  inputPrice?: string;
-  outputPrice?: string;
   categoryIds?: string[];
 }): Promise<RosterNotice | null> {
   await requireOwner();
@@ -183,8 +176,6 @@ export async function updateRosterModel(raw: {
     size: fields.size,
     difficulty: difficultyNumber[fields.difficulty],
     released_on: fields.releasedOn ?? releasedOnForYear(current.data.released_on as string | null, fields.year),
-    input_usd_per_mtok: fields.inputUsdPerMtok,
-    output_usd_per_mtok: fields.outputUsdPerMtok,
     updated_at: new Date().toISOString(),
   };
   const { error } = await client.from("models").update(patch).eq("id", id);
@@ -217,32 +208,6 @@ export async function setRosterEnabled(idRaw: string, enabled: boolean): Promise
     .eq("id", id);
   if (error) return "save";
   return null;
-}
-
-export async function writeRosterPrices(
-  updates: { id: string; inputUsdPerMtok: number; outputUsdPerMtok: number }[],
-): Promise<boolean> {
-  await requireOwner();
-  if (updates.length === 0) return true;
-  const rows: { id: string; inputUsdPerMtok: number; outputUsdPerMtok: number }[] = [];
-  for (const update of updates) {
-    const id = parseModelId(update.id);
-    if (!id || !Number.isFinite(update.inputUsdPerMtok) || !Number.isFinite(update.outputUsdPerMtok)) return false;
-    rows.push({ id, inputUsdPerMtok: update.inputUsdPerMtok, outputUsdPerMtok: update.outputUsdPerMtok });
-  }
-  const client = serviceOrThrow();
-  for (const row of rows) {
-    const { error } = await client
-      .from("models")
-      .update({
-        input_usd_per_mtok: row.inputUsdPerMtok,
-        output_usd_per_mtok: row.outputUsdPerMtok,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", row.id);
-    if (error) return false;
-  }
-  return true;
 }
 
 export async function writeReasoningFlags(catalog: CatalogModel[]): Promise<boolean> {
@@ -296,8 +261,6 @@ export async function insertDiscoveredModels(
     id: string;
     name: string;
     releasedOn: string | null;
-    inputUsdPerMtok: number | null;
-    outputUsdPerMtok: number | null;
     size: string;
     difficulty: string;
     reasoning: boolean;
@@ -332,8 +295,6 @@ export async function insertDiscoveredModels(
       reasoning: model.reasoning,
       provider_settings: model.reasoning ? { reasoning: { effort: "low" } } : {},
       released_on: released,
-      input_usd_per_mtok: finitePrice(model.inputUsdPerMtok),
-      output_usd_per_mtok: finitePrice(model.outputUsdPerMtok),
       enabled: false,
       logo_path: null,
       updated_at: new Date().toISOString(),
@@ -344,10 +305,6 @@ export async function insertDiscoveredModels(
   }
   if (added === 0 && failed > 0) return null;
   return added;
-}
-
-function finitePrice(value: number | null): number | null {
-  return typeof value === "number" && Number.isFinite(value) ? value : null;
 }
 
 async function resolveCompany(client: SupabaseClient, name: string, region: Region): Promise<CompanyRow | RosterNotice> {

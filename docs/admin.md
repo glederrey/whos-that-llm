@@ -26,7 +26,7 @@ A subnav sits on every one of those pages: **Stats, Costs, Games, Modes, Models,
 
 `/admin/modes` is one row per game category, including a category with zero games, plus any extra category id already stored on a game. Each row has games, open, finished, solved, solve rate, and give-ups. A class leaderboard is not a row on this page. The class game mode is not built.
 
-`/admin/models` shows the display name, company, region, year, size, difficulty, input price, output price, then the classes, then active. Difficulty is the name: Easy, Medium, Hard, or Impossible. The column sorts Easy to Impossible. Input and output are dollars per 1 million tokens. Clicking one of those headers sorts both tables ascending. Clicking it again sorts descending. A third click clears the sort and returns the default order. Clicking a different column starts that column at ascending. The turn-on and edit controls are not a sort column. Saving an edit keeps the current search. **Reset** shows only while a search is active and clears it. Add starts with an OpenRouter id. The lookup fills the display name, the company when that org is one of ours, the release date, and the two prices. Size, difficulty, and classes stay empty. OpenRouter does not set the difficulty. A new model stays off. Class membership is a set of checkboxes from the classes that already exist, and a model can have more than one. **On** is green. **Off** is red.
+`/admin/models` shows the display name, company, region, year, size, difficulty, input price, output price, then the classes, then active. Difficulty is the name: Easy, Medium, Hard, or Impossible. The column sorts Easy to Impossible. Input and output are the live OpenRouter list price in dollars per 1 million tokens. They are not stored on the model. The page asks OpenRouter on each load, and a price shows a dash when OpenRouter has none or does not answer. Clicking one of those headers sorts both tables ascending. Clicking it again sorts descending. A third click clears the sort and returns the default order. Clicking a different column starts that column at ascending. The turn-on and edit controls are not a sort column. Saving an edit keeps the current search. **Reset** shows only while a search is active and clears it. Add starts with an OpenRouter id. The lookup fills the display name, the company when that org is one of ours, and the release date. Size, difficulty, and classes stay empty. OpenRouter does not set the difficulty. A new model stays off. Class membership is a set of checkboxes from the classes that already exist, and a model can have more than one. **On** is green. **Off** is red.
 
 `/admin/classes` creates and edits a class: name, description, and an optional company. There is no logo field. The class game mode is not on this page.
 
@@ -73,7 +73,7 @@ Each block links to the page that can change the thing. Spend by model links to 
 
 Add, edit, and turn off. The column is `models.enabled`.
 
-**Add.** A form: our id (slug), OpenRouter id, display name, company, classes, size, open weights, reasoning, release date, `provider_settings`, list prices. There is no latest flag. `enabled` starts false. Saving an enabled reasoning model with empty settings, or an enabled model with no release date, is rejected. Companies can be created from here if the dropdown does not have them yet. Classes are chosen from `/admin/classes`. They are not typed in as a new name on this form.
+**Add.** A form: our id (slug), OpenRouter id, display name, company, classes, size, open weights, reasoning, release date, `provider_settings`. There is no latest flag. `enabled` starts false. Saving an enabled reasoning model with empty settings, or an enabled model with no release date, is rejected. Companies can be created from here if the dropdown does not have them yet. Classes are chosen from `/admin/classes`. They are not typed in as a new name on this form.
 
 Open weights and reasoning are stored on the model as admin facts. Play does not use them. Size and release year are hints in All models and Daily. They are not points. Region does not offer hints.
 
@@ -85,7 +85,7 @@ Open weights and reasoning are stored on the model as admin facts. Play does not
 
 **Delete the row.** Only when no game points at it. Otherwise the button reads **Turn it off instead** and does nothing. Deleting a model that has been played would break the foreign key. History still reads `games.traits` for the values.
 
-The table shows list price beside average `cost_usd` and average `reasoning_tokens`. Rows with `enabled = false` stay in the list, visually marked, so they are easy to turn back on.
+The table shows the live list price beside average `cost_usd` and average `reasoning_tokens`. Rows with `enabled = false` stay in the list, visually marked, so they are easy to turn back on.
 
 `provider_settings` is a JSON textarea. The route rejects invalid JSON. It does not interpret the vendor's schema beyond "this object is what we pass through". Play one round and read `reasoning_tokens` before leaving a thinking model enabled.
 

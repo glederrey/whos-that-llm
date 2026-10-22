@@ -8,7 +8,7 @@ import { RosterReturnFields } from "@/components/roster-return-fields";
 import { AddModelForm } from "@/components/add-model-form";
 import { difficultyLabel } from "@/lib/difficulty";
 import { regionLabel, sizeLabel } from "@/lib/game";
-import { formatListPrice, formatPriceInput } from "@/lib/list-price";
+import { formatListPrice } from "@/lib/list-price";
 import type { CategoryRow, RosterRow } from "@/lib/roster-row";
 import { nextRosterSort, pageOf, searchRoster, sortRoster, type RosterSort, type RosterSortColumn } from "@/lib/roster-list";
 
@@ -309,13 +309,11 @@ function ModelRow({
                 year={row.year}
                 size={row.size}
                 difficulty={row.difficulty ?? ""}
-                inputPrice={formatPriceInput(row.inputUsdPerMtok)}
-                outputPrice={formatPriceInput(row.outputUsdPerMtok)}
                 categories={categories}
                 categoryIds={row.categoryIds}
               />
             </div>
-            <p className="muted">Prices are dollars per 1 million tokens. Region belongs to the company. New games use it.</p>
+            <p className="muted">Region belongs to the company. New games use it.</p>
             <div className="row">
               <button className="button" type="submit">
                 Save
