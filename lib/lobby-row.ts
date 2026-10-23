@@ -22,6 +22,7 @@ export function modeToOpen(games: readonly OpenGame[]): string | null {
   }
   if (games.some((game) => game.mode === "company" && game.companyId)) return "company";
   if (games.some((game) => game.mode === "class" && game.categoryId)) return "class";
+  if (games.some((game) => game.mode === "custom")) return "custom";
   return null;
 }
 

@@ -2,6 +2,7 @@ import { parseCategoryId } from "./admin-category";
 import { loadCategoryEntries } from "./category-data";
 import { config, rulesForGameMode } from "./config";
 import { companyModelCounts } from "./company";
+import { minCustomModels } from "./custom-mode";
 import { dailyRoundKey, startDailyRound, utcDayKey, type DailyRound } from "./daily";
 import { difficultyFromStored, difficultyNumber, type Difficulty } from "./difficulty";
 import { buildTraits, gameModeAllowsHints } from "./game";
@@ -111,6 +112,13 @@ export async function lobbyState(userId: string) {
     difficultyCounts: difficultyCounts(catalog),
     companies,
     categories,
+    customModels: catalog.map((model) => ({
+      id: model.id,
+      name: model.name,
+      companyName: model.companyName,
+      logoUrl: model.logoPath,
+      enabled: true,
+    })),
     nextAt,
   };
 }
@@ -186,6 +194,36 @@ export async function startCategory(userId: string, categoryId: string, noHint =
     p_pool_model_ids: pool.map((model) => model.id),
     p_traits: buildTraits(pool),
     p_rules: rulesForGameMode(Boolean(gameMode.hints_allowed) && gameModeAllowsHints("class")),
+    p_difficulty: null,
+  });
+  const failure = fromRpc(result);
+  if (failure) return failure;
+  return { gameId: result.gameId as string };
+}
+
+/** Custom. The player's own models, at least 2. No difficulty. Same hints as Category. A model that is gone or turned off is dropped. */
+export async function startCustom(userId: string, modelIds: readonly string[], noHint = false): Promise<{ gameId: string } | ApiFailure> {
+  const client = serviceOrThrow();
+  const [{ data: gameMode, error }, catalog] = await Promise.all([
+    client.from("game_modes").select("id, enabled, hints_allowed").eq("id", "custom").maybeSingle(),
+    loadCatalog(client),
+  ]);
+  if (error) throw new Error(error.message);
+  if (!gameMode?.enabled) return fail(404, "not_found");
+  const picked = new Set(modelIds);
+  const pool = catalog.filter((model) => picked.has(model.id));
+  const modelId = pool[Math.floor(Math.random() * pool.length)]?.id ?? null;
+  if (pool.length < minCustomModels || !modelId) return fail(422, "pool_too_small");
+  const result = await rpc(client, "start_game", {
+    p_user_id: userId,
+    p_hourly_cap: config.hourlyCap,
+    p_game_mode: "custom",
+    p_pool_key: null,
+    p_no_hint: noHint,
+    p_model_id: modelId,
+    p_pool_model_ids: pool.map((model) => model.id),
+    p_traits: buildTraits(pool),
+    p_rules: rulesForGameMode(Boolean(gameMode.hints_allowed) && gameModeAllowsHints("custom")),
     p_difficulty: null,
   });
   const failure = fromRpc(result);

@@ -30,9 +30,9 @@ export type DailyStart =
 export const dailyCardBlurb =
   "One round per difficulty. Everyone at that level gets the same model. A new puzzle tomorrow.";
 
-/** Daily, All models, Company, Category, and Origin. Custom stays closed. */
+/** Daily, All models, Company, Category, Origin, and Custom. */
 export function canStartMode(id: string): boolean {
-  return id === "all" || id === "daily" || id === "company" || id === "class" || id === "origin";
+  return id === "all" || id === "daily" || id === "company" || id === "class" || id === "origin" || id === "custom";
 }
 
 /**
