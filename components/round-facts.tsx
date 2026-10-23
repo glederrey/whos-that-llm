@@ -1,10 +1,14 @@
-export function RoundFacts({ mode, difficulty, label = "Difficulty" }: { mode: string; difficulty: string; label?: string }) {
+export function RoundFacts({ mode, difficulty, label = "Difficulty" }: { mode: string; difficulty: string | null; label?: string }) {
   return (
     <>
       <dt>Game mode</dt>
       <dd>{mode}</dd>
-      <dt>{label}</dt>
-      <dd>{difficulty}</dd>
+      {difficulty === null ? null : (
+        <>
+          <dt>{label}</dt>
+          <dd>{difficulty}</dd>
+        </>
+      )}
     </>
   );
 }

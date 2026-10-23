@@ -136,7 +136,7 @@ export function HistoryDetail({ item, panel }: { item: HistoryItem; panel?: stri
         <dd>{item.when}</dd>
         <RoundFacts
           mode={item.mode}
-          difficulty={item.place ? (item.place.value ?? "—") : difficultyText(item.difficulty)}
+          difficulty={item.origin ? null : item.place ? (item.place.value ?? "—") : difficultyText(item.difficulty)}
           label={item.place?.label ?? "Difficulty"}
         />
         {item.noHint ? (

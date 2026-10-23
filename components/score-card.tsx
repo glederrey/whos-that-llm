@@ -100,7 +100,7 @@ export function ScoreCard({
                   <dt>{place.label}</dt>
                   <dd>{place.value ?? "—"}</dd>
                 </>
-              ) : (
+              ) : origin ? null : (
                 <>
                   <dt>Difficulty</dt>
                   <dd style={difficulty ? { color: difficultyColor[difficulty] } : undefined}>{difficultyText(difficulty)}</dd>
