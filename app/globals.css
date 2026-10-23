@@ -1287,6 +1287,7 @@ html[data-theme="dark"] .hit { color: var(--teal); }
 }
 .status[data-state="solved"] { background: #1c7c43; color: #fff; border-color: transparent; }
 .status[data-state="miss"] { background: #c41b15; color: #fff; border-color: transparent; }
+html[data-theme="dark"] .status[data-state="given-up"] { background: #383838; border-color: #4a4a4a; }
 .score-card { padding: 22px 24px; }
 .score-head { display: flex; justify-content: space-between; align-items: center; gap: 16px 32px; }
 .score-meta { margin-left: auto; display: grid; justify-items: end; gap: 8px; text-align: right; }

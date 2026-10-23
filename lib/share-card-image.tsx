@@ -41,7 +41,7 @@ const dark: Tone = {
   line: "#2E2E2E",
   score: "#00BBC9",
   frame: "#00BBC9",
-  quietWash: "#262626",
+  quietWash: "#383838",
   chip: "#FFFFFF",
 };
 
@@ -216,7 +216,7 @@ function originBlock(origin: NonNullable<ReturnType<typeof shareCardDisplay>["or
 function statusChip(outcome: ShareCard["outcome"], tone: Tone): { color: string; background: string; border?: string } {
   if (outcome === "Solved") return { color: "#fff", background: "#1c7c43" };
   if (outcome === "Not solved") return { color: "#fff", background: "#c41b15" };
-  return { color: tone.ink, background: tone.quietWash, border: `1px solid ${tone.line}` };
+  return { color: tone.ink, background: tone.quietWash, border: `1px solid ${tone === dark ? "#4A4A4A" : tone.line}` };
 }
 
 function factLine(facts: string[], tone: Tone): ReactElement {
