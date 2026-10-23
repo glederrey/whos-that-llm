@@ -1,3 +1,8 @@
+import type { PickerModel } from "./admin-category";
+
+/** A model in the Custom picker: what the player needs to choose it. Origin is the company's. */
+export type CustomModel = PickerModel & { year: number; sizeName: string; originName: string; originFlag: string };
+
 /** Most models one Custom round can hold. The body of a request has no size limit of its own. */
 export const maxCustomModels = 200;
 

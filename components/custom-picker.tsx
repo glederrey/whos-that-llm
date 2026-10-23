@@ -1,19 +1,25 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { filterPickerModels, type PickerModel } from "@/lib/admin-category";
-import { minCustomModels } from "@/lib/custom-mode";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { filterPickerModels } from "@/lib/admin-category";
+import { minCustomModels, type CustomModel } from "@/lib/custom-mode";
 import { unfinishedLine } from "@/lib/lobby-row";
 import { CompanyLogo } from "./company-logo";
 
 const storeKey = "custom-models";
 
-type Group = { companyName: string; logoUrl: string; models: PickerModel[] };
+type Group = { companyName: string; logoUrl: string; originName: string; originFlag: string; models: CustomModel[] };
 
-function groupByCompany(models: readonly PickerModel[]): Group[] {
+function groupByCompany(models: readonly CustomModel[]): Group[] {
   const groups = new Map<string, Group>();
   for (const model of models) {
-    const group = groups.get(model.companyName) ?? { companyName: model.companyName, logoUrl: model.logoUrl, models: [] };
+    const group = groups.get(model.companyName) ?? {
+      companyName: model.companyName,
+      logoUrl: model.logoUrl,
+      originName: model.originName,
+      originFlag: model.originFlag,
+      models: [],
+    };
     group.models.push(model);
     groups.set(model.companyName, group);
   }
@@ -30,8 +36,9 @@ function readStored(valid: ReadonlySet<string>): string[] {
 }
 
 /**
- * The Custom card on /play: search, models grouped by company, one tap to add or drop a model, a whole company
- * at once, the picks as chips, and a Start button that waits for two models. The last choice is remembered in this browser.
+ * The Custom card on /play: search, one row per model grouped by company (the company's origin sits on its header,
+ * each row shows the year and size), a whole company at once, and a Start button that waits for two models.
+ * The picks open in a window from the footer. The last choice is remembered in this browser.
  */
 export function CustomPicker({
   models,
@@ -40,7 +47,7 @@ export function CustomPicker({
   onStart,
   onContinue,
 }: {
-  models: PickerModel[];
+  models: CustomModel[];
   /** An unfinished Custom round. Starting is replaced by continuing it. */
   openGameId: string | null;
   disabled: boolean;
@@ -49,8 +56,9 @@ export function CustomPicker({
 }) {
   const [selected, setSelected] = useState<string[]>([]);
   const [query, setQuery] = useState("");
+  const dialogRef = useRef<HTMLDialogElement>(null);
   const byId = useMemo(() => new Map(models.map((model) => [model.id, model])), [models]);
-  const groups = useMemo(() => groupByCompany(filterPickerModels(models, query)), [models, query]);
+  const groups = useMemo(() => groupByCompany(filterPickerModels(models, query) as CustomModel[]), [models, query]);
 
   useEffect(() => {
     setSelected(readStored(new Set(models.map((model) => model.id))));
@@ -94,9 +102,6 @@ export function CustomPicker({
           placeholder="Search models or companies"
           aria-label="Search models"
         />
-        <button className="button-quiet" type="button" disabled={chosen.length === 0} onClick={() => change([])}>
-          Clear
-        </button>
       </div>
       <div className="custom-groups">
         {groups.length === 0 ? <p className="muted custom-empty">No model matches.</p> : null}
@@ -108,6 +113,9 @@ export function CustomPicker({
               <header>
                 <CompanyLogo src={group.logoUrl} />
                 <strong>{group.companyName}</strong>
+                <span className="muted custom-origin">
+                  {group.originFlag} {group.originName}
+                </span>
                 <span className="muted">
                   {picked}/{group.models.length}
                 </span>
@@ -120,52 +128,72 @@ export function CustomPicker({
                   {all ? "Drop all" : "Add all"}
                 </button>
               </header>
-              <div className="custom-models">
+              <ul className="custom-models">
                 {group.models.map((model) => {
                   const on = selected.includes(model.id);
                   return (
-                    <button
-                      key={model.id}
-                      type="button"
-                      className="custom-model"
-                      aria-pressed={on}
-                      onClick={() => toggle(model.id)}
-                    >
-                      <span className="custom-tick" aria-hidden="true">
-                        {on ? "✓" : ""}
-                      </span>
-                      {model.name}
-                    </button>
+                    <li key={model.id}>
+                      <button type="button" className="custom-model" aria-pressed={on} onClick={() => toggle(model.id)}>
+                        <span className="custom-tick" aria-hidden="true">
+                          {on ? "✓" : ""}
+                        </span>
+                        <span className="custom-name">{model.name}</span>
+                        <span className="muted custom-facts">
+                          {model.year} · {model.sizeName}
+                        </span>
+                      </button>
+                    </li>
                   );
                 })}
-              </div>
+              </ul>
             </section>
           );
         })}
       </div>
-      {chosen.length > 0 ? (
-        <ul className="model-chips" aria-label="Selected models">
-          {chosen.map((model) => (
-            <li key={model.id}>
-              <button type="button" className="model-chip" onClick={() => toggle(model.id)} aria-label={`Remove ${model.name}`}>
-                {model.name} <span aria-hidden="true">×</span>
-              </button>
-            </li>
-          ))}
-        </ul>
-      ) : null}
       <div className="custom-foot">
-        <span className="muted" aria-live="polite">
-          {ready
-            ? `${chosen.length} models picked`
-            : chosen.length === 0
-              ? `Pick at least ${minCustomModels} models.`
-              : `Pick ${minCustomModels - chosen.length} more to start.`}
-        </span>
+        <button
+          type="button"
+          className="button-quiet custom-count"
+          disabled={chosen.length === 0}
+          onClick={() => dialogRef.current?.showModal()}
+          aria-live="polite"
+        >
+          {chosen.length === 0
+            ? `Pick at least ${minCustomModels} models`
+            : ready
+              ? `${chosen.length} models picked`
+              : `${chosen.length} picked, ${minCustomModels - chosen.length} more to start`}
+        </button>
         <button type="button" className="button" disabled={disabled || !ready} onClick={() => onStart(chosen.map((model) => model.id))}>
           Start
         </button>
       </div>
+      <dialog ref={dialogRef} className="dialog custom-selected">
+        <h2>Your models ({chosen.length})</h2>
+        {chosen.length === 0 ? (
+          <p className="muted">No model picked yet.</p>
+        ) : (
+          <ul className="custom-selected-list">
+            {chosen.map((model) => (
+              <li key={model.id}>
+                <span className="custom-name">{model.name}</span>
+                <span className="muted custom-facts">{model.companyName}</span>
+                <button type="button" className="button-quiet" aria-label={`Remove ${model.name}`} onClick={() => toggle(model.id)}>
+                  Remove
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+        <div className="row">
+          <button type="button" className="button-quiet" disabled={chosen.length === 0} onClick={() => change([])}>
+            Clear all
+          </button>
+          <button type="button" className="button" onClick={() => dialogRef.current?.close()}>
+            Done
+          </button>
+        </div>
+      </dialog>
     </div>
   );
 }

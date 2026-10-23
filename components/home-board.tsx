@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { CategoryCombobox, type LobbyCategory } from "@/components/category-combobox";
 import { CompanyLogo } from "@/components/company-logo";
 import { CustomPicker } from "@/components/custom-picker";
-import type { PickerModel } from "@/lib/admin-category";
+import type { CustomModel } from "@/lib/custom-mode";
 import { canStartMode, presentDailyCard } from "@/lib/daily";
 import { difficulties, difficultyBlurb, difficultyLabel, type Difficulty } from "@/lib/difficulty";
 import {
@@ -107,7 +107,7 @@ export function HomeBoard({
   difficultyCounts: Record<Difficulty, number>;
   companies: Array<{ id: string; name: string; logoUrl: string; models: number }>;
   categories: LobbyCategory[];
-  customModels: PickerModel[];
+  customModels: CustomModel[];
   nextAt: string | null;
   gameModes: HomeGameMode[];
 }) {

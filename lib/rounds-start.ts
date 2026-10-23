@@ -2,10 +2,11 @@ import { parseCategoryId } from "./admin-category";
 import { loadCategoryEntries } from "./category-data";
 import { config, rulesForGameMode } from "./config";
 import { companyModelCounts } from "./company";
-import { minCustomModels } from "./custom-mode";
+import { minCustomModels, type CustomModel } from "./custom-mode";
 import { dailyRoundKey, startDailyRound, utcDayKey, type DailyRound } from "./daily";
 import { difficultyFromStored, difficultyNumber, type Difficulty } from "./difficulty";
 import { buildTraits, gameModeAllowsHints } from "./game";
+import { originFlag, originLabel, sizeLabel } from "./game-labels";
 import { serviceOrThrow } from "./rounds-db";
 import { loadCatalog, loadModel, rpc } from "./rounds-queries";
 import { difficultyCounts, fail, fromRpc, presentLogo, type ApiFailure } from "./rounds-shape";
@@ -112,12 +113,16 @@ export async function lobbyState(userId: string) {
     difficultyCounts: difficultyCounts(catalog),
     companies,
     categories,
-    customModels: catalog.map((model) => ({
+    customModels: catalog.map((model): CustomModel => ({
       id: model.id,
       name: model.name,
       companyName: model.companyName,
       logoUrl: model.logoPath,
       enabled: true,
+      year: model.year,
+      sizeName: sizeLabel(model.size),
+      originName: model.originName ?? originLabel(model.origin),
+      originFlag: model.originFlag ?? originFlag(model.origin),
     })),
     nextAt,
   };
