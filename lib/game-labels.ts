@@ -125,6 +125,7 @@ export function poolLabel(gameMode: string, poolKey: string | null, traits: Trai
   if (gameMode === "daily") return difficulty ? `Daily · ${difficultyLabel[difficulty]}` : "Daily";
   if (gameMode === "class") return "Category";
   if (gameMode === "origin") return "Origin";
+  if (gameMode === "custom") return "Custom";
   if (gameMode === "latest") return "Latest";
   if (gameMode === "company") {
     const name = Object.values(traits.models).find((model) => model.companyId === poolKey)?.companyName;

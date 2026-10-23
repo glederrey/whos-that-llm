@@ -25,6 +25,8 @@ type HistoryItem = {
   origin?: OriginView | null;
   mode: string;
   difficulty: Difficulty | null;
+  /** False for modes with no difficulty (Origin, Custom): the row and the line are left out. */
+  hasDifficulty: boolean;
   /** Company and category rounds put this name where a difficulty chip would be. */
   place?: RoundPlace | null;
   /** Models in the round's pool. Null hides the row. */
@@ -105,6 +107,7 @@ export function HistoryDetail({ item, panel }: { item: HistoryItem; panel?: stri
           state={item.state}
           mode={item.mode}
           difficulty={item.difficulty}
+          hasDifficulty={item.hasDifficulty}
           place={item.place}
           poolSize={item.poolSize ?? null}
           noHint={item.noHint}
@@ -136,7 +139,9 @@ export function HistoryDetail({ item, panel }: { item: HistoryItem; panel?: stri
         <dd>{item.when}</dd>
         <RoundFacts
           mode={item.mode}
-          difficulty={item.origin ? null : item.place ? (item.place.value ?? "—") : difficultyText(item.difficulty)}
+          difficulty={
+            item.place ? (item.place.value ?? "—") : item.hasDifficulty ? difficultyText(item.difficulty) : null
+          }
           label={item.place?.label ?? "Difficulty"}
         />
         {item.noHint ? (

@@ -178,6 +178,17 @@ test("a category round names the category in the meta, and a long name is clippe
   assert.equal(Array.from(clipText(long, 26)).length, 27);
 });
 
+test("a Custom card names the mode and the number of models, with no difficulty", () => {
+  const custom = shareCardDisplay(card({ gameMode: "custom", difficulty: null, poolKey: null, poolModelIds: ["a", "b"] }));
+  assert.deepEqual(
+    custom.meta.map((row) => [row.label, row.value]),
+    [
+      ["Game mode", "Custom"],
+      ["Pool", "2 models"],
+    ],
+  );
+});
+
 test("the pool size comes from the stored snapshot and is the last meta row", () => {
   const sized = shareCardDisplay(card({ poolModelIds: ["a", "b", "c"] }));
   assert.equal(card({ poolModelIds: ["a", "b", "c"] }).poolSize, 3);

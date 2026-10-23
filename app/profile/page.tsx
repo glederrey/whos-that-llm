@@ -110,6 +110,7 @@ export default async function ProfilePage({
               origin: row.origin,
               mode: row.mode,
               difficulty: row.difficulty,
+              hasDifficulty: row.hasDifficulty,
               place: row.place,
               poolSize: row.poolSize,
               noHint: row.noHint,

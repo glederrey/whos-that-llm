@@ -24,6 +24,7 @@ export function ScoreCard({
   state,
   mode,
   difficulty,
+  hasDifficulty = true,
   place = null,
   poolSize = null,
   noHint,
@@ -38,6 +39,8 @@ export function ScoreCard({
   state: "solved" | "miss" | "given_up";
   mode: string;
   difficulty: Difficulty | null;
+  /** False for modes with no difficulty (Origin, Custom): the row is left out. */
+  hasDifficulty?: boolean;
   /** When set, this name takes the place difficulty occupies. */
   place?: RoundPlace | null;
   /** Models in the round's pool. Null hides the row. */
@@ -100,12 +103,12 @@ export function ScoreCard({
                   <dt>{place.label}</dt>
                   <dd>{place.value ?? "—"}</dd>
                 </>
-              ) : origin ? null : (
+              ) : hasDifficulty ? (
                 <>
                   <dt>Difficulty</dt>
                   <dd style={difficulty ? { color: difficultyColor[difficulty] } : undefined}>{difficultyText(difficulty)}</dd>
                 </>
-              )}
+              ) : null}
               {poolSize !== null ? (
                 <>
                   <dt>{poolSizeLabel}</dt>

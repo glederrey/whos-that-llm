@@ -11,6 +11,11 @@ export function difficultyText(value: Difficulty | null | undefined): string {
   return value ? difficultyLabel[value] : "—";
 }
 
+/** Origin and Custom rounds have no difficulty, so their cards and history rows leave that line out. */
+export function modeHasDifficulty(gameModeId: string): boolean {
+  return gameModeId !== "origin" && gameModeId !== "custom";
+}
+
 /** A company or category round names that where the difficulty would go. A category with no name left shows a dash. */
 export type RoundPlace = { label: "Company" | "Category"; value: string | null };
 

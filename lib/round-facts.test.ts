@@ -4,7 +4,7 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { HistoryDetail, HistoryList } from "../components/history-list";
 import { ResultSummary } from "../components/round-facts";
-import { difficultyText, playedRoundFacts, roundPlace } from "./round-facts";
+import { difficultyText, modeHasDifficulty, playedRoundFacts, roundPlace } from "./round-facts";
 import { siteName } from "./site";
 
 const item = {
@@ -23,6 +23,7 @@ const item = {
   originFound: false,
   mode: "All models",
   difficulty: "hard" as const,
+  hasDifficulty: true,
   noHint: false,
   scoreValue: 1200,
   modelFacts: ["Anthropic", "USA", "2026", "Large"],
@@ -120,6 +121,21 @@ test("an open round still names the mode and the difficulty", () => {
   assert.ok(html.includes("—"));
   assert.ok(html.includes("Continue"));
   assert.ok(html.includes("Hidden until the round ends."));
+});
+
+test("a custom round shows the mode and the pool but no difficulty", () => {
+  assert.equal(modeHasDifficulty("custom"), false);
+  assert.equal(modeHasDifficulty("origin"), false);
+  assert.equal(modeHasDifficulty("all"), true);
+  const custom = { ...item, mode: "Custom", difficulty: null, hasDifficulty: false, poolSize: 5 };
+  const detail = renderToStaticMarkup(createElement(HistoryDetail, { item: custom }));
+  assert.match(detail, /<dt>Game mode<\/dt><dd>Custom<\/dd>/);
+  assert.match(detail, /<dt>Pool<\/dt><dd>5 models<\/dd>/);
+  assert.doesNotMatch(detail, /Difficulty/);
+  const open = renderToStaticMarkup(
+    createElement(HistoryDetail, { item: { ...custom, state: "active", modelName: null } }),
+  );
+  assert.doesNotMatch(open, /Difficulty/);
 });
 
 test("a category round names the category, a company round the company, others neither", () => {
