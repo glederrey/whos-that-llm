@@ -371,7 +371,7 @@ test("the public picture and the download are the same card", () => {
   const quietDark = renderToStaticMarkup(shareCardImage(quiet, "data:image/png;base64,aaaa", null, "dark"));
   assert.match(quietDark, /background:#383838/i);
   assert.match(quietDark, /color:#EBEBEB/i);
-  assert.match(quietDark, /border:1px solid #2E2E2E/i);
+  assert.match(quietDark, /border:1px solid #4A4A4A/i);
 
   const page = fs.readFileSync(path.join(root, "app/r/[gameId]/page.tsx"), "utf8");
   assert.match(page, /shareCardPath/);
