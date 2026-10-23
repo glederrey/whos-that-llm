@@ -1290,7 +1290,7 @@ html[data-theme="dark"] .hit { color: var(--teal); }
 .score-card { padding: 22px 24px; }
 .score-head { display: flex; justify-content: space-between; align-items: center; gap: 16px 32px; }
 .score-meta { margin-left: auto; display: grid; justify-items: end; gap: 8px; text-align: right; }
-.score-meta .status { text-align: right; }
+.score-meta .status { width: 100%; justify-content: center; text-align: center; }
 .score-meta dl { display: grid; grid-template-columns: auto auto; gap: 4px 14px; margin: 0; justify-content: end; }
 .score-meta dt { color: var(--mute); font-weight: 500; }
 .score-meta dd { margin: 0; font-weight: 700; text-align: left; max-width: 20ch; overflow-wrap: anywhere; }
@@ -1895,6 +1895,7 @@ html[data-theme="dark"] .history-score[data-best="true"] { color: var(--teal); }
   .score-head > :first-child { flex: none; }
   .score-meta { flex: 1 1 auto; gap: 4px; min-width: 0; }
   .score-meta .status {
+    width: auto;
     max-width: 100%;
     font-size: 12px;
     line-height: 1.25;
