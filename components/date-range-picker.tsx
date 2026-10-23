@@ -30,6 +30,7 @@ export function DateRangePicker({
   const [open, setOpen] = useState(false);
   const [view, setView] = useState(() => monthOf(from));
   const [start, setStart] = useState<string | null>(null);
+  const [hover, setHover] = useState<string | null>(null);
   const root = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -68,6 +69,7 @@ export function DateRangePicker({
     }
     const [low, high] = day < start ? [day, start] : [start, day];
     setStart(null);
+    setHover(null);
     setOpen(false);
     onChange(low, high);
   }
@@ -103,7 +105,7 @@ export function DateRangePicker({
               ›
             </button>
           </div>
-          <div className="range-grid">
+          <div className="range-grid" onMouseLeave={() => setHover(null)}>
             {weekdays.map((name) => (
               <span key={name} className="range-weekday">
                 {name}
@@ -111,8 +113,10 @@ export function DateRangePicker({
             ))}
             {cells.map((day, index) => {
               if (!day) return <span key={`gap-${index}`} />;
-              const edge = start ? day === start : day === from || day === to;
-              const inside = !start && from && to && day > from && day < to;
+              // While the first day is picked, the cursor day sets the other end of the preview.
+              const [low, high] = start ? (hover && hover < start ? [hover, start] : [start, hover ?? start]) : [from, to];
+              const edge = day === low || day === high;
+              const inside = Boolean(low && high && day > low && day < high);
               return (
                 <button
                   key={day}
@@ -122,6 +126,7 @@ export function DateRangePicker({
                   data-inside={inside ? "true" : undefined}
                   aria-label={shortDay(day)}
                   aria-pressed={edge}
+                  onMouseEnter={() => setHover(day)}
                   onClick={() => pick(day)}
                 >
                   {Number(day.slice(8))}
