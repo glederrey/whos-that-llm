@@ -17,28 +17,28 @@ type PublicGame = {
   poolLabel: string;
   noHint: boolean;
   hintsAllowed: boolean;
-  hintCosts: Record<"company" | "region" | "year" | "size", number>;  // so the hint buttons do not hardcode prices
+  hintCosts: Record<"company" | "origin" | "year" | "size", number>;  // so the hint buttons do not hardcode prices
   status: "active" | "solved" | "miss" | "given_up";
   messageNumber: number;     // replies already stored, 0–10
   messageLimit: number;      // from games.rules
   awaitingGuess: boolean;
-  given: { key: "company" | "region" | "year" | "size"; label: string; value: string }[];
+  given: { key: "company" | "origin" | "year" | "size"; label: string; value: string }[];
   feedback: null | {
     company: "match" | "miss" | null;   // null when that trait is given, or before any guess
-    region: "match" | "miss" | null;
+    origin: "match" | "miss" | null;
     companyValue: string | null;        // set on a company match
-    regionValue: string | null;         // "USA", "China", or "Europe" on a region match
+    originValue: string | null;         // the origin name (such as "USA") on an origin match
   };
   pastGuesses: {                   // wrong model guesses, oldest first. Empty traits in no-hint mode
     id: string;
     name: string;
     companyName: string;
     logoPath: string;
-    wrong: ("company" | "region")[];
+    wrong: ("company" | "origin")[];
   }[];
   hints: {
     company: string | null;  // the company name once bought, else null
-    region: string | null;   // "USA", "China", or "Europe" once bought, else null
+    origin: string | null;   // the origin name (such as "USA") once bought, else null
     year: string | null;     // "2026" once bought, else null
     size: string | null;     // "Small", "Medium", or "Large" once bought, else null
   };
@@ -48,7 +48,7 @@ type PublicGame = {
     name: string;
     companyName: string;
     logoPath: string;
-    region: string;
+    origin: string;
     year: number;
     size: string;
   };
@@ -58,9 +58,9 @@ type PublicGame = {
 };
 ```
 
-`feedback` is null for the whole round when `noHint` is true, and on Origin. `given` is still sent. `candidates` is the filtered list: logo, company, and name only. The server removes models that contradict a known trait, and models already guessed, before it sends the list. The client does not receive region, year, size, weights, or reasoning, and it does not filter.
+`feedback` is null for the whole round when `noHint` is true, and on Origin. On an Origin round `candidates` is empty and `origin` holds `{ choices, guessed, actual }`: the buttons, the player's guess, and (once the round ends) the real origin. Each choice is `{ id, name, flag }`, read from the traits frozen at the start. `given` is still sent. `candidates` is the filtered list: logo, company, and name only. The server removes models that contradict a known trait, and models already guessed, before it sends the list. The client does not receive origin, year, size, weights, or reasoning, and it does not filter.
 
-Known traits are given values, bought hints, and matched company and region. When hints are on, a company miss also removes every model from that company. A company hit leaves that company's other models. In no-hint mode, matches are stored on the guess row and do not become known, and a company miss removes nothing, so they do not narrow `candidates`.
+Known traits are given values, bought hints, and matched company and origin. When hints are on, a company miss also removes every model from that company. A company hit leaves that company's other models. In no-hint mode, matches are stored on the guess row and do not become known, and a company miss removes nothing, so they do not narrow `candidates`.
 
 Do not tell the client which traits the highlighted row would hit. That preview would be the answer.
 
@@ -72,7 +72,7 @@ Do not tell the client which traits the highlighted row would hit. That preview 
 | `GET /api/games/:id` | The public object |
 | `POST /api/games/:id/messages` | Send a message, stream the model |
 | `POST /api/games/:id/guesses` | One guess for the open turn |
-| `POST /api/games/:id/hints` | Buy a company, region, year, or size hint |
+| `POST /api/games/:id/hints` | Buy a company, origin, year, or size hint (not on Origin) |
 | `POST /api/games/:id/give-up` | End the round, show the model, stay off the leaderboard |
 | `GET /api/leaderboard?category=&period=week\|all` | Rank, name, score |
 | `PATCH /api/me` | Set `{ username }`. Also rewrites `games.username` for that user id |
@@ -84,7 +84,7 @@ Do not tell the client which traits the highlighted row would hit. That preview 
 | `PATCH /api/admin/models/:id` | Admin, later. Including `enabled`. Trait edits apply to new games only |
 | `DELETE /api/admin/models/:id` | Admin, later. Rejected when a game references it |
 | `PATCH /api/admin/categories/:id` | Admin, later. Name, blurb, enabled, leaderboard, hints_allowed, sort |
-| `POST /api/admin/companies` | Admin, later. `{ id, name, region }` plus a logo upload or a logo URL |
+| `POST /api/admin/companies` | Admin, later. `{ id, name, origin }` plus a logo upload or a logo URL |
 | `POST /api/admin/logos` | Admin, later. Upload to Supabase Storage. The response is the path to store |
 | `POST /api/admin/availability` | Bot. `Authorization: Bearer $AVAILABILITY_TOKEN`, no session. A dry run unless the query is exactly `?apply=true`. Wrong or missing token, or no token set: `404` with no body. See Availability API in `admin.md` |
 
@@ -102,7 +102,7 @@ In one transaction:
 1. For `daily`, look up this account's row whose `daily_key` is today's UTC date plus this difficulty, `YYYY-MM-DD:1` through `:4`. If that row is still `active`, return that `gameId`. Coming back resumes that difficulty and does not draw again. If it is `solved`, `miss`, or `given_up`, return `409` `daily_done`. Easy and Medium are different keys, so both can be played the same day. A second Easy cannot. This happens before the pause check, so an open difficulty can be resumed while the game is paused.
 2. If `app_settings.paused`, return `503` `paused`.
 3. Reject if this user already has a row with `status = 'active'` for this game mode and this difficulty (`409`, `active_game`). A different difficulty can still start, and Daily and All models do not block each other. Reject if they have 20 rows with `started_at` in the last hour (`429`, `hourly_cap`, body includes `nextAt`).
-4. Load the mode and reject it unless `game_modes.enabled` (`404`). Build the pool. `all` and `daily` use enabled models whose `difficulty` is `<=` the chosen difficulty, so Easy never includes an Impossible model. `company` uses `poolKey` as a company id. `region` uses `poolKey` as `us`, `cn`, or `eu`. `custom` is not built yet. Reject a pool with fewer than 2 enabled models. The error is `422` `pool_too_small`. `poolKey` is required for company and region, and rejected for the others. A missing or unknown `difficulty` on All models or Daily is `422` `difficulty`.
+4. Load the mode and reject it unless `game_modes.enabled` (`404`). Build the pool. `all` and `daily` use enabled models whose `difficulty` is `<=` the chosen difficulty, so Easy never includes an Impossible model. `company` uses `poolKey` as a company id. `origin` takes no `poolKey`: the pool is every enabled model whose origin is turned on in `origins`, and the draw is uniform over it. A pool with fewer than 2 origins is `422` `pool_too_small`. `custom` is not built yet. Reject a pool with fewer than 2 enabled models. The error is `422` `pool_too_small`. `poolKey` is required for company and category, and rejected for the others. A missing or unknown `difficulty` on All models or Daily is `422` `difficulty`.
 5. All models draws a uniform model from that pool. Daily uses the row in `daily_models` for this UTC date and this difficulty. The first start inserts that row, and the insert only accepts a model whose `difficulty` is `<=` the chosen level. Medium, Hard, and Impossible each have their own row. A later player the same day reads that row. Two starts in the same instant share it: `insert ... on conflict (played_on, difficulty) do nothing`, then read the stored id back. Tomorrow is a new date and a new row at each level. The guess list is the pool at the moment this round starts. If the stored model has since been turned off, it is still included so it can be named.
 6. Freeze traits from the current catalog into `games.traits`. Insert `games` with `pool_model_ids` set to that pool, `rules` copied from config, `rules.hintsAllowed` copied from `game_modes.hints_allowed`, `username` copied from the profile, `hints = '{}'`, `message_count = 0`, `awaiting_guess = false`, `no_hint` from the body. Daily sets `daily_key` to the UTC date and the difficulty, such as `2026-10-12:2` for Medium. Every other mode leaves it null. Origin stores `no_hint` false and `hintsAllowed` false. Do not write a score on insert.
 
@@ -126,7 +126,9 @@ An explicit credit error is a response whose status or error code says the key i
 
 ### `POST /api/games/:id/guesses`
 
-Body for a model guess: `{ modelId: string }`.
+Body for a model guess: `{ modelId: string }`. Body for an Origin guess: `{ origin: string }`.
+
+An Origin guess needs an Origin round that is `active`, awaiting a guess, with at least one reply. The origin must be one of the choices frozen into the round (`409` `conflict` otherwise). The server calls `apply_origin_guess(p_game_id, p_user_id, p_origin, p_correct)`, which locks the row, inserts the one guess, and sets `solved` or `miss`, with no score. The response includes `model` and the real origin. A second guess is `409` `turn`.
 
 Reject unless `awaiting_guess` is true. Lock the game row.
 
@@ -142,13 +144,13 @@ If this was the last message and the model was not named, set `status = 'miss'` 
 
 ### `POST /api/games/:id/hints`
 
-Body: `{ key: "company" | "region" | "year" | "size" }`.
+Body: `{ key: "company" | "origin" | "year" | "size" }`.
 
-Lock the game row. Reject when `no_hint`, when `rules.hintsAllowed` is false, when the round is not `active`, when the key is already in `hints`, when the key is not one of `company`, `region`, `year`, or `size`, when that trait is given, and when a guess already matched that company or region. Append the key. The next `candidates` list drops models whose frozen value for that trait disagrees. Return `PublicGame`. The price (company 600, region 400, year 100, size 100) is not subtracted until the round ends. Hints are copied on only for Daily, All models, and Custom.
+Lock the game row. Reject when `no_hint`, when `rules.hintsAllowed` is false, when the round is not `active`, when the key is already in `hints`, when the key is not one of `company`, `origin`, `year`, or `size`, when that trait is given, and when a guess already matched that company or origin. Append the key. The next `candidates` list drops models whose frozen value for that trait disagrees. Return `PublicGame`. The price (company 600, origin 400, year 100, size 100) is not subtracted until the round ends. Hints are copied on only for Daily, All models, and Custom.
 
 ### `POST /api/games/:id/give-up`
 
-Requires `active`. Lock the game row. Sets `given_up` and `finished_at`. When `message_count` is at least 1, writes `score`, `score_breakdown`, and `score_explanation` from the region and company matches and the hints so far. The model was not named, so the base is those points only. When `message_count` is 0, leaves the score columns null. The response includes the model. The round is not eligible for the leaderboard.
+Requires `active`. Lock the game row. Sets `given_up` and `finished_at`. When `message_count` is at least 1, writes `score`, `score_breakdown`, and `score_explanation` from the origin and company matches and the hints so far. The model was not named, so the base is those points only. When `message_count` is 0, leaves the score columns null. The response includes the model. The round is not eligible for the leaderboard.
 
 ## The model call
 

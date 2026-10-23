@@ -27,13 +27,13 @@ test("a mode that is not open cannot be selected", () => {
   assert.equal(closed.company, "all");
   assert.equal(boardChoice({ gameMode: "daily" }, modes).gameMode, "all");
   assert.equal(boardChoice({ gameMode: "class" }, modes).gameMode, "all");
-  assert.equal(boardChoice({ gameMode: "region" }, modes).gameMode, "all");
+  assert.equal(boardChoice({ gameMode: "origin" }, modes).gameMode, "all");
 });
 
-test("region and custom stay off the leaderboard bar", () => {
+test("origin and custom stay off the leaderboard bar", () => {
   const shown = boardModes([
     { id: "custom", name: "Custom", enabled: false, sort_order: 6 },
-    { id: "region", name: "Region", enabled: false, sort_order: 5 },
+    { id: "origin", name: "Origin", enabled: false, sort_order: 5 },
     { id: "company", name: "Company", enabled: false, sort_order: 4 },
     { id: "class", name: "Category", enabled: false, sort_order: 3 },
     { id: "all", name: "All models", enabled: true, sort_order: 2 },

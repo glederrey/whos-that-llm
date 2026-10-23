@@ -1,13 +1,13 @@
 import type { CategoryIconData } from "./category-icon";
 import type { Difficulty } from "./difficulty";
-import type { Region, Size } from "./game";
+import type { Origin, Size } from "./game";
 
 export type RosterRow = {
   id: string;
   openrouterId: string;
   name: string;
   companyName: string;
-  region: Region;
+  origin: Origin;
   year: string;
   size: Size;
   difficulty: Difficulty | null;

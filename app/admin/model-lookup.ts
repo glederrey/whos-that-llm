@@ -3,7 +3,7 @@
 import { requireOwner } from "@/lib/admin-access";
 import { validOpenRouterId } from "@/lib/admin-model";
 import { draftFromOpenRouter, type CompanyChoice, type ModelDraft } from "@/lib/openrouter-draft";
-import type { Region } from "@/lib/game";
+import type { Origin } from "@/lib/game";
 import { serviceOrThrow } from "@/lib/rounds";
 
 export type LookupResult = { ok: true; found: true; draft: ModelDraft } | { ok: true; found: false } | { ok: false };
@@ -41,11 +41,11 @@ async function findOpenRouterModel(id: string): Promise<CatalogModel | null | "d
 
 async function loadCompanies(): Promise<CompanyChoice[] | null> {
   const client = serviceOrThrow();
-  const { data, error } = await client.from("companies").select("id, name, region").order("name");
+  const { data, error } = await client.from("companies").select("id, name, origin").order("name");
   if (error) return null;
   return (data ?? []).flatMap((row) => {
-    const region = row.region as string;
-    if (region !== "us" && region !== "cn" && region !== "eu") return [];
-    return [{ id: row.id as string, name: row.name as string, region: region as Region }];
+    const origin = row.origin as string;
+    if (origin !== "us" && origin !== "cn" && origin !== "eu") return [];
+    return [{ id: row.id as string, name: row.name as string, origin: origin as Origin }];
   });
 }

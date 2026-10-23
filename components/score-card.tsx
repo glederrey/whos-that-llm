@@ -2,9 +2,10 @@
 
 import type { ReactNode } from "react";
 import { CompanyLogo } from "@/components/company-logo";
+import { OriginGuess } from "@/components/origin-guess";
 import { ShareActions } from "@/components/share-actions";
 import type { Difficulty } from "@/lib/difficulty";
-import { scoreSteps, type ScoreLine } from "@/lib/game";
+import { scoreSteps, type OriginView, type ScoreLine } from "@/lib/game";
 import { poolSizeLabel, poolSizeValue } from "@/lib/game-labels";
 import { difficultyText, type RoundPlace } from "@/lib/round-facts";
 import { difficultyColor } from "@/lib/share-card";
@@ -27,6 +28,7 @@ export function ScoreCard({
   poolSize = null,
   noHint,
   breakdown,
+  origin = null,
   share,
   actions,
 }: {
@@ -42,16 +44,18 @@ export function ScoreCard({
   poolSize?: number | null;
   noHint: boolean;
   breakdown: ScoreLine[] | null;
+  /** An Origin round. It has no score, so the guess takes the score's place. */
+  origin?: OriginView | null;
   share: { gameId: string; text: string } | null;
   actions?: ReactNode;
 }) {
   const scored = score !== null && breakdown !== null;
   const status =
     state === "solved"
-      ? `Solved on message ${messages}.`
+      ? `Solved on message ${messages}`
       : state === "miss"
-        ? "Failed."
-        : "Given up.";
+        ? "Failed"
+        : "Given up";
   const shown = state === "given_up" ? "given-up" : state;
 
   return (
@@ -76,10 +80,14 @@ export function ScoreCard({
       {actions}
       <section className="card score-card">
         <div className="score-head">
-          <div>
-            <p className="score-label">Your score</p>
-            <p className="score">{scored ? score.toLocaleString("en-US") : "—"}</p>
-          </div>
+          {origin?.actual ? (
+            <OriginGuess label="Your guess" guessed={origin.guessed} actual={origin.actual} correct={state === "solved"} />
+          ) : (
+            <div>
+              <p className="score-label">Your score</p>
+              <p className="score">{scored ? score.toLocaleString("en-US") : "—"}</p>
+            </div>
+          )}
           <div className="score-meta">
             <p className="status" data-state={shown}>
               {status}
@@ -92,7 +100,7 @@ export function ScoreCard({
                   <dt>{place.label}</dt>
                   <dd>{place.value ?? "—"}</dd>
                 </>
-              ) : (
+              ) : origin ? null : (
                 <>
                   <dt>Difficulty</dt>
                   <dd style={difficulty ? { color: difficultyColor[difficulty] } : undefined}>{difficultyText(difficulty)}</dd>
@@ -140,11 +148,13 @@ export function ScoreCard({
         ) : null}
         <div className="score-foot">
           {share ? <ShareActions gameId={share.gameId} text={share.text} /> : <div />}
-          <p className="score-link">
-            <a href="/scoring" target="_blank" rel="noopener noreferrer">
-              How scoring works
-            </a>
-          </p>
+          {origin ? null : (
+            <p className="score-link">
+              <a href="/scoring" target="_blank" rel="noopener noreferrer">
+                How scoring works
+              </a>
+            </p>
+          )}
         </div>
       </section>
     </>

@@ -20,7 +20,7 @@ const item = {
   companyName: "Anthropic",
   logoPath: null,
   companyFound: true,
-  regionFound: false,
+  originFound: false,
   mode: "All models",
   difficulty: "hard" as const,
   noHint: false,
@@ -78,7 +78,7 @@ test("the history dropdown names the mode and the difficulty", () => {
   assert.ok(html.includes("Claude Haiku"));
   assert.ok(html.includes("Your score"));
   assert.ok(html.includes("1,200"));
-  assert.ok(html.includes("Solved on message 3."));
+  assert.ok(html.includes("Solved on message 3"));
   assert.ok(html.includes("Share"));
   assert.ok(html.includes("Copy link"));
   assert.ok(html.includes("Download"));

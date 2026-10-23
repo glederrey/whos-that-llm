@@ -47,7 +47,7 @@ function traits(): Traits {
         name: hidden,
         companyId: "anthropic",
         companyName: "Anthropic",
-        region: "us",
+        origin: "us",
         size: "large",
         year: 2026,
         logoPath: "logos/anthropic.png",
@@ -56,7 +56,7 @@ function traits(): Traits {
         name: decoy,
         companyId: "openai",
         companyName: "OpenAI",
-        region: "us",
+        origin: "us",
         size: "small",
         year: 2026,
         logoPath: "logos/openai.png",
@@ -117,7 +117,7 @@ test("a finished round becomes a score card", () => {
   assert.equal(category.modeLine, "Category · Opus");
   assert.equal(card({ gameMode: "class", poolKey: "opus", difficulty: null }).modeLine, "Category · opus");
 
-  assert.equal(card({ gameMode: "region", poolKey: "us", difficulty: null }).modeLine, "Region · USA");
+  assert.equal(card({ gameMode: "origin", poolKey: null, difficulty: null }).modeLine, "Origin");
   assert.equal(card({ gameMode: "custom", difficulty: null }).modeLine, "Custom");
   const givenUp = card({ status: "given_up", score: null, breakdown: null, messageCount: 0 });
   assert.equal(givenUp.outcome, "Given up");
@@ -132,9 +132,9 @@ test("the card uses the tokens the score counted", () => {
   const scored = scoreRound({
     rules: rulesForGameMode(true),
     namedModel: true,
-    regionMatched: false,
+    originMatched: false,
     companyMatched: false,
-    regionGiven: false,
+    originGiven: false,
     companyGiven: false,
     tokens: 2694,
     noHint: false,
@@ -317,7 +317,7 @@ test("the public picture and the download are the same card", () => {
   assert.match(image, /Daily/);
   assert.match(image, /Easy/);
   assert.match(image, /#1c7c43/);
-  assert.match(image, /Failed\./);
+  assert.match(image, /Failed/);
   assert.match(image, /background:#c41b15/);
   assert.match(image, /color:#fff/);
   assert.doesNotMatch(image, /#FDECEC|#fdecec|#E6F8F8|#e6f8f8/);
@@ -363,15 +363,15 @@ test("the public picture and the download are the same card", () => {
   assert.match(shareCardAlt(named), new RegExp(hidden));
   const quiet = card({ status: "given_up", score: null, breakdown: null, messageCount: 0 });
   const quietImage = renderToStaticMarkup(shareCardImage(quiet, "data:image/png;base64,aaaa"));
-  assert.match(quietImage, /Given up\./);
+  assert.match(quietImage, /Given up/);
   assert.match(quietImage, /background:#F3F3F4/i);
   assert.match(quietImage, /color:#141414/i);
   assert.match(quietImage, /border:1px solid #D4D4D8/i);
   assert.doesNotMatch(quietImage, /background:#1c7c43|background:#c41b15/);
   const quietDark = renderToStaticMarkup(shareCardImage(quiet, "data:image/png;base64,aaaa", null, "dark"));
-  assert.match(quietDark, /background:#262626/i);
+  assert.match(quietDark, /background:#383838/i);
   assert.match(quietDark, /color:#EBEBEB/i);
-  assert.match(quietDark, /border:1px solid #2E2E2E/i);
+  assert.match(quietDark, /border:1px solid #4A4A4A/i);
 
   const page = fs.readFileSync(path.join(root, "app/r/[gameId]/page.tsx"), "utf8");
   assert.match(page, /shareCardPath/);
@@ -448,7 +448,7 @@ test("the public result is the score table and a link home", () => {
 
   const quiet = card({ status: "given_up", score: null, breakdown: null, messageCount: 0 });
   const quietHtml = renderToStaticMarkup(createElement(SharedResult, { card: quiet }));
-  assert.match(quietHtml, /Given up\./);
+  assert.match(quietHtml, /Given up/);
   assert.match(quietHtml, /Try a round/);
   assert.equal(quietHtml.includes("Your score"), false);
   assert.equal(quietHtml.includes("Try to beat this score"), false);
@@ -533,7 +533,8 @@ test("the public card is drawn from the game row and is not stored", () => {
   assert.match(load, /id, status, game_mode, pool_key, pool_model_ids, difficulty, message_count, score, score_breakdown, model_id, traits, daily_key, username, finished_at/);
   assert.doesNotMatch(load, /from\("messages"\)/);
   assert.doesNotMatch(load, /from\("usage"\)/);
-  assert.doesNotMatch(load, /from\("guesses"\)/);
+  assert.match(load, /from\("guesses"\)\.select\("guessed_origin"\)/);
+  assert.equal(load.split('from("guesses")').length, 2);
   assert.doesNotMatch(`${load}\n${route}\n${page}`, /\.storage|writeFile/);
   assert.doesNotMatch(page, /MessageBubble|transcript|SharePicture|ShareActions/);
   assert.match(route, /card\.png|ImageResponse|shareCardImage/);

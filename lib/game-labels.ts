@@ -1,11 +1,20 @@
 import type { Rules } from "./config";
 import { difficultyLabel, type Difficulty } from "./difficulty";
-import type { FrozenModel, HintKey, PublicGame, Region, ScoreInput, Size, TraitKey, Traits } from "./game";
+import type { FrozenModel, HintKey, PublicGame, Origin, ScoreInput, Size, TraitKey, Traits } from "./game";
 
-export function regionLabel(region: Region): string {
-  if (region === "us") return "USA";
-  if (region === "cn") return "China";
-  return "Europe";
+/** Name of a built-in origin. An origin an admin added shows its id until the round's frozen name is used. */
+export function originLabel(origin: Origin): string {
+  if (origin === "us") return "USA";
+  if (origin === "cn") return "China";
+  if (origin === "eu") return "Europe";
+  return origin.charAt(0).toUpperCase() + origin.slice(1);
+}
+
+export function originFlag(origin: Origin): string {
+  if (origin === "us") return "🇺🇸";
+  if (origin === "cn") return "🇨🇳";
+  if (origin === "eu") return "🇪🇺";
+  return "🏳️";
 }
 
 export function sizeLabel(size: Size): string {
@@ -44,7 +53,7 @@ export function formatFactor(value: number): string {
 
 export const hintNames: Record<HintKey, string> = {
   company: "Company",
-  region: "Region",
+  origin: "Origin",
   year: "Year",
   size: "Size",
 };
@@ -61,7 +70,7 @@ export function explainScore(
 ): string[] {
   const { rules } = input;
   const wrongGuesses = input.wrongGuesses ?? 0;
-  const regionKnown = input.regionGiven || bought.includes("region");
+  const originKnown = input.originGiven || bought.includes("origin");
   const companyKnown = input.companyGiven || bought.includes("company");
   const lines = [
     `Your score starts from the base and subtracts penalties. That subtotal is multiplied by ${formatInt(rules.tokenScale)} divided by the tokens used, capped at ${formatFactor(rules.tokenCap)}, then by ${formatFactor(rules.noHintMultiplier)}× if you played with no hints, then by the difficulty. It is rounded and never goes below 0.`,
@@ -70,12 +79,12 @@ export function explainScore(
     lines.push(`Base: ${formatInt(rules.modelBase)} for naming the model.`);
   } else if (base === 0) {
     lines.push("Base: 0.");
-  } else if (input.regionMatched && !regionKnown && input.companyMatched && !companyKnown) {
+  } else if (input.originMatched && !originKnown && input.companyMatched && !companyKnown) {
     lines.push(
-      `Base: ${formatInt(base)} — region ${formatInt(rules.regionPoints)}, company ${formatInt(rules.companyPoints)}.`,
+      `Base: ${formatInt(base)} — origin ${formatInt(rules.originPoints)}, company ${formatInt(rules.companyPoints)}.`,
     );
-  } else if (input.regionMatched && !regionKnown) {
-    lines.push(`Base: ${formatInt(rules.regionPoints)} for the region.`);
+  } else if (input.originMatched && !originKnown) {
+    lines.push(`Base: ${formatInt(rules.originPoints)} for the origin.`);
   } else {
     lines.push(`Base: ${formatInt(rules.companyPoints)} for the company.`);
   }
@@ -121,9 +130,6 @@ export function poolLabel(gameMode: string, poolKey: string | null, traits: Trai
     const name = Object.values(traits.models).find((model) => model.companyId === poolKey)?.companyName;
     return `Company · ${name ?? first?.companyName ?? poolKey ?? ""}`;
   }
-  if (gameMode === "region" && (poolKey === "us" || poolKey === "cn" || poolKey === "eu")) {
-    return `Region · ${regionLabel(poolKey)}`;
-  }
   return gameMode;
 }
 
@@ -137,14 +143,14 @@ export function givenRows(traits: Traits, hidden: FrozenModel): PublicGame["give
 
 function traitLabel(key: TraitKey): string {
   if (key === "company") return "Company";
-  if (key === "region") return "Region";
+  if (key === "origin") return "Origin";
   if (key === "year") return "Year";
   return "Size";
 }
 
 export function displayValue(model: FrozenModel, key: TraitKey): string {
   if (key === "company") return model.companyName;
-  if (key === "region") return regionLabel(model.region);
+  if (key === "origin") return originLabel(model.origin);
   if (key === "year") return String(model.year);
   return sizeLabel(model.size);
 }

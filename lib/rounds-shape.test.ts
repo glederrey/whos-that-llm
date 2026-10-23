@@ -94,7 +94,7 @@ const catalogRow = {
   logo_path: null,
   openrouter_id: "acme/one",
   provider_settings: { a: 1 },
-  companies: { name: "Acme", region: "us", logo_path: "logos/acme.svg" },
+  companies: { name: "Acme", origin: "us", logo_path: "logos/acme.svg" },
 };
 
 test("mapCatalog shapes a model row and takes the year from the release date", () => {
@@ -102,7 +102,7 @@ test("mapCatalog shapes a model row and takes the year from the release date", (
   const [model] = mapCatalog([catalogRow]);
   assert.equal(model.id, "m1");
   assert.equal(model.companyName, "Acme");
-  assert.equal(model.region, "us");
+  assert.equal(model.origin, "us");
   assert.equal(model.year, 2024);
   assert.equal(model.difficulty, "medium");
   assert.equal(model.openrouterId, "acme/one");
@@ -113,7 +113,7 @@ test("mapCatalog shapes a model row and takes the year from the release date", (
 test("mapCatalog accepts the company as a one-item array and prefers the model logo", () => {
   noSupabaseEnv();
   const [model] = mapCatalog([
-    { ...catalogRow, logo_path: "https://cdn.example/m.png", companies: [{ name: "Acme", region: "us", logo_path: "logos/acme.svg" }] },
+    { ...catalogRow, logo_path: "https://cdn.example/m.png", companies: [{ name: "Acme", origin: "us", logo_path: "logos/acme.svg" }] },
   ]);
   assert.equal(model.companyName, "Acme");
   assert.equal(model.logoPath, "https://cdn.example/m.png");
@@ -131,13 +131,13 @@ test("mapCatalog drops rows with no difficulty, no release date or no company", 
 test("presentTraits keeps the shown trait keys and trims each model to public fields", () => {
   noSupabaseEnv();
   const traits = {
-    given: ["company", "region", "year", "size", "name", "hidden"],
+    given: ["company", "origin", "year", "size", "name", "hidden"],
     models: {
       m1: {
         name: "One",
         companyId: "acme",
         companyName: "Acme",
-        region: "us",
+        origin: "us",
         size: "large",
         year: 2024,
         logoPath: "logos/acme.svg",
@@ -146,24 +146,24 @@ test("presentTraits keeps the shown trait keys and trims each model to public fi
     },
   } as unknown as Traits;
   const shown = presentTraits(traits);
-  assert.deepEqual(shown.given, ["company", "region", "year", "size"]);
-  assert.deepEqual(Object.keys(shown.models.m1).sort(), ["companyId", "companyName", "logoPath", "name", "region", "size", "year"]);
+  assert.deepEqual(shown.given, ["company", "origin", "year", "size"]);
+  assert.deepEqual(Object.keys(shown.models.m1).sort(), ["companyId", "companyName", "logoPath", "name", "origin", "size", "year"]);
   assert.equal(shown.models.m1.logoPath, presentLogo("logos/acme.svg", "acme"));
 });
 
-test("recordedGuesses defaults the turn and keeps only the three known regions", () => {
+test("recordedGuesses defaults the turn and keeps any non-empty origin id", () => {
   const rows = recordedGuesses([
-    { guessed_model_id: "a", guessed_region: "us", model_correct: true, company_correct: false, region_correct: true, turn: 3 },
-    { guessed_model_id: null, guessed_region: "mars", model_correct: false, company_correct: false, region_correct: false },
-    { guessed_model_id: "b", guessed_region: "cn", model_correct: false, company_correct: true, region_correct: false },
-    { guessed_model_id: "c", guessed_region: "eu", model_correct: false, company_correct: false, region_correct: false },
+    { guessed_model_id: "a", guessed_origin: "us", model_correct: true, company_correct: false, origin_correct: true, turn: 3 },
+    { guessed_model_id: null, guessed_origin: "mars", model_correct: false, company_correct: false, origin_correct: false },
+    { guessed_model_id: "b", guessed_origin: "cn", model_correct: false, company_correct: true, origin_correct: false },
+    { guessed_model_id: "c", guessed_origin: "eu", model_correct: false, company_correct: false, origin_correct: false },
   ]);
-  assert.deepEqual(rows[0], { turn: 3, modelId: "a", region: "us", modelCorrect: true, companyCorrect: false, regionCorrect: true });
+  assert.deepEqual(rows[0], { turn: 3, modelId: "a", origin: "us", modelCorrect: true, companyCorrect: false, originCorrect: true });
   assert.equal(rows[1].turn, 0);
-  assert.equal(rows[1].region, null);
+  assert.equal(rows[1].origin, "mars");
   assert.equal(rows[1].modelId, null);
-  assert.equal(rows[2].region, "cn");
-  assert.equal(rows[3].region, "eu");
+  assert.equal(rows[2].origin, "cn");
+  assert.equal(rows[3].origin, "eu");
 });
 
 test("sortTranscript orders by turn, user before assistant, without changing the input", () => {
@@ -182,17 +182,17 @@ test("sortTranscript orders by turn, user before assistant, without changing the
 });
 
 test("guessFlags coerces the correctness columns to booleans", () => {
-  assert.deepEqual(guessFlags([{ model_correct: 1, company_correct: null, region_correct: "x" }]), [
-    { modelCorrect: true, companyCorrect: false, regionCorrect: true },
+  assert.deepEqual(guessFlags([{ model_correct: 1, company_correct: null, origin_correct: "x" }]), [
+    { modelCorrect: true, companyCorrect: false, originCorrect: true },
   ]);
   assert.deepEqual(guessFlags([]), []);
 });
 
-test("previousGuesses keeps the guessed model and region next to the flags", () => {
+test("previousGuesses keeps the guessed model and origin next to the flags", () => {
   assert.deepEqual(
     previousGuesses([
-      { guessed_model_id: "a", guessed_region: "eu", model_correct: false, company_correct: true, region_correct: true },
+      { guessed_model_id: "a", guessed_origin: "eu", model_correct: false, company_correct: true, origin_correct: true },
     ]),
-    [{ modelId: "a", region: "eu", modelCorrect: false, companyCorrect: true, regionCorrect: true }],
+    [{ modelId: "a", origin: "eu", modelCorrect: false, companyCorrect: true, originCorrect: true }],
   );
 });

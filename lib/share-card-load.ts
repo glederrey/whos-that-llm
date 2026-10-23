@@ -60,8 +60,16 @@ export const readShareCard = cache(async (gameId: string): Promise<ShareCard | n
     categoryName = await readCategoryName(client, data.pool_key);
   }
 
+  let guessedOrigin: string | null = null;
+  if (data.game_mode === "origin") {
+    const guess = await client.from("guesses").select("guessed_origin").eq("game_id", gameId).maybeSingle();
+    if (guess.error) throw new Error(guess.error.message);
+    guessedOrigin = typeof guess.data?.guessed_origin === "string" ? guess.data.guessed_origin : null;
+  }
+
   return buildShareCard({
     id: data.id,
+    guessedOrigin,
     gameMode: data.game_mode,
     poolKey: data.pool_key,
     difficulty: data.difficulty,

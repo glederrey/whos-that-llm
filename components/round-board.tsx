@@ -8,6 +8,7 @@ import { ChatComposer } from "./chat-composer";
 import { CompanyLogo } from "./company-logo";
 import { GuessHistory } from "./guess-history";
 import { MessageBubble } from "./message-bubble";
+import { Twemoji } from "./twemoji";
 import { TraitLine } from "./trait-line";
 import { useGuessFit } from "./use-guess-fit";
 import { useRound } from "./use-round";
@@ -63,12 +64,12 @@ export function RoundBoard({ initial }: { initial: PublicGame }) {
     return Boolean(game.hints[key]) || openedHints.includes(key);
   }
 
-  function purchasable(key: "company" | "region") {
+  function purchasable(key: "company" | "origin") {
     const visible =
       given.has(key) ||
       Boolean(game.hints[key]) ||
       (key === "company" && game.feedback?.company === "match") ||
-      (key === "region" && game.feedback?.region === "match");
+      (key === "origin" && game.feedback?.origin === "match");
     if (game.gameMode === "company" || !hintsOpen || visible || game.status !== "active") return null;
     return { label: `Reveal (−${game.hintCosts[key]} pts)`, busy: hintBusy !== null, onOpen: () => void buy(key) };
   }
@@ -136,10 +137,10 @@ export function RoundBoard({ initial }: { initial: PublicGame }) {
               reveal={purchasable("company")}
             />
             <TraitLine
-              label="Region"
-              value={given.get("region") ?? (game.feedback?.region === "match" ? game.feedback.regionValue : null) ?? game.hints.region}
+              label="Origin"
+              value={given.get("origin") ?? (game.feedback?.origin === "match" ? game.feedback.originValue : null) ?? game.hints.origin}
               flag
-              reveal={purchasable("region")}
+              reveal={purchasable("origin")}
             />
             {hintsOpen ? (
               <TraitLine
@@ -158,6 +159,34 @@ export function RoundBoard({ initial }: { initial: PublicGame }) {
           </section>
         ) : null}
         <div className="guess-sticky">
+            {game.origin ? (
+            <section className="card stack guess-box">
+              <h2>Where does it come from?</h2>
+              <p className="muted">
+                {canGuess
+                  ? "One guess, then the round ends. Send more messages first if you need them."
+                  : "Send a message before you guess."}
+              </p>
+              <div className="origin-choices">
+                {game.origin.choices.map((choice) => (
+                  <button
+                    key={choice.id}
+                    type="button"
+                    className="candidate origin-choice"
+                    aria-pressed={canGuess && selected === choice.id}
+                    disabled={!canGuess}
+                    onClick={() => setSelected(choice.id)}
+                  >
+                    <Twemoji emoji={choice.flag} />
+                    <span>{choice.name}</span>
+                  </button>
+                ))}
+              </div>
+              <button type="button" className="button" disabled={!canGuess || !selected || guessBusy || busy} onClick={() => void guess()}>
+                Submit guess
+              </button>
+            </section>
+            ) : (
             <section className="card stack guess-box">
               <h2>Guess for message {guessFor}.</h2>
               <p className="muted">
@@ -224,13 +253,14 @@ export function RoundBoard({ initial }: { initial: PublicGame }) {
                 Submit guess
               </button>
             </section>
+            )}
             {game.pastGuesses.length > 0 ? (
               <GuessHistory pastGuesses={game.pastGuesses} noHint={game.noHint} freshGuessId={freshGuessId} />
             ) : null}
           </div>
       </aside>
       <dialog ref={dialogRef} className="dialog">
-        <p>End the round? You will see the model. This round stays off the leaderboard.</p>
+        <p>{game.origin ? "End the round? You will see the model and where it comes from." : "End the round? You will see the model. This round stays off the leaderboard."}</p>
         <div className="row">
           <button type="button" className="button-quiet" onClick={() => dialogRef.current?.close()}>
             Keep playing

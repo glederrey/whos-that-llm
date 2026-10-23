@@ -23,9 +23,9 @@ export function scoreGame(
   return scoreRound({
     rules: game.rules,
     namedModel,
-    regionMatched: guesses.some((guess) => guess.regionCorrect),
+    originMatched: guesses.some((guess) => guess.originCorrect),
     companyMatched: guesses.some((guess) => guess.companyCorrect),
-    regionGiven: game.traits.given.includes("region"),
+    originGiven: game.traits.given.includes("origin"),
     companyGiven: game.traits.given.includes("company"),
     tokens,
     noHint: game.no_hint,

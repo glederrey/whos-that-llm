@@ -2,13 +2,13 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import type { Difficulty } from "./difficulty";
 import { modelsReturnPath, nextRosterSort, pageOf, rosterSortOf, searchRoster, sortRoster, type RosterSort } from "./roster-list";
-import type { Region, Size } from "./game";
+import type { Origin, Size } from "./game";
 
 function row(partial: {
   id: string;
   name: string;
   companyName?: string;
-  region?: Region;
+  origin?: Origin;
   year?: string;
   size?: Size;
   difficulty?: Difficulty | null;
@@ -18,7 +18,7 @@ function row(partial: {
 }) {
   return {
     companyName: "Lab",
-    region: "us" as Region,
+    origin: "us" as Origin,
     year: "2026",
     size: "small" as Size,
     difficulty: "medium" as Difficulty,
@@ -46,15 +46,15 @@ test("search matches name, company, and category without case", () => {
 
 test("a column sorts every data field, and the same column reverses", () => {
   const rows = [
-    row({ id: "b", name: "Beta", companyName: "OpenAI", region: "us", year: "2024", size: "xxl", difficulty: "hard", categoryNames: "Haiku", inputUsdPerMtok: 30, outputUsdPerMtok: 0.02 }),
-    row({ id: "a", name: "alpha", companyName: "Alibaba", region: "cn", year: "2026", size: "nano", difficulty: "easy", categoryNames: "", inputUsdPerMtok: null, outputUsdPerMtok: 10 }),
-    row({ id: "c", name: "Gamma", companyName: "Mistral", region: "eu", year: "", size: "medium", difficulty: null, categoryNames: "Latest", inputUsdPerMtok: 0.02, outputUsdPerMtok: null }),
+    row({ id: "b", name: "Beta", companyName: "OpenAI", origin: "us", year: "2024", size: "xxl", difficulty: "hard", categoryNames: "Haiku", inputUsdPerMtok: 30, outputUsdPerMtok: 0.02 }),
+    row({ id: "a", name: "alpha", companyName: "Alibaba", origin: "cn", year: "2026", size: "nano", difficulty: "easy", categoryNames: "", inputUsdPerMtok: null, outputUsdPerMtok: 10 }),
+    row({ id: "c", name: "Gamma", companyName: "Mistral", origin: "eu", year: "", size: "medium", difficulty: null, categoryNames: "Latest", inputUsdPerMtok: 0.02, outputUsdPerMtok: null }),
   ];
   const names = (sort: RosterSort) => sortRoster(rows, sort).map((item) => item.name);
   assert.deepEqual(names({ column: "name", dir: "asc" }), ["alpha", "Beta", "Gamma"]);
   assert.deepEqual(names({ column: "name", dir: "desc" }), ["Gamma", "Beta", "alpha"]);
   assert.deepEqual(names({ column: "company", dir: "asc" }), ["alpha", "Gamma", "Beta"]);
-  assert.deepEqual(names({ column: "region", dir: "asc" }), ["alpha", "Gamma", "Beta"]);
+  assert.deepEqual(names({ column: "origin", dir: "asc" }), ["alpha", "Gamma", "Beta"]);
   assert.deepEqual(names({ column: "year", dir: "asc" }), ["Beta", "alpha", "Gamma"]);
   assert.deepEqual(names({ column: "year", dir: "desc" }), ["Gamma", "alpha", "Beta"]);
   assert.deepEqual(names({ column: "size", dir: "asc" }), ["alpha", "Gamma", "Beta"]);

@@ -1,5 +1,6 @@
 import { Fragment } from "react";
 import { CompanyLogo } from "@/components/company-logo";
+import { OriginGuess } from "@/components/origin-guess";
 import {
   hiddenModelNote,
   hiddenModelTitle,
@@ -59,10 +60,19 @@ export function SharedResult({ card }: { card: ShareCard }) {
       ) : null}
       <section className="card score-card">
         <div className="score-head">
-          <div>
-            <p className="score-label">{display.scoreLabel}</p>
-            <p className="score">{display.score}</p>
-          </div>
+          {display.origin ? (
+            <OriginGuess
+              label={display.origin.guessLabel}
+              guessed={display.origin.guessed}
+              actual={display.origin.actual}
+              correct={display.origin.correct}
+            />
+          ) : (
+            <div>
+              <p className="score-label">{display.scoreLabel}</p>
+              <p className="score">{display.score}</p>
+            </div>
+          )}
           <div className="score-meta">
             <p className="status" data-state={state}>
               {display.status}

@@ -173,12 +173,13 @@ test("the play page explains one round per difficulty", () => {
   assert.doesNotMatch(home, /The same model for everyone today/);
 });
 
-test("daily, all models, company, and category can start", () => {
+test("daily, all models, company, category, and origin can start", () => {
   assert.equal(canStartMode("daily"), true);
   assert.equal(canStartMode("all"), true);
   assert.equal(canStartMode("company"), true);
   assert.equal(canStartMode("class"), true);
-  for (const id of ["region", "custom"]) assert.equal(canStartMode(id), false);
+  assert.equal(canStartMode("origin"), true);
+  assert.equal(canStartMode("custom"), false);
 });
 
 test("daily stores one model per difficulty", () => {

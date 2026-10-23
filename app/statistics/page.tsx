@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 };
 
 export default async function StatisticsPage() {
-  const { stats, names } = await loadPublicStats();
+  const { stats, names, origins } = await loadPublicStats();
 
   return (
     <div className="stack">
@@ -21,7 +21,7 @@ export default async function StatisticsPage() {
         Back
       </a>
       <h1>Statistics</h1>
-      <StatisticsBoard stats={stats} names={names} />
+      <StatisticsBoard stats={stats} names={names} origins={origins} />
     </div>
   );
 }

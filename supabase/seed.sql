@@ -7,7 +7,7 @@
 insert into public.app_settings (id, paused) values (1, false)
 on conflict (id) do update set paused = excluded.paused;
 
-insert into public.companies (id, name, region, logo_path) values
+insert into public.companies (id, name, origin, logo_path) values
   ('alibaba', 'Alibaba', 'cn', 'logos/alibaba.png'),
   ('anthropic', 'Anthropic', 'us', 'logos/anthropic.png'),
   ('deepseek', 'DeepSeek', 'cn', 'logos/deepseek.png'),
@@ -21,7 +21,7 @@ insert into public.companies (id, name, region, logo_path) values
   ('zai', 'Z.ai', 'cn', 'logos/zai.png')
 on conflict (id) do update set
   name = excluded.name,
-  region = excluded.region,
+  origin = excluded.origin,
   logo_path = excluded.logo_path;
 
 -- Models: reasoning models carry {"reasoning": {"effort": "low"}} as their

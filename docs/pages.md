@@ -115,26 +115,26 @@ Requires a session. No session goes to `/login?next=/play`. No username goes to 
 - Heading: **Game modes**
 - Line: **One LLM, 10 messages. Guess which one it is, and earn a place on the leaderboard.** Scoring is the header link.
 - A status bar: **7 games left**, then **Adding a new game to the pool at 14:22** when a round has already started in the rolling hour. The time is the oldest `started_at` in that window plus one hour, in the viewer's local zone. At the cap: **None left** and **Next one at 14:22.** Right-aligned on the same row: **Twenty games an hour. One more, and the developer goes broke.** On a narrow screen the count, the time, and that sentence stack on the left. The number is `hourlyCap`, written as a word up to twenty. When the game is paused, the bar says **The game is paused.**
-- Category rows. Daily first, then All models, Company, Category, Region, Custom. A mode that is not enabled yet has **Coming soon.** and no button. The sentences are the `game_modes.blurb` column (Daily's is replaced by the line below):
+- Category rows. Daily first, then All models, Company, Category, Origin, Custom. A mode that is not enabled yet has **Coming soon.** and no button. The sentences are the `game_modes.blurb` column (Daily's is replaced by the line below):
 
 | Card | Sentence |
 |---|---|
 | Daily | One round per difficulty. Everyone at that level gets the same model. A new puzzle tomorrow. |
-| All models | Any model in the roster. Name it, or take the region and the company. |
+| All models | Any model in the roster. Name it, or take the origin and the company. |
 | Category | A set we define, not a lab's line. Only Opus, only the nano models, or obscure ones. |
 | Company | The lab is already known. Name the model. |
-| Region | USA, China, or Europe. |
+| Origin | Ten messages, one guess: where does this model come from? |
 | Custom | A custom choice of models. |
 
 - Daily opens the same way as All models: **Choose difficulty**, then Easy, Medium, Hard, and Impossible, and **Play without hints.** Its sentence is **One round per difficulty. Everyone at that level gets the same model. A new puzzle tomorrow.** That sentence is the card, even when the stored blurb is still the old line. Daily is open on this page. It does not show **Coming soon.** A finished difficulty is grayed out, says **Already played.**, and cannot be started again until tomorrow. An unfinished round of that difficulty stays open and resumes. A difficulty they have not started is not grayed out. Easy and Medium on the same day are two rounds.
 - Weekly top 5, later: rank, name, and score from the All models board for the current week, limited to 5. If the week has no counted round: **No finished games this week.**
-- Daily, All models, Company, and Category open. Coming soon modes stay closed: Region and Custom keep the **Coming soon** badge and do not show an expand chevron. Inside an open mode, **Choose difficulty** lists Easy, Medium, Hard, and Impossible on one line each: the name, then the short line beside it, and the turned-on model count on the right. The colors match the leaderboard: Easy `#1c7c43`, Medium `#d4a017`, Hard `#c41b15`, Impossible `#a78bfa`, on the name and the left edge. Daily and All models can start a round. Custom has no difficulty: **The player chooses that pool.**
+- Daily, All models, Company, Category, and Origin open. Coming soon modes stay closed: Custom keeps the **Coming soon** badge and does not show an expand chevron. Origin has no difficulty, no category, and no hint choice, so its row is a plain button: a click starts the round, or resumes the open one. Inside an open mode, **Choose difficulty** lists Easy, Medium, Hard, and Impossible on one line each: the name, then the short line beside it, and the turned-on model count on the right. The colors match the leaderboard: Easy `#1c7c43`, Medium `#d4a017`, Hard `#c41b15`, Impossible `#a78bfa`, on the name and the left edge. Daily and All models can start a round. Custom has no difficulty: **The player chooses that pool.**
 - An unfinished Daily or All models difficulty replaces the model count with **Game isn't finished yet. Continue?** The line is teal: `#007278` on a light page and `#00bbc9` on a dark page. Clicking that row resumes the round. The mode header has no Continue button. A difficulty with no open round still shows the model count and can start. A second round cannot start on a difficulty that already has an unfinished one.
 - On All models, a difficulty is disabled when the hour is full, the game is paused, or that pool has fewer than 2 turned-on models. An unfinished difficulty stays enabled and resumes, including while paused or at the hourly cap. On Daily, a finished difficulty is grayed out. A difficulty they have not started stays available. The open round of a difficulty can still be resumed.
 - Inside an open Category row, **Choose category** shows a search box that opens a list (a combobox: arrow keys, Enter to start, Escape to close). Each option has the icon, the name, the description, and the turned-on model count on the right, or **Game isn't finished yet. Continue?** when that category has an open round. Typing filters by name and description. A category with fewer than 2 turned-on models, or turned off, is not listed. **Play without hints.** sits under the list as in Company. Choosing an option starts the round.
 - Inside an open Daily or All models row, off by default: **Play without hints.** Beside it: **No hints. No match feedback.** On a normal-width page that is one line. On a phone, the checkbox and **Play without hints.** stay on the first line, and **No hints. No match feedback.** moves to the next line. It stays editable until a difficulty is chosen.
 
-Company and Region go to `/play/new?category=…` once they are built. Custom is a later choice of models. Hints can be on for that choice, and it has no leaderboard. Category is open on `/play` itself, with no picker page. There is no Family card, no Latest card, and no Origin card.
+Custom is a later choice of models. Hints can be on for that choice, and it has no leaderboard. Category and Origin are open on `/play` itself, with no picker page. There is no Family card and no Latest card.
 
 ## Username (`/welcome`)
 
@@ -150,15 +150,15 @@ Shown once, when `profiles.username` is null.
 
 ## Pool picker (`/play/new`)
 
-Later, for Company and Region. Heading is the category name. The list is legal pools only.
+Later, for Company. Heading is the category name. The list is legal pools only.
 
 Each row: pool name, model count, button **Start**. The row does not list model names. A count under 4 adds **Small set.**
 
-Region rows are labeled **USA**, **China**, and **Europe**. Region has no hints. Latest is not a card. A latest group is a category, and that mode is not built. Fewer than two models and a later card says **Not enough models.**
+Latest is not a card. A latest group is a category, and that mode is not built. Fewer than two models and a later card says **Not enough models.**
 
 Empty state: **Nothing to play in this category yet.** Link back to the lobby.
 
-Hints are possible on Daily, All models, Company, Category, and Custom. Region and latest have none. The no-hint checkbox is on every open mode. Custom, when it is built, can turn hints on and has no leaderboard.
+Hints are possible on Daily, All models, Company, Category, and Custom. Origin and latest have none. The no-hint checkbox is on every open mode. Custom, when it is built, can turn hints on and has no leaderboard.
 
 Start calls `POST /api/games` and routes to `/play/[gameId]`. Failures:
 
@@ -177,7 +177,7 @@ On a phone, feedback and hints sit under the transcript, as in [Phones](#phones)
 Always visible.
 
 - `Message 2 of 10`. Before the first send: `Message 1 of 10` with the input empty, so the cap is there before they type.
-- Pool label: `All models · Easy`, `Daily · Easy`, `Company · Anthropic`, `Region · USA`, `Custom`
+- Pool label: `All models · Easy`, `Daily · Easy`, `Company · Anthropic`, `Origin`, `Custom`
 - **No hints** when the box was checked
 - **Give up**. Asks **End the round? You will see the model. This round stays off the leaderboard.** Buttons **Keep playing** and **Give up**.
 
@@ -197,13 +197,17 @@ Input under the transcript:
 
 A stored assistant reply that is empty or whitespace still spends the message and opens the guess. The bubble can be blank.
 
+### Origin round
+
+An Origin round has no guess bar and no board. Under the transcript, once a reply is stored, a row of buttons shows every origin in the round's pool, each with the Twemoji flag and the name, in the order the admin set. Choosing one marks it. **Submit guess** is enabled when one is marked, and sends it. The guess is final. The tenth reply says **Last message. Choose where it comes from, or give up.** The header says **Origin** and has no **No hints** tag.
+
 ### Guess bar
 
 Appears when `awaitingGuess` is true. Heading: **Guess for message 2.**
 
 Search field, placeholder **Search models**. The rows stay closed until the field is focused, then open as a dropdown: logo, company, and name. Nothing else. A chosen model replaces the placeholder in that field. Submit is enabled when a row is selected. Under the heading: **You can guess, or send another message.** On the tenth reply: **Last message. Name the model, or give up.** A wrong guess slides into **Previous guesses** and stays there. That model leaves the search list. When hints are on, a wrong company also removes every other model from that company. A right company leaves its other models in the search. No-hint mode still only removes the model that was named. A model already guessed is not offered again. Sending the next message leaves that turn without a guess. On a wide screen the **Previous guesses** card shrinks to fit between the top of the side column and the bottom of the writing box, so it scrolls with the page. When a short thread leaves it under 120px, it uses the bottom of the window instead, so it never collapses to its title. On a phone it shows in full.
 
-Each previous guess shows the logo, the company, and the name, then the traits it missed: **Wrong company**, **Wrong region**. A trait the pool already shares is left off that line. A trait it got right is left off too, because the board unveils that row. If neither of those missed, the line is **Wrong model**. No-hint mode keeps the model and says **Wrong model**, with no trait words.
+Each previous guess shows the logo, the company, and the name, then the traits it missed: **Wrong company**, **Wrong origin**. A trait the pool already shares is left off that line. A trait it got right is left off too, because the board unveils that row. If neither of those missed, the line is **Wrong model**. No-hint mode keeps the model and says **Wrong model**, with no trait words.
 
 The list is the one the server already filtered. A guess the server rejects: **That model is not in the list.**
 
@@ -211,7 +215,7 @@ The list is the one the server already filtered. A guess the server rejects: **T
 
 Hidden for the whole round when no-hint mode is on. Origin renders none of it.
 
-The board sits on the right. Every row looks the same: the trait, then **Not found yet**, or the unveiled value. Company, region, year, and size are on the board as soon as the round opens. A miss does not change a row to **Wrong**. The miss is named on the previous-guess card. A hit unveils that row: **Anthropic**, or **USA** with the USA, China, or Europe flag. A trait the pool already shares is unveiled from the start, except year and size.
+The board sits on the right. Every row looks the same: the trait, then **Not found yet**, or the unveiled value. Company, origin, year, and size are on the board as soon as the round opens. A miss does not change a row to **Wrong**. The miss is named on the previous-guess card. A hit unveils that row: **Anthropic**, or **USA** with the USA, China, or Europe flag. A trait the pool already shares is unveiled from the start, except year and size.
 
 Year and size read **Not found yet** until the click, with **Reveal** when the pool shares that trait, or **Reveal (−100 pts)** when the models differ. The click reveals the year or the size. The button does not come back.
 
@@ -222,9 +226,9 @@ Point numbers for a match stay off this board. They are on the result page. Nami
 On the same board, from the moment the round opens, when this category allows hints and no-hint mode is off. No-hint rounds do not show these buttons.
 
 - **Reveal**, or **Reveal (−100 pts)** when the years or the sizes differ
-- **Reveal (−600 pts)** on company, and **Reveal (−400 pts)** on region, when that trait is not already unveiled. A trait the pool shares stays unveiled with no button.
+- **Reveal (−600 pts)** on company, and **Reveal (−400 pts)** on origin, when that trait is not already unveiled. A trait the pool shares stays unveiled with no button.
 
-One click. The button disables until the response returns. A revealed year shows the calendar year, such as **2026**. A revealed size shows **Small**, **Medium**, or **Large**. A revealed company or region shows that value. The button does not come back.
+One click. The button disables until the response returns. A revealed year shows the calendar year, such as **2026**. A revealed size shows **Small**, **Medium**, or **Large**. A revealed company or origin shows that value. The button does not come back.
 
 ### Failures on the round
 
@@ -238,8 +242,9 @@ One click. The button disables until the response returns. A revealed year shows
 
 A page, not a popup. Only for `solved`, `miss`, and `given_up`. An active round redirects to the round page. Refresh is safe.
 
-- Logo, model name, company, region, year, and size. Origin names the model here. The round never did.
-- One score card. **Your score** and the number sit on the left. On the right: the status line (**Solved on message 2.** or **Miss.** or **Given up.**), then **Game mode**, **Difficulty** and **Pool**. A company or category round puts **Company** or **Category** and that name where **Difficulty** would be (a category that no longer exists shows **—**), here, on the result page and the profile. A long name wraps in the narrow right column. **Pool** is the size of the round's pool, written like **11 models** (a category or company round counts that group), read from the pool saved on the round, so old rounds stay right. A round with no saved pool hides that row. A round with no score (a give-up before any reply) keeps the label and shows a dash in place of the number, here, on the shared page and on the downloadable card. The labels sit right-aligned in one column and the values left-aligned in the next. A round stored with no difficulty says **—**. A round played without hints says **No hints**. On a phone that right-hand group stays on the right, a little smaller, so the score can sit beside it.
+- Logo, model name, company, origin, year, and size. Origin names the model here. The round never did.
+- An Origin round has a different card. The model sits on top. Where the score would be, the card says **Your guess** and the origin the player chose, with its flag, or a dash for a give-up. When the guess was wrong, or the round was given up, a second line says **Comes from** and the real origin. **Game mode** says **Origin**. There is no **Difficulty** row and no breakdown. **Pool** still shows how many models the round drew from. **How scoring works** is not on the card. **Play again** returns to the lobby.
+- One score card. **Your score** and the number sit on the left. On the right: the status line (**Solved on message 2** or **Failed** or **Given up**), then **Game mode**, **Difficulty** and **Pool**. A company or category round puts **Company** or **Category** and that name where **Difficulty** would be (a category that no longer exists shows **—**), here, on the result page and the profile. A long name wraps in the narrow right column. **Pool** is the size of the round's pool, written like **11 models** (a category or company round counts that group), read from the pool saved on the round, so old rounds stay right. A round with no saved pool hides that row. A round with no score (a give-up before any reply) keeps the label and shows a dash in place of the number, here, on the shared page and on the downloadable card. The labels sit right-aligned in one column and the values left-aligned in the next. A round stored with no difficulty says **—**. A round played without hints says **No hints**. On a phone that right-hand group stays on the right, a little smaller, so the score can sit beside it.
 - **How scoring works** sits at the bottom right of that card on a wide screen, on the same line as the share buttons, and opens `/scoring` in a new tab. The page does not repeat the formula beside the breakdown. On a phone that link is not on the card.
 - **Share**, **Copy link**, and **Download card** sit on one line. On a wide screen **Share** is the filled button, with a down mark, and the other two sit beside it. **Copy link** copies the public result link. On a wide screen the button flashes teal twice, quickly. It does not add a line. If the copy fails: **The link could not be copied.** On a phone the same three buttons sit side by side and together fill the width. Each label stays on one line. The button says **Download card** when that fits, and **Download** when it does not. **Copy link** does not flash and does not add a line, because the phone already shows that the clipboard changed. On a phone, **Download card** shows **Saving…** when that word fits in the button. When it does not, the button flashes teal twice. It does not add a line. The result page does not show the picture itself. The picture is the download and the link preview. The public page is the score table.
 - On a phone, **Share** opens the same menu. **By message** is first, with a chat mark. It opens the system share sheet with that PNG when the browser allows it. The sheet is for a chat. When the picture is attached, that chat says **Play here: https://www.whos-that-llm.com** instead of the round link. **Copy link** is not in that menu. **X**, **LinkedIn**, and **Facebook** follow. Those posts use the round link, on a phone and on a computer. **X** opens with the message filled in and the public round page as the shared URL, so X can preview that page's card. A blank line sits before that link. It does not use **Play here**, and the PNG is not attached to the post. LinkedIn and Facebook copy that same message, including the link, and their tooltip says **This opens the post. Paste the message.** They open that same round page, so their preview can show the card too. If **By message** fails, a red line under the buttons says **Try again.**
@@ -258,9 +263,9 @@ A page, not a popup. Only for `solved`, `miss`, and `given_up`. An active round 
   https://www.whos-that-llm.com/r/…
   ```
 
-  Daily leaves out the model paragraph. A company, category, or region round replaces the difficulty line with that name, such as **Company: Anthropic.** A round with no score leaves out the points and the challenge. If **By message** fails: **Try again.** If the copy fails: **The message could not be copied.**
+  Daily leaves out the model paragraph. A company or category round replaces the difficulty line with that name, such as **Company: Anthropic.** A round with no score leaves out the points and the challenge. If **By message** fails: **Try again.** If the copy fails: **The message could not be copied.**
 - The transcript
-- **Play again** and **Leaderboard** sit at the top right, level with the model name. **Play again** returns to the lobby. It does not start a round. A company or region round returns to that category's pool picker. Latest returns to the lobby. **Leaderboard** is shown when this category has a leaderboard and the status is `solved` or `miss`. On a phone those two buttons sit side by side just under the score card, and together they fill the width.
+- **Play again** and **Leaderboard** sit at the top right, level with the model name. **Play again** returns to the lobby. It does not start a round. A company round returns to that category's pool picker. Latest returns to the lobby. **Leaderboard** is shown when this category has a leaderboard and the status is `solved` or `miss`. On a phone those two buttons sit side by side just under the score card, and together they fill the width.
 
 The score is the integer from [Rules](rules.md), never below 0. When the total comes to less than 0 before the floor, a **Floor at 0** line brings it to 0.
 
@@ -283,9 +288,11 @@ Only a finished game (`solved`, `miss`, or `given_up`). An open round or an unkn
 
 Above the card, the player's name is the title: **Gael's game.** Under it, quieter: **Played on October 16, 2026.** The day is the UTC day the round finished. A round with no stored name has no title, only the date when one is stored. The player's own result and the profile still name the model on a Daily. This page does not, while that puzzle's UTC day is still today. In the model's place: the game logo, **Model hidden**, and **It will be revealed tomorrow.** The downloaded card uses that same placement. The next UTC day, this page and the card name the model. Other modes name it as soon as the round is finished.
 
-When this round may name the model, the logo, the name, and the company, region, year, and size sit above the card.
+When this round may name the model, the logo, the name, and the company, origin, year, and size sit above the card.
 
-**{Name}'s score** (the username stored on the round, uppercase, cut to 20 characters with an ellipsis; **Score** when the name is gone) and the number sit on the left. On the right: **Solved on message 2.** or **Miss.** or **Given up.**, then **Game mode**, **Difficulty** and **Pool** (the pool size, like **11 models**, hidden when the round has no saved pool). A company, category, or region round names that instead of the difficulty (category: the name of the category, also for one turned off since; a category that is gone shows its id). A name over 26 characters is cut with an ellipsis on the downloadable card. The difficulty word uses the leaderboard colors: Easy `#1c7c43`, Medium `#d4a017`, Hard `#c41b15`, Impossible `#a78bfa`. A round played without hints says **No hints**.
+An Origin round is shared in full. The page and the downloaded card show the model, the player's guess with its flag, and, when the guess missed or the round was given up, **Comes from** and the real origin. They show no score, no breakdown, and no pool. The share text reads **I just played Who's that LLM? Origin and guessed Europe for Qwen3.8 Max. It comes from China.** (right guess: **…and got it right: Claude Sonnet 5.5 comes from the USA.**) The link under the card says **Try a round**.
+
+**{Name}'s score** (the username stored on the round, uppercase, cut to 20 characters with an ellipsis; **Score** when the name is gone) and the number sit on the left. On the right: **Solved on message 2** or **Failed** or **Given up**, then **Game mode**, **Difficulty** and **Pool** (the pool size, like **11 models**, hidden when the round has no saved pool). A company or category round names that instead of the difficulty (category: the name of the category, also for one turned off since; a category that is gone shows its id). A name over 26 characters is cut with an ellipsis on the downloadable card. The difficulty word uses the leaderboard colors: Easy `#1c7c43`, Medium `#d4a017`, Hard `#c41b15`, Impossible `#a78bfa`. A round played without hints says **No hints**.
 
 The breakdown is the full score: each line, the change, and **After**, including **Before the multiplier**, then **Total**. A give-up before any reply has no score and no breakdown. This page does not link to **How scoring works**. The player's own result still does.
 
@@ -299,7 +306,7 @@ The link preview is that same picture. It is drawn when a share preview requests
 
 **Back** returns home. It is a text button with a chevron, larger than a footnote link.
 
-One bar. Game modes sit on the left, in play-page order: Daily, All models, Company, Category. Region and Custom are not on it. Daily, All models, Company, and Category are open. A mode that is closed stays visible, grayed out, and cannot be selected. A closed mode in the URL falls back to All models.
+One bar. Game modes sit on the left, in play-page order: Daily, All models, Company, Category. Origin and Custom are not on it, because they have no leaderboard. Daily, All models, Company, and Category are open. A mode that is closed stays visible, grayed out, and cannot be selected. A closed mode in the URL falls back to All models.
 
 The middle is one slot, and it follows the selected mode. Daily and All models use the difficulty tabs: **Any difficulty**, **Easy**, **Medium**, **Hard**, and **Impossible**. Category uses a dropdown of every category that is turned on (All categories first, each with its icon), and that dropdown shows only when Category is selected. Company uses a dropdown of every company, and that dropdown shows only when Company is selected. With Daily or All models selected, the bar is the mode tabs, the difficulty tabs, and This week or All time. No category or company dropdown is visible.
 
@@ -348,13 +355,14 @@ First person. The words:
 
 Public. No session. Linked from the header. It does not show prices, spend, or OpenRouter billing. The heading is **Statistics**. Mode buttons are next, then the stats. There is no intro under the heading.
 
-A game counts only when `finished_at` is set. A round that was started and not finished is left out of every figure, the chart, and the lists. The page does not say how many rounds are still open. A game with no account still counts once it is finished. Arrival shows the overall stats. Mode buttons sit under the heading: **All modes**, **Daily**, **All models**, **Category**, **Company**, **Region**, and **Custom**. **All modes**, **Daily**, **All models**, **Company**, and **Category** can be chosen. **All modes** is the arrival view, every game mode together. Region and Custom stay visible and gray, the same as a mode that is not open on the leaderboard. Choosing **Daily** or **All models** replaces the overall stats with that mode. The seven buttons share the bar in equal widths. On a phone they sit on two rows, four then three, and each row fills the width. They do not reload the page. Class is not on the overall stats. Family is not a section.
+A game counts only when `finished_at` is set. A round that was started and not finished is left out of every figure, the chart, and the lists. The page does not say how many rounds are still open. A game with no account still counts once it is finished. Arrival shows the overall stats. Mode buttons sit under the heading: **All modes**, **Daily**, **All models**, **Category**, **Company**, **Origin**, and **Custom**. **All modes**, **Daily**, **All models**, **Company**, and **Category** can be chosen. **All modes** is the arrival view, every game mode together. Origin and Custom stay visible and gray, the same as a mode that is not open on the leaderboard. Choosing **Daily** or **All models** replaces the overall stats with that mode. The seven buttons share the bar in equal widths. On a phone they sit on two rows, four then three, and each row fills the width. They do not reload the page. Class is not on the overall stats. Family is not a section.
 
-- Solve rate, give-ups, correct guesses, messages per game, tokens per game, region found. Give-ups do not mention open rounds
+- Solve rate, give-ups, correct guesses, messages per game, tokens per game, origin found. Give-ups do not mention open rounds
 - Finished games started per UTC day, last 14 days
 - Which models are hardest to find: games, solve rate, messages when solved, tokens
 - Wrong names: hidden model, the model named instead, and how often
-- Size and region of the hidden model
+- Size and origin of the hidden model
+- The Origin view: solve rate, messages and tokens per game, a table by real origin (games, found, and a Picked column with one count per origin), and the hardest and easiest models. Origin rounds stay out of the All modes figures.
 - **All models** uses the same blocks for that category. A category with no finished games says **No finished games in this category yet.** It does not show a made-up rate
 - **Category** shows the blocks above for the Category mode, then a **By category** table of the categories that are turned on. A category that is turned off is left out.
 
@@ -392,6 +400,6 @@ Any URL that does not exist, and any `/admin` URL for a visitor who is not the o
 
 `/admin/modes` shows each game category, including one with zero games: games, open, finished, solved, solve rate, and give-ups. The Category mode is one row, not one per category.
 
-This build's admin pages are `/admin`, `/admin/costs`, `/admin/games`, `/admin/modes`, `/admin/models`, and `/admin/categories`. `/admin/models` has a closed **Add a model** dropdown, a search box (display name, company, category), and two tables: active models first, inactive second. Each lists display name, company, region, year, size, input price, output price, and categories, 10 per page with **Previous** and **Next**, paged on its own. Clicking a data header sorts both tables ascending. Clicking it again sorts descending. A third click clears the sort and returns the default order. Clicking a different column starts that column at ascending. The turn-on and edit controls are not a sort column. Paging keeps the scroll position. **On** is green. **Off** is red, and **Edit** sits next to it. **Reset** sits by the search box only while a search is active, and saving an edit stays on that search. Turning a model off leaves it out of new rounds. Add starts with an OpenRouter id. Looking it up fills the display name, the company when that org is one we already have, and the release date. Size and categories stay empty until he fills them. He can change any filled value before saving. Edit those fields on a row, including the categories. Input and output prices are read live from OpenRouter on each load and are not edited. A new model starts off. Past games keep the traits they froze. `/admin/categories` creates, edits, turns on or off, and deletes a category: name, a short description, and an icon (an uploaded image, an emoji, a company logo, or the default logo, first one filled wins; an emoji is drawn as a Twemoji picture, see `docs/admin.md`). It lists active and inactive categories in two tables. Company logos come from the `logos` bucket. Scoring settings are not on these pages.
+This build's admin pages are `/admin`, `/admin/costs`, `/admin/games`, `/admin/modes`, `/admin/models`, and `/admin/categories`. `/admin/models` has a closed **Add a model** dropdown, a search box (display name, company, category), and two tables: active models first, inactive second. Each lists display name, company, origin, year, size, input price, output price, and categories, 10 per page with **Previous** and **Next**, paged on its own. Clicking a data header sorts both tables ascending. Clicking it again sorts descending. A third click clears the sort and returns the default order. Clicking a different column starts that column at ascending. The turn-on and edit controls are not a sort column. Paging keeps the scroll position. **On** is green. **Off** is red, and **Edit** sits next to it. **Reset** sits by the search box only while a search is active, and saving an edit stays on that search. Turning a model off leaves it out of new rounds. Add starts with an OpenRouter id. Looking it up fills the display name, the company when that org is one we already have, and the release date. Size and categories stay empty until he fills them. He can change any filled value before saving. Edit those fields on a row, including the categories. Input and output prices are read live from OpenRouter on each load and are not edited. A new model starts off. Past games keep the traits they froze. `/admin/categories` creates, edits, turns on or off, and deletes a category: name, a short description, and an icon (an uploaded image, an emoji, a company logo, or the default logo, first one filled wins; an emoji is drawn as a Twemoji picture, see `docs/admin.md`). It lists active and inactive categories in two tables. Company logos come from the `logos` bucket. Scoring settings are not on these pages.
 
 The later cockpit (the pause switch, categories, confusion, transcripts) is still specified in [Admin](admin.md).

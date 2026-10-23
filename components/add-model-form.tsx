@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { addModel } from "@/app/admin/actions";
 import { lookupOpenRouterModel } from "@/app/admin/model-lookup";
+import type { OriginOption } from "@/lib/admin-origin";
 import { validOpenRouterId } from "@/lib/admin-model";
 import type { ModelDraft } from "@/lib/openrouter-draft";
 import type { RosterSort } from "@/lib/roster-list";
@@ -11,6 +12,7 @@ import { RosterReturnFields } from "./roster-return-fields";
 
 export function AddModelForm({
   categories,
+  origins,
   query,
   sort,
   activePage,
@@ -18,6 +20,7 @@ export function AddModelForm({
   unavailablePage,
 }: {
   categories: ModelFieldCategory[];
+  origins: OriginOption[];
   query: string;
   sort: RosterSort;
   activePage: number;
@@ -84,7 +87,8 @@ export function AddModelForm({
               omitOpenRouterId
               name={draft.name}
               company={draft.company}
-              region={draft.region}
+              origin={draft.origin}
+              origins={origins}
               releasedOn={draft.releasedOn}
               size=""
               categories={categories}
@@ -105,5 +109,5 @@ export function AddModelForm({
 }
 
 function emptyDraft(): ModelDraft {
-  return { name: "", company: "", region: "", releasedOn: "" };
+  return { name: "", company: "", origin: "", releasedOn: "" };
 }

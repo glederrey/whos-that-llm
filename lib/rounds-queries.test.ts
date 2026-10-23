@@ -62,7 +62,7 @@ test("scoreFrom throws the database message when the usage query fails", async (
 
 test("scoreFrom scores from the usage rows it reads", async () => {
   const { client, tableCalls } = fakeClient({ usage: { data: [{ input_tokens: 10, output_tokens: 5 }] } }, {});
-  const scored = await scoreFrom(client, gameRow(), [{ modelCorrect: true, companyCorrect: true, regionCorrect: true }], true);
+  const scored = await scoreFrom(client, gameRow(), [{ modelCorrect: true, companyCorrect: true, originCorrect: true }], true);
   assert.deepEqual(tableCalls, ["usage"]);
   assert.equal(typeof scored.score, "number");
   assert.ok(Array.isArray(scored.breakdown));

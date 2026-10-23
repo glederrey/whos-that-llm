@@ -96,12 +96,12 @@ export function traitFound(input: {
   status: GameStatus;
   given: string[];
   companyCorrect: boolean;
-  regionCorrect: boolean;
-  trait: "company" | "region";
+  originCorrect: boolean;
+  trait: "company" | "origin";
 }): boolean {
   if (input.status === "solved") return true;
   if (input.given.includes(input.trait)) return true;
-  return input.trait === "company" ? input.companyCorrect : input.regionCorrect;
+  return input.trait === "company" ? input.companyCorrect : input.originCorrect;
 }
 
 export function avatarPublicUrl(baseUrl: string, path: string | null): string | null {

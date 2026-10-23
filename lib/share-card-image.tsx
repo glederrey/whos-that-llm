@@ -1,6 +1,9 @@
 import { createElement, type CSSProperties, type ReactElement } from "react";
 import { clipText, hiddenModelNote, hiddenModelTitle, shareCardDisplay, type ShareCard, type ShareCardTheme, type ShareMeta } from "./share-card";
 
+/** Data URIs of the flag pictures an Origin card draws. Null falls back to the name alone. */
+export type ShareCardFlags = { guessed: string | null; actual: string | null };
+
 export const shareCardWidth = 1080;
 export const shareCardHeight = 1350;
 
@@ -38,7 +41,7 @@ const dark: Tone = {
   line: "#2E2E2E",
   score: "#00BBC9",
   frame: "#00BBC9",
-  quietWash: "#262626",
+  quietWash: "#383838",
   chip: "#FFFFFF",
 };
 
@@ -53,6 +56,7 @@ export function shareCardImage(
   logoSrc: string,
   modelLogoSrc: string | null = null,
   theme: ShareCardTheme = "light",
+  flags: ShareCardFlags = { guessed: null, actual: null },
 ): ReactElement {
   const tone = theme === "dark" ? dark : light;
   const display = shareCardDisplay(card);
@@ -124,7 +128,9 @@ export function shareCardImage(
           : null,
       box(
         { alignItems: "center", justifyContent: "space-between", marginTop: display.modelName || card.modelHidden ? 76 : 0 },
-        box(
+        display.origin
+          ? originBlock(display.origin, flags, tone)
+          : box(
           { flexDirection: "column" },
           text(display.scoreLabel, {
             fontSize: 28,
@@ -143,8 +149,10 @@ export function shareCardImage(
           }),
         ),
         box(
-          { flexDirection: "column", alignItems: "flex-end" },
+          { flexDirection: "column", alignItems: "stretch" },
           text(display.status, {
+            justifyContent: "center",
+            width: "100%",
             fontSize: 36,
             fontWeight: 700,
             color: status.color,
@@ -156,7 +164,7 @@ export function shareCardImage(
           metaTable(display.meta, tone),
         ),
       ),
-      display.steps.length > 0 || display.score !== "—"
+      !display.origin && (display.steps.length > 0 || display.score !== "—")
         ? box(
             { flexDirection: "column", marginTop: 28 },
             tableHead(tone),
@@ -176,11 +184,39 @@ export function shareCardImage(
   );
 }
 
+/** What the player guessed, and where the model really comes from when the guess missed or they gave up. */
+function originBlock(origin: NonNullable<ReturnType<typeof shareCardDisplay>["origin"]>, flags: ShareCardFlags, tone: Tone): ReactElement {
+  const place = (name: string, flag: string | null, size: number, color: string) =>
+    box(
+      { alignItems: "center" },
+      flag ? createElement("img", { src: flag, width: size, height: size, style: { marginRight: 18 } }) : null,
+      text(clipText(name, 14), { fontSize: size, fontWeight: 700, lineHeight: 1, color }),
+    );
+  return box(
+    { flexDirection: "column" },
+    text(origin.guessLabel, {
+      fontSize: 28,
+      fontWeight: 500,
+      letterSpacing: 2,
+      textTransform: "uppercase",
+      color: tone.mute,
+    }),
+    box({ marginTop: 12 }, origin.guessed ? place(origin.guessed.name, flags.guessed, 84, tone.score) : text("—", { fontSize: 84, fontWeight: 700, lineHeight: 1, color: tone.score })),
+    origin.correct
+      ? null
+      : box(
+          { flexDirection: "column", marginTop: 36 },
+          text("Comes from", { fontSize: 28, fontWeight: 500, letterSpacing: 2, textTransform: "uppercase", color: tone.mute }),
+          box({ marginTop: 12 }, place(origin.actual.name, flags.actual, 64, tone.ink)),
+        ),
+  );
+}
+
 /** Same chips as the score card. Solved is the Easy green, Failed is the Hard red, Given up stays gray. */
 function statusChip(outcome: ShareCard["outcome"], tone: Tone): { color: string; background: string; border?: string } {
   if (outcome === "Solved") return { color: "#fff", background: "#1c7c43" };
   if (outcome === "Not solved") return { color: "#fff", background: "#c41b15" };
-  return { color: tone.ink, background: tone.quietWash, border: `1px solid ${tone.line}` };
+  return { color: tone.ink, background: tone.quietWash, border: `1px solid ${tone === dark ? "#4A4A4A" : tone.line}` };
 }
 
 function factLine(facts: string[], tone: Tone): ReactElement {
@@ -196,7 +232,7 @@ function factLine(facts: string[], tone: Tone): ReactElement {
 function metaTable(rows: ShareMeta[], tone: Tone): ReactElement {
   const cell = { height: 36, alignItems: "center", marginTop: 8 } as const;
   return box(
-    { marginTop: 8 },
+    { marginTop: 8, justifyContent: "flex-end" },
     box(
       { flexDirection: "column", alignItems: "flex-end", marginRight: 16 },
       ...rows.map((row) => text(row.label, { ...cell, fontSize: 26, color: tone.mute })),

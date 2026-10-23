@@ -1,12 +1,21 @@
+import type { OriginOption } from "@/lib/admin-origin";
 import { difficulties, difficultyLabel, type Difficulty } from "@/lib/difficulty";
 
 export type ModelFieldCategory = { id: string; name: string };
+
+/** The origin select before the origins load, and the old rounds' three. */
+const defaultOrigins: OriginOption[] = [
+  { id: "us", name: "USA", flag: "🇺🇸" },
+  { id: "cn", name: "China", flag: "🇨🇳" },
+  { id: "eu", name: "Europe", flag: "🇪🇺" },
+];
 
 export function ModelFields({
   openrouterId = "",
   name = "",
   company = "",
-  region = "us",
+  origin = "us",
+  origins = defaultOrigins,
   year = "",
   releasedOn,
   size = "small",
@@ -18,7 +27,8 @@ export function ModelFields({
   openrouterId?: string;
   name?: string;
   company?: string;
-  region?: string;
+  origin?: string;
+  origins?: OriginOption[];
   year?: string;
   releasedOn?: string;
   size?: string;
@@ -44,12 +54,14 @@ export function ModelFields({
         <input name="company" defaultValue={company} list="roster-companies" required />
       </label>
       <label>
-        Region
-        <select name="region" defaultValue={region} required>
-          {region ? null : <option value="">Choose</option>}
-          <option value="us">USA</option>
-          <option value="cn">China</option>
-          <option value="eu">Europe</option>
+        Origin
+        <select name="origin" defaultValue={origin} required>
+          {origin ? null : <option value="">Choose</option>}
+          {origins.map((option) => (
+            <option key={option.id} value={option.id}>
+              {option.flag} {option.name}
+            </option>
+          ))}
         </select>
       </label>
       {releasedOn !== undefined ? (

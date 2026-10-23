@@ -24,9 +24,9 @@ A subnav sits on every one of those pages: **Stats, Costs, Games, Modes, Models,
 
 `/admin/games` is play, without money columns: solve rate, give-ups, correct guesses, messages, tokens, games started per UTC day for 14 days, and which models are hardest to find (games, solve rate, messages when solved).
 
-`/admin/modes` is one row per game category, including a category with zero games, plus any extra category id already stored on a game. Each row has games, open, finished, solved, solve rate, and give-ups. A class leaderboard is not a row on this page. The class game mode is not built.
+`/admin/modes` is one row per game category, including a category with zero games, plus any extra category id already stored on a game. Each row has games, open, finished, solved, solve rate, and give-ups. The Origin row shows a dash for give-ups. A class leaderboard is not a row on this page. The class game mode is not built.
 
-`/admin/models` shows the display name, company, region, year, size, difficulty, input price, output price, then the classes, then active. Difficulty is the name: Easy, Medium, Hard, or Impossible. The column sorts Easy to Impossible. Input and output are the live OpenRouter list price in dollars per 1 million tokens. They are not stored on the model. The page asks OpenRouter on each load, and a price shows a dash when OpenRouter has none or does not answer. Clicking one of those headers sorts both tables ascending. Clicking it again sorts descending. A third click clears the sort and returns the default order. Clicking a different column starts that column at ascending. The turn-on and edit controls are not a sort column. Saving an edit keeps the current search. **Reset** shows only while a search is active and clears it. Add starts with an OpenRouter id. The lookup fills the display name, the company when that org is one of ours, and the release date. Size, difficulty, and classes stay empty. OpenRouter does not set the difficulty. A new model stays off. Class membership is a set of checkboxes from the classes that already exist, and a model can have more than one. **On** is green. **Off** is red.
+`/admin/models` shows the display name, company, origin, year, size, difficulty, input price, output price, then the classes, then active. Difficulty is the name: Easy, Medium, Hard, or Impossible. The column sorts Easy to Impossible. Input and output are the live OpenRouter list price in dollars per 1 million tokens. They are not stored on the model. The page asks OpenRouter on each load, and a price shows a dash when OpenRouter has none or does not answer. Clicking one of those headers sorts both tables ascending. Clicking it again sorts descending. A third click clears the sort and returns the default order. Clicking a different column starts that column at ascending. The turn-on and edit controls are not a sort column. Saving an edit keeps the current search. **Reset** shows only while a search is active and clears it. Add starts with an OpenRouter id. The lookup fills the display name, the company when that org is one of ours, and the release date. Size, difficulty, and classes stay empty. OpenRouter does not set the difficulty. A new model stays off. Class membership is a set of checkboxes from the classes that already exist, and a model can have more than one. **On** is green. **Off** is red.
 
 `/admin/categories` creates, edits, and turns on or off a category: name, a short description, and an icon (an uploaded image, an emoji, a company logo, or the default logo).
 
@@ -36,13 +36,14 @@ When the rest of this cockpit exists, it is still not a role, and it is still no
 
 ## Pages
 
-One home page for the picture, and the rest for the work. A subnav sits on every admin page: **Home, Models, Categories, Stats, Rounds.** It is part of the admin layout, so it never appears on the public site.
+One home page for the picture, and the rest for the work. A subnav sits on every admin page: **Home, Models, Categories, Origins, Stats, Rounds.** It is part of the admin layout, so it never appears on the public site.
 
 | Page | What it is for |
 |---|---|
 | `/admin` | The picture. Spend, volume, and the pause switch |
 | `/admin/models` | Add a model, or set `enabled` |
 | `/admin/categories` | Add, edit, and turn on or off categories with their icon |
+| `/admin/origins` | Add, edit, and turn on or off origins with their flag |
 | `/admin/stats` | Confusion, hints, solve rates |
 | `/admin/rounds` | Transcripts, one round at a time |
 | `/admin/rounds/[gameId]` | One transcript |
@@ -75,13 +76,13 @@ Add, edit, and turn off. The column is `models.enabled`.
 
 **Add.** A form: our id (slug), OpenRouter id, display name, company, classes, size, open weights, reasoning, release date, `provider_settings`. There is no latest flag. `enabled` starts false. Saving an enabled reasoning model with empty settings, or an enabled model with no release date, is rejected. Companies can be created from here if the dropdown does not have them yet. Classes are chosen from `/admin/classes`. They are not typed in as a new name on this form.
 
-Open weights and reasoning are stored on the model as admin facts. Play does not use them. Size and release year are hints in All models and Daily. They are not points. Region does not offer hints.
+Open weights and reasoning are stored on the model as admin facts. Play does not use them. Size and release year are hints in All models and Daily. They are not points. Origin does not offer hints.
 
 **Logo.** Upload the company logo to the public `logos` bucket as `{company_id}.png` (PNG, SVG, or WebP, at most 1 MB). The row stores `logos/{company_id}.png` on `companies.logo_path`, or a model override on `models.logo_path`. If the upload is unavailable, paste an `https` URL instead. A model logo overrides the company logo.
 
 **Off.** The normal way to remove a model. `enabled = false`. It leaves every draw. The row stays. Rounds already played still show the name from `games.traits`. A round already open keeps the model it drew and the traits it froze, including one you just edited, so a player in the middle of ten messages is not rewritten. New rounds use the edited row.
 
-**On.** Runs the checks above, then the model is eligible wherever its company, region, or classes put it.
+**On.** Runs the checks above, then the model is eligible wherever its company, origin, or classes put it.
 
 **Delete the row.** Only when no game points at it. Otherwise the button reads **Turn it off instead** and does nothing. Deleting a model that has been played would break the foreign key. History still reads `games.traits` for the values.
 
@@ -138,9 +139,21 @@ curl -X POST -H "Authorization: Bearer $AVAILABILITY_TOKEN" "https://<site>/api/
 
 ## Game modes (database)
 
-The built-ins are seeded: Daily, All models, Company, Category (`class`), Region, Custom. Latest, Origin, and Family are not rows. Size is not a row. Daily, All models, Company, and Category are enabled with a leaderboard and hints. Region and Custom are off. The flags (`enabled`, `leaderboard`, `hints_allowed`, `blurb`, `sort_order`) are edited in the database. No admin page edits them. `/admin/modes` only shows counts per mode. You cannot delete a built-in.
+The built-ins are seeded: Daily, All models, Company, Category (`class`), Origin, Custom. Latest and Family are not rows. Size is not a row. Daily, All models, Company, and Category are enabled with a leaderboard and hints. Origin is enabled with no leaderboard and no hints. Custom is off. The flags (`enabled`, `leaderboard`, `hints_allowed`, `blurb`, `sort_order`) are edited in the database. No admin page edits them. `/admin/modes` only shows counts per mode. You cannot delete a built-in.
 
 Turning a mode off hides its card. Old rounds stay on the leaderboard as long as that mode has `leaderboard` and has counted games. A round already started keeps the `rules.hintsAllowed` it copied. The score formula is the one in [Rules](rules.md), frozen onto the round. A mode has no multiplier of its own.
+
+## Origins (`/admin/origins`)
+
+The list of origins a company can have. Each row shows the flag, the name, the id, the order, how many companies use it, and whether it is on. The owner can:
+
+- **Add** an origin: a name, one flag emoji, and an order. The id comes from the name (`Latin America` is `latin-america`). A taken id says so.
+- **Edit** the name, the flag, and the order. The id never changes.
+- **Turn off or on.** Off, the origin has no button in the Origin game and none of its models is drawn there. Nothing else changes: the other modes, the origin hint, and past rounds stay as they are.
+
+There is no delete. An origin that was used stays in the table for good, because companies and guesses point to it.
+
+The company form on `/admin/models` lists every origin, on or off, as a dropdown with the flag in front. A model's company cannot be given an origin that is not in the table.
 
 ## Categories (`/admin/categories`)
 
@@ -158,7 +171,7 @@ Upload is a server action that repeats the owner check. It sniffs the bytes (`re
 ## Stats (`/admin/stats`)
 
 - Rounds started, solved, missed, given up. Today and all time.
-- Among misses: how many found company and region at least once.
+- Among misses: how many found company and origin at least once.
 - Hints: how often year and size are bought, and how often a round that bought one still solved.
 - Messages used on solved rounds, 1 through 5.
 - Solve rate by category and by model.

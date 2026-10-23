@@ -123,7 +123,7 @@ function rosterRow(id: string, openrouterId: string): RosterRow {
     openrouterId,
     name: id,
     companyName: "Co",
-    region: "us",
+    origin: "us",
     year: "2026",
     size: "small",
     difficulty: null,

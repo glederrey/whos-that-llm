@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import type { Difficulty } from "@/lib/difficulty";
-import type { ScoreLine } from "@/lib/game";
+import type { OriginView, ScoreLine } from "@/lib/game";
 import { difficultyText, type RoundPlace } from "@/lib/round-facts";
 import { CompanyLogo } from "./company-logo";
 import { ScoreCard } from "./score-card";
@@ -21,7 +21,8 @@ type HistoryItem = {
   companyName: string | null;
   logoPath: string | null;
   companyFound: boolean;
-  regionFound: boolean;
+  originFound: boolean;
+  origin?: OriginView | null;
   mode: string;
   difficulty: Difficulty | null;
   /** Company and category rounds put this name where a difficulty chip would be. */
@@ -109,6 +110,7 @@ export function HistoryDetail({ item, panel }: { item: HistoryItem; panel?: stri
           noHint={item.noHint}
           breakdown={item.breakdown}
           share={item.shareText ? { gameId: item.id, text: item.shareText } : null}
+          origin={item.origin ?? null}
         />
       </div>
     );
@@ -134,7 +136,7 @@ export function HistoryDetail({ item, panel }: { item: HistoryItem; panel?: stri
         <dd>{item.when}</dd>
         <RoundFacts
           mode={item.mode}
-          difficulty={item.place ? (item.place.value ?? "—") : difficultyText(item.difficulty)}
+          difficulty={item.origin ? null : item.place ? (item.place.value ?? "—") : difficultyText(item.difficulty)}
           label={item.place?.label ?? "Difficulty"}
         />
         {item.noHint ? (
@@ -158,8 +160,8 @@ export function HistoryDetail({ item, panel }: { item: HistoryItem; panel?: stri
         <dd>{item.messages}</dd>
         <dt>Company</dt>
         <dd>{item.companyFound ? "Found" : "Not found"}</dd>
-        <dt>Region</dt>
-        <dd>{item.regionFound ? "Found" : "Not found"}</dd>
+        <dt>Origin</dt>
+        <dd>{item.originFound ? "Found" : "Not found"}</dd>
       </dl>
       {item.state === "active" ? (
         <p>

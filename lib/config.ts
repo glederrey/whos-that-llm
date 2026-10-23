@@ -6,11 +6,11 @@ export const config = {
   maxUserChars: 500,
   maxOutputTokens: 2000,
   modelBase: 2000,
-  regionPoints: 100,
+  originPoints: 100,
   companyPoints: 300,
   tokenScale: 10000,
   tokenCap: 20,
-  hintCosts: { year: 100, size: 100, region: 400, company: 600 },
+  hintCosts: { year: 100, size: 100, origin: 400, company: 600 },
   wrongGuessCost: 100,
   noHintMultiplier: 2,
   difficultyMultipliers: { easy: 0.5, medium: 1, hard: 2, impossible: 3 } satisfies Record<Difficulty, number>,
@@ -23,7 +23,7 @@ export type Rules = {
   maxUserChars: number;
   maxOutputTokens: number;
   modelBase: number;
-  regionPoints: number;
+  originPoints: number;
   companyPoints: number;
   tokenScale: number;
   tokenCap: number;
@@ -40,7 +40,7 @@ export function rulesForGameMode(hintsAllowed: boolean): Rules {
     maxUserChars: config.maxUserChars,
     maxOutputTokens: config.maxOutputTokens,
     modelBase: config.modelBase,
-    regionPoints: config.regionPoints,
+    originPoints: config.originPoints,
     companyPoints: config.companyPoints,
     tokenScale: config.tokenScale,
     tokenCap: config.tokenCap,

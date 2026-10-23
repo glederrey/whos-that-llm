@@ -7,21 +7,29 @@ import {
   type GuessFact,
   type UsageFact,
 } from "./admin-metrics";
-import type { Region, Size } from "./game";
+import type { Origin, Size } from "./game";
 
 const sizes: Size[] = ["nano", "small", "medium", "large", "xxl"];
-const regions: Region[] = ["us", "cn", "eu"];
+const builtInOrigins: Origin[] = ["us", "cn", "eu"];
+
+/** The three first origins keep their place; any origin an admin added follows, in id order. */
+function originOrder(games: PublicGameFact[]): Origin[] {
+  const extra = new Set<Origin>();
+  for (const game of games) if (game.origin && !builtInOrigins.includes(game.origin)) extra.add(game.origin);
+  return [...builtInOrigins, ...[...extra].sort()];
+}
 
 export type PublicGameFact = GameFact & {
   gameMode: string;
   size: Size | null;
-  region: Region | null;
+  origin: Origin | null;
   categoryIds: string[];
 };
 
 export type PublicGuessFact = GuessFact & {
   guessedModelId: string | null;
-  regionCorrect: boolean;
+  guessedOrigin: string | null;
+  originCorrect: boolean;
 };
 
 export type PublicUsageFact = {
@@ -51,7 +59,7 @@ export type Outcome = {
   guessAccuracy: number | null;
   messagesPerGame: number | null;
   tokensPerGame: number | null;
-  regionFoundRate: number | null;
+  originFoundRate: number | null;
 };
 
 export type ModelOutcome = {
@@ -76,7 +84,17 @@ export type TraitRow = {
   solveRate: number | null;
   avgMessagesWhenSolved: number | null;
   tokensPerGame: number | null;
-  regionFoundRate: number | null;
+  originFoundRate: number | null;
+};
+
+/** One real origin in the Origin mode: how often it was found, and what people picked instead. */
+export type OriginPickRow = {
+  origin: Origin;
+  games: number;
+  solved: number;
+  givenUp: number;
+  foundRate: number | null;
+  picks: { origin: Origin; count: number }[];
 };
 
 export type GameModeReport = {
@@ -90,7 +108,8 @@ export type GameModeReport = {
   confusion: ConfusionPair[];
   days: DayCount[];
   sizes: TraitRow[];
-  regions: TraitRow[];
+  origins: TraitRow[];
+  originPicks: OriginPickRow[];
 };
 
 export const statisticModes = [
@@ -99,7 +118,7 @@ export const statisticModes = [
   { id: "all", name: "All models", enabled: true },
   { id: "company", name: "Company", enabled: true },
   { id: "class", name: "Category", enabled: true },
-  { id: "region", name: "Region", enabled: false },
+  { id: "origin", name: "Origin", enabled: true },
   { id: "custom", name: "Custom", enabled: false },
 ] as const;
 
@@ -111,7 +130,7 @@ export type PublicStats = {
   days: DayCount[];
   confusion: ConfusionPair[];
   sizes: TraitRow[];
-  regions: TraitRow[];
+  origins: TraitRow[];
   categories: CategoryStat[];
   gameModes: GameModeReport[];
 };
@@ -134,12 +153,12 @@ function asGuesses(rows: PublicGuessFact[]): GuessFact[] {
   return rows.map((row) => ({ gameId: row.gameId, modelCorrect: row.modelCorrect }));
 }
 
-function regionFoundRate(games: PublicGameFact[], guesses: PublicGuessFact[]): number | null {
+function originFoundRate(games: PublicGameFact[], guesses: PublicGuessFact[]): number | null {
   if (games.length === 0) return null;
   const ids = new Set(games.map((game) => game.id));
   const found = new Set<string>();
   for (const guess of guesses) {
-    if (ids.has(guess.gameId) && guess.regionCorrect) found.add(guess.gameId);
+    if (ids.has(guess.gameId) && guess.originCorrect) found.add(guess.gameId);
   }
   let hits = 0;
   for (const id of ids) if (found.has(id)) hits += 1;
@@ -163,7 +182,7 @@ function outcomeFrom(games: PublicGameFact[], usage: PublicUsageFact[], guesses:
     guessAccuracy: metrics.guessAccuracy,
     messagesPerGame: metrics.messagesPerGame,
     tokensPerGame: metrics.tokensPerGame,
-    regionFoundRate: regionFoundRate(games, guesses),
+    originFoundRate: originFoundRate(games, guesses),
   };
 }
 
@@ -197,11 +216,35 @@ function confusionPairs(games: PublicGameFact[], guesses: PublicGuessFact[]): Co
   );
 }
 
+function originPickRows(games: PublicGameFact[], guesses: PublicGuessFact[]): OriginPickRow[] {
+  const byGame = new Map<string, PublicGuessFact>();
+  for (const guess of guesses) byGame.set(guess.gameId, guess);
+  return originOrder(games).map((origin) => {
+    const subset = games.filter((game) => game.origin === origin);
+    const solved = subset.filter((game) => game.status === "solved").length;
+    const counts = new Map<Origin, number>();
+    for (const game of subset) {
+      const picked = byGame.get(game.id)?.guessedOrigin;
+      if (picked) counts.set(picked, (counts.get(picked) ?? 0) + 1);
+    }
+    return {
+      origin,
+      games: subset.length,
+      solved,
+      givenUp: subset.filter((game) => game.status === "given_up").length,
+      foundRate: subset.length > 0 ? solved / subset.length : null,
+      picks: [...counts.entries()]
+        .map(([pick, count]) => ({ origin: pick, count }))
+        .sort((a, b) => b.count - a.count || a.origin.localeCompare(b.origin)),
+    };
+  });
+}
+
 function traitRows(
   games: PublicGameFact[],
   usage: PublicUsageFact[],
   guesses: PublicGuessFact[],
-  key: "size" | "region",
+  key: "size" | "origin",
   order: readonly string[],
 ): TraitRow[] {
   const keys = [...order];
@@ -218,7 +261,7 @@ function traitRows(
       solveRate: outcome.solveRate,
       avgMessagesWhenSolved: solved > 0 ? solvedMessages / solved : null,
       tokensPerGame: outcome.tokensPerGame,
-      regionFoundRate: outcome.regionFoundRate,
+      originFoundRate: outcome.originFoundRate,
     };
   });
 }
@@ -244,7 +287,7 @@ function categoryRows(
         solveRate: outcome.solveRate,
         avgMessagesWhenSolved: solved > 0 ? solvedMessages / solved : null,
         tokensPerGame: outcome.tokensPerGame,
-        regionFoundRate: outcome.regionFoundRate,
+        originFoundRate: outcome.originFoundRate,
       };
     });
 }
@@ -279,11 +322,13 @@ function gameModeReport(
       confusion: [],
       days: [],
       sizes: [],
-      regions: [],
+      origins: [],
+      originPicks: [],
     };
   }
   const ids = new Set(rows.map((game) => game.id));
   const named = withoutTodayDaily(rows, today);
+  const originMode = gameMode.id === "origin";
   const metrics = computeGameMetrics(
     rows,
     tiedUsage(usage, ids),
@@ -310,13 +355,14 @@ function gameModeReport(
       guessAccuracy: metrics.guessAccuracy,
       messagesPerGame: metrics.messagesPerGame,
       tokensPerGame: metrics.tokensPerGame,
-      regionFoundRate: regionFoundRate(rows, guesses),
+      originFoundRate: originFoundRate(rows, guesses),
     },
     models: modelsFrom(named, usage, guesses),
-    confusion: confusionPairs(named, guesses),
+    confusion: originMode ? [] : confusionPairs(named, guesses),
     days: metrics.days,
-    sizes: traitRows(named, usage, guesses, "size", sizes),
-    regions: traitRows(named, usage, guesses, "region", regions),
+    sizes: originMode ? [] : traitRows(named, usage, guesses, "size", sizes),
+    origins: originMode ? [] : traitRows(named, usage, guesses, "origin", originOrder(named)),
+    originPicks: originMode ? originPickRows(rows, guesses) : [],
   };
 }
 
@@ -328,12 +374,14 @@ export function computePublicStats(
   categories: NamedCategory[] = [],
   now: Date = new Date(),
 ): PublicStats {
-  const counted = games.filter((game) => hasFinishedAt(game));
+  const finished = games.filter((game) => hasFinishedAt(game));
+  // Origin rounds guess an origin, not a model: they have their own tab and stay out of the all-modes figures.
+  const counted = finished.filter((game) => game.gameMode !== "origin");
   const today = utcDate(now);
   const named = withoutTodayDaily(counted, today);
   const playable = gameModes.filter((gameMode) => gameMode.id !== "family");
   const known = new Set(playable.map((gameMode) => gameMode.id));
-  const extra = [...new Set(counted.map((game) => game.gameMode).filter((id) => id !== "family" && !known.has(id)))].sort();
+  const extra = [...new Set(finished.map((game) => game.gameMode).filter((id) => id !== "family" && !known.has(id)))].sort();
   const listed = [...playable, ...extra.map((id) => ({ id, name: id }))];
   const countedIds = new Set(counted.map((game) => game.id));
   const overall = computeGameMetrics(
@@ -357,14 +405,14 @@ export function computePublicStats(
       guessAccuracy: overall.guessAccuracy,
       messagesPerGame: overall.messagesPerGame,
       tokensPerGame: overall.tokensPerGame,
-      regionFoundRate: regionFoundRate(counted, guesses),
+      originFoundRate: originFoundRate(counted, guesses),
     },
     models: modelsFrom(named, usage, guesses),
     days: overall.days,
     confusion: confusionPairs(named, guesses),
     sizes: traitRows(named, usage, guesses, "size", sizes),
-    regions: traitRows(named, usage, guesses, "region", regions),
+    origins: traitRows(named, usage, guesses, "origin", originOrder(named)),
     categories: categoryRows(named, usage, guesses, categories),
-    gameModes: listed.map((gameMode) => gameModeReport(gameMode, counted, usage, guesses, today, now)),
+    gameModes: listed.map((gameMode) => gameModeReport(gameMode, finished, usage, guesses, today, now)),
   };
 }

@@ -1,7 +1,7 @@
-export function RegionFlag({ region }: { region: string }) {
-  if (region === "USA") return <UsaFlag />;
-  if (region === "China") return <ChinaFlag />;
-  if (region === "Europe") return <EuropeFlag />;
+export function OriginFlag({ origin }: { origin: string }) {
+  if (origin === "USA") return <UsaFlag />;
+  if (origin === "China") return <ChinaFlag />;
+  if (origin === "Europe") return <EuropeFlag />;
   return null;
 }
 

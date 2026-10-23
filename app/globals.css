@@ -1212,6 +1212,9 @@ html[data-theme="dark"] .hit { color: var(--teal); }
   width: 100%;
   line-height: 1.3;
 }
+.origin-choices { display: grid; gap: 6px; }
+.origin-choice { border-color: var(--line); font-size: 1.05rem; }
+.origin-choice:disabled { opacity: 0.55; }
 .candidate:hover { background: var(--teal-wash); }
 .candidate[aria-pressed="true"] { border-color: var(--teal); background: var(--teal-wash); }
 .candidate img, .model-lockup img { width: 28px; height: 28px; border-radius: 6px; }
@@ -1284,10 +1287,11 @@ html[data-theme="dark"] .hit { color: var(--teal); }
 }
 .status[data-state="solved"] { background: #1c7c43; color: #fff; border-color: transparent; }
 .status[data-state="miss"] { background: #c41b15; color: #fff; border-color: transparent; }
+html[data-theme="dark"] .status[data-state="given-up"] { background: #383838; border-color: #4a4a4a; }
 .score-card { padding: 22px 24px; }
 .score-head { display: flex; justify-content: space-between; align-items: center; gap: 16px 32px; }
 .score-meta { margin-left: auto; display: grid; justify-items: end; gap: 8px; text-align: right; }
-.score-meta .status { text-align: right; }
+.score-meta .status { width: 100%; justify-content: center; text-align: center; }
 .score-meta dl { display: grid; grid-template-columns: auto auto; gap: 4px 14px; margin: 0; justify-content: end; }
 .score-meta dt { color: var(--mute); font-weight: 500; }
 .score-meta dd { margin: 0; font-weight: 700; text-align: left; max-width: 20ch; overflow-wrap: anywhere; }
@@ -1299,6 +1303,9 @@ html[data-theme="dark"] .hit { color: var(--teal); }
   margin: 2px 0 0;
 }
 .score-card .breakdown { margin-top: 28px; }
+.score-card .score.origin-pick { font-size: 56px; letter-spacing: 0; }
+.origin-actual { display: grid; gap: 2px; margin: 10px 0 0; font-size: 22px; }
+.origin-actual .score-label { margin: 0; }
 .score {
   font-size: 56px;
   line-height: 1.05;
@@ -1514,6 +1521,8 @@ html[data-theme="dark"] .history-score[data-best="true"] { color: var(--teal); }
 .section-nav a:hover { border-color: var(--teal); color: var(--text); }
 .stats .stat-note { margin: 6px 0 0; color: var(--mute); font-size: 13px; }
 .roster th.group { text-align: center; border-left: 1px solid var(--line); }
+.roster th.pick, .roster td.pick, .roster td.group { text-align: center; }
+.roster td.group { border-left: 1px solid var(--line); }
 .roster th:nth-child(n + 2), .roster td:nth-child(n + 2) { font-variant-numeric: tabular-nums; }
 .roster tr.total-row td { font-weight: 700; background: var(--soft); }
 .daybars { display: grid; grid-template-columns: repeat(14, minmax(0, 1fr)); gap: 6px; align-items: end; }
@@ -1887,6 +1896,7 @@ html[data-theme="dark"] .history-score[data-best="true"] { color: var(--teal); }
   .score-head > :first-child { flex: none; }
   .score-meta { flex: 1 1 auto; gap: 4px; min-width: 0; }
   .score-meta .status {
+    width: auto;
     max-width: 100%;
     font-size: 12px;
     line-height: 1.25;

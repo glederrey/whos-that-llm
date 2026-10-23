@@ -1,15 +1,17 @@
 "use client";
 
 import { useState } from "react";
-import { RegionFlag } from "@/components/region-flag";
+import { OriginFlag } from "@/components/origin-flag";
+import { Twemoji } from "@/components/twemoji";
 import { compact, decimal, percent, type DayCount } from "@/lib/admin-metrics";
-import { regionLabel, sizeLabel, type Region, type Size } from "@/lib/game";
+import { originLabel, sizeLabel, type Origin, type Size } from "@/lib/game";
 import {
   statisticModes,
   type CategoryStat,
   type GameModeReport,
   type ConfusionPair,
   type ModelOutcome,
+  type OriginPickRow,
   type Outcome,
   type PublicStats,
   type StatisticModeId,
@@ -18,7 +20,17 @@ import {
 
 type Figure = { label: string; value: string; note?: string };
 
-export function StatisticsBoard({ stats, names }: { stats: PublicStats; names: Record<string, string> }) {
+type OriginNames = Record<string, { name: string; flag: string }>;
+
+export function StatisticsBoard({
+  stats,
+  names,
+  origins,
+}: {
+  stats: PublicStats;
+  names: Record<string, string>;
+  origins: OriginNames;
+}) {
   const [mode, setMode] = useState<StatisticModeId>("main");
   const nameFor = (id: string) => names[id] ?? id;
   const selected = stats.gameModes.find((gameMode) => gameMode.id === mode);
@@ -42,6 +54,8 @@ export function StatisticsBoard({ stats, names }: { stats: PublicStats; names: R
         <MainStats stats={stats} nameFor={nameFor} />
       ) : mode === "class" ? (
         <CategoryMode categories={stats.categories} report={selected} nameFor={nameFor} />
+      ) : mode === "origin" ? (
+        <OriginMode report={selected} nameFor={nameFor} origins={origins} />
       ) : (
         <ModeStats report={selected} nameFor={nameFor} />
       )}
@@ -65,9 +79,9 @@ function MainStats({ stats, nameFor }: { stats: PublicStats; nameFor: (id: strin
       <h2>Size</h2>
       <p className="muted">By the size of the hidden model.</p>
       <TraitTable kind="size" rows={stats.sizes} />
-      <h2>Region</h2>
-      <p className="muted">By the region of the hidden model. Region found is a finished game where a guess got the region.</p>
-      <TraitTable kind="region" rows={stats.regions} />
+      <h2>Origin</h2>
+      <p className="muted">By the origin of the hidden model. Origin found is a finished game where a guess got the origin.</p>
+      <TraitTable kind="origin" rows={stats.origins} />
     </>
   );
 }
@@ -95,10 +109,98 @@ function ModeStats({ report, nameFor }: { report: GameModeReport | undefined; na
       <h2>Size</h2>
       <p className="muted">By the size of the hidden model.</p>
       <TraitTable kind="size" rows={report.sizes} />
-      <h2>Region</h2>
-      <p className="muted">By the region of the hidden model. Region found is a finished game where a guess got the region.</p>
-      <TraitTable kind="region" rows={report.regions} />
+      <h2>Origin</h2>
+      <p className="muted">By the origin of the hidden model. Origin found is a finished game where a guess got the origin.</p>
+      <TraitTable kind="origin" rows={report.origins} />
     </>
+  );
+}
+
+function OriginMode({
+  report,
+  nameFor,
+  origins,
+}: {
+  report: GameModeReport | undefined;
+  nameFor: (id: string) => string;
+  origins: OriginNames;
+}) {
+  if (!report || report.outcome === null) {
+    return (
+      <div className="card empty">
+        <p>No finished games in this game mode yet.</p>
+      </div>
+    );
+  }
+  const outcome = report.outcome;
+  const label = (id: string) => (
+    <span className="roster-company">
+      {origins[id] ? <Twemoji emoji={origins[id].flag} /> : null}
+      {origins[id]?.name ?? originLabel(id)}
+    </span>
+  );
+  return (
+    <>
+      <h2>{report.name}</h2>
+      <Figures
+        items={[
+          { label: "Solve rate", value: percent(outcome.solveRate), note: `${outcome.solved} solved of ${outcome.finished} finished` },
+          { label: "Messages per game", value: decimal(outcome.messagesPerGame), note: "Finished games" },
+          { label: "Tokens per game", value: compact(outcome.tokensPerGame), note: "Prompt plus completion" },
+        ]}
+      />
+      <h2>Games over time</h2>
+      <DayBars days={report.days} />
+      <h2>By real origin</h2>
+      <p className="muted">
+        For each real origin: how often it was found, and how many times each origin was picked.
+      </p>
+      <OriginPickTable rows={report.originPicks} label={label} />
+      <h2>Hardest and easiest models</h2>
+      <p className="muted">Hidden models, hardest first. Solve rate is solved over finished games.</p>
+      <ModelTable rows={report.models} nameFor={nameFor} />
+    </>
+  );
+}
+
+function OriginPickTable({ rows, label }: { rows: OriginPickRow[]; label: (id: string) => React.ReactNode }) {
+  const columns = rows.map((row) => row.origin);
+  return (
+    <div className="card roster-card">
+      <table className="roster compact">
+        <thead>
+          <tr>
+            <th rowSpan={2}>Real origin</th>
+            <th rowSpan={2}>Games</th>
+            <th rowSpan={2}>Found</th>
+            <th className="group" colSpan={columns.length}>
+              Picked
+            </th>
+          </tr>
+          <tr>
+            {columns.map((id, index) => (
+              <th key={id} className={index === 0 ? "group" : "pick"}>
+                {label(id)}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row) => (
+            <tr key={row.origin}>
+              <td>{label(row.origin)}</td>
+              <td>{row.games.toLocaleString("en-US")}</td>
+              <td>{row.games === 0 ? "n/a" : percent(row.foundRate)}</td>
+              {columns.map((id, index) => (
+                <td key={id} className={index === 0 ? "group" : "pick"}>
+                  {(row.picks.find((pick) => pick.origin === id)?.count ?? 0).toLocaleString("en-US")}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 }
 
@@ -144,9 +246,9 @@ function gameFigures(outcome: Outcome): Figure[] {
     { label: "Messages per game", value: decimal(outcome.messagesPerGame), note: "Finished games" },
     { label: "Tokens per game", value: compact(outcome.tokensPerGame), note: "Prompt plus completion" },
     {
-      label: "Region found",
-      value: percent(outcome.regionFoundRate),
-      note: "Finished games where a guess got the region",
+      label: "Origin found",
+      value: percent(outcome.originFoundRate),
+      note: "Finished games where a guess got the origin",
     },
   ];
 }
@@ -264,17 +366,17 @@ function CategoryTable({ rows }: { rows: CategoryStat[] }) {
   );
 }
 
-function TraitTable({ kind, rows }: { kind: "size" | "region"; rows: TraitRow[] }) {
+function TraitTable({ kind, rows }: { kind: "size" | "origin"; rows: TraitRow[] }) {
   return (
     <div className="card roster-card">
       <table className="roster compact">
         <thead>
           <tr>
-            <th>{kind === "size" ? "Size" : "Region"}</th>
+            <th>{kind === "size" ? "Size" : "Origin"}</th>
             <th>Games</th>
             <th>Solve rate</th>
             <th>Messages when solved</th>
-            {kind === "region" ? <th>Region found</th> : null}
+            {kind === "origin" ? <th>Origin found</th> : null}
             <th>Tokens per game</th>
           </tr>
         </thead>
@@ -282,9 +384,9 @@ function TraitTable({ kind, rows }: { kind: "size" | "region"; rows: TraitRow[] 
           {rows.map((row) => (
             <tr key={row.key}>
               <td>
-                {kind === "region" && row.key !== "unknown" ? (
+                {kind === "origin" && row.key !== "unknown" ? (
                   <span className="roster-company">
-                    <RegionFlag region={regionLabel(row.key as Region)} />
+                    <OriginFlag origin={originLabel(row.key as Origin)} />
                     {traitLabel(kind, row.key)}
                   </span>
                 ) : (
@@ -294,7 +396,7 @@ function TraitTable({ kind, rows }: { kind: "size" | "region"; rows: TraitRow[] 
               <td>{row.finished === 0 ? "0" : row.games.toLocaleString("en-US")}</td>
               <td>{row.finished === 0 ? "n/a" : percent(row.solveRate)}</td>
               <td>{decimal(row.avgMessagesWhenSolved)}</td>
-              {kind === "region" ? <td>{row.finished === 0 ? "n/a" : percent(row.regionFoundRate)}</td> : null}
+              {kind === "origin" ? <td>{row.finished === 0 ? "n/a" : percent(row.originFoundRate)}</td> : null}
               <td>{compact(row.tokensPerGame)}</td>
             </tr>
           ))}
@@ -304,10 +406,10 @@ function TraitTable({ kind, rows }: { kind: "size" | "region"; rows: TraitRow[] 
   );
 }
 
-function traitLabel(kind: "size" | "region", key: string): string {
+function traitLabel(kind: "size" | "origin", key: string): string {
   if (key === "unknown") return "Not recorded";
   if (kind === "size") return sizeLabel(key as Size);
-  return regionLabel(key as Region);
+  return originLabel(key as Origin);
 }
 
 function DayBars({ days }: { days: DayCount[] }) {

@@ -6,13 +6,13 @@ import {
   formatFactor,
   givenRows,
   poolLabel,
-  regionLabel,
+  originLabel,
   scoreRound,
   scoreSteps,
   sizeLabel,
   type FrozenModel,
   type HintKey,
-  type Region,
+  type Origin,
   type Size,
 } from "./game";
 
@@ -20,9 +20,9 @@ const rules = rulesForGameMode(true);
 
 const none = {
   namedModel: false,
-  regionMatched: false,
+  originMatched: false,
   companyMatched: false,
-  regionGiven: false,
+  originGiven: false,
   companyGiven: false,
   noHint: false,
   hints: [] as HintKey[],
@@ -34,15 +34,15 @@ const intro =
 function frozen(
   name: string,
   companyId: string,
-  region: Region,
+  origin: Origin,
   size: Size,
   year: number,
 ): FrozenModel & { id: string } {
-  return { id: name, name, companyId, companyName: companyId.toUpperCase(), region, size, year, logoPath: "l" };
+  return { id: name, name, companyId, companyName: companyId.toUpperCase(), origin, size, year, logoPath: "l" };
 }
 
-test("region and size labels", () => {
-  assert.deepEqual((["us", "cn", "eu"] as Region[]).map(regionLabel), ["USA", "China", "Europe"]);
+test("origin and size labels", () => {
+  assert.deepEqual((["us", "cn", "eu"] as Origin[]).map(originLabel), ["USA", "China", "Europe"]);
   assert.deepEqual(
     (["nano", "small", "medium", "large", "xxl"] as Size[]).map(sizeLabel),
     ["Nano", "Small", "Medium", "Large", "XXL"],
@@ -67,25 +67,20 @@ test("pool labels per game mode", () => {
   assert.equal(poolLabel("company", null, traits), "Company · X");
   assert.equal(poolLabel("company", "q", { given: [], models: {} }), "Company · q");
   assert.equal(poolLabel("company", null, { given: [], models: {} }), "Company · ");
-  assert.equal(poolLabel("region", "us", traits), "Region · USA");
-  assert.equal(poolLabel("region", "cn", traits), "Region · China");
-  assert.equal(poolLabel("region", "eu", traits), "Region · Europe");
-  assert.equal(poolLabel("region", "xx", traits), "region");
-  assert.equal(poolLabel("region", null, traits), "region");
   assert.equal(poolLabel("custom", null, traits), "custom");
 });
 
 test("given rows show the label and the displayed value of each shared trait", () => {
   const shared = buildTraits([frozen("a", "x", "us", "small", 2026), frozen("b", "y", "us", "small", 2026)]);
   assert.deepEqual(givenRows(shared, shared.models.a), [
-    { key: "region", label: "Region", value: "USA" },
+    { key: "origin", label: "Origin", value: "USA" },
     { key: "year", label: "Year", value: "2026" },
     { key: "size", label: "Size", value: "Small" },
   ]);
   const single = buildTraits([frozen("a", "x", "eu", "xxl", 2024)]);
   assert.deepEqual(givenRows(single, single.models.a), [
     { key: "company", label: "Company", value: "X" },
-    { key: "region", label: "Region", value: "Europe" },
+    { key: "origin", label: "Origin", value: "Europe" },
     { key: "year", label: "Year", value: "2024" },
     { key: "size", label: "Size", value: "XXL" },
   ]);
@@ -110,12 +105,12 @@ test("explanation: a miss with nothing matched and zero tokens", () => {
   ]);
 });
 
-test("explanation: base line for region and company, region only, company only", () => {
-  const both = scoreRound({ rules, ...none, regionMatched: true, companyMatched: true, tokens: 2000 });
-  assert.equal(both.explanation[1], "Base: 400 — region 100, company 300.");
+test("explanation: base line for origin and company, origin only, company only", () => {
+  const both = scoreRound({ rules, ...none, originMatched: true, companyMatched: true, tokens: 2000 });
+  assert.equal(both.explanation[1], "Base: 400 — origin 100, company 300.");
   assert.equal(both.explanation[5], "Tokens: 2,000. Token factor ×5 (10,000/2,000).");
-  const region = scoreRound({ rules, ...none, regionMatched: true, tokens: 2000 });
-  assert.equal(region.explanation[1], "Base: 100 for the region.");
+  const origin = scoreRound({ rules, ...none, originMatched: true, tokens: 2000 });
+  assert.equal(origin.explanation[1], "Base: 100 for the origin.");
   const company = scoreRound({ rules, ...none, companyMatched: true, tokens: 2000 });
   assert.equal(company.explanation[1], "Base: 300 for the company.");
   assert.equal(company.score, 1500);
@@ -123,14 +118,14 @@ test("explanation: base line for region and company, region only, company only",
     { label: "Company", points: 300 },
     { label: "Tokens · 2,000 tokens", points: null, multiplier: "×5" },
   ]);
-  const given = scoreRound({ rules, ...none, regionMatched: true, companyMatched: true, regionGiven: true, tokens: 2000 });
+  const given = scoreRound({ rules, ...none, originMatched: true, companyMatched: true, originGiven: true, tokens: 2000 });
   assert.equal(given.explanation[1], "Base: 300 for the company.");
   const bothKnown = scoreRound({
     rules,
     ...none,
-    regionMatched: true,
+    originMatched: true,
     companyMatched: true,
-    regionGiven: true,
+    originGiven: true,
     hints: ["company"],
     tokens: 2000,
   });

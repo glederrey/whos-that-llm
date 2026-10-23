@@ -48,17 +48,17 @@ test("the best score covers every finished game and marks each tie", () => {
   assert.equal(isBestGame(noScores[0], bestScore(noScores)), false);
 });
 
-test("company and region count as found when the model is named or the trait matched", () => {
+test("company and origin count as found when the model is named or the trait matched", () => {
   assert.equal(
-    traitFound({ status: "solved", given: [], companyCorrect: false, regionCorrect: false, trait: "company" }),
+    traitFound({ status: "solved", given: [], companyCorrect: false, originCorrect: false, trait: "company" }),
     true,
   );
   assert.equal(
-    traitFound({ status: "miss", given: [], companyCorrect: true, regionCorrect: false, trait: "region" }),
+    traitFound({ status: "miss", given: [], companyCorrect: true, originCorrect: false, trait: "origin" }),
     false,
   );
   assert.equal(
-    traitFound({ status: "miss", given: ["region"], companyCorrect: false, regionCorrect: false, trait: "region" }),
+    traitFound({ status: "miss", given: ["origin"], companyCorrect: false, originCorrect: false, trait: "origin" }),
     true,
   );
 });

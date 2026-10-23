@@ -1,7 +1,7 @@
 import "server-only";
 
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Region, Size } from "./game";
+import type { Origin, Size } from "./game";
 import { computePublicStats, type NamedCategory, type NamedGameMode, type PublicGameFact, type PublicGuessFact, type PublicUsageFact } from "./public-stats";
 import { serviceOrThrow } from "./rounds";
 
@@ -11,18 +11,21 @@ const rowCap = 200_000;
 export type PublicStatsPayload = {
   stats: ReturnType<typeof computePublicStats>;
   names: Record<string, string>;
+  /** Name and flag of every origin, by id. */
+  origins: Record<string, { name: string; flag: string }>;
 };
 
 export async function loadPublicStats(): Promise<PublicStatsPayload> {
   const client = serviceOrThrow();
-  const [games, usage, guesses, gameModes, models, categories, memberships] = await Promise.all([
+  const [games, usage, guesses, gameModes, models, categories, memberships, originRows] = await Promise.all([
     readAll(client, "games", "id, model_id, status, message_count, started_at, finished_at, game_mode, traits"),
     readAll(client, "usage", "id, game_id, model_id, input_tokens, output_tokens"),
-    readAll(client, "guesses", "id, game_id, guessed_model_id, model_correct, region_correct"),
+    readAll(client, "guesses", "id, game_id, guessed_model_id, guessed_origin, model_correct, origin_correct"),
     readAll(client, "game_modes", "id, name, sort_order"),
     readAll(client, "models", "id, name"),
     readAll(client, "categories", "id, name, enabled"),
     readAll(client, "model_categories", "model_id, category_id", ["model_id", "category_id"]),
+    readAll(client, "origins", "id, name, flag"),
   ]);
   const names: Record<string, string> = {};
   for (const row of models) names[row.id as string] = row.name as string;
@@ -40,8 +43,11 @@ export async function loadPublicStats(): Promise<PublicStatsPayload> {
     if (!current.includes(categoryId)) current.push(categoryId);
     categoriesByModel.set(modelId, current);
   }
+  const origins: PublicStatsPayload["origins"] = {};
+  for (const row of originRows) origins[row.id as string] = { name: row.name as string, flag: row.flag as string };
   return {
     names,
+    origins,
     stats: computePublicStats(
       games.map((row) => gameFact(row, categoriesByModel.get(row.model_id as string) ?? [])),
       usage.map(usageFact),
@@ -64,7 +70,7 @@ function gameFact(row: Record<string, unknown>, categoryIds: string[]): PublicGa
     finishedAt: typeof row.finished_at === "string" && row.finished_at.length > 0 ? row.finished_at : null,
     gameMode: row.game_mode as string,
     size: trait.size,
-    region: trait.region,
+    origin: trait.origin,
     categoryIds,
   };
 }
@@ -83,21 +89,22 @@ function guessFact(row: Record<string, unknown>): PublicGuessFact {
     gameId: row.game_id as string,
     modelCorrect: Boolean(row.model_correct),
     guessedModelId: (row.guessed_model_id as string | null) ?? null,
-    regionCorrect: Boolean(row.region_correct),
+    guessedOrigin: (row.guessed_origin as string | null) ?? null,
+    originCorrect: Boolean(row.origin_correct),
   };
 }
 
-function hiddenTrait(traits: unknown, modelId: string): { size: Size | null; region: Region | null } {
-  if (!traits || typeof traits !== "object") return { size: null, region: null };
+function hiddenTrait(traits: unknown, modelId: string): { size: Size | null; origin: Origin | null } {
+  if (!traits || typeof traits !== "object") return { size: null, origin: null };
   const models = (traits as { models?: unknown }).models;
-  if (!models || typeof models !== "object") return { size: null, region: null };
+  if (!models || typeof models !== "object") return { size: null, origin: null };
   const model = (models as Record<string, unknown>)[modelId];
-  if (!model || typeof model !== "object") return { size: null, region: null };
+  if (!model || typeof model !== "object") return { size: null, origin: null };
   const size = (model as { size?: unknown }).size;
-  const region = (model as { region?: unknown }).region;
+  const origin = (model as { origin?: unknown }).origin;
   return {
     size: size === "nano" || size === "small" || size === "medium" || size === "large" || size === "xxl" ? size : null,
-    region: region === "us" || region === "cn" || region === "eu" ? region : null,
+    origin: typeof origin === "string" && origin.length > 0 ? origin : null,
   };
 }
 

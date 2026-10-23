@@ -18,9 +18,9 @@ const exampleFactor = tokenFactor(exampleTokens, exampleRules);
 const example = scoreRound({
   rules: exampleRules,
   namedModel: true,
-  regionMatched: false,
+  originMatched: false,
   companyMatched: false,
-  regionGiven: false,
+  originGiven: false,
   companyGiven: false,
   tokens: exampleTokens,
   noHint: false,
@@ -51,7 +51,7 @@ export default function ScoringPage() {
             <strong>1. Base</strong>
             <span>
               Name the model, on any reply, and the base is {n(config.modelBase)}. How many messages you used does not change it. If you never
-              name it, the base is the region ({n(config.regionPoints)}) and the company ({n(config.companyPoints)}) your guesses matched. A
+              name it, the base is the origin ({n(config.originPoints)}) and the company ({n(config.companyPoints)}) your guesses matched. A
               trait the round already showed you, or that you revealed, adds nothing.
             </span>
           </li>
@@ -59,7 +59,7 @@ export default function ScoringPage() {
             <strong>2. Penalties</strong>
             <span>
               Each wrong guess costs {n(config.wrongGuessCost)}. A hint costs what its trait is worth: year {n(hintCosts.year)}, size{" "}
-              {n(hintCosts.size)}, region {n(hintCosts.region)}, company {n(hintCosts.company)}. The right name
+              {n(hintCosts.size)}, origin {n(hintCosts.origin)}, company {n(hintCosts.company)}. The right name
               is never a wrong guess. Earlier wrong names still count. Penalties are subtracted from the base. What is left is the subtotal.
             </span>
           </li>
@@ -98,7 +98,7 @@ export default function ScoringPage() {
       </div>
       <h2>Hints</h2>
       <p>
-        Company, region, year, and size can each be revealed once, after the first reply. A revealed trait is known from then on, and
+        Company, origin, year, and size can each be revealed once, after the first reply. A revealed trait is known from then on, and
         the guess list drops models that do not match it. A trait the round already showed you has no hint.
       </p>
       <h2>One round</h2>
