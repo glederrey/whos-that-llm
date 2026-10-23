@@ -13,7 +13,7 @@ export type HistoryFilter = {
   level?: string;
 };
 
-const statuses: readonly GameStatus[] = ["active", "solved", "miss", "given_up"];
+const statuses: readonly GameStatus[] = ["solved", "miss", "given_up"];
 const modeIdPattern = /^[a-z0-9_-]{1,40}$/;
 const levelPattern = /^[A-Za-z0-9_.-]{1,80}$/;
 

@@ -5,6 +5,7 @@ import { difficulties, difficultyLabel } from "@/lib/difficulty";
 import type { HistoryFacets } from "@/lib/profile-data";
 import type { HistoryFilter } from "@/lib/profile-filter";
 import type { HistoryItem } from "@/lib/profile-history";
+import { DateRangePicker } from "./date-range-picker";
 import { HistoryList } from "./history-list";
 
 type Page = { items: HistoryItem[]; total: number; page: number; pageCount: number };
@@ -13,7 +14,6 @@ const statusOptions = [
   { value: "solved", label: "Solved" },
   { value: "miss", label: "Failed" },
   { value: "given_up", label: "Given up" },
-  { value: "active", label: "In progress" },
 ] as const;
 
 /** What the third menu offers once a game mode is chosen. */
@@ -74,14 +74,10 @@ export function ProfileGames({ initial, facets }: { initial: Page; facets: Histo
   return (
     <>
       <div className="history-filters">
-        <label>
-          From
-          <input type="date" value={filter.from ?? ""} max={filter.to} onChange={(event) => change({ from: event.target.value })} />
-        </label>
-        <label>
-          To
-          <input type="date" value={filter.to ?? ""} min={filter.from} onChange={(event) => change({ to: event.target.value })} />
-        </label>
+        <div className="history-field">
+          Dates
+          <DateRangePicker from={filter.from} to={filter.to} onChange={(from, to) => change({ from, to })} />
+        </div>
         <label>
           Status
           <select value={filter.status ?? ""} onChange={(event) => change({ status: (event.target.value || undefined) as HistoryFilter["status"] })}>
