@@ -74,7 +74,15 @@ export function DateRangePicker({
     onChange(low, high);
   }
 
-  const label = from && to ? (from === to ? shortDay(from) : `${shortDay(from)} – ${shortDay(to)}`) : "All dates";
+  // The year is written once when both days share it, so the button stays short on a phone.
+  const label =
+    from && to
+      ? from === to
+        ? shortDay(from)
+        : from.slice(0, 4) === to.slice(0, 4)
+          ? `${shortDay(from).replace(/, \d{4}$/, "")} – ${shortDay(to)}`
+          : `${shortDay(from)} – ${shortDay(to)}`
+      : "All dates";
 
   return (
     <div className="range-picker" ref={root}>
