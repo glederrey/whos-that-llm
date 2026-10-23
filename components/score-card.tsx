@@ -92,9 +92,12 @@ export function ScoreCard({
             </div>
           )}
           <div className="score-meta">
-            <p className="status" data-state={shown}>
-              {status}
-            </p>
+            <div className="status-row">
+              {noHint ? <p className="status no-hints">No hints</p> : null}
+              <p className="status" data-state={shown}>
+                {status}
+              </p>
+            </div>
             <dl>
               <dt>Game mode</dt>
               <dd>{mode}</dd>
@@ -113,12 +116,6 @@ export function ScoreCard({
                 <>
                   <dt>{poolSizeLabel}</dt>
                   <dd>{poolSizeValue(poolSize)}</dd>
-                </>
-              ) : null}
-              {noHint ? (
-                <>
-                  <dt>Hints</dt>
-                  <dd>No hints</dd>
                 </>
               ) : null}
             </dl>

@@ -11,8 +11,9 @@ import {
   diffModelIds,
   parseModelIds,
   type CategoryNotice,
-  type PickerModel,
 } from "./admin-category";
+import type { CustomModel } from "./custom-mode";
+import { originFlag, originLabel, sizeLabel } from "./game-labels";
 import {
   canTurnOn,
   companyIdFromName,
@@ -390,7 +391,7 @@ async function loadEnabledCounts(client: SupabaseClient) {
 export async function loadCategoryList(): Promise<{
   categories: CategoryListRow[];
   companies: CompanyRow[];
-  models: PickerModel[];
+  models: CustomModel[];
 }> {
   await requireOwner();
   const client = serviceOrThrow();
@@ -399,13 +400,18 @@ export async function loadCategoryList(): Promise<{
     loadCompanies(client),
     client
       .from("models")
-      .select("id, name, enabled, logo_path, company_id, companies(name, logo_path), model_categories(category_id)")
+      .select(
+        "id, name, enabled, logo_path, company_id, size, released_on, companies(name, origin, logo_path, origins(name, flag)), model_categories(category_id)",
+      )
       .order("name"),
   ]);
   if (!categories || !companies || error) throw new Error("Could not read categories.");
+  type PickerCompany = { name: string; origin: Origin; logo_path: string; origins: { name: string; flag: string } | { name: string; flag: string }[] | null };
   const rows = (data ?? []).map((row) => {
-    const company = first(row.companies as { name: string; logo_path: string } | { name: string; logo_path: string }[] | null);
+    const company = first(row.companies as PickerCompany | PickerCompany[] | null);
     const companyId = typeof row.company_id === "string" ? row.company_id : "";
+    const origin = first(company?.origins ?? null);
+    const released = typeof row.released_on === "string" ? new Date(`${row.released_on}T00:00:00Z`) : null;
     return {
       model: {
         id: row.id as string,
@@ -413,6 +419,11 @@ export async function loadCategoryList(): Promise<{
         companyName: company?.name ?? companyId,
         logoUrl: presentLogo((row.logo_path as string | null) || company?.logo_path || "", companyId),
         enabled: Boolean(row.enabled),
+        // A model that was never enabled may have no release date. Zero hides the year.
+        year: released ? released.getUTCFullYear() : 0,
+        sizeName: sizeLabel(row.size as Size),
+        originName: origin?.name ?? (company ? originLabel(company.origin) : ""),
+        originFlag: origin?.flag ?? (company ? originFlag(company.origin) : ""),
       },
       companyId,
       categoryIds: membershipIds(row.model_categories),

@@ -332,6 +332,8 @@ export type ShareCardDisplay = {
   outcome: ShareOutcome;
   /** Solved on message 2, Failed, Given up. */
   status: string;
+  /** The round was played without hints. The chip sits left of the status. */
+  noHint: boolean;
   meta: ShareMeta[];
   modelName: string | null;
   modelFacts: string[];
@@ -374,6 +376,7 @@ export function shareCardDisplay(card: ShareCard): ShareCardDisplay {
     origin: card.origin ? { ...card.origin, guessLabel: guessLabel(card.playerName, false) } : null,
     outcome: card.outcome,
     status,
+    noHint: card.details.some((detail) => detail.label === "No-hint"),
     meta,
     modelName: card.modelName,
     modelFacts: card.modelFacts,

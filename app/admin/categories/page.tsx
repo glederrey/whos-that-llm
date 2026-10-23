@@ -3,7 +3,8 @@ import { CategoryModelPicker } from "@/components/category-model-picker";
 import { EmojiPickerField } from "@/components/emoji-picker-field";
 import { SectionNav } from "@/components/section-nav";
 import { addCategory, saveCategory, toggleCategory } from "@/app/admin/actions";
-import { categoryNotice, maxCategoryDescription, type PickerModel } from "@/lib/admin-category";
+import { categoryNotice, maxCategoryDescription } from "@/lib/admin-category";
+import type { CustomModel } from "@/lib/custom-mode";
 import { loadCategoryList, type CategoryListRow } from "@/lib/admin-roster";
 
 export const dynamic = "force-dynamic";
@@ -61,7 +62,7 @@ function CategoryTable({
   title: string;
   rows: CategoryListRow[];
   companies: Company[];
-  models: PickerModel[];
+  models: CustomModel[];
   empty: string;
 }) {
   return (
@@ -95,7 +96,7 @@ function CategoryTable({
   );
 }
 
-function CategoryRowView({ row, companies, models }: { row: CategoryListRow; companies: Company[]; models: PickerModel[] }) {
+function CategoryRowView({ row, companies, models }: { row: CategoryListRow; companies: Company[]; models: CustomModel[] }) {
   const panel = `edit-category-${row.id}`;
   return (
     <tr className={row.enabled ? undefined : "is-off"}>
@@ -163,7 +164,7 @@ function CategoryFields({
   iconValue?: string;
   icon?: CategoryListRow["icon"];
   companies: Company[];
-  models: PickerModel[];
+  models: CustomModel[];
   modelIds?: string[];
 }) {
   const removable = iconKind === "image" || iconKind === "emoji";

@@ -74,9 +74,12 @@ export function SharedResult({ card }: { card: ShareCard }) {
             </div>
           )}
           <div className="score-meta">
-            <p className="status" data-state={state}>
-              {display.status}
-            </p>
+            <div className="status-row">
+              {noHint ? <p className="status no-hints">No hints</p> : null}
+              <p className="status" data-state={state}>
+                {display.status}
+              </p>
+            </div>
             <dl>
               {display.meta.map((row) => (
                 <Fragment key={row.label}>
@@ -84,12 +87,6 @@ export function SharedResult({ card }: { card: ShareCard }) {
                   <dd style={row.color ? { color: row.color } : undefined}>{row.value}</dd>
                 </Fragment>
               ))}
-              {noHint ? (
-                <>
-                  <dt>Hints</dt>
-                  <dd>No hints</dd>
-                </>
-              ) : null}
             </dl>
           </div>
         </div>
