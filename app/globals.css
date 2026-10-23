@@ -1453,6 +1453,12 @@ html[data-theme="dark"] .md a { color: var(--teal); }
 .profile-stats { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 .profile-stats dd { font-size: 28px; }
 .history { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.history-filters { display: flex; flex-wrap: wrap; align-items: end; gap: 12px; }
+.history-filters label { flex: 1 1 150px; min-width: 0; font-size: 13px; color: var(--mute); }
+.history-filters input, .history-filters select { color: var(--text); height: 40px; padding: 0 12px; }
+.history-filters .button-quiet { height: 40px; }
+.history-body { display: grid; gap: 12px; transition: opacity 0.15s ease; }
+.history-body[data-busy="true"] { opacity: 0.55; }
 .history-row {
   display: grid;
   grid-template-columns: 12.85rem minmax(0, 1fr) 5.75rem 4.75rem;

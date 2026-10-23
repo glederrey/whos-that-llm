@@ -76,6 +76,7 @@ Do not tell the client which traits the highlighted row would hit. That preview 
 | `POST /api/games/:id/give-up` | End the round, show the model, stay off the leaderboard |
 | `GET /api/leaderboard?category=&period=week\|all` | Rank, name, score |
 | `PATCH /api/me` | Set `{ username }`. Also rewrites `games.username` for that user id |
+| `GET /api/me/history` | The signed-in player's Games list: `page` and the filters `from`, `to` (`YYYY-MM-DD`, UTC, last day included), `status`, `mode`, and `level` (a difficulty, or a category or company id; it needs `mode`). A bad value is dropped. Returns `items`, `total`, `page`, `pageCount`, and puts `best` on the best solved round of the filter. `401` when signed out |
 | `POST /api/me/avatar` | Upload a picture. Field `avatar`. JPEG, PNG, or WebP, at most 1 MB. Anything else is `422` `avatar`. A body over 1 MB plus a little multipart slack, or one without `Content-Length`, is `413` before it is read |
 | `GET /api/admin/spend` | Admin, later |
 | `GET /api/admin/stats` | Admin, later |

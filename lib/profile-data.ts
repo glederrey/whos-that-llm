@@ -2,8 +2,9 @@ import type { Difficulty } from "./difficulty";
 import { originChoiceFor, originChoiceOf, originLabel, sizeLabel, type FrozenModel, type GameStatus, type OriginView, type ScoreLine, type Traits } from "./game";
 import { avatarPublicUrl, profileStats, publicImageCacheControl, readImage, traitFound, type ProfileStats } from "./profile";
 import { presentLogo, serviceOrThrow } from "./rounds";
-import { modeHasDifficulty, playedRoundFacts, roundPlace, type RoundPlace } from "./round-facts";
+import { modeHasDifficulty, modeLabel, playedRoundFacts, roundPlace, type RoundPlace } from "./round-facts";
 import { poolSizeFrom } from "./game-labels";
+import { bestSolvedScore, dayWindow, levelColumn, type HistoryFilter } from "./profile-filter";
 import { buildShareCard, shareText } from "./share-card";
 import { publicEnv } from "./supabase/env";
 
@@ -60,29 +61,96 @@ type ModelRef = {
   companies: { name: string; origin: FrozenModel["origin"]; logo_path: string } | { name: string; origin: FrozenModel["origin"]; logo_path: string }[] | null;
 };
 
-export async function loadHistory(userId: string, page: number) {
+type Chain<Q> = { eq(column: string, value: string): Q; gte(column: string, value: string): Q; lt(column: string, value: string): Q };
+
+/** Adds the profile filter to a query on `games`. */
+function narrow<Q>(query: Q, filter: HistoryFilter): Q {
+  let next = query as unknown as Chain<Q>;
+  const { since, before } = dayWindow(filter);
+  if (since) next = next.gte("started_at", since) as unknown as Chain<Q>;
+  if (before) next = next.lt("started_at", before) as unknown as Chain<Q>;
+  if (filter.status) next = next.eq("status", filter.status) as unknown as Chain<Q>;
+  if (filter.mode) next = next.eq("game_mode", filter.mode) as unknown as Chain<Q>;
+  if (filter.mode && filter.level) {
+    const column = levelColumn(filter.mode, filter.level);
+    if (column) next = next.eq(column, filter.level) as unknown as Chain<Q>;
+  }
+  return next as unknown as Q;
+}
+
+export type HistoryFacets = {
+  modes: { id: string; name: string }[];
+  categories: { id: string; name: string }[];
+  companies: { id: string; name: string }[];
+};
+
+/** The modes, categories and companies this player has rounds in, for the filter menus. */
+export async function loadHistoryFacets(userId: string): Promise<HistoryFacets> {
   const client = serviceOrThrow();
-  const { count, error: countError } = await client
-    .from("games")
-    .select("id", { count: "exact", head: true })
-    .eq("user_id", userId);
+  const [{ data: played, error }, { data: gameModes, error: modeError }] = await Promise.all([
+    client.from("games").select("game_mode, pool_key").eq("user_id", userId),
+    client.from("game_modes").select("id, name, sort_order").order("sort_order"),
+  ]);
+  if (error || modeError) throw new Error("Could not read profile history.");
+  const seen = new Set((played ?? []).map((row) => row.game_mode as string));
+  const poolKeys = (mode: string) => [
+    ...new Set(
+      (played ?? []).flatMap((row) =>
+        row.game_mode === mode && typeof row.pool_key === "string" && row.pool_key.length > 0 ? [row.pool_key] : [],
+      ),
+    ),
+  ];
+  const named = async (table: "categories" | "companies", ids: string[]) => {
+    if (ids.length === 0) return [];
+    const { data, error: nameError } = await client.from(table).select("id, name").in("id", ids).order("name");
+    if (nameError) throw new Error("Could not read profile history.");
+    return (data ?? []).map((row) => ({ id: row.id as string, name: row.name as string }));
+  };
+  return {
+    modes: (gameModes ?? []).flatMap((row) =>
+      seen.has(row.id as string) ? [{ id: row.id as string, name: modeLabel(row.name as string, row.id as string) }] : [],
+    ),
+    categories: await named("categories", poolKeys("class")),
+    companies: await named("companies", poolKeys("company")),
+  };
+}
+
+export async function loadHistory(userId: string, page: number, filter: HistoryFilter = {}) {
+  const client = serviceOrThrow();
+  const { count, error: countError } = await narrow(
+    client.from("games").select("id", { count: "exact", head: true }).eq("user_id", userId),
+    filter,
+  );
   if (countError) throw new Error("Could not read profile history.");
   const total = count ?? 0;
   const pageCount = Math.max(1, Math.ceil(total / pageSize));
   const safePage = Number.isFinite(page) && page >= 1 ? Math.min(Math.trunc(page), pageCount) : 1;
   const from = (safePage - 1) * pageSize;
-  const [{ data, error }, { data: gameModes, error: gameModeError }] = await Promise.all([
-    client
-      .from("games")
-      .select(
-        "id, status, score, message_count, started_at, traits, game_mode, pool_key, pool_model_ids, difficulty, no_hint, model_id, daily_key, score_breakdown, models(name, company_id, logo_path, size, released_on, companies(name, origin, logo_path))",
-      )
-      .eq("user_id", userId)
+  // The cup goes to the best solved round among the rounds the filter keeps, not only the ones on this page.
+  const bestQuery =
+    filter.status && filter.status !== "solved"
+      ? Promise.resolve({ data: [] as { status: string; score: number | null }[], error: null })
+      : narrow(client.from("games").select("status, score").eq("user_id", userId).eq("status", "solved"), filter)
+          .not("score", "is", null)
+          .order("score", { ascending: false })
+          .limit(1);
+  const [{ data, error }, { data: gameModes, error: gameModeError }, { data: bestRows, error: bestError }] = await Promise.all([
+    narrow(
+      client
+        .from("games")
+        .select(
+          "id, status, score, message_count, started_at, traits, game_mode, pool_key, pool_model_ids, difficulty, no_hint, model_id, daily_key, score_breakdown, models(name, company_id, logo_path, size, released_on, companies(name, origin, logo_path))",
+        )
+        .eq("user_id", userId),
+      filter,
+    )
       .order("started_at", { ascending: false })
       .range(from, from + pageSize - 1),
     client.from("game_modes").select("id, name"),
+    bestQuery,
   ]);
-  if (error || gameModeError) throw new Error("Could not read profile history.");
+  if (error || gameModeError || bestError) throw new Error("Could not read profile history.");
+  const best = bestSolvedScore((bestRows ?? []).map((row) => ({ status: row.status as GameStatus, score: row.score as number | null })));
   const gameModeNames = new Map((gameModes ?? []).map((gameMode) => [gameMode.id as string, gameMode.name as string]));
   const classIds = [
     ...new Set(
@@ -211,7 +279,7 @@ export async function loadHistory(userId: string, page: number) {
       poolSize: poolSizeFrom(row.pool_model_ids),
     };
   });
-  return { rows, total, page: safePage };
+  return { rows, total, page: safePage, best };
 }
 
 export async function saveAvatar(userId: string, bytes: Uint8Array): Promise<{ error: "avatar" } | { path: string }> {

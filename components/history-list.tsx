@@ -1,43 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import type { Difficulty } from "@/lib/difficulty";
-import type { OriginView, ScoreLine } from "@/lib/game";
-import { difficultyText, type RoundPlace } from "@/lib/round-facts";
+import type { HistoryItem } from "@/lib/profile-history";
+import { difficultyText } from "@/lib/round-facts";
 import { CompanyLogo } from "./company-logo";
 import { ScoreCard } from "./score-card";
 import { RoundFacts } from "./round-facts";
-
-type HistoryItem = {
-  id: string;
-  when: string;
-  status: string;
-  state: "active" | "solved" | "miss" | "given_up";
-  score: string;
-  best: boolean;
-  messages: number;
-  tokens: string;
-  modelName: string | null;
-  companyName: string | null;
-  logoPath: string | null;
-  companyFound: boolean;
-  originFound: boolean;
-  origin?: OriginView | null;
-  mode: string;
-  difficulty: Difficulty | null;
-  /** False for modes with no difficulty (Origin, Custom): the row and the line are left out. */
-  hasDifficulty: boolean;
-  /** Company and category rounds put this name where a difficulty chip would be. */
-  place?: RoundPlace | null;
-  /** Models in the round's pool. Null hides the row. */
-  poolSize?: number | null;
-  noHint: boolean;
-  /** The stored score. The closed row uses the formatted `score` string. */
-  scoreValue: number | null;
-  modelFacts: string[];
-  breakdown: ScoreLine[] | null;
-  shareText: string | null;
-};
 
 export function HistoryList({ items }: { items: HistoryItem[] }) {
   const [openId, setOpenId] = useState<string | null>(null);

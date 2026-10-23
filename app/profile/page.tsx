@@ -1,12 +1,11 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { DeleteAccountForm } from "@/components/delete-account-form";
-import { HistoryList } from "@/components/history-list";
+import { ProfileGames } from "@/components/profile-games";
 import { ProfileForm } from "@/components/profile-form";
-import type { GameStatus } from "@/lib/game";
-import { loadHistory, loadProfileStats, profilePageSize } from "@/lib/profile-data";
-import { isBestGame, type ProfileStats } from "@/lib/profile";
+import type { ProfileStats } from "@/lib/profile";
+import { loadHistory, loadHistoryFacets, loadProfileStats, profilePageSize } from "@/lib/profile-data";
+import { historyItem } from "@/lib/profile-history";
 import { currentProfile } from "@/lib/session";
 
 export const dynamic = "force-dynamic";
@@ -14,19 +13,6 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   description: "Your username, picture, scores, and the rounds you have played. You can delete your account from here.",
 };
-
-function profileHref(page: number) {
-  return page > 1 ? `/profile?page=${page}` : "/profile";
-}
-
-function formatWhen(iso: string) {
-  const formatted = new Intl.DateTimeFormat("en", {
-    dateStyle: "medium",
-    timeStyle: "short",
-    timeZone: "UTC",
-  }).format(new Date(iso));
-  return `${formatted} UTC`;
-}
 
 function formatStat(stats: ProfileStats, key: keyof ProfileStats) {
   const value = stats[key];
@@ -38,17 +24,10 @@ function formatStat(stats: ProfileStats, key: keyof ProfileStats) {
   return (value as number).toLocaleString("en-US", { minimumFractionDigits: digits, maximumFractionDigits: digits });
 }
 
-function statusLabel(status: GameStatus) {
-  if (status === "solved") return "Solved";
-  if (status === "miss") return "Failed";
-  if (status === "given_up") return "Given up";
-  return "In progress";
-}
-
 export default async function ProfilePage({
   searchParams,
 }: {
-  searchParams: Promise<{ page?: string; notice?: string }>;
+  searchParams: Promise<{ notice?: string }>;
 }) {
   const params = await searchParams;
   const { user, username, avatarUrl } = await currentProfile();
@@ -56,10 +35,7 @@ export default async function ProfilePage({
   if (!username) redirect("/welcome?next=/profile");
 
   const stats = await loadProfileStats(user.id);
-  const requested = Number(params.page);
-  const history = await loadHistory(user.id, Number.isFinite(requested) ? requested : 1);
-  const shownPage = history.page;
-  const realPageCount = Math.max(1, Math.ceil(history.total / profilePageSize()));
+  const [history, facets] = await Promise.all([loadHistory(user.id, 1), loadHistoryFacets(user.id)]);
 
   const figures: { label: string; key: keyof ProfileStats }[] = [
     { label: "Games played", key: "played" },
@@ -87,62 +63,15 @@ export default async function ProfilePage({
       </dl>
       <p className="muted">Average messages is the mean on solved games. Solve rate is solved games divided by finished games.</p>
       <h2>Games</h2>
-      {history.rows.length === 0 ? (
-        <div className="card empty">No games yet.</div>
-      ) : (
-        <>
-          <HistoryList
-            key={shownPage}
-            items={history.rows.map((row) => ({
-              id: row.id,
-              when: formatWhen(row.startedAt),
-              status: statusLabel(row.status),
-              state: row.status,
-              score: row.score === null ? "—" : row.score.toLocaleString("en-US"),
-              best: isBestGame(row, stats.best),
-              messages: row.messageCount,
-              tokens: row.tokens.toLocaleString("en-US"),
-              modelName: row.modelName,
-              companyName: row.companyName,
-              logoPath: row.logoPath,
-              companyFound: row.companyFound,
-              originFound: row.originFound,
-              origin: row.origin,
-              mode: row.mode,
-              difficulty: row.difficulty,
-              hasDifficulty: row.hasDifficulty,
-              place: row.place,
-              poolSize: row.poolSize,
-              noHint: row.noHint,
-              scoreValue: row.score,
-              modelFacts: row.modelFacts,
-              breakdown: row.breakdown,
-              shareText: row.shareText,
-            }))}
-          />
-          <div className="row pager">
-            <div className="row">
-              {shownPage > 1 ? (
-                <Link className="button-quiet" href={profileHref(shownPage - 1)} scroll={false}>
-                  Previous
-                </Link>
-              ) : (
-                <span className="button-quiet is-disabled">Previous</span>
-              )}
-              <span className="muted">
-                Page {shownPage} of {realPageCount}
-              </span>
-              {shownPage < realPageCount ? (
-                <Link className="button-quiet" href={profileHref(shownPage + 1)} scroll={false}>
-                  Next
-                </Link>
-              ) : (
-                <span className="button-quiet is-disabled">Next</span>
-              )}
-            </div>
-          </div>
-        </>
-      )}
+      <ProfileGames
+        facets={facets}
+        initial={{
+          items: history.rows.map((row) => historyItem(row, history.best)),
+          total: history.total,
+          page: history.page,
+          pageCount: Math.max(1, Math.ceil(history.total / profilePageSize())),
+        }}
+      />
       <DeleteAccountForm notice={params.notice} returnTo="profile" />
     </div>
   );
