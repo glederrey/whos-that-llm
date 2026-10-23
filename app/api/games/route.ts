@@ -1,8 +1,9 @@
 import { parseCategoryId } from "@/lib/admin-category";
 import { allCompanies, parseBoardCompany } from "@/lib/company";
+import { parseCustomModelIds } from "@/lib/custom-mode";
 import { parseDifficulty } from "@/lib/difficulty";
 import { apiError, apiJson, readJsonBody } from "@/lib/http";
-import { startAllModels, startCategory, startCompany, startDaily, startOrigin } from "@/lib/rounds";
+import { startAllModels, startCategory, startCompany, startCustom, startDaily, startOrigin } from "@/lib/rounds";
 import { requireUser } from "@/lib/session";
 
 export async function POST(request: Request) {
@@ -15,6 +16,7 @@ export async function POST(request: Request) {
     noHint?: boolean;
     difficulty?: string;
     companyId?: string;
+    modelIds?: unknown;
   };
   if (body.gameMode === "company") {
     const companyId = parseBoardCompany(body.companyId);
@@ -27,6 +29,13 @@ export async function POST(request: Request) {
     const categoryId = parseCategoryId(body.poolKey ?? "");
     if (!categoryId) return apiJson({ error: "category" }, 422);
     const result = await startCategory(user.id, categoryId, Boolean(body.noHint));
+    if ("error" in result) return apiError(result);
+    return apiJson({ gameId: result.gameId });
+  }
+  if (body.gameMode === "custom") {
+    const modelIds = parseCustomModelIds(body.modelIds);
+    if (!modelIds) return apiJson({ error: "models" }, 422);
+    const result = await startCustom(user.id, modelIds, Boolean(body.noHint));
     if ("error" in result) return apiError(result);
     return apiJson({ gameId: result.gameId });
   }

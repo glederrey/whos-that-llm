@@ -21,6 +21,8 @@ type Tone = {
   frame: string;
   quietWash: string;
   chip: string;
+  noHint: string;
+  noHintBorder: string;
 };
 
 const light: Tone = {
@@ -32,6 +34,8 @@ const light: Tone = {
   frame: "#00BBC9",
   quietWash: "#F3F3F4",
   chip: "#FFFFFF",
+  noHint: "#C8C8CE",
+  noHintBorder: "#B4B4BA",
 };
 
 const dark: Tone = {
@@ -43,6 +47,8 @@ const dark: Tone = {
   frame: "#00BBC9",
   quietWash: "#383838",
   chip: "#FFFFFF",
+  noHint: "#4A4A4A",
+  noHintBorder: "#6A6A6A",
 };
 
 /**
@@ -150,17 +156,33 @@ export function shareCardImage(
         ),
         box(
           { flexDirection: "column", alignItems: "stretch" },
-          text(display.status, {
-            justifyContent: "center",
-            width: "100%",
-            fontSize: 36,
-            fontWeight: 700,
-            color: status.color,
-            background: status.background,
-            borderRadius: 999,
-            padding: "12px 22px",
-            ...(status.border ? { border: status.border } : {}),
-          }),
+          box(
+            { flexDirection: "column", alignItems: "stretch", width: "100%" },
+            text(display.status, {
+              justifyContent: "center",
+              fontSize: 36,
+              fontWeight: 700,
+              color: status.color,
+              background: status.background,
+              borderRadius: 999,
+              padding: "12px 22px",
+              ...(status.border ? { border: status.border } : {}),
+            }),
+            display.noHint
+              ? text("No hints", {
+                  justifyContent: "center",
+                  fontSize: 30,
+                  fontWeight: 700,
+                  color: tone.ink,
+                  background: tone.noHint,
+                  border: `2px solid ${tone.noHintBorder}`,
+                  borderRadius: 999,
+                  padding: "8px 22px",
+                  marginTop: 10,
+                  alignSelf: "flex-end",
+                })
+              : null,
+          ),
           metaTable(display.meta, tone),
         ),
       ),

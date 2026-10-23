@@ -24,6 +24,7 @@ export function ScoreCard({
   state,
   mode,
   difficulty,
+  hasDifficulty = true,
   place = null,
   poolSize = null,
   noHint,
@@ -38,6 +39,8 @@ export function ScoreCard({
   state: "solved" | "miss" | "given_up";
   mode: string;
   difficulty: Difficulty | null;
+  /** False for modes with no difficulty (Origin, Custom): the row is left out. */
+  hasDifficulty?: boolean;
   /** When set, this name takes the place difficulty occupies. */
   place?: RoundPlace | null;
   /** Models in the round's pool. Null hides the row. */
@@ -89,9 +92,12 @@ export function ScoreCard({
             </div>
           )}
           <div className="score-meta">
-            <p className="status" data-state={shown}>
-              {status}
-            </p>
+            <div className="status-row">
+              {noHint ? <p className="status no-hints">No hints</p> : null}
+              <p className="status" data-state={shown}>
+                {status}
+              </p>
+            </div>
             <dl>
               <dt>Game mode</dt>
               <dd>{mode}</dd>
@@ -100,22 +106,16 @@ export function ScoreCard({
                   <dt>{place.label}</dt>
                   <dd>{place.value ?? "—"}</dd>
                 </>
-              ) : origin ? null : (
+              ) : hasDifficulty ? (
                 <>
                   <dt>Difficulty</dt>
                   <dd style={difficulty ? { color: difficultyColor[difficulty] } : undefined}>{difficultyText(difficulty)}</dd>
                 </>
-              )}
+              ) : null}
               {poolSize !== null ? (
                 <>
                   <dt>{poolSizeLabel}</dt>
                   <dd>{poolSizeValue(poolSize)}</dd>
-                </>
-              ) : null}
-              {noHint ? (
-                <>
-                  <dt>Hints</dt>
-                  <dd>No hints</dd>
                 </>
               ) : null}
             </dl>

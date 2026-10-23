@@ -67,7 +67,7 @@ test("pool labels per game mode", () => {
   assert.equal(poolLabel("company", null, traits), "Company · X");
   assert.equal(poolLabel("company", "q", { given: [], models: {} }), "Company · q");
   assert.equal(poolLabel("company", null, { given: [], models: {} }), "Company · ");
-  assert.equal(poolLabel("custom", null, traits), "custom");
+  assert.equal(poolLabel("custom", null, traits), "Custom");
 });
 
 test("given rows show the label and the displayed value of each shared trait", () => {

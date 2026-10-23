@@ -167,7 +167,7 @@ The lobby and the leaderboard read this table. The built-in rows are seeded and 
 | `sort_order` | int | Main page and lobby order |
 | `created_at` | timestamptz | |
 
-`daily`, `all`, `company`, `class`, and `origin` are enabled. All but `origin` have a leaderboard. `custom` stays off until it is built. The leaderboard bar shows Daily, All models, Company, and Category. Origin and Custom are not on that bar. The Origin migration replaced the old `region` row with `origin` (blurb: Ten messages, one guess: where does this model come from?) and repointed `games.game_mode`.
+`daily`, `all`, `company`, `class`, `origin`, and `custom` are enabled. Only `daily`, `all`, `company`, and `class` have a leaderboard. The Custom migration enabled `custom` with no leaderboard, hints allowed, and the blurb `Pick your own models, at least two, and guess which one is hiding.` The leaderboard bar shows Daily, All models, Company, and Category. Origin and Custom are not on that bar. The Origin migration replaced the old `region` row with `origin` (blurb: Ten messages, one guess: where does this model come from?) and repointed `games.game_mode`.
 
 Every scored round uses the formula in [Rules](rules.md). The category row does not store a multiplier.
 
@@ -203,7 +203,7 @@ One row per round.
 | `game_mode` | text, fk `game_modes` | |
 | `pool_key` | text, null | A company id for `company`, a `categories.id` for `class`. Null for `all`, `daily`, `origin`, and `custom` |
 | `difficulty` | smallint, null | `1` easy, `2` medium, `3` hard, `4` impossible. The difficulty the round was played at. Null for a round that has no difficulty, including Custom and rounds from before difficulties |
-| `pool_model_ids` | text[] | The models that were legal when the round started |
+| `pool_model_ids` | text[] | The models that were legal when the round started. For `custom`, the picked models that were enabled |
 | `model_id` | text, fk `models` | |
 | `traits` | jsonb | Frozen at insert. Scoring, filtering, feedback, and the result page read this, not the live catalog |
 | `status` | text | `active`, `solved`, `miss`, `given_up` |
@@ -228,6 +228,7 @@ Indexes:
 - unique `(user_id, game_mode, difficulty)` where `status = 'active'`. One unfinished round per mode and difficulty. Easy can stay open while Medium starts. It replaces the older unique `(user_id)` index.
 - unique `(user_id, daily_key)` where `daily_key is not null`. One Daily round per account per difficulty per UTC day, because the key includes the difficulty. `start_game` writes `daily_key` only for `daily`
 - unique `(user_id, game_mode, pool_key)` where `status = 'active'` and `game_mode` is `company` or `class`. One unfinished Company round per company, one unfinished Category round per category
+- unique `(user_id)` where `status = 'active'` and `game_mode = 'custom'` (`games_one_active_custom_idx`). One unfinished Custom round per account
 - `(game_mode, status, finished_at)` for the leaderboard
 
 ### `daily_models`

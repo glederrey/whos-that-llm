@@ -4,6 +4,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { CategoryCombobox, type LobbyCategory } from "@/components/category-combobox";
 import { CompanyLogo } from "@/components/company-logo";
+import { CustomPicker } from "@/components/custom-picker";
+import type { CustomModel } from "@/lib/custom-mode";
 import { canStartMode, presentDailyCard } from "@/lib/daily";
 import { difficulties, difficultyBlurb, difficultyLabel, type Difficulty } from "@/lib/difficulty";
 import {
@@ -92,6 +94,7 @@ export function HomeBoard({
   difficultyCounts,
   companies,
   categories,
+  customModels,
   nextAt,
   gameModes,
 }: {
@@ -104,6 +107,7 @@ export function HomeBoard({
   difficultyCounts: Record<Difficulty, number>;
   companies: Array<{ id: string; name: string; logoUrl: string; models: number }>;
   categories: LobbyCategory[];
+  customModels: CustomModel[];
   nextAt: string | null;
   gameModes: HomeGameMode[];
 }) {
@@ -261,6 +265,57 @@ export function HomeBoard({
     setNotice("Not enough models.");
   }
 
+  async function startCustom(modelIds: string[]) {
+    setBusy(true);
+    setNotice("");
+    setResumeId(null);
+    let response: Response;
+    try {
+      response = await fetch("/api/games", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ gameMode: "custom", modelIds, noHint }),
+      });
+    } catch {
+      setBusy(false);
+      setNotice("Try again.");
+      return;
+    }
+    const body = (await response.json().catch(() => ({}))) as { gameId?: string; error?: string; nextAt?: string };
+    setBusy(false);
+    if (response.status === 401) {
+      router.push("/login?next=/play");
+      return;
+    }
+    if (body.error === "active_game") {
+      setResumeId(body.gameId ?? openGames.find((game) => game.mode === "custom")?.id ?? null);
+      setNotice("You already have a game open.");
+      return;
+    }
+    if (body.gameId) {
+      router.push(`/play/${body.gameId}`);
+      return;
+    }
+    if (body.error === "hourly_cap") {
+      const when = body.nextAt ? localTime(body.nextAt) : nextAt ? localTime(nextAt) : "";
+      setNotice(when ? `Hourly limit reached. Next game at ${when}.` : "Hourly limit reached.");
+      return;
+    }
+    if (body.error === "paused") {
+      setNotice("The game is paused.");
+      return;
+    }
+    if (body.error === "username") {
+      router.push("/welcome?next=/play");
+      return;
+    }
+    if (body.error === "not_found") {
+      setNotice("That mode is not open yet.");
+      return;
+    }
+    setNotice(body.error === "models" || body.error === "pool_too_small" ? "Pick at least two models." : "Try again.");
+  }
+
   const slot = slotLabel();
   const leftLabel = paused ? null : left === 0 ? "None left" : left === 1 ? "1 game left" : `${left} games left`;
 
@@ -335,7 +390,13 @@ export function HomeBoard({
               {opened ? (
                 <div className="difficulty-panel">
                   {custom ? (
-                    <p className="muted">The player chooses that pool.</p>
+                    <CustomPicker
+                      models={customModels}
+                      openGameId={openGames.find((game) => game.mode === "custom")?.id ?? null}
+                      disabled={!playable || paused || busy || full}
+                      onStart={(ids) => void startCustom(ids)}
+                      onContinue={(id) => router.push(`/play/${id}`)}
+                    />
                   ) : gameMode.id === "class" ? (
                     <>
                       <p className="difficulty-heading">Choose category</p>

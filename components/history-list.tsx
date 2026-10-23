@@ -1,41 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import type { Difficulty } from "@/lib/difficulty";
-import type { OriginView, ScoreLine } from "@/lib/game";
-import { difficultyText, type RoundPlace } from "@/lib/round-facts";
+import type { HistoryItem } from "@/lib/profile-history";
+import { difficultyText } from "@/lib/round-facts";
 import { CompanyLogo } from "./company-logo";
 import { ScoreCard } from "./score-card";
 import { RoundFacts } from "./round-facts";
-
-type HistoryItem = {
-  id: string;
-  when: string;
-  status: string;
-  state: "active" | "solved" | "miss" | "given_up";
-  score: string;
-  best: boolean;
-  messages: number;
-  tokens: string;
-  modelName: string | null;
-  companyName: string | null;
-  logoPath: string | null;
-  companyFound: boolean;
-  originFound: boolean;
-  origin?: OriginView | null;
-  mode: string;
-  difficulty: Difficulty | null;
-  /** Company and category rounds put this name where a difficulty chip would be. */
-  place?: RoundPlace | null;
-  /** Models in the round's pool. Null hides the row. */
-  poolSize?: number | null;
-  noHint: boolean;
-  /** The stored score. The closed row uses the formatted `score` string. */
-  scoreValue: number | null;
-  modelFacts: string[];
-  breakdown: ScoreLine[] | null;
-  shareText: string | null;
-};
 
 export function HistoryList({ items }: { items: HistoryItem[] }) {
   const [openId, setOpenId] = useState<string | null>(null);
@@ -61,6 +31,11 @@ export function HistoryList({ items }: { items: HistoryItem[] }) {
                   {item.status}
                 </span>
                 <span className="history-score" data-best={item.best ? "true" : undefined}>
+                  {item.best ? (
+                    <svg className="history-cup" viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M7 3h10v5a5 5 0 0 1-10 0V3Z M7 5H3v2a4 4 0 0 0 4 4 M17 5h4v2a4 4 0 0 1-4 4 M12 13v4 M8 21h8 M9 17h6v4H9z" />
+                    </svg>
+                  ) : null}
                   {item.score}
                   {item.best ? <span className="history-best-note"> (best score)</span> : null}
                 </span>
@@ -105,6 +80,7 @@ export function HistoryDetail({ item, panel }: { item: HistoryItem; panel?: stri
           state={item.state}
           mode={item.mode}
           difficulty={item.difficulty}
+          hasDifficulty={item.hasDifficulty}
           place={item.place}
           poolSize={item.poolSize ?? null}
           noHint={item.noHint}
@@ -136,7 +112,9 @@ export function HistoryDetail({ item, panel }: { item: HistoryItem; panel?: stri
         <dd>{item.when}</dd>
         <RoundFacts
           mode={item.mode}
-          difficulty={item.origin ? null : item.place ? (item.place.value ?? "—") : difficultyText(item.difficulty)}
+          difficulty={
+            item.place ? (item.place.value ?? "—") : item.hasDifficulty ? difficultyText(item.difficulty) : null
+          }
           label={item.place?.label ?? "Difficulty"}
         />
         {item.noHint ? (

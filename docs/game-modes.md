@@ -40,10 +40,10 @@ The result is shareable. The card shows the model and what the player guessed. W
 
 Origins are never deleted. An admin adds them, renames them, and turns them on or off.
 
-The statistics page has an Origin view: solve rate, how often each real origin was found, how many times each origin was picked, and the hardest and easiest models. Origin rounds are left out of the All modes figures, because nobody names a model in them.
+The statistics page has an Origin view: solve rate, how often each real origin was found, how many times each origin was picked, and the hardest and easiest models. Origin rounds are left out of the All modes figures, because nobody names a model in them. Custom rounds are left out too, because the pool is the player's own.
 
 ## Custom
 
-The player searches and selects the models in the pool, then can play with hints or without.
+The player builds the pool in the lobby: a search box, models grouped by company with Add all and Drop all, one row per model with its year and size, the company's origin on its header, one-tap toggles, and a window that lists the picks and removes them. Start needs at least 2 models. The last selection is remembered in this browser. The player can play with hints or without. There is no difficulty, so the score has no difficulty multiplier. One Custom round can be open at a time.
 
-No leaderboard. The result can be shared. The card says the mode is Custom, and where a difficulty would be it says how many models were in the pool.
+No leaderboard. The result can be shared. The card says the mode is Custom, has no difficulty line, and the Pool row says how many models were picked.

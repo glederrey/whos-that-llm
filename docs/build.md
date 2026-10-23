@@ -136,7 +136,7 @@ The first build is a playable All models round. Gael plays it locally, then the 
 4. `lib/game.ts`: frozen traits, server-filtered guess list, compare, hints, no-hint mode, score. All models, ten messages, a guess the player can skip, give up. The result page shows the breakdown and links to How scoring works. The total is never below 0. Play across the enabled models.
 5. The hourly cap and one active round. A credit error sets `app_settings.paused` for everyone.
 6. Leaderboard for All models: rank, name, best score.
-7. Later: daily, company, origin, custom, and class. They are pool filters plus the given-trait rule. Origin is built apart: its own guess function, its own buttons, no score. Custom is a choice of models, hints can be on, and it has no leaderboard. Class is not built. Hints are only on Daily, All models, and Custom. There is no Latest category. `models.is_latest` is dropped.
+7. Later: daily, company, origin, custom, and class. They are pool filters plus the given-trait rule. Origin is built apart: its own guess function, its own buttons, no score. Custom is the player's own choice of models (at least 2), hints can be on, and it has no leaderboard. Class is not built. Hints are only on Daily, All models, and Custom. There is no Latest category. `models.is_latest` is dropped.
 8. Later: home weekly top 5 and daily result stats. The profile, with stats, past games, and username changes, is in this prototype.
 9. Later: admin. Spend, stats, roster, logos in Supabase Storage with a URL fallback, pause switch, recent rounds.
 10. Publish a GitHub Release. That deploys the release tag to the `*.vercel.app` URL. A domain comes after someone besides us is playing.

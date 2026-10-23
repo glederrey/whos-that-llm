@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   description:
-    "Start a round. Daily, All models, Company, Category, and Origin are open. You have ten messages with a hidden model. Most modes ask you to name it; in Origin you get one guess at where it comes from.",
+    "Start a round. Daily, All models, Company, Category, Origin, and Custom are open. You have ten messages with a hidden model. Most modes ask you to name it; in Origin you get one guess at where it comes from.",
 };
 
 export default async function PlayPage() {
@@ -29,6 +29,7 @@ export default async function PlayPage() {
       difficultyCounts={state.difficultyCounts}
       companies={state.companies}
       categories={state.categories}
+      customModels={state.customModels}
       nextAt={state.nextAt}
       gameModes={gameModes.map((gameMode) => ({
         id: gameMode.id,
