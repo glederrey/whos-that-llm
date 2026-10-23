@@ -63,6 +63,11 @@ export function HistoryList({ items }: { items: HistoryItem[] }) {
                   {item.status}
                 </span>
                 <span className="history-score" data-best={item.best ? "true" : undefined}>
+                  {item.best ? (
+                    <svg className="history-cup" viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M7 3h10v5a5 5 0 0 1-10 0V3Z M7 5H3v2a4 4 0 0 0 4 4 M17 5h4v2a4 4 0 0 1-4 4 M12 13v4 M8 21h8 M9 17h6v4H9z" />
+                    </svg>
+                  ) : null}
                   {item.score}
                   {item.best ? <span className="history-best-note"> (best score)</span> : null}
                 </span>
