@@ -52,7 +52,7 @@ export default async function ProfilePage({
     <div className="stack">
       <h1>Profile</h1>
       <ProfileForm username={username} avatarUrl={avatarUrl} userId={user.id} />
-      <h2>Stats</h2>
+      <h2 className="profile-heading">Stats</h2>
       <dl className="stats profile-stats">
         {figures.map((figure) => (
           <div key={figure.key}>
@@ -62,7 +62,7 @@ export default async function ProfilePage({
         ))}
       </dl>
       <p className="muted">Average messages is the mean on solved games. Solve rate is solved games divided by finished games.</p>
-      <h2>Games</h2>
+      <h2 className="profile-heading">Games</h2>
       <ProfileGames
         facets={facets}
         initial={{

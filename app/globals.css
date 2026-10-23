@@ -229,6 +229,7 @@ p { margin: 0; }
 .lede, .limits, .muted { color: var(--mute); }
 .lede { font-size: 17px; }
 .stack { display: grid; gap: 16px; }
+.stack > .profile-heading { margin-bottom: -4px; }
 /* The 16px stack gap is the space between paragraphs. A heading's own 8px
    bottom margin was added on top of that, so the title sat farther from its
    paragraph than from the paragraph above. These margins land at 24px above
@@ -1513,7 +1514,7 @@ html[data-theme="dark"] .md a { color: var(--teal); }
 @media (max-width: 560px) {
   .history-filters { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
   .history-filters .history-field:first-child { grid-column: 1 / -1; }
-  .history-filters .button-quiet { align-self: end; }
+  .history-filters .button-quiet { align-self: end; width: 100%; }
   .history-filters > .button-quiet:nth-child(4) { grid-column: 1 / -1; }
 }
 .history-body { display: grid; gap: 12px; transition: opacity 0.15s ease; }
