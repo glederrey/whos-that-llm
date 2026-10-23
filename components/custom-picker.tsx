@@ -5,6 +5,7 @@ import { filterPickerModels } from "@/lib/admin-category";
 import { minCustomModels, type CustomModel } from "@/lib/custom-mode";
 import { unfinishedLine } from "@/lib/lobby-row";
 import { CompanyLogo } from "./company-logo";
+import { Twemoji } from "./twemoji";
 
 const storeKey = "custom-models";
 
@@ -114,7 +115,7 @@ export function CustomPicker({
                 <CompanyLogo src={group.logoUrl} />
                 <strong>{group.companyName}</strong>
                 <span className="muted custom-origin">
-                  {group.originFlag} {group.originName}
+                  <Twemoji emoji={group.originFlag} /> {group.originName}
                 </span>
                 <span className="muted">
                   {picked}/{group.models.length}
@@ -173,17 +174,30 @@ export function CustomPicker({
         {chosen.length === 0 ? (
           <p className="muted">No model picked yet.</p>
         ) : (
-          <ul className="custom-selected-list">
-            {chosen.map((model) => (
-              <li key={model.id}>
-                <span className="custom-name">{model.name}</span>
-                <span className="muted custom-facts">{model.companyName}</span>
-                <button type="button" className="button-quiet" aria-label={`Remove ${model.name}`} onClick={() => toggle(model.id)}>
-                  Remove
-                </button>
-              </li>
+          <div className="custom-selected-groups">
+            {groupByCompany(chosen).map((group) => (
+              <section key={group.companyName} aria-label={group.companyName}>
+                <header>
+                  <CompanyLogo src={group.logoUrl} />
+                  <strong>{group.companyName}</strong>
+                  <span className="muted">{group.models.length}</span>
+                </header>
+                <ul className="custom-selected-list">
+                  {group.models.map((model) => (
+                    <li key={model.id}>
+                      <span className="custom-name">{model.name}</span>
+                      <span className="muted custom-facts">
+                        {model.year} · {model.sizeName}
+                      </span>
+                      <button type="button" className="custom-remove" aria-label={`Remove ${model.name}`} onClick={() => toggle(model.id)}>
+                        ✕
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </section>
             ))}
-          </ul>
+          </div>
         )}
         <div className="row">
           <button type="button" className="button-quiet" disabled={chosen.length === 0} onClick={() => change([])}>
