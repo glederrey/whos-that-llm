@@ -139,7 +139,7 @@ curl -X POST -H "Authorization: Bearer $AVAILABILITY_TOKEN" "https://<site>/api/
 
 ## Game modes (database)
 
-The built-ins are seeded: Daily, All models, Company, Category (`class`), Origin, Custom. Latest and Family are not rows. Size is not a row. Daily, All models, Company, and Category are enabled with a leaderboard and hints. Origin is enabled with no leaderboard and no hints. Custom is off. The flags (`enabled`, `leaderboard`, `hints_allowed`, `blurb`, `sort_order`) are edited in the database. No admin page edits them. `/admin/modes` only shows counts per mode. You cannot delete a built-in.
+The built-ins are seeded: Daily, All models, Company, Category (`class`), Origin, Custom. Latest and Family are not rows. Size is not a row. Daily, All models, Company, and Category are enabled with a leaderboard and hints. Origin is enabled with no leaderboard and no hints. Custom is enabled with no leaderboard and hints. The flags (`enabled`, `leaderboard`, `hints_allowed`, `blurb`, `sort_order`) are edited in the database. No admin page edits them. `/admin/modes` only shows counts per mode. You cannot delete a built-in.
 
 Turning a mode off hides its card. Old rounds stay on the leaderboard as long as that mode has `leaderboard` and has counted games. A round already started keeps the `rules.hintsAllowed` it copied. The score formula is the one in [Rules](rules.md), frozen onto the round. A mode has no multiplier of its own.
 

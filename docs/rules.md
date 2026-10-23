@@ -249,7 +249,7 @@ The call is the same in every category: 10 messages, 500 characters, 2,000 outpu
 | `all` | Enabled models at or below the chosen difficulty | Yes | Yes | First build |
 | `company` | One company, at least 2 enabled models | Year and size only | Yes | Built |
 | `origin` | Enabled models whose origin is turned on, at least 2 origins | No | No | Built |
-| `custom` | A choice of models, picked before the round | Yes | No | Later |
+| `custom` | The models the player picks, at least 2 | Yes | No | Built |
 | `class` | Models in one category (`model_categories`), at least 2 enabled | Yes | Yes, filterable to one category | Built |
 
 Hints are possible on Daily, All models, Company (year and size), Category, and Custom. Origin has none. Latest and any other mode also have none, because they are not on that list.
@@ -290,7 +290,7 @@ The player picks one category (id `class`) from a searchable dropdown on `/play`
 
 ### Custom
 
-Later. The player picks the models before the round. Disabled until that picker exists. Hints can be turned on. There is no leaderboard.
+The player builds a list of models in the lobby, at least 2. The pool is the picked models that are still enabled when the round starts, at least 2, and it is saved on the round. Hints and the no-hint mode work as in All models. No difficulty, so the score has no difficulty multiplier (as in Company and Category). There is no leaderboard. A player can have one active Custom round at a time.
 
 ### Leaderboards
 
