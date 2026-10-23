@@ -52,10 +52,10 @@ export function ScoreCard({
   const scored = score !== null && breakdown !== null;
   const status =
     state === "solved"
-      ? `Solved on message ${messages}.`
+      ? `Solved on message ${messages}`
       : state === "miss"
-        ? "Failed."
-        : "Given up.";
+        ? "Failed"
+        : "Given up";
   const shown = state === "given_up" ? "given-up" : state;
 
   return (

@@ -317,7 +317,7 @@ test("the public picture and the download are the same card", () => {
   assert.match(image, /Daily/);
   assert.match(image, /Easy/);
   assert.match(image, /#1c7c43/);
-  assert.match(image, /Failed\./);
+  assert.match(image, /Failed/);
   assert.match(image, /background:#c41b15/);
   assert.match(image, /color:#fff/);
   assert.doesNotMatch(image, /#FDECEC|#fdecec|#E6F8F8|#e6f8f8/);
@@ -363,7 +363,7 @@ test("the public picture and the download are the same card", () => {
   assert.match(shareCardAlt(named), new RegExp(hidden));
   const quiet = card({ status: "given_up", score: null, breakdown: null, messageCount: 0 });
   const quietImage = renderToStaticMarkup(shareCardImage(quiet, "data:image/png;base64,aaaa"));
-  assert.match(quietImage, /Given up\./);
+  assert.match(quietImage, /Given up/);
   assert.match(quietImage, /background:#F3F3F4/i);
   assert.match(quietImage, /color:#141414/i);
   assert.match(quietImage, /border:1px solid #D4D4D8/i);
@@ -448,7 +448,7 @@ test("the public result is the score table and a link home", () => {
 
   const quiet = card({ status: "given_up", score: null, breakdown: null, messageCount: 0 });
   const quietHtml = renderToStaticMarkup(createElement(SharedResult, { card: quiet }));
-  assert.match(quietHtml, /Given up\./);
+  assert.match(quietHtml, /Given up/);
   assert.match(quietHtml, /Try a round/);
   assert.equal(quietHtml.includes("Your score"), false);
   assert.equal(quietHtml.includes("Try to beat this score"), false);

@@ -330,7 +330,7 @@ export type ShareCardDisplay = {
   /** Set on an Origin card. It replaces the score block. */
   origin: (ShareOrigin & { guessLabel: string }) | null;
   outcome: ShareOutcome;
-  /** Solved on message 2. Failed. Given up. */
+  /** Solved on message 2, Failed, Given up. */
   status: string;
   meta: ShareMeta[];
   modelName: string | null;
@@ -360,10 +360,10 @@ export function shareCardDisplay(card: ShareCard): ShareCardDisplay {
   if (card.poolSize !== null) meta.push({ label: poolSizeLabel, value: poolSizeValue(card.poolSize), color: null });
   const status =
     card.outcome === "Solved"
-      ? `Solved on message ${formatShareNumber(card.messages)}.`
+      ? `Solved on message ${formatShareNumber(card.messages)}`
       : card.outcome === "Not solved"
-        ? "Failed."
-        : "Given up.";
+        ? "Failed"
+        : "Given up";
   return {
     title: shareBrand,
     mode,
