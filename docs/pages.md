@@ -362,7 +362,7 @@ A game counts only when `finished_at` is set. A round that was started and not f
 - Which models are hardest to find: games, solve rate, messages when solved, tokens
 - Wrong names: hidden model, the model named instead, and how often
 - Size and origin of the hidden model
-- The Origin view: solve rate, give-ups, messages and tokens per game, a table by real origin (games, found, given up, and what people picked), and the hardest and easiest models. Origin rounds stay out of the All modes figures.
+- The Origin view: solve rate, messages and tokens per game, a table by real origin (games, found, and a Picked column with one count per origin), and the hardest and easiest models. Origin rounds stay out of the All modes figures.
 - **All models** uses the same blocks for that category. A category with no finished games says **No finished games in this category yet.** It does not show a made-up rate
 - **Category** shows the blocks above for the Category mode, then a **By category** table of the categories that are turned on. A category that is turned off is left out.
 

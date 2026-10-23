@@ -145,7 +145,6 @@ function OriginMode({
       <Figures
         items={[
           { label: "Solve rate", value: percent(outcome.solveRate), note: `${outcome.solved} solved of ${outcome.finished} finished` },
-          { label: "Give-ups", value: outcome.givenUp.toLocaleString("en-US"), note: `${percent(outcome.giveUpRate)} of finished. ${outcome.missed} missed` },
           { label: "Messages per game", value: decimal(outcome.messagesPerGame), note: "Finished games" },
           { label: "Tokens per game", value: compact(outcome.tokensPerGame), note: "Prompt plus completion" },
         ]}
@@ -154,8 +153,7 @@ function OriginMode({
       <DayBars days={report.days} />
       <h2>By real origin</h2>
       <p className="muted">
-        For each real origin: how often it was found, and what people picked when they were wrong. Rounds that were given up
-        have no pick.
+        For each real origin: how often it was found, and how many times each origin was picked.
       </p>
       <OriginPickTable rows={report.originPicks} label={label} />
       <h2>Hardest and easiest models</h2>
@@ -166,16 +164,25 @@ function OriginMode({
 }
 
 function OriginPickTable({ rows, label }: { rows: OriginPickRow[]; label: (id: string) => React.ReactNode }) {
+  const columns = rows.map((row) => row.origin);
   return (
     <div className="card roster-card">
       <table className="roster compact">
         <thead>
           <tr>
-            <th>Real origin</th>
-            <th>Games</th>
-            <th>Found</th>
-            <th>Given up</th>
-            <th>Picked</th>
+            <th rowSpan={2}>Real origin</th>
+            <th rowSpan={2}>Games</th>
+            <th rowSpan={2}>Found</th>
+            <th className="group" colSpan={columns.length}>
+              Picked
+            </th>
+          </tr>
+          <tr>
+            {columns.map((id, index) => (
+              <th key={id} className={index === 0 ? "group" : "pick"}>
+                {label(id)}
+              </th>
+            ))}
           </tr>
         </thead>
         <tbody>
@@ -184,17 +191,11 @@ function OriginPickTable({ rows, label }: { rows: OriginPickRow[]; label: (id: s
               <td>{label(row.origin)}</td>
               <td>{row.games.toLocaleString("en-US")}</td>
               <td>{row.games === 0 ? "n/a" : percent(row.foundRate)}</td>
-              <td>{row.givenUp.toLocaleString("en-US")}</td>
-              <td>
-                {row.picks.length === 0
-                  ? "n/a"
-                  : row.picks.map((pick, index) => (
-                      <span key={pick.origin}>
-                        {index > 0 ? ", " : ""}
-                        {label(pick.origin)} {pick.count}
-                      </span>
-                    ))}
-              </td>
+              {columns.map((id, index) => (
+                <td key={id} className={index === 0 ? "group" : "pick"}>
+                  {(row.picks.find((pick) => pick.origin === id)?.count ?? 0).toLocaleString("en-US")}
+                </td>
+              ))}
             </tr>
           ))}
         </tbody>

@@ -1520,6 +1520,8 @@ html[data-theme="dark"] .history-score[data-best="true"] { color: var(--teal); }
 .section-nav a:hover { border-color: var(--teal); color: var(--text); }
 .stats .stat-note { margin: 6px 0 0; color: var(--mute); font-size: 13px; }
 .roster th.group { text-align: center; border-left: 1px solid var(--line); }
+.roster th.pick, .roster td.pick, .roster td.group { text-align: center; }
+.roster td.group { border-left: 1px solid var(--line); }
 .roster th:nth-child(n + 2), .roster td:nth-child(n + 2) { font-variant-numeric: tabular-nums; }
 .roster tr.total-row td { font-weight: 700; background: var(--soft); }
 .daybars { display: grid; grid-template-columns: repeat(14, minmax(0, 1fr)); gap: 6px; align-items: end; }
