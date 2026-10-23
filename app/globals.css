@@ -8,8 +8,8 @@
   --canvas: #e0e0e1;
   --card: #ffffff;
   --soft: #f3f3f4;
-  --chip-2: #e8e8ea;
-  --chip-3: #dcdcdf;
+  --chip-2: #e0e0e3;
+  --chip-3: #c8c8ce;
   --text: #141414;
   --mute: #52525b;
   --miss: #ff4436;
@@ -30,8 +30,8 @@ html[data-theme="dark"] {
   --canvas: #141414;
   --card: #1e1e1e;
   --soft: #262626;
-  --chip-2: #313131;
-  --chip-3: #3c3c3c;
+  --chip-2: #363636;
+  --chip-3: #4a4a4a;
   --text: #ebebeb;
   --mute: #a1a1aa;
   --miss-wash: #3a1212;
@@ -1295,10 +1295,10 @@ html[data-theme="dark"] .status[data-state="given-up"] { background: #383838; bo
 .score-card { padding: 22px 24px; }
 .score-head { display: flex; justify-content: space-between; align-items: center; gap: 16px 32px; }
 .score-meta { margin-left: auto; display: grid; justify-items: end; gap: 8px; text-align: right; }
-.status-row { display: flex; justify-content: flex-end; gap: 8px; width: 100%; }
+.status-row { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; width: 100%; }
 .status-row .status { margin: 0; justify-content: center; text-align: center; }
-.status-row .status:last-child { flex: 1 1 auto; }
-.status.no-hints { background: var(--chip-3); border-color: var(--line-strong); font-weight: 600; white-space: nowrap; }
+.status-row .status:last-child { width: 100%; }
+.status.no-hints { width: fit-content; background: var(--chip-3); border-color: var(--line-strong); font-weight: 600; white-space: nowrap; }
 .score-meta dl { display: grid; grid-template-columns: auto auto; gap: 4px 14px; margin: 0; justify-content: end; }
 .score-meta dt { color: var(--mute); font-weight: 500; }
 .score-meta dd { margin: 0; font-weight: 700; text-align: left; max-width: 20ch; overflow-wrap: anywhere; }

@@ -34,7 +34,7 @@ const light: Tone = {
   frame: "#00BBC9",
   quietWash: "#F3F3F4",
   chip: "#FFFFFF",
-  noHint: "#DCDCDF",
+  noHint: "#C8C8CE",
   noHintBorder: "#B4B4BA",
 };
 
@@ -47,8 +47,8 @@ const dark: Tone = {
   frame: "#00BBC9",
   quietWash: "#383838",
   chip: "#FFFFFF",
-  noHint: "#3C3C3C",
-  noHintBorder: "#4A4A4A",
+  noHint: "#4A4A4A",
+  noHintBorder: "#6A6A6A",
 };
 
 /**
@@ -157,7 +157,7 @@ export function shareCardImage(
         box(
           { flexDirection: "column", alignItems: "stretch" },
           box(
-            { alignItems: "stretch", justifyContent: "flex-end", width: "100%" },
+            { flexDirection: "column", alignItems: "stretch", width: "100%" },
             display.noHint
               ? text("No hints", {
                   justifyContent: "center",
@@ -167,13 +167,13 @@ export function shareCardImage(
                   background: tone.noHint,
                   border: `2px solid ${tone.noHintBorder}`,
                   borderRadius: 999,
-                  padding: "10px 22px",
-                  marginRight: 12,
+                  padding: "8px 22px",
+                  marginBottom: 10,
+                  alignSelf: "flex-end",
                 })
               : null,
             text(display.status, {
               justifyContent: "center",
-              flexGrow: 1,
               fontSize: 36,
               fontWeight: 700,
               color: status.color,
