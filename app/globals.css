@@ -1485,8 +1485,7 @@ html[data-theme="dark"] .history-facts .board-chip.no-hints {
 .history-status[data-state="miss"] { color: var(--miss-press); font-weight: 600; }
 .history-status[data-state="given_up"] { color: var(--mute); font-weight: 600; }
 .history-score { justify-self: end; text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
-.history-score[data-best="true"] { justify-self: end; color: #007f88; font-weight: 800; }
-html[data-theme="dark"] .history-score[data-best="true"] { color: var(--teal); }
+.history-score[data-best="true"] { justify-self: end; background: var(--teal); color: #062e2e; font-weight: 700; padding: 2px 10px; margin-right: -10px; border-radius: 6px; }
 .history-best-note { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .history-row:hover, .history-row[aria-expanded="true"] { border-color: var(--teal); }
 .history-row[aria-expanded="true"] { box-shadow: inset 0 0 0 1px var(--teal); border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
