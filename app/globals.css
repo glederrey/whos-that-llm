@@ -2145,6 +2145,6 @@ html[data-theme="dark"] .emoji-picker { color-scheme: dark; }
 .custom-selected-list { list-style: none; margin: 0; padding: 0; display: grid; }
 .custom-selected-list li { display: flex; align-items: center; gap: 10px; padding: 6px 0; border-bottom: 1px solid var(--line); }
 .custom-selected-list li:last-child { border-bottom: 0; }
-.custom-remove { flex: none; display: inline-grid; place-items: center; width: 28px; height: 28px; border: 1px solid transparent; border-radius: 50%; background: transparent; color: var(--miss-press); font: inherit; font-size: 14px; line-height: 1; cursor: pointer; }
-.custom-remove:hover, .custom-remove:focus-visible { background: var(--miss-wash); border-color: var(--miss-press); }
+.custom-remove { flex: none; display: inline-grid; place-items: center; width: 28px; height: 28px; border: 0; border-radius: 8px; background: var(--miss-press); color: #fff; font: inherit; font-size: 14px; font-weight: 700; line-height: 1; cursor: pointer; }
+.custom-remove:hover, .custom-remove:focus-visible { background: var(--miss); }
 .dialog.custom-selected .row { display: flex; justify-content: space-between; gap: 8px; }
