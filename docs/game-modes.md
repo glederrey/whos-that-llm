@@ -44,6 +44,6 @@ The statistics page has an Origin view: solve rate, how often each real origin w
 
 ## Custom
 
-The player builds the pool in the lobby: a search box, models grouped by company with Add all and Drop all, one-tap toggles, and a chip for each pick that can be removed. Start needs at least 2 models. The last selection is remembered in this browser. The player can play with hints or without. There is no difficulty, so the score has no difficulty multiplier. One Custom round can be open at a time.
+The player builds the pool in the lobby: a search box, models grouped by company with Add all and Drop all, one row per model with its year and size, the company's origin on its header, one-tap toggles, and a window that lists the picks and removes them. Start needs at least 2 models. The last selection is remembered in this browser. The player can play with hints or without. There is no difficulty, so the score has no difficulty multiplier. One Custom round can be open at a time.
 
 No leaderboard. The result can be shared. The card says the mode is Custom, has no difficulty line, and the Pool row says how many models were picked.
