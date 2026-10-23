@@ -6,8 +6,9 @@ import { CompanyLogo } from "@/components/company-logo";
 import { ModelFields } from "@/components/model-fields";
 import { RosterReturnFields } from "@/components/roster-return-fields";
 import { AddModelForm } from "@/components/add-model-form";
+import type { OriginOption } from "@/lib/admin-origin";
 import { difficultyLabel } from "@/lib/difficulty";
-import { regionLabel, sizeLabel } from "@/lib/game";
+import { originLabel, sizeLabel } from "@/lib/game";
 import { formatListPrice } from "@/lib/list-price";
 import type { CategoryRow, RosterRow } from "@/lib/roster-row";
 import { nextRosterSort, pageOf, searchRoster, sortRoster, type RosterSort, type RosterSortColumn } from "@/lib/roster-list";
@@ -15,7 +16,7 @@ import { nextRosterSort, pageOf, searchRoster, sortRoster, type RosterSort, type
 const sortLabels: Record<RosterSortColumn, string> = {
   name: "Name",
   company: "Company",
-  region: "Region",
+  origin: "Origin",
   year: "Year",
   size: "Size",
   difficulty: "Difficulty",
@@ -27,6 +28,7 @@ const sortLabels: Record<RosterSortColumn, string> = {
 export function RosterBrowser({
   rows,
   categories,
+  origins,
   initialQuery,
   initialSort,
   initialActive,
@@ -35,6 +37,7 @@ export function RosterBrowser({
 }: {
   rows: RosterRow[];
   categories: CategoryRow[];
+  origins: OriginOption[];
   initialQuery: string;
   initialSort: RosterSort;
   initialActive: number;
@@ -71,6 +74,7 @@ export function RosterBrowser({
         <summary>Add a model</summary>
         <AddModelForm
           categories={categories}
+          origins={origins}
           query={query}
           sort={sort}
           activePage={active.page}
@@ -96,6 +100,7 @@ export function RosterBrowser({
         query={query}
         sort={sort}
         categories={categories}
+        origins={origins}
         activePage={active.page}
         inactivePage={inactive.page}
         unavailablePage={unavailable.page}
@@ -111,6 +116,7 @@ export function RosterBrowser({
         query={query}
         sort={sort}
         categories={categories}
+        origins={origins}
         activePage={active.page}
         inactivePage={inactive.page}
         unavailablePage={unavailable.page}
@@ -126,6 +132,7 @@ export function RosterBrowser({
         query={query}
         sort={sort}
         categories={categories}
+        origins={origins}
         activePage={active.page}
         inactivePage={inactive.page}
         unavailablePage={unavailable.page}
@@ -145,6 +152,7 @@ function RosterSection({
   query,
   sort,
   categories,
+  origins,
   activePage,
   inactivePage,
   unavailablePage,
@@ -159,6 +167,7 @@ function RosterSection({
   query: string;
   sort: RosterSort;
   categories: CategoryRow[];
+  origins: OriginOption[];
   activePage: number;
   inactivePage: number;
   unavailablePage: number;
@@ -196,6 +205,7 @@ function RosterSection({
                     key={row.id}
                     row={row}
                     categories={categories}
+                    origins={origins}
                     query={query}
                     sort={sort}
                     activePage={activePage}
@@ -236,6 +246,7 @@ function RosterSection({
 function ModelRow({
   row,
   categories,
+  origins,
   query,
   sort,
   activePage,
@@ -244,6 +255,7 @@ function ModelRow({
 }: {
   row: RosterRow;
   categories: CategoryRow[];
+  origins: OriginOption[];
   query: string;
   sort: RosterSort;
   activePage: number;
@@ -260,7 +272,7 @@ function ModelRow({
           <span>{row.companyName}</span>
         </span>
       </td>
-      <td>{regionLabel(row.region)}</td>
+      <td>{originLabel(row.origin)}</td>
       <td>{row.year || "—"}</td>
       <td>{sizeLabel(row.size)}</td>
       <td>{row.difficulty ? difficultyLabel[row.difficulty] : "—"}</td>
@@ -305,7 +317,8 @@ function ModelRow({
                 openrouterId={row.openrouterId}
                 name={row.name}
                 company={row.companyName}
-                region={row.region}
+                origin={row.origin}
+                origins={origins}
                 year={row.year}
                 size={row.size}
                 difficulty={row.difficulty ?? ""}
@@ -313,7 +326,7 @@ function ModelRow({
                 categoryIds={row.categoryIds}
               />
             </div>
-            <p className="muted">Region belongs to the company. New games use it.</p>
+            <p className="muted">Origin belongs to the company. New games use it.</p>
             <div className="row">
               <button className="button" type="submit">
                 Save

@@ -24,7 +24,7 @@ stateDiagram-v2
 2. The server calls the hidden model. The reply streams word by word. The guess opens only after the reply is stored. A failed call does not spend the message. A successful call spends the message even when the stored reply is empty or whitespace.
 3. The player may name one model from the list the server still allows, send the next message with no guess, or give up. A second guess on that same message is rejected.
 4. Naming the exact model ends the round as `solved`. That correct name does not take the wrong-guess penalty. Earlier wrong names still do.
-5. A wrong guess on the tenth reply ends the round as `miss`. The region and company matches still count. The round does not end by itself when the tenth reply arrives. The player can still guess or give up.
+5. A wrong guess on the tenth reply ends the round as `miss`. The origin and company matches still count. The round does not end by itself when the tenth reply arrives. The player can still guess or give up.
 6. Give up ends the round as `given_up`, shows which model it was, and keeps that round off the leaderboard. Give up asks for confirmation.
 
 Sending the next message while a guess is open drops that guess. The composer stays open until the tenth reply is stored, or the round ends. Refresh restores the same state from the server.
@@ -43,29 +43,29 @@ These are the only traits that pay.
 
 | Key | Stored as | Match | Points | Shown as |
 |---|---|---|---|---|
-| `region` | the company's region on the frozen row | Same `us` / `cn` / `eu` | 100 | USA, China, Europe |
+| `origin` | the company's origin on the frozen row | Same origin id | 100 | The origin name |
 | `company` | `company_id` on the frozen row | Same company | 300 | The company name |
 
-If the player names the model, on any reply, the base is **2000**. Region and company do not stack on top of it, and the reply number does not change it.
+If the player names the model, on any reply, the base is **2000**. Origin and company do not stack on top of it, and the reply number does not change it.
 
-If they never name the model, the base is 100 when any guess matched the region, plus 300 when any guess matched the company. Both is 400. A trait the pool gave them, or that they revealed with a hint, pays nothing, so it is left out of the base.
+If they never name the model, the base is 100 when any guess matched the origin, plus 300 when any guess matched the company. Both is 400. A trait the pool gave them, or that they revealed with a hint, pays nothing, so it is left out of the base.
 
 Each point trait pays at most once per round.
 
 ### Hints
 
-Company, region, year, and size award no points. Each can be bought once, after at least one reply is stored, and only when the category allows hints. The price is subtracted from the base, before the token factor.
+Company, origin, year, and size award no points. Each can be bought once, after at least one reply is stored, and only when the category allows hints. The price is subtracted from the base, before the token factor.
 
 | Hint | What the player sees | Price |
 |---|---|---|
 | Company | The company name | 600 |
-| Region | USA, China, or Europe | 400 |
+| Origin | The company origin name | 400 |
 | Year | The calendar year of `released_on` | 100 |
 | Size | Small, medium, or large | 100 |
 
 There is no free newer/older clue. A revealed trait is known afterwards, the same way year and size are, so the guess list drops models that do not match it.
 
-A hint is not offered for a trait the round already showed: a given value, a value already revealed, or a company or region a guess already matched. There is nothing to buy.
+A hint is not offered for a trait the round already showed: a given value, a value already revealed, or a company or origin a guess already matched. There is nothing to buy.
 
 Hints are hidden in no-hint mode. They are also off on the narrow pools named in [Categories](#categories). Buying any hint means the round is not a no-hint round, so it does not get the 2× multiplier.
 
@@ -81,27 +81,26 @@ Compute it from the frozen pool, not from a hardcoded list per category:
 
 ```
 pool = the models frozen on this round
-for company, region, year, and size:
+for company, origin, year, and size:
   if the pool has exactly one distinct value:
     that trait is given, and the value is that one
 ```
 
 Consequences:
 
-- All models gives nothing, unless the whole roster shares a value. Do not enable a roster that is all USA and then act surprised that region is given.
-- A company pool gives company. Region is given too, because a company has one region. Both pay nothing.
-- A region pool gives region, and region pays nothing.
-- Origin has no trait board. The player is guessing the region itself.
+- All models gives nothing, unless the whole roster shares a value. Do not enable a roster that is all USA and then act surprised that origin is given.
+- A company pool gives company. Origin is given too, because a company has one origin. Both pay nothing.
+- Origin has no trait board and no scoring. The player is guessing the origin itself.
 
 ## Known values and the guess list
 
-A value becomes known when it is given, bought as a hint, or matched by a guess. Region and company matches count. Every hint trait also counts once it is bought.
+A value becomes known when it is given, bought as a hint, or matched by a guess. Origin and company matches count. Every hint trait also counts once it is bought.
 
 When hints are on, a guess that misses the company removes every model from that company. A guess that hits the company and misses the model leaves the other models from that company.
 
 In no-hint mode, matches are not shown and do not narrow the list. A company miss does not remove that company either. Narrowing would tell the player what they hit. The score still counts those matches. Given values can still be shown, because every model in the pool shares them.
 
-The server filters the guess list as known values change. The client shows logo, company, and name only. It does not receive region, year, size, or any other trait, and it does not filter the list itself.
+The server filters the guess list as known values change. The client shows logo, company, and name only. It does not receive origin, year, size, or any other trait, and it does not filter the list itself.
 
 The server refuses a guess that is not in the filtered list (`409`). Hiding rows is not left to the browser.
 
@@ -114,7 +113,7 @@ The lobby checkbox **Play without hints** is stored as `games.no_hint` and canno
 Playing with no hints:
 
 - Do not offer any hint purchase. The roster never shrinks.
-- Hide match feedback for the whole round. Do not show that a guess hit company or region.
+- Hide match feedback for the whole round. Do not show that a guess hit company or origin.
 - Still score those matches.
 - Multiply the score by **2×**. The multiplier applies only to a round played in this mode.
 
@@ -134,9 +133,9 @@ The steps, in this order:
 6. Round with the half-up helper.
 7. Floor at 0.
 
-The base is **2000** if the player named the model, on any reply. That replaces region and company. There is no message-count multiplier. If they never named it, the base is the region (100) and company (300) points they actually matched. A trait that was given, or that the player revealed with a hint, contributes 0. Year and size are not part of the base. There is no 2× on that path unless the round was played in no-hint mode.
+The base is **2000** if the player named the model, on any reply. That replaces origin and company. There is no message-count multiplier. If they never named it, the base is the origin (100) and company (300) points they actually matched. A trait that was given, or that the player revealed with a hint, contributes 0. Year and size are not part of the base. There is no 2× on that path unless the round was played in no-hint mode.
 
-Penalties: **100** for each wrong guess, and the hint prices (year 100, size 100, region 400, company 600). They come off the base before the multiplier. Naming the model does not itself count as a wrong guess. Earlier wrong names still do, even in a round that is later solved.
+Penalties: **100** for each wrong guess, and the hint prices (year 100, size 100, origin 400, company 600). They come off the base before the multiplier. Naming the model does not itself count as a wrong guess. Earlier wrong names still do, even in a round that is later solved.
 
 The token factor is 10,000 divided by the tokens the successful replies used, capped at 20. 500 tokens or fewer, including 0, is ×20. 10,000 tokens is ×1. Past 10,000 tokens the factor drops below 1, so 20,000 tokens is ×0.5. There is no separate token floor and no "0 tokens means factor 1" rule.
 
@@ -150,7 +149,7 @@ noHintFactor     = 2 when the round is no-hint and no hint was bought, otherwise
 difficultyFactor = 0.5, 1, 2, or 3 for the difficulty the round was played at, otherwise 1
 
 base      = 2000 if the model was named
-            otherwise region points + company points
+            otherwise origin points + company points
 penalties = (100 * wrong guesses) + (sum of the hint prices bought)
 
 score = max(0, round((base − penalties) * tokenFactor * noHintFactor * difficultyFactor))
@@ -158,7 +157,7 @@ score = max(0, round((base − penalties) * tokenFactor * noHintFactor * difficu
 
 `round` goes to the nearest integer. A half rounds up. A total below 0 after rounding is shown as 0.
 
-The numbers in that formula are the ones in `lib/config.ts`: `modelBase` (2000), `regionPoints` (100), `companyPoints` (300), `tokenScale` (10000), `tokenCap` (20), `hintCosts`, `wrongGuessCost` (100), `noHintMultiplier` (2), `difficultyMultipliers` (Easy 0.5, Medium 1, Hard 2, Impossible 3), and `messageLimit` (10, how many replies a round allows). A round scores with the current numbers when it ends, so a round that started under the old formula is scored with the new one. It keeps the `messageLimit` it froze. A round that has already finished keeps the score stored on it. That score is not rewritten, and the leaderboard is not rebuilt.
+The numbers in that formula are the ones in `lib/config.ts`: `modelBase` (2000), `originPoints` (100), `companyPoints` (300), `tokenScale` (10000), `tokenCap` (20), `hintCosts`, `wrongGuessCost` (100), `noHintMultiplier` (2), `difficultyMultipliers` (Easy 0.5, Medium 1, Hard 2, Impossible 3), and `messageLimit` (10, how many replies a round allows). A round scores with the current numbers when it ends, so a round that started under the old formula is scored with the new one. It keeps the `messageLimit` it froze. A round that has already finished keeps the score stored on it. That score is not rewritten, and the leaderboard is not rebuilt.
 
 A short reply raises the score, because `10000 / tokens` gets large. The factor stops at 20. Past 10,000 tokens it falls below 1.
 
@@ -178,9 +177,9 @@ Nothing is written to `games.score` until the round ends. The result is recomput
 
 All models, hints allowed. The truth is Claude Sonnet 5.5: Anthropic, USA, year 2026, size medium.
 
-On message 1 the player names DeepSeek V4 Pro. Company and region both miss. That wrong name costs 100. They buy the year hint. The board shows 2026, and the list narrows to that year. That purchase costs 100.
+On message 1 the player names DeepSeek V4 Pro. Company and origin both miss. That wrong name costs 100. They buy the year hint. The board shows 2026, and the list narrows to that year. That purchase costs 100.
 
-On message 2 they name Claude Sonnet 5.5. The round is solved. The base is 2000. The region and the company do not add on top. The correct name is not a wrong guess. The earlier wrong name still is.
+On message 2 they name Claude Sonnet 5.5. The round is solved. The base is 2000. The origin and the company do not add on top. The correct name is not a wrong guess. The earlier wrong name still is.
 
 The score counted 500 tokens from the two successful replies. One hint was bought, so the round is not in no-hint mode. 500 tokens is where ×20 starts, so the token factor is the cap.
 
@@ -195,7 +194,7 @@ score     = round(1800 * 20)
 
 The same solve in no-hint mode, with no hint and no wrong guess, would be `round(2000 * 20 * 2) = 80000`. No-hint mode would also have hidden the misses on message 1.
 
-A round that never names the model still has a score. Region and company both matched, 2,000 tokens, no hints, no wrong guesses:
+A round that never names the model still has a score. Origin and company both matched, 2,000 tokens, no hints, no wrong guesses:
 
 ```
 score = round((400 − 0) * (10000 / 2000))
@@ -216,10 +215,10 @@ score    = max(0, round(subtotal * tokenFactor * noHintFactor * difficultyFactor
 | Line | When | Value |
 |---|---|---|
 | `Named the model` | The model was named | 2000 |
-| `Region` | The model was not named, and region matched and was not given or revealed | 100 |
+| `Origin` | The model was not named, and origin matched and was not given or revealed | 100 |
 | `Company` | The model was not named, and company matched and was not given or revealed | 300 |
 | `Base` | The base is 0 | 0 |
-| `<Trait> hint` | That hint was bought. Company, Region, Year, or Size | its price, negative |
+| `<Trait> hint` | That hint was bought. Company, Origin, Year, or Size | its price, negative |
 | `Wrong guesses · N` | At least one wrong model name. One line for the count | −100 each |
 | `Tokens · N tokens` | Always. The value is the factor, such as `×20` or `×3.712`. 0 tokens is `×20` | `×` factor, not a point delta |
 | `No-hint` | Only when the round is no-hint and no hint was bought | `×2` |
@@ -249,23 +248,23 @@ The call is the same in every category: 10 messages, 500 characters, 2,000 outpu
 | `daily` | Same roster as All models at the chosen difficulty. One hidden model per difficulty per UTC day, the same for every player. One round per account per difficulty per UTC day | Yes | Yes | Built |
 | `all` | Enabled models at or below the chosen difficulty | Yes | Yes | First build |
 | `company` | One company, at least 2 enabled models | Year and size only | Yes | Built |
-| `region` | `us`, `cn`, or `eu`, at least 2 enabled models | No | No | Later |
+| `origin` | Enabled models whose origin is turned on, at least 2 origins | No | No | Built |
 | `custom` | A choice of models, picked before the round | Yes | No | Later |
 | `class` | Models in one category (`model_categories`), at least 2 enabled | Yes | Yes, filterable to one category | Built |
 
-Hints are possible on Daily, All models, Company (year and size), Category, and Custom. Region has none. Latest and any other mode also have none, because they are not on that list.
+Hints are possible on Daily, All models, Company (year and size), Category, and Custom. Origin has none. Latest and any other mode also have none, because they are not on that list.
 
 Size is not a category. It is only a hint.
 
 A company pool only cares about traits that differ inside the pool. Company is given on a company pool, so the 300 is not paid. That pool has no hints.
 
-Special pools can still be scored. Company and Category have a leaderboard that lists each player's best round in any pool and can be narrowed to one. Region is not on a leaderboard. Custom is not on a leaderboard.
+Special pools can still be scored. Company and Category have a leaderboard that lists each player's best round in any pool and can be narrowed to one. Origin is not on a leaderboard. Custom is not on a leaderboard.
 
 A pool with fewer than 2 enabled models is not listed. Daily uses that same rule. An empty roster is not playable. Europe will be thin. A row with fewer than 4 models still appears, and it shows the count. A category with `enabled = false` still has its sentence on the main page, with **Coming soon.**
 
-Latest is not a column on the model. `models.is_latest` is gone. A latest group, if Gael wants one, is a category he creates. A latest game mode is not built. If it is built later, it has no hints, because it is not on the hint list above. Origin is not a category. Region is that pool, and it has no hints.
+Latest is not a column on the model. `models.is_latest` is gone. A latest group, if Gael wants one, is a category he creates. A latest game mode is not built. If it is built later, it has no hints, because it is not on the hint list above. Origin is not a category. Origin is that pool, and it has no hints.
 
-Regions on companies:
+Origins on companies:
 
 - **USA** (`us`): OpenAI, Anthropic, Google, Meta, xAI, Amazon
 - **Europe** (`eu`): Mistral, plus any other lab we actually have a key for
@@ -279,6 +278,12 @@ Size, also manual, and only as a hint:
 
 The first Daily start of a UTC day, at a difficulty, draws one model from the roster All models can already draw at that level (difficulty less than or equal to the chosen level) and stores that id on `daily_models`. Easy cannot store an Impossible model. Medium, Hard, and Impossible each store their own id. Later starts that day use the stored id, so two players get the same hidden model. A model turned off after the draw is still included in a later round's list, so it can still be named. Do not publish the id ahead of time. One account gets one Daily round per difficulty that UTC day. Easy and Medium are both allowed. A second Easy is not. Starting spends that difficulty, including a give-up before the first message. Coming back while that difficulty is open resumes it. A finished difficulty is done until tomorrow, which draws again at each level. A difficulty they have not started stays open.
 
+### Origin
+
+The pool is every enabled model whose origin is turned on in `origins`, and it must hold at least two origins. The server draws one model at random. No difficulty, no hints, no no-hint choice (`no_hint` stays false), no leaderboard, no score.
+
+The round has ten messages and one guess. After at least one reply the player may choose an origin among those in the pool. The server compares it with the hidden model's frozen origin. A right guess ends the round as `solved`. A wrong one ends it as `miss`. Giving up ends it as `given_up`. `score`, `score_breakdown`, and `score_explanation` stay null. An origin guess is stored in `guesses` with `guessed_model_id` null and `guessed_origin` set.
+
 ### Category
 
 The player picks one category (id `class`) from a searchable dropdown on `/play`. The pool is the category's enabled models, at least 2. A category that is turned off in the admin is not listed and cannot be started. No difficulty. Hints and the no-hint mode work as in All models. The leaderboard bar shows Category, with a dropdown of every category that narrows the board, and a chip on each row with the category's icon and name.
@@ -289,7 +294,7 @@ Later. The player picks the models before the round. Disabled until that picker 
 
 ### Leaderboards
 
-The leaderboard is one bar: modes on the left, one middle control, and This week or All time on the right. On a narrow screen those three groups stack, full width, in that order, and the buttons in each group share the row evenly. On a phone the scoreboard table is flush to its card, and Previous, the page count, and Next span the width of the board. The modes are Daily, All models, Company, and Category. Region and Custom are not on it. All models is open. Its middle control is five boards: Any difficulty, Easy, Medium, Hard, and Impossible. Any difficulty is a score from whichever difficulty was played, so the four multipliers sit next to each other. That board puts a difficulty chip on the row. The other four do not, because the board is already that difficulty. A round played with no hints has a No hints chip on every board. A round scores on the difficulty it was played at. Daily is open and uses those same difficulty tabs. Company and Category are open. A category dropdown shows only when Category is selected, and a company dropdown shows only when Company is selected. With All models selected, the middle is the difficulty tabs. Custom has no difficulty and no leaderboard. A round counts when its status is `solved` or `miss` and the category has a leaderboard. `given_up` does not count. Rounds from before difficulties have no difficulty and stay off these five boards.
+The leaderboard is one bar: modes on the left, one middle control, and This week or All time on the right. On a narrow screen those three groups stack, full width, in that order, and the buttons in each group share the row evenly. On a phone the scoreboard table is flush to its card, and Previous, the page count, and Next span the width of the board. The modes are Daily, All models, Company, and Category. Origin and Custom are not on it. All models is open. Its middle control is five boards: Any difficulty, Easy, Medium, Hard, and Impossible. Any difficulty is a score from whichever difficulty was played, so the four multipliers sit next to each other. That board puts a difficulty chip on the row. The other four do not, because the board is already that difficulty. A round played with no hints has a No hints chip on every board. A round scores on the difficulty it was played at. Daily is open and uses those same difficulty tabs. Company and Category are open. A category dropdown shows only when Category is selected, and a company dropdown shows only when Company is selected. With All models selected, the middle is the difficulty tabs. Custom has no difficulty and no leaderboard. A round counts when its status is `solved` or `miss` and the category has a leaderboard. `given_up` does not count. Rounds from before difficulties have no difficulty and stay off these five boards.
 
 Rank is the player's best score in the period, highest first. Scores are never negative, so a round can score 0. Ties break by fewer messages on that round, then by earlier finish. Weeks start Monday 00:00 UTC.
 

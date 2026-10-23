@@ -1,4 +1,4 @@
-import { RegionFlag } from "./region-flag";
+import { OriginFlag } from "./origin-flag";
 
 export function TraitLine({
   label,
@@ -17,7 +17,7 @@ export function TraitLine({
       <span className="trait-side">
         {value ? (
           <span className="trait-value">
-            {flag ? <RegionFlag region={value} /> : null}
+            {flag ? <OriginFlag origin={value} /> : null}
             {value}
           </span>
         ) : (

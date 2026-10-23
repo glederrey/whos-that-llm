@@ -14,7 +14,7 @@ function gameRow(overrides: Partial<GameRow> = {}): GameRow {
     pool_key: null,
     pool_model_ids: [],
     model_id: "m1",
-    traits: { given: ["region"], models: {} },
+    traits: { given: ["origin"], models: {} },
     status: "active",
     no_hint: false,
     rules: rulesForGameMode(true),
@@ -43,8 +43,8 @@ test("guessFinish: a wrong guess misses only once the message limit is reached",
 test("scoreGame matches scoreRound on the same input", () => {
   const game = gameRow();
   const guesses = [
-    { modelCorrect: false, companyCorrect: true, regionCorrect: true },
-    { modelCorrect: true, companyCorrect: true, regionCorrect: true },
+    { modelCorrect: false, companyCorrect: true, originCorrect: true },
+    { modelCorrect: true, companyCorrect: true, originCorrect: true },
   ];
   const usage = [
     { input_tokens: 100, output_tokens: 50 },
@@ -53,9 +53,9 @@ test("scoreGame matches scoreRound on the same input", () => {
   const expected = scoreRound({
     rules: game.rules,
     namedModel: true,
-    regionMatched: true,
+    originMatched: true,
     companyMatched: true,
-    regionGiven: true,
+    originGiven: true,
     companyGiven: false,
     tokens: scoreTokens([{ inputTokens: 100, outputTokens: 50 }, { inputTokens: 20, outputTokens: 0 }]).tokens,
     noHint: false,
@@ -78,12 +78,12 @@ test("scoreGame reads missing token counts as 0 and gives no score for a pure gi
 
 test("scoreGame counts hints and wrong guesses from the row and the guesses", () => {
   const game = gameRow();
-  const clean = scoreGame(game, [{ modelCorrect: true, companyCorrect: true, regionCorrect: true }], true, []);
+  const clean = scoreGame(game, [{ modelCorrect: true, companyCorrect: true, originCorrect: true }], true, []);
   const worse = scoreGame(
     gameRow({ hints: ["year"] }),
     [
-      { modelCorrect: false, companyCorrect: false, regionCorrect: false },
-      { modelCorrect: true, companyCorrect: true, regionCorrect: true },
+      { modelCorrect: false, companyCorrect: false, originCorrect: false },
+      { modelCorrect: true, companyCorrect: true, originCorrect: true },
     ],
     true,
     [],

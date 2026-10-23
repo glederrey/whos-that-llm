@@ -193,6 +193,39 @@ export async function startCategory(userId: string, categoryId: string, noHint =
   return { gameId: result.gameId as string };
 }
 
+/** Origin. One random model from the whole roster. No difficulty, no hints. Needs two origins to be a question. */
+export async function startOrigin(userId: string): Promise<{ gameId: string } | ApiFailure> {
+  const client = serviceOrThrow();
+  const [{ data: gameMode, error }, catalog, { data: turnedOn, error: originsError }] = await Promise.all([
+    client.from("game_modes").select("id, enabled").eq("id", "origin").maybeSingle(),
+    loadCatalog(client),
+    client.from("origins").select("id").eq("enabled", true),
+  ]);
+  if (error) throw new Error(error.message);
+  if (originsError) throw new Error(originsError.message);
+  if (!gameMode?.enabled) return fail(404, "not_found");
+  // A turned-off origin has no button, so its models are not drawn either.
+  const open = new Set((turnedOn ?? []).map((row) => row.id as string));
+  const pool = catalog.filter((model) => open.has(model.origin));
+  const modelId = pool[Math.floor(Math.random() * pool.length)]?.id ?? null;
+  if (!modelId || new Set(pool.map((model) => model.origin)).size < 2) return fail(422, "pool_too_small");
+  const result = await rpc(client, "start_game", {
+    p_user_id: userId,
+    p_hourly_cap: config.hourlyCap,
+    p_game_mode: "origin",
+    p_pool_key: null,
+    p_no_hint: false,
+    p_model_id: modelId,
+    p_pool_model_ids: pool.map((model) => model.id),
+    p_traits: buildTraits(pool),
+    p_rules: rulesForGameMode(false),
+    p_difficulty: null,
+  });
+  const failure = fromRpc(result);
+  if (failure) return failure;
+  return { gameId: result.gameId as string };
+}
+
 async function startRosterRound(
   userId: string,
   modeId: "all" | "daily",

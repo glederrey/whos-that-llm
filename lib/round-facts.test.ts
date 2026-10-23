@@ -20,7 +20,7 @@ const item = {
   companyName: "Anthropic",
   logoPath: null,
   companyFound: true,
-  regionFound: false,
+  originFound: false,
   mode: "All models",
   difficulty: "hard" as const,
   noHint: false,

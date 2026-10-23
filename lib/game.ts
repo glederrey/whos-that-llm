@@ -9,16 +9,18 @@ import {
   givenRows,
   hintNames,
   poolLabel,
-  regionLabel,
+  originFlag,
+  originLabel,
   sizeLabel,
 } from "./game-labels";
 
-export { formatFactor, givenRows, poolLabel, regionLabel, sizeLabel };
+export { formatFactor, givenRows, poolLabel, originFlag, originLabel, sizeLabel };
 
-export type Region = "us" | "cn" | "eu";
+/** An origin id from the `origins` table. The first three ship with the app; an admin can add more. */
+export type Origin = string;
 export type Size = "nano" | "small" | "medium" | "large" | "xxl";
-export type TraitKey = "company" | "region" | "year" | "size";
-export type HintKey = "company" | "region" | "year" | "size";
+export type TraitKey = "company" | "origin" | "year" | "size";
+export type HintKey = "company" | "origin" | "year" | "size";
 export type GameStatus = "active" | "solved" | "miss" | "given_up";
 
 /** A round counts as played once it is solved, not solved, or given up. */
@@ -37,7 +39,11 @@ export type FrozenModel = {
   name: string;
   companyId: string;
   companyName: string;
-  region: Region;
+  origin: Origin;
+  /** Name, flag and order of the origin, frozen with the round. Absent on a round that started before Origin. */
+  originName?: string;
+  originFlag?: string;
+  originSort?: number;
   size: Size;
   year: number;
   logoPath: string;
@@ -51,7 +57,7 @@ export type Traits = {
 export type GuessFlags = {
   modelCorrect: boolean;
   companyCorrect: boolean;
-  regionCorrect: boolean;
+  originCorrect: boolean;
 };
 
 export type ScoreLine = {
@@ -81,8 +87,8 @@ export type PublicCandidate = {
 export type RecordedGuess = GuessFlags & {
   modelId: string | null;
   turn: number;
-  /** Present on a region guess that names the region without a model. */
-  region?: Region | null;
+  /** Present on an origin guess that names the origin without a model. */
+  origin?: Origin | null;
 };
 
 export type PastGuess = {
@@ -91,7 +97,17 @@ export type PastGuess = {
   companyName: string;
   logoPath: string;
   message: number;
-  wrong: Array<"company" | "region">;
+  wrong: Array<"company" | "origin">;
+};
+
+/** An origin as the Origin buttons and the result show it. */
+export type OriginChoice = { id: Origin; name: string; flag: string };
+
+/** What an Origin round shows: the buttons, then the guess and the answer once it is over. */
+export type OriginView = {
+  choices: OriginChoice[];
+  guessed: OriginChoice | null;
+  actual: OriginChoice | null;
 };
 
 export type PublicGame = {
@@ -109,19 +125,21 @@ export type PublicGame = {
   given: { key: TraitKey; label: string; value: string }[];
   feedback: null | {
     company: "match" | "miss" | null;
-    region: "match" | "miss" | null;
+    origin: "match" | "miss" | null;
     companyValue: string | null;
-    regionValue: string | null;
+    originValue: string | null;
   };
   hints: Record<HintKey, string | null>;
   candidates: PublicCandidate[];
   pastGuesses: PastGuess[];
+  /** Origin rounds only. */
+  origin?: OriginView;
   transcript: { turn: number; role: "user" | "assistant"; content: string }[];
   model?: {
     name: string;
     companyName: string;
     logoPath: string;
-    region: string;
+    origin: string;
     year: number;
     size: string;
   };
@@ -131,7 +149,7 @@ export type PublicGame = {
   explanation?: string[];
 };
 
-const traitOrder: TraitKey[] = ["company", "region", "year", "size"];
+const traitOrder: TraitKey[] = ["company", "origin", "year", "size"];
 
 export function roundHalfUp(value: number): number {
   return Math.round(value);
@@ -152,7 +170,7 @@ export function buildTraits(models: Array<FrozenModel & { id: string }>): Traits
 
 function traitValue(model: FrozenModel, key: TraitKey): string {
   if (key === "company") return model.companyId;
-  if (key === "region") return model.region;
+  if (key === "origin") return model.origin;
   if (key === "year") return String(model.year);
   return model.size;
 }
@@ -161,7 +179,7 @@ export function compareGuess(hidden: FrozenModel, guess: FrozenModel): GuessFlag
   return {
     modelCorrect: false,
     companyCorrect: hidden.companyId === guess.companyId,
-    regionCorrect: hidden.region === guess.region,
+    originCorrect: hidden.origin === guess.origin,
   };
 }
 
@@ -171,7 +189,7 @@ export function compareModel(hiddenId: string, guessId: string, hidden: FrozenMo
 
 export type Known = {
   companyId?: string;
-  region?: Region;
+  origin?: Origin;
   year?: number;
   size?: Size;
 };
@@ -186,12 +204,12 @@ export function knownValues(input: {
   const known: Known = {};
   const { traits, hidden, guesses, hints, noHint } = input;
   if (traits.given.includes("company") || hints.includes("company")) known.companyId = hidden.companyId;
-  if (traits.given.includes("region") || hints.includes("region")) known.region = hidden.region;
+  if (traits.given.includes("origin") || hints.includes("origin")) known.origin = hidden.origin;
   if (traits.given.includes("year") || hints.includes("year")) known.year = hidden.year;
   if (traits.given.includes("size") || hints.includes("size")) known.size = hidden.size;
   if (!noHint) {
     if (guesses.some((guess) => guess.companyCorrect)) known.companyId = hidden.companyId;
-    if (guesses.some((guess) => guess.regionCorrect)) known.region = hidden.region;
+    if (guesses.some((guess) => guess.originCorrect)) known.origin = hidden.origin;
   }
   return known;
 }
@@ -207,7 +225,7 @@ export function hintOffered(input: {
   if (input.noHint || input.hints.includes(input.key)) return false;
   const known = knownValues(input);
   if (input.key === "company") return known.companyId === undefined;
-  if (input.key === "region") return known.region === undefined;
+  if (input.key === "origin") return known.origin === undefined;
   if (input.key === "year") return known.year === undefined;
   return known.size === undefined;
 }
@@ -222,7 +240,7 @@ export function missedGuesses(traits: Traits, guesses: RecordedGuess[], noHint: 
       const wrong: PastGuess["wrong"] = [];
       if (!noHint) {
         if (!given.has("company") && !guess.companyCorrect) wrong.push("company");
-        if (!given.has("region") && !guess.regionCorrect) wrong.push("region");
+        if (!given.has("origin") && !guess.originCorrect) wrong.push("origin");
       }
       return {
         id: guess.modelId as string,
@@ -250,25 +268,51 @@ export function eliminatedCompanyIds(
   return [...companies];
 }
 
-function isRegion(value: string | null | undefined): value is Region {
-  return value === "us" || value === "cn" || value === "eu";
+function isOrigin(value: string | null | undefined): value is Origin {
+  return typeof value === "string" && value !== "";
 }
 
-/** Regions a guess has ruled out. A model guess uses that model's region; a region guess uses its own. */
-export function eliminatedRegions(
+/** Origins a guess has ruled out. A model guess uses that model's origin; an origin guess uses its own. */
+export function eliminatedOrigins(
   traits: Traits,
-  guesses: Array<{ modelId: string | null; regionCorrect: boolean; region?: string | null }>,
+  guesses: Array<{ modelId: string | null; originCorrect: boolean; origin?: string | null }>,
   noHint: boolean,
-): Region[] {
+): Origin[] {
   if (noHint) return [];
-  const regions = new Set<Region>();
+  const origins = new Set<Origin>();
   for (const guess of guesses) {
-    if (guess.regionCorrect) continue;
-    const fromModel = guess.modelId ? traits.models[guess.modelId]?.region : undefined;
-    const region = fromModel ?? (isRegion(guess.region) ? guess.region : undefined);
-    if (region) regions.add(region);
+    if (guess.originCorrect) continue;
+    const fromModel = guess.modelId ? traits.models[guess.modelId]?.origin : undefined;
+    const origin = fromModel ?? (isOrigin(guess.origin) ? guess.origin : undefined);
+    if (origin) origins.add(origin);
   }
-  return [...regions];
+  return [...origins];
+}
+
+/** The origin of a frozen model, with the name and flag frozen on it or the built-in ones. */
+export function originChoiceOf(model: FrozenModel): OriginChoice {
+  return {
+    id: model.origin,
+    name: model.originName ?? originLabel(model.origin),
+    flag: model.originFlag ?? originFlag(model.origin),
+  };
+}
+
+/** Every origin the pool holds, in the order the admin set. */
+export function originChoices(traits: Traits): OriginChoice[] {
+  const byId = new Map<Origin, { choice: OriginChoice; sort: number }>();
+  for (const model of Object.values(traits.models)) {
+    if (!byId.has(model.origin)) byId.set(model.origin, { choice: originChoiceOf(model), sort: model.originSort ?? 100 });
+  }
+  return [...byId.values()]
+    .sort((a, b) => a.sort - b.sort || a.choice.name.localeCompare(b.choice.name))
+    .map((entry) => entry.choice);
+}
+
+export function originChoiceFor(traits: Traits, id: Origin): OriginChoice {
+  return (
+    originChoices(traits).find((choice) => choice.id === id) ?? { id, name: originLabel(id), flag: originFlag(id) }
+  );
 }
 
 export function filterCandidates(
@@ -276,18 +320,18 @@ export function filterCandidates(
   known: Known,
   excludeIds: string[] = [],
   excludeCompanyIds: string[] = [],
-  excludeRegions: readonly string[] = [],
+  excludeOrigins: readonly string[] = [],
 ): PublicCandidate[] {
   const excluded = new Set(excludeIds);
   const excludedCompanies = new Set(excludeCompanyIds);
-  const excludedRegions = new Set(excludeRegions);
+  const excludedOrigins = new Set(excludeOrigins);
   return Object.entries(traits.models)
     .filter(([id, model]) => {
       if (excluded.has(id)) return false;
       if (excludedCompanies.has(model.companyId)) return false;
-      if (excludedRegions.has(model.region)) return false;
+      if (excludedOrigins.has(model.origin)) return false;
       if (known.companyId && model.companyId !== known.companyId) return false;
-      if (known.region && model.region !== known.region) return false;
+      if (known.origin && model.origin !== known.origin) return false;
       if (known.year !== undefined && model.year !== known.year) return false;
       if (known.size && model.size !== known.size) return false;
       return true;
@@ -416,9 +460,9 @@ export function scoreTokens(turns: readonly ScoreUsageTurn[]): ScoreTokenCount {
 export type ScoreInput = {
   rules: Rules;
   namedModel: boolean;
-  regionMatched: boolean;
+  originMatched: boolean;
   companyMatched: boolean;
-  regionGiven: boolean;
+  originGiven: boolean;
   companyGiven: boolean;
   tokens: number;
   noHint: boolean;
@@ -428,14 +472,14 @@ export type ScoreInput = {
   difficulty?: Difficulty | null;
 };
 
-const hintKeyList: readonly HintKey[] = ["company", "region", "year", "size"];
+const hintKeyList: readonly HintKey[] = ["company", "origin", "year", "size"];
 
-/** Hints exist on Daily, All models, Company, Category, and Custom. Region has none. */
+/** Hints exist on Daily, All models, Company, Category, and Custom. Origin has none. */
 export function gameModeAllowsHints(gameMode: string): boolean {
   return gameMode === "daily" || gameMode === "all" || gameMode === "company" || gameMode === "class" || gameMode === "custom";
 }
 
-/** Company already names the lab and its region, so only the year and the size can be bought. */
+/** Company already names the lab and its origin, so only the year and the size can be bought. */
 export function hintAllowedForMode(gameMode: string, key: HintKey): boolean {
   if (!gameModeAllowsHints(gameMode)) return false;
   if (gameMode === "company") return key === "year" || key === "size";
@@ -450,7 +494,7 @@ export function playableHints(value: readonly string[] | null | undefined): Hint
 export function scoreRound(input: ScoreInput): { score: number; breakdown: ScoreLine[]; explanation: string[] } {
   const { rules } = input;
   const wrongGuesses = input.wrongGuesses ?? 0;
-  const regionKnown = input.regionGiven || input.hints.includes("region");
+  const originKnown = input.originGiven || input.hints.includes("origin");
   const companyKnown = input.companyGiven || input.hints.includes("company");
   const factor = tokenFactor(input.tokens, rules);
   const boughtHints = playableHints(input.hints);
@@ -464,9 +508,9 @@ export function scoreRound(input: ScoreInput): { score: number; breakdown: Score
     base = rules.modelBase;
     breakdown.push({ label: "Named the model", points: rules.modelBase });
   } else {
-    if (input.regionMatched && !regionKnown) {
-      base += rules.regionPoints;
-      breakdown.push({ label: "Region", points: rules.regionPoints });
+    if (input.originMatched && !originKnown) {
+      base += rules.originPoints;
+      breakdown.push({ label: "Origin", points: rules.originPoints });
     }
     if (input.companyMatched && !companyKnown) {
       base += rules.companyPoints;
@@ -544,9 +588,9 @@ export function toPublicGame(input: {
     noHint: input.noHint,
   });
   const hints = playableHints(input.hints);
-  const regionGiven = input.traits.given.includes("region");
+  const originGiven = input.traits.given.includes("origin");
   const companyGiven = input.traits.given.includes("company");
-  const regionMatched = input.guesses.some((guess) => guess.regionCorrect);
+  const originMatched = input.guesses.some((guess) => guess.originCorrect);
   const companyMatched = input.guesses.some((guess) => guess.companyCorrect);
   const showFeedback = !input.noHint && input.guesses.length > 0 && input.gameMode !== "origin";
 
@@ -567,34 +611,46 @@ export function toPublicGame(input: {
     feedback: showFeedback
       ? {
           company: companyGiven ? null : companyMatched ? "match" : "miss",
-          region: regionGiven ? null : regionMatched ? "match" : "miss",
+          origin: originGiven ? null : originMatched ? "match" : "miss",
           companyValue: !companyGiven && companyMatched ? hidden.companyName : null,
-          regionValue: !regionGiven && regionMatched ? regionLabel(hidden.region) : null,
+          originValue: !originGiven && originMatched ? originLabel(hidden.origin) : null,
         }
       : null,
     hints: {
       company: hints.includes("company") ? displayValue(hidden, "company") : null,
-      region: hints.includes("region") ? displayValue(hidden, "region") : null,
+      origin: hints.includes("origin") ? displayValue(hidden, "origin") : null,
       year: hints.includes("year") ? displayValue(hidden, "year") : null,
       size: hints.includes("size") ? displayValue(hidden, "size") : null,
     },
-    candidates: filterCandidates(
-      input.traits,
-      known,
-      input.guessedModelIds,
-      eliminatedCompanyIds(input.traits, input.guesses, input.noHint),
-      eliminatedRegions(input.traits, input.guesses, input.noHint),
-    ),
-    pastGuesses: missedGuesses(input.traits, input.guesses, input.noHint),
+    candidates:
+      input.gameMode === "origin"
+        ? []
+        : filterCandidates(
+            input.traits,
+            known,
+            input.guessedModelIds,
+            eliminatedCompanyIds(input.traits, input.guesses, input.noHint),
+            eliminatedOrigins(input.traits, input.guesses, input.noHint),
+          ),
+    pastGuesses: input.gameMode === "origin" ? [] : missedGuesses(input.traits, input.guesses, input.noHint),
     transcript: input.transcript,
   };
+
+  if (input.gameMode === "origin") {
+    const guessedId = input.guesses.find((guess) => guess.origin)?.origin ?? null;
+    game.origin = {
+      choices: originChoices(input.traits),
+      guessed: guessedId ? originChoiceFor(input.traits, guessedId) : null,
+      actual: input.status !== "active" ? originChoiceOf(hidden) : null,
+    };
+  }
 
   if (input.status !== "active") {
     game.model = {
       name: hidden.name,
       companyName: hidden.companyName,
       logoPath: hidden.logoPath,
-      region: regionLabel(hidden.region),
+      origin: originLabel(hidden.origin),
       year: hidden.year,
       size: sizeLabel(hidden.size),
     };

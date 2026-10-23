@@ -24,8 +24,8 @@ export type HomeGameMode = {
   enabled: boolean;
 };
 
-const order = ["daily", "all", "company", "class", "region", "custom"];
-const hidden = new Set(["latest", "origin", "family"]);
+const order = ["daily", "all", "company", "class", "origin", "custom"];
+const hidden = new Set(["latest", "family"]);
 
 const numberWords = [
   "Zero",
@@ -127,8 +127,8 @@ export function HomeBoard({
     return left === 0 ? `Next one at ${when}` : `Adding a new game to the pool at ${when}`;
   }
 
-  async function start(gameMode: string, difficulty: Difficulty) {
-    const open = openGameOn(openGames, gameMode, difficulty);
+  async function start(gameMode: string, difficulty: Difficulty | null) {
+    const open = difficulty ? openGameOn(openGames, gameMode, difficulty) : openGames.find((game) => game.mode === gameMode);
     if (open) {
       router.push(`/play/${open.id}`);
       return;
@@ -155,7 +155,7 @@ export function HomeBoard({
       return;
     }
     if (body.error === "active_game") {
-      const known = openGameOn(openGames, gameMode, difficulty) ?? openGames.find((game) => game.id) ?? null;
+      const known = (difficulty ? openGameOn(openGames, gameMode, difficulty) : null) ?? openGames.find((game) => game.id) ?? null;
       setResumeId(body.gameId ?? known?.id ?? null);
       setNotice("You already have a game open.");
       return;
@@ -286,6 +286,12 @@ export function HomeBoard({
               <strong>{gameMode.name}</strong>
               <br />
               <span className="muted">{gameMode.blurb}</span>
+              {gameMode.id === "origin" && openGames.some((game) => game.mode === "origin") ? (
+                <>
+                  <br />
+                  <span className="difficulty-resume">{unfinishedLine}</span>
+                </>
+              ) : null}
               {playable && poolSize < 2 ? (
                 <>
                   <br />
@@ -297,7 +303,19 @@ export function HomeBoard({
           return (
             <div key={gameMode.id} className={gameMode.enabled ? "category-block" : "category-block closed"}>
               <div className="category-main">
-                {gameMode.enabled ? (
+                {gameMode.enabled && gameMode.id === "origin" ? (
+                  <button
+                    type="button"
+                    className="category-toggle"
+                    disabled={busy || (!openGames.some((game) => game.mode === "origin") && (paused || full || poolSize < 2))}
+                    onClick={() => void start("origin", null)}
+                  >
+                    {label}
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                      <path fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="m9 6 6 6-6 6" />
+                    </svg>
+                  </button>
+                ) : gameMode.enabled ? (
                   <button
                     type="button"
                     className="category-toggle"

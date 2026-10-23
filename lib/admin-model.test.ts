@@ -6,7 +6,7 @@ import {
   hasAdminFlag,
   modelIdFromOpenRouter,
   parseModelFields,
-  parseRegion,
+  parseOrigin,
   parseReleasedOn,
   parseYear,
   releasedOnForYear,
@@ -49,19 +49,19 @@ test("a reasoning model cannot turn on with empty settings", () => {
   assert.equal(canTurnOn({ releasedOn: "2026-01-01", reasoning: false, providerSettings: {} }), true);
 });
 
-test("model fields reject a bad region or year", () => {
-  assert.equal(parseRegion("USA"), "us");
+test("model fields reject a bad origin or year", () => {
+  assert.equal(parseOrigin("USA"), "us");
   assert.equal(parseYear("1999"), null);
   assert.equal(
     parseModelFields({
       openrouterId: "openai/gpt-5.6-luna",
       name: "GPT-5.6 Luna",
       company: "OpenAI",
-      region: "USA",
+      origin: "USA",
       year: "2026",
       size: "small",
       difficulty: "easy",
-    })?.region,
+    })?.origin,
     "us",
   );
   assert.equal(
@@ -69,21 +69,21 @@ test("model fields reject a bad region or year", () => {
       openrouterId: "openai/gpt-5.6-luna",
       name: "GPT-5.6 Luna",
       company: "OpenAI",
-      region: "USA",
+      origin: "USA",
       year: "2026",
       size: "small",
       difficulty: "medium",
     })?.company,
     "OpenAI",
   );
-  assert.equal(parseModelFields({ openrouterId: "openai/gpt-5.6-luna", name: "GPT", company: "OpenAI", region: "moon", year: "2026", size: "small" }), null);
-  assert.equal(parseModelFields({ openrouterId: "openai/gpt-5.6-luna", name: "GPT", company: "O", region: "us", year: "2026", size: "small" }), null);
+  assert.equal(parseModelFields({ openrouterId: "openai/gpt-5.6-luna", name: "GPT", company: "OpenAI", origin: "moon", year: "2026", size: "small" }), null);
+  assert.equal(parseModelFields({ openrouterId: "openai/gpt-5.6-luna", name: "GPT", company: "O", origin: "us", year: "2026", size: "small" }), null);
   assert.equal(
     parseModelFields({
       openrouterId: "openai/gpt-5.6-luna",
       name: "GPT",
       company: "OpenAI",
-      region: "us",
+      origin: "us",
       year: "2026",
       size: "small",
       difficulty: "famous",
@@ -100,7 +100,7 @@ test("a release date is kept", () => {
     openrouterId: "anthropic/claude-opus-4.1",
     name: "Claude Opus 4.1",
     company: "Anthropic",
-    region: "us",
+    origin: "us",
     releasedOn: "2025-08-05",
     size: "large",
     difficulty: "hard",

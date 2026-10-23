@@ -49,7 +49,14 @@ export function fromRpc(result: RpcResult): ApiFailure | null {
 export type CatalogModel = FrozenModel & { id: string; openrouterId: string; providerSettings: unknown; difficulty: Difficulty };
 
 export const catalogColumns =
-  "id, name, company_id, size, released_on, enabled, difficulty, logo_path, openrouter_id, provider_settings, companies(name, region, logo_path)";
+  "id, name, company_id, size, released_on, enabled, difficulty, logo_path, openrouter_id, provider_settings, companies(name, origin, logo_path, origins(name, flag, sort_order))";
+
+type CatalogCompany = {
+  name: string;
+  origin: FrozenModel["origin"];
+  logo_path: string;
+  origins?: { name: string; flag: string; sort_order: number } | Array<{ name: string; flag: string; sort_order: number }> | null;
+};
 
 export function mapCatalog(data: readonly object[]): CatalogModel[] {
   return data.flatMap((row) => {
@@ -63,18 +70,20 @@ export function mapCatalog(data: readonly object[]): CatalogModel[] {
       logo_path: string | null;
       openrouter_id: string;
       provider_settings: unknown;
-      companies: { name: string; region: FrozenModel["region"]; logo_path: string } | Array<{ name: string; region: FrozenModel["region"]; logo_path: string }> | null;
+      companies: CatalogCompany | CatalogCompany[] | null;
     };
     const difficulty = difficultyFromStored(record.difficulty);
     if (!difficulty || typeof record.released_on !== "string") return [];
     const company = first(record.companies);
     if (!company) return [];
+    const origin = first(company.origins ?? null);
     return [{
       id: record.id,
       name: record.name,
       companyId: record.company_id,
       companyName: company.name,
-      region: company.region,
+      origin: company.origin,
+      ...(origin ? { originName: origin.name, originFlag: origin.flag, originSort: origin.sort_order } : {}),
       size: record.size,
       year: new Date(`${record.released_on}T00:00:00Z`).getUTCFullYear(),
       logoPath: presentLogo(record.logo_path || company.logo_path, record.company_id),
@@ -105,7 +114,7 @@ export function presentLogo(path: string, companyId: string): string {
   return logoPublicUrl(base, stored);
 }
 
-const keptTraits = new Set<TraitKey>(["company", "region", "year", "size"]);
+const keptTraits = new Set<TraitKey>(["company", "origin", "year", "size"]);
 
 export function presentTraits(traits: Traits): Traits {
   const models: Traits["models"] = {};
@@ -114,7 +123,10 @@ export function presentTraits(traits: Traits): Traits {
       name: model.name,
       companyId: model.companyId,
       companyName: model.companyName,
-      region: model.region,
+      origin: model.origin,
+      ...(model.originName ? { originName: model.originName } : {}),
+      ...(model.originFlag ? { originFlag: model.originFlag } : {}),
+      ...(model.originSort !== undefined ? { originSort: model.originSort } : {}),
       size: model.size,
       year: model.year,
       logoPath: presentLogo(model.logoPath, model.companyId),
@@ -130,22 +142,19 @@ export function recordedGuesses(
   rows: {
     turn?: number;
     guessed_model_id: string | null;
-    guessed_region?: string | null;
+    guessed_origin?: string | null;
     model_correct: boolean;
     company_correct: boolean;
-    region_correct: boolean;
+    origin_correct: boolean;
   }[],
 ): RecordedGuess[] {
   return rows.map((guess) => ({
     turn: guess.turn ?? 0,
     modelId: guess.guessed_model_id,
-    region:
-      guess.guessed_region === "us" || guess.guessed_region === "cn" || guess.guessed_region === "eu"
-        ? guess.guessed_region
-        : null,
+    origin: guess.guessed_origin || null,
     modelCorrect: Boolean(guess.model_correct),
     companyCorrect: Boolean(guess.company_correct),
-    regionCorrect: Boolean(guess.region_correct),
+    originCorrect: Boolean(guess.origin_correct),
   }));
 }
 
@@ -161,24 +170,24 @@ export function sortTranscript(
     }));
 }
 
-type CorrectnessRow = { model_correct: unknown; company_correct: unknown; region_correct: unknown };
+type CorrectnessRow = { model_correct: unknown; company_correct: unknown; origin_correct: unknown };
 
 /** Guess rows with only the three correctness columns, as flags. */
 export function guessFlags(rows: CorrectnessRow[]): GuessFlags[] {
   return rows.map((guess) => ({
     modelCorrect: Boolean(guess.model_correct),
     companyCorrect: Boolean(guess.company_correct),
-    regionCorrect: Boolean(guess.region_correct),
+    originCorrect: Boolean(guess.origin_correct),
   }));
 }
 
-/** Earlier guesses as the guess check sees them: flags plus the guessed model and region. */
-export function previousGuesses<R>(rows: Array<CorrectnessRow & { guessed_model_id: string | null; guessed_region: R }>) {
+/** Earlier guesses as the guess check sees them: flags plus the guessed model and origin. */
+export function previousGuesses<R>(rows: Array<CorrectnessRow & { guessed_model_id: string | null; guessed_origin: R }>) {
   return rows.map((guess) => ({
     modelId: guess.guessed_model_id,
-    region: guess.guessed_region,
+    origin: guess.guessed_origin,
     modelCorrect: Boolean(guess.model_correct),
     companyCorrect: Boolean(guess.company_correct),
-    regionCorrect: Boolean(guess.region_correct),
+    originCorrect: Boolean(guess.origin_correct),
   }));
 }

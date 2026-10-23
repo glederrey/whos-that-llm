@@ -2,9 +2,12 @@ import { difficultyFromStored, difficultyLabel, type Difficulty } from "./diffic
 import {
   isFinishedGame,
   poolLabel,
-  regionLabel,
+  originChoiceFor,
+  originChoiceOf,
+  originLabel,
   scoreSteps,
   sizeLabel,
+  type OriginChoice,
   type ScoreLine,
   type ScoreStep,
   type Traits,
@@ -36,8 +39,13 @@ export const shareOutcomes = ["Solved", "Not solved", "Given up"] as const;
 
 export type ShareOutcome = (typeof shareOutcomes)[number];
 
+/** An Origin round: the origin the player picked (none when they gave up) and the real one. */
+export type ShareOrigin = { guessed: OriginChoice | null; actual: OriginChoice; correct: boolean };
+
 export type ShareCard = {
   id: string;
+  /** Set on an Origin round. It has no score. */
+  origin: ShareOrigin | null;
   /** Daily · Easy, All models · Hard, Company · Anthropic, Category · Opus. */
   modeLine: string;
   difficulty: Difficulty | null;
@@ -54,7 +62,7 @@ export type ShareCard = {
   modelHidden: boolean;
   /** Company logo path. Hidden with the name. */
   modelLogoPath: string | null;
-  /** Company, region, year, and size. Hidden with the name. */
+  /** Company, origin, year, and size. Hidden with the name. */
   modelFacts: string[];
   /** Running total, including Before the multiplier. Empty when there is no score. */
   steps: ScoreStep[];
@@ -90,6 +98,8 @@ export type ShareCardInput = {
   now?: Date;
   /** The username stored on the round. */
   playerName?: string | null;
+  /** `guesses.guessed_origin` of an Origin round. Null when the player gave up. */
+  guessedOrigin?: string | null;
   /** When the round finished. */
   finishedAt?: string | null;
 };
@@ -149,6 +159,16 @@ export function scoreLabel(playerName: string | null | undefined, own: boolean):
   return `${shown}'s score`;
 }
 
+/** `Your guess` for the player. `Gael's guess` for a shared round. `Guess` when the name is gone. */
+export function guessLabel(playerName: string | null | undefined, own: boolean): string {
+  if (own) return "Your guess";
+  const name = playerName?.trim() ?? "";
+  if (name.length === 0) return "Guess";
+  const chars = Array.from(name);
+  const shown = chars.length > scoreLabelNameMax ? `${chars.slice(0, scoreLabelNameMax).join("").trimEnd()}…` : name;
+  return `${shown}'s guess`;
+}
+
 /** Cuts to `max` characters with an ellipsis. */
 export function clipText(value: string, max: number): string {
   const chars = Array.from(value);
@@ -189,7 +209,7 @@ function shownModel(traits: Traits, modelId: string, hidden: boolean) {
   const model = traits.models[modelId];
   const name = model?.name?.trim() ?? "";
   if (!model || name.length === 0) return null;
-  const facts = [model.companyName, regionLabel(model.region), String(model.year), sizeLabel(model.size)].filter(
+  const facts = [model.companyName, originLabel(model.origin), String(model.year), sizeLabel(model.size)].filter(
     (fact) => fact.trim().length > 0,
   );
   const logoPath = model.logoPath?.trim() ?? "";
@@ -208,8 +228,18 @@ export function buildShareCard(input: ShareCardInput): ShareCard | null {
   const difficulty = difficultyFromStored(input.difficulty);
   const hideModel = input.gameMode === "daily" && !dailyModelVisible(input.dailyKey, input.now ?? new Date());
   const model = shownModel(input.traits, input.modelId, hideModel);
+  const hiddenModel = input.traits.models[input.modelId];
+  const origin: ShareOrigin | null =
+    input.gameMode === "origin" && hiddenModel
+      ? {
+          guessed: input.guessedOrigin ? originChoiceFor(input.traits, input.guessedOrigin) : null,
+          actual: originChoiceOf(hiddenModel),
+          correct: input.status === "solved",
+        }
+      : null;
   return {
     id: input.id,
+    origin,
     modeLine: shareModeLine({
       gameMode: input.gameMode,
       poolKey: input.poolKey,
@@ -229,7 +259,7 @@ export function buildShareCard(input: ShareCardInput): ShareCard | null {
     steps: input.score === null || !input.breakdown ? [] : scoreSteps(input.breakdown, input.score),
     details: detailsFrom(input.breakdown),
     hints: hintsLine(input.breakdown),
-    invite: input.score === null ? "Come try a round" : `Can you beat my score of ${formatShareNumber(input.score)}?`,
+    invite: origin ? "Can you tell where a model comes from?" : input.score === null ? "Come try a round" : `Can you beat my score of ${formatShareNumber(input.score)}?`,
     playerName: cleanPlayerName(input.playerName),
     playedOn: sharePlayedOn(input.finishedAt),
     modelHidden: hideModel,
@@ -297,6 +327,8 @@ export type ShareCardDisplay = {
   score: string;
   /** Gael's score, or Score when the name is gone. The card draws it uppercase. */
   scoreLabel: string;
+  /** Set on an Origin card. It replaces the score block. */
+  origin: (ShareOrigin & { guessLabel: string }) | null;
   outcome: ShareOutcome;
   /** Solved on message 2. Failed. Given up. */
   status: string;
@@ -339,6 +371,7 @@ export function shareCardDisplay(card: ShareCard): ShareCardDisplay {
     variantColor: colored,
     score: card.score === null ? "—" : formatShareNumber(card.score),
     scoreLabel: scoreLabel(card.playerName, false),
+    origin: card.origin ? { ...card.origin, guessLabel: guessLabel(card.playerName, false) } : null,
     outcome: card.outcome,
     status,
     meta,
@@ -361,6 +394,13 @@ export function shareCardAlt(card: ShareCard): string {
   const display = shareCardDisplay(card);
   const parts = [display.title, display.mode];
   if (display.variant) parts.push(display.variant);
+  if (card.origin) {
+    parts.push(display.status);
+    if (display.modelName) parts.push(display.modelName);
+    if (card.origin.guessed) parts.push(`guessed ${card.origin.guessed.name}`);
+    parts.push(`comes from ${card.origin.actual.name}`);
+    return parts.join(", ");
+  }
   parts.push(display.score, display.status);
   if (display.modelName) parts.push(display.modelName);
   return parts.join(", ");
@@ -368,6 +408,7 @@ export function shareCardAlt(card: ShareCard): string {
 
 /** The post for X, LinkedIn, Facebook, and the phone share sheet. Today's Daily hides the model. */
 export function shareText(card: ShareCard): string {
+  if (card.origin) return originShareText(card, card.origin);
   const score = card.score === null ? null : formatShareNumber(card.score);
   const blocks = [
     score ? `I just played on ${shareBrand} and scored ${score} points.` : `I just played on ${shareBrand}`,
@@ -379,13 +420,24 @@ export function shareText(card: ShareCard): string {
   return blocks.join("\n\n");
 }
 
+function originShareText(card: ShareCard, origin: ShareOrigin): string {
+  const model = card.modelName ?? "a model";
+  const actual = `${origin.actual.flag} ${origin.actual.name}`;
+  const sentence = origin.correct
+    ? `I just played Origin on ${shareBrand} and knew that ${model} comes from ${actual}.`
+    : origin.guessed
+      ? `I just played Origin on ${shareBrand}. I guessed ${origin.guessed.flag} ${origin.guessed.name}, but ${model} comes from ${actual}.`
+      : `I just played Origin on ${shareBrand} and gave up. ${model} comes from ${actual}.`;
+  return [sentence, "Can you tell where a model comes from?", sharePageUrl(card.id)].join("\n\n");
+}
+
 /** A chat that already attaches the picture can point at the game. A public post does not use this. */
 export function shareTextForImage(text: string, pageUrl: string): string {
   if (!text.endsWith(pageUrl)) return text;
   return `${text.slice(0, -pageUrl.length)}Play here: ${siteOrigin}`;
 }
 
-/** All models and Daily name the difficulty. A company, category, or region names that instead. */
+/** All models and Daily name the difficulty. A company, category, or origin names that instead. */
 function shareFacts(card: ShareCard): string[] {
   const splitAt = card.modeLine.indexOf(" · ");
   const mode = splitAt === -1 ? card.modeLine : card.modeLine.slice(0, splitAt);

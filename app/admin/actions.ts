@@ -15,6 +15,7 @@ import {
   updateCategory,
   updateRosterModel,
 } from "@/lib/admin-roster";
+import { createOrigin, setOriginEnabled, updateOrigin } from "@/lib/admin-origins";
 import { checkAvailability } from "@/lib/availability-check";
 import { loadOpenRouterCatalog } from "@/lib/openrouter-catalog";
 import { clearProviderBlacklist } from "@/lib/openrouter-providers";
@@ -36,7 +37,7 @@ function fields(formData: FormData) {
     openrouterId: text(formData, "openrouterId"),
     name: text(formData, "name"),
     company: text(formData, "company"),
-    region: text(formData, "region"),
+    origin: text(formData, "origin"),
     year: text(formData, "year"),
     releasedOn: text(formData, "releasedOn"),
     size: text(formData, "size"),
@@ -81,6 +82,33 @@ function finishCategory(notice: string | null) {
   revalidatePath("/leaderboard");
   revalidatePath("/statistics");
   redirect(notice ? `/admin/categories?notice=${notice}` : "/admin/categories");
+}
+
+function finishOrigin(notice: string | null) {
+  revalidatePath("/admin/origins");
+  revalidatePath("/admin/models");
+  revalidatePath("/admin/companies");
+  revalidatePath("/play");
+  redirect(notice ? `/admin/origins?notice=${notice}` : "/admin/origins");
+}
+
+function originFields(formData: FormData) {
+  return { name: text(formData, "name"), flag: text(formData, "flag"), sortOrder: text(formData, "sortOrder") };
+}
+
+export async function addOrigin(formData: FormData) {
+  await requireOwner();
+  finishOrigin(await createOrigin(originFields(formData)));
+}
+
+export async function saveOrigin(formData: FormData) {
+  await requireOwner();
+  finishOrigin(await updateOrigin({ id: text(formData, "id"), ...originFields(formData) }));
+}
+
+export async function toggleOrigin(formData: FormData) {
+  await requireOwner();
+  finishOrigin(await setOriginEnabled(text(formData, "id"), text(formData, "enabled") === "1"));
 }
 
 export async function addModel(formData: FormData) {

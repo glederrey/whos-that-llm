@@ -14,9 +14,9 @@ Fewer tokens, fewer hints and fewer wrong names mean more points. The exact numb
 
 ## What is in the game
 
-- **All models** and **Daily** rounds. Company, region, custom and class modes are specified in [`docs/`](docs/README.md) and are coming.
+- **All models** and **Daily** rounds. Company, category and Origin modes are built (in Origin you guess where a model comes from, no score). Custom is specified in [`docs/`](docs/README.md) and is coming.
 - A leaderboard, a profile page, and a shareable result card for every finished round.
-- Hints (company, region, year, size) that cost points, or a no-hint round that doubles the score.
+- Hints (company, origin, year, size) that cost points, or a no-hint round that doubles the score.
 - An owner-only admin to manage the model roster and watch the OpenRouter bill.
 
 ## Stack

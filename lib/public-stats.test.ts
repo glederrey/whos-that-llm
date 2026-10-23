@@ -23,7 +23,7 @@ function game(
     finishedAt: status === "solved" || status === "miss" || status === "given_up" ? "2026-10-10T09:00:00Z" : null,
     gameMode: "all",
     size: "small",
-    region: "us",
+    origin: "us",
     categoryIds: [],
     ...extra,
   };
@@ -31,11 +31,11 @@ function game(
 
 test("public stats keep outcomes and drop cost", () => {
   const games = [
-    game("1", "opus", "solved", 3, { size: "large", region: "us" }),
-    game("2", "opus", "miss", 10, { size: "large", region: "us", startedAt: "2026-10-09T08:00:00Z" }),
-    game("3", "haiku", "given_up", 2, { size: "small", region: "eu", gameMode: "daily" }),
-    game("4", "haiku", "solved", 4, { size: "small", region: "cn" }),
-    game("5", "secret", "active", 1, { size: "medium", region: "cn", gameMode: "company" }),
+    game("1", "opus", "solved", 3, { size: "large", origin: "us" }),
+    game("2", "opus", "miss", 10, { size: "large", origin: "us", startedAt: "2026-10-09T08:00:00Z" }),
+    game("3", "haiku", "given_up", 2, { size: "small", origin: "eu", gameMode: "daily" }),
+    game("4", "haiku", "solved", 4, { size: "small", origin: "cn" }),
+    game("5", "secret", "active", 1, { size: "medium", origin: "cn", gameMode: "company" }),
   ];
   const usage: PublicUsageFact[] = [
     { gameId: "1", modelId: "opus", inputTokens: 80, outputTokens: 20 },
@@ -45,13 +45,13 @@ test("public stats keep outcomes and drop cost", () => {
     { gameId: null, modelId: "secret", inputTokens: 500, outputTokens: 500 },
   ];
   const guesses: PublicGuessFact[] = [
-    { gameId: "1", modelCorrect: false, guessedModelId: "sonnet", regionCorrect: true },
-    { gameId: "1", modelCorrect: true, guessedModelId: "opus", regionCorrect: true },
-    { gameId: "2", modelCorrect: false, guessedModelId: "sonnet", regionCorrect: false },
-    { gameId: "2", modelCorrect: false, guessedModelId: "sonnet", regionCorrect: true },
-    { gameId: "4", modelCorrect: true, guessedModelId: "haiku", regionCorrect: true },
-    { gameId: "5", modelCorrect: false, guessedModelId: "opus", regionCorrect: false },
-    { gameId: "missing", modelCorrect: false, guessedModelId: "opus", regionCorrect: true },
+    { gameId: "1", modelCorrect: false, guessedModelId: "sonnet", guessedOrigin: null, originCorrect: true },
+    { gameId: "1", modelCorrect: true, guessedModelId: "opus", guessedOrigin: null, originCorrect: true },
+    { gameId: "2", modelCorrect: false, guessedModelId: "sonnet", guessedOrigin: null, originCorrect: false },
+    { gameId: "2", modelCorrect: false, guessedModelId: "sonnet", guessedOrigin: null, originCorrect: true },
+    { gameId: "4", modelCorrect: true, guessedModelId: "haiku", guessedOrigin: null, originCorrect: true },
+    { gameId: "5", modelCorrect: false, guessedModelId: "opus", guessedOrigin: null, originCorrect: false },
+    { gameId: "missing", modelCorrect: false, guessedModelId: "opus", guessedOrigin: null, originCorrect: true },
   ];
   const stats = computePublicStats(
     games,
@@ -75,7 +75,7 @@ test("public stats keep outcomes and drop cost", () => {
   assert.equal(stats.days.find((day) => day.date === "2026-10-10")?.solved, 2);
   assert.equal(stats.outcome.messagesPerGame, (3 + 10 + 2 + 4) / 4);
   assert.equal(stats.outcome.tokensPerGame, (100 + 250 + 50) / 4);
-  assert.equal(stats.outcome.regionFoundRate, 0.75);
+  assert.equal(stats.outcome.originFoundRate, 0.75);
   assert.equal(JSON.stringify(stats).includes("cost"), false);
   assert.equal(JSON.stringify(stats).includes("usd"), false);
   assert.equal(JSON.stringify(stats).includes("secret"), false);
@@ -92,8 +92,8 @@ test("public stats keep outcomes and drop cost", () => {
   assert.equal(stats.sizes[2].finished, 0);
   assert.equal(stats.sizes[2].solveRate, null);
   assert.equal(stats.sizes[3].solveRate, 0.5);
-  assert.equal(stats.regions.find((row) => row.key === "eu")?.finished, 0);
-  assert.equal(stats.regions.find((row) => row.key === "cn")?.games, 1);
+  assert.equal(stats.origins.find((row) => row.key === "eu")?.finished, 0);
+  assert.equal(stats.origins.find((row) => row.key === "cn")?.games, 1);
 
   assert.deepEqual(
     stats.gameModes.map((row) => row.id),
@@ -122,7 +122,7 @@ test("an empty game mode list does not invent rows", () => {
 
 test("a finished game mode outside the list is still shown", () => {
   const stats = computePublicStats(
-    [game("1", "opus", "solved", 2, { gameMode: "custom", size: "medium", region: "eu" })],
+    [game("1", "opus", "solved", 2, { gameMode: "custom", size: "medium", origin: "eu" })],
     [],
     [],
     [{ id: "all", name: "All models" }],
@@ -182,9 +182,9 @@ test("a solved round with no finished_at does not count", () => {
       { gameId: "open", modelId: "secret", inputTokens: 80, outputTokens: 20 },
     ],
     [
-      { gameId: "done", modelCorrect: true, guessedModelId: "opus", regionCorrect: true },
-      { gameId: "stale", modelCorrect: true, guessedModelId: "haiku", regionCorrect: true },
-      { gameId: "open", modelCorrect: false, guessedModelId: "opus", regionCorrect: true },
+      { gameId: "done", modelCorrect: true, guessedModelId: "opus", guessedOrigin: null, originCorrect: true },
+      { gameId: "stale", modelCorrect: true, guessedModelId: "haiku", guessedOrigin: null, originCorrect: true },
+      { gameId: "open", modelCorrect: false, guessedModelId: "opus", guessedOrigin: null, originCorrect: true },
     ],
     [
       { id: "all", name: "All models" },
@@ -214,7 +214,7 @@ test("today's Daily rounds stay in the totals and leave the named breakdowns", (
       game("daily-today", "grok", "solved", 3, {
         gameMode: "daily",
         size: "xxl",
-        region: "us",
+        origin: "us",
         categoryIds: ["frontier"],
         startedAt: `${today}T08:00:00Z`,
         finishedAt: `${today}T09:00:00Z`,
@@ -222,7 +222,7 @@ test("today's Daily rounds stay in the totals and leave the named breakdowns", (
       game("daily-today-medium", "kimi", "miss", 6, {
         gameMode: "daily",
         size: "medium",
-        region: "cn",
+        origin: "cn",
         categoryIds: ["cn-labs"],
         startedAt: `${today}T00:05:00Z`,
         finishedAt: `${today}T01:00:00Z`,
@@ -230,7 +230,7 @@ test("today's Daily rounds stay in the totals and leave the named breakdowns", (
       game("daily-yesterday", "opus", "miss", 5, {
         gameMode: "daily",
         size: "large",
-        region: "eu",
+        origin: "eu",
         categoryIds: ["opus"],
         startedAt: "2026-10-11T23:30:00Z",
         finishedAt: "2026-10-11T23:50:00Z",
@@ -238,7 +238,7 @@ test("today's Daily rounds stay in the totals and leave the named breakdowns", (
       game("all-today", "haiku", "solved", 2, {
         gameMode: "all",
         size: "small",
-        region: "eu",
+        origin: "eu",
         categoryIds: ["haiku"],
         startedAt: `${today}T10:00:00Z`,
         finishedAt: `${today}T11:00:00Z`,
@@ -246,10 +246,10 @@ test("today's Daily rounds stay in the totals and leave the named breakdowns", (
     ],
     [{ gameId: "daily-today", modelId: "grok", inputTokens: 40, outputTokens: 10 }],
     [
-      { gameId: "daily-today", modelCorrect: false, guessedModelId: "sonnet", regionCorrect: true },
-      { gameId: "daily-today-medium", modelCorrect: false, guessedModelId: "opus", regionCorrect: false },
-      { gameId: "daily-yesterday", modelCorrect: false, guessedModelId: "sonnet", regionCorrect: false },
-      { gameId: "all-today", modelCorrect: false, guessedModelId: "opus", regionCorrect: true },
+      { gameId: "daily-today", modelCorrect: false, guessedModelId: "sonnet", guessedOrigin: null, originCorrect: true },
+      { gameId: "daily-today-medium", modelCorrect: false, guessedModelId: "opus", guessedOrigin: null, originCorrect: false },
+      { gameId: "daily-yesterday", modelCorrect: false, guessedModelId: "sonnet", guessedOrigin: null, originCorrect: false },
+      { gameId: "all-today", modelCorrect: false, guessedModelId: "opus", guessedOrigin: null, originCorrect: true },
     ],
     [
       { id: "daily", name: "Daily" },
@@ -287,9 +287,9 @@ test("today's Daily rounds stay in the totals and leave the named breakdowns", (
   assert.equal(stats.sizes.find((row) => row.key === "medium")?.games, 0);
   assert.equal(stats.sizes.find((row) => row.key === "large")?.games, 1);
   assert.equal(stats.sizes.find((row) => row.key === "small")?.games, 1);
-  assert.equal(stats.regions.find((row) => row.key === "us")?.games, 0);
-  assert.equal(stats.regions.find((row) => row.key === "cn")?.games, 0);
-  assert.equal(stats.regions.find((row) => row.key === "eu")?.games, 2);
+  assert.equal(stats.origins.find((row) => row.key === "us")?.games, 0);
+  assert.equal(stats.origins.find((row) => row.key === "cn")?.games, 0);
+  assert.equal(stats.origins.find((row) => row.key === "eu")?.games, 2);
   assert.deepEqual(
     stats.categories.map((row) => [row.name, row.games]),
     [
@@ -311,8 +311,8 @@ test("today's Daily rounds stay in the totals and leave the named breakdowns", (
   );
   assert.equal(daily?.sizes.find((row) => row.key === "xxl")?.games, 0);
   assert.equal(daily?.sizes.find((row) => row.key === "large")?.games, 1);
-  assert.equal(daily?.regions.find((row) => row.key === "us")?.games, 0);
-  assert.equal(daily?.regions.find((row) => row.key === "eu")?.games, 1);
+  assert.equal(daily?.origins.find((row) => row.key === "us")?.games, 0);
+  assert.equal(daily?.origins.find((row) => row.key === "eu")?.games, 1);
 
   const all = stats.gameModes.find((row) => row.id === "all");
   assert.equal(all?.finished, 1);
@@ -323,10 +323,10 @@ test("today's Daily rounds stay in the totals and leave the named breakdowns", (
     [["haiku", "opus"]],
   );
   assert.equal(all?.sizes.find((row) => row.key === "small")?.games, 1);
-  assert.equal(all?.regions.find((row) => row.key === "eu")?.games, 1);
+  assert.equal(all?.origins.find((row) => row.key === "eu")?.games, 1);
 });
 
-test("Daily, Company, and Category can be selected, and Region and Custom stay closed", () => {
+test("Daily, Company, Category, and Origin can be selected, and Custom stays closed", () => {
   assert.deepEqual(
     statisticModes.map((mode) => [mode.name, mode.enabled]),
     [
@@ -335,10 +335,43 @@ test("Daily, Company, and Category can be selected, and Region and Custom stay c
       ["All models", true],
       ["Company", true],
       ["Category", true],
-      ["Region", false],
+      ["Origin", true],
       ["Custom", false],
     ],
   );
+});
+
+test("Origin rounds get their own pick table and stay out of the all-modes figures", () => {
+  const stats = computePublicStats(
+    [
+      game("o1", "opus", "solved", 4, { gameMode: "origin", origin: "us" }),
+      game("o2", "opus", "miss", 10, { gameMode: "origin", origin: "us" }),
+      game("o3", "kimi", "given_up", 3, { gameMode: "origin", origin: "cn" }),
+      game("o4", "kimi", "miss", 10, { gameMode: "origin", origin: "latam" }),
+      game("a1", "haiku", "solved", 2),
+    ],
+    [],
+    [
+      { gameId: "o1", modelCorrect: true, guessedModelId: null, guessedOrigin: "us", originCorrect: true },
+      { gameId: "o2", modelCorrect: false, guessedModelId: null, guessedOrigin: "eu", originCorrect: false },
+      { gameId: "o4", modelCorrect: false, guessedModelId: null, guessedOrigin: "us", originCorrect: false },
+    ],
+    [{ id: "all", name: "All models" }, { id: "origin", name: "Origin" }],
+    [],
+    now,
+  );
+  assert.equal(stats.outcome.games, 1);
+  assert.deepEqual(stats.models.map((row) => row.modelId), ["haiku"]);
+  const report = stats.gameModes.find((mode) => mode.id === "origin");
+  assert.equal(report?.games, 4);
+  assert.deepEqual(report?.confusion, []);
+  const rows = report?.originPicks ?? [];
+  assert.deepEqual(rows.map((row) => row.origin), ["us", "cn", "eu", "latam"]);
+  assert.equal(rows[0].foundRate, 0.5);
+  assert.deepEqual(rows[0].picks, [{ origin: "eu", count: 1 }, { origin: "us", count: 1 }]);
+  assert.equal(rows[1].givenUp, 1);
+  assert.deepEqual(rows[1].picks, []);
+  assert.equal(rows[3].games, 1);
 });
 
 test("the public stats page does not read prices, billing, or account rows", () => {
@@ -364,7 +397,7 @@ test("the public stats page does not read prices, billing, or account rows", () 
   assert.match(loader, /readAll\(client, "model_categories", "model_id, category_id", \["model_id", "category_id"\]\)/);
   assert.match(loader, /finished_at/);
   const home = fs.readFileSync(path.join(root, "components/home-board.tsx"), "utf8");
-  assert.match(home, /\["daily", "all", "company", "class", "region", "custom"\]/);
+  assert.match(home, /\["daily", "all", "company", "class", "origin", "custom"\]/);
   assert.match(home, /A set we define, not a lab's line\. Only Opus, only the nano models, or obscure ones\./);
   assert.match(home, /id: "class"[\s\S]*enabled: false/);
   assert.doesNotMatch(board, /<h2>Family<\/h2>/);

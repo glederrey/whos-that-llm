@@ -32,7 +32,7 @@ function model(
   return {
     id: partial.id ?? partial.name.toLowerCase().replace(/\s+/g, "-"),
     companyName: partial.companyId,
-    region: "us",
+    origin: "us",
     size: "small",
     year: 2026,
     logoPath: "logos/x.png",
@@ -42,9 +42,9 @@ function model(
 
 const none = {
   namedModel: false,
-  regionMatched: false,
+  originMatched: false,
   companyMatched: false,
-  regionGiven: false,
+  originGiven: false,
   companyGiven: false,
   noHint: false,
   hints: [] as HintKey[],
@@ -56,13 +56,13 @@ function pointValues(lines: ScoreLine[]) {
 
 test("the scoring numbers are the agreed ones", () => {
   assert.equal(rules.modelBase, 2000);
-  assert.equal(rules.regionPoints, 100);
+  assert.equal(rules.originPoints, 100);
   assert.equal(rules.companyPoints, 300);
   assert.equal(rules.wrongGuessCost, 100);
   assert.equal(rules.tokenScale, 10000);
   assert.equal(rules.tokenCap, 20);
   assert.equal(rules.noHintMultiplier, 2);
-  assert.deepEqual(rules.hintCosts, { year: 100, size: 100, region: 400, company: 600 });
+  assert.deepEqual(rules.hintCosts, { year: 100, size: 100, origin: 400, company: 600 });
 });
 
 test("a round started under the old numbers is scored with the current ones", () => {
@@ -148,7 +148,7 @@ test("naming the model starts at 2000 and penalties stay minus lines", () => {
 
 test("naming the model pays the same on a late reply as on an early one", () => {
   const early = scoreRound({ rules, ...none, namedModel: true, tokens: 500 });
-  const late = scoreRound({ rules, ...none, namedModel: true, tokens: 500, regionMatched: true, companyMatched: true });
+  const late = scoreRound({ rules, ...none, namedModel: true, tokens: 500, originMatched: true, companyMatched: true });
   assert.equal(early.score, 40000);
   assert.equal(late.score, 40000);
 });
@@ -162,15 +162,15 @@ test("penalties come off the base before the token factor", () => {
 });
 
 test("every hint has its own price", () => {
-  const prices: Record<HintKey, number> = { year: 100, size: 100, region: 400, company: 600 };
+  const prices: Record<HintKey, number> = { year: 100, size: 100, origin: 400, company: 600 };
   for (const [key, price] of Object.entries(prices) as [HintKey, number][]) {
     const result = scoreRound({ rules, ...none, namedModel: true, tokens: 1000, hints: [key] });
     assert.equal(result.score, (2000 - price) * 10, key);
     assert.equal(result.breakdown.find((line) => line.label.endsWith("hint"))?.points, -price, key);
   }
-  const all = scoreRound({ rules, ...none, namedModel: true, tokens: 1000, hints: ["company", "region", "year", "size"] });
+  const all = scoreRound({ rules, ...none, namedModel: true, tokens: 1000, hints: ["company", "origin", "year", "size"] });
   assert.equal(all.score, 8000);
-  assert.match(all.explanation.join("\n"), /Company −600\. Region −400\. Year −100\. Size −100/);
+  assert.match(all.explanation.join("\n"), /Company −600\. Origin −400\. Year −100\. Size −100/);
 });
 
 test("the no-hint multiplier applies only to a round with no hint", () => {
@@ -225,14 +225,14 @@ test("a 2,694-token hint round scores 6682", () => {
   );
 });
 
-test("a miss scores the region and company it matched", () => {
-  const both = scoreRound({ rules, ...none, regionMatched: true, companyMatched: true, tokens: 2000 });
+test("a miss scores the origin and company it matched", () => {
+  const both = scoreRound({ rules, ...none, originMatched: true, companyMatched: true, tokens: 2000 });
   assert.equal(both.score, 2000);
   assert.equal(both.breakdown.find((line) => line.label.startsWith("Tokens"))?.multiplier, "×5");
-  const noBoost = scoreRound({ rules, ...none, regionMatched: true, companyMatched: true, tokens: 2000, noHint: true });
+  const noBoost = scoreRound({ rules, ...none, originMatched: true, companyMatched: true, tokens: 2000, noHint: true });
   assert.equal(noBoost.score, 4000);
   assert.equal(noBoost.breakdown.at(-1)?.multiplier, "×2");
-  const given = scoreRound({ rules, ...none, regionMatched: true, companyMatched: true, regionGiven: true, tokens: 1000 });
+  const given = scoreRound({ rules, ...none, originMatched: true, companyMatched: true, originGiven: true, tokens: 1000 });
   assert.equal(given.score, 3000);
   const nothing = scoreRound({ rules, ...none, tokens: 1000 });
   assert.equal(nothing.score, 0);
@@ -244,15 +244,15 @@ test("a trait the player revealed does not pay base points", () => {
   const result = scoreRound({
     rules,
     ...none,
-    regionMatched: true,
+    originMatched: true,
     companyMatched: true,
     hints: ["company"],
     tokens: 1000,
   });
   assert.equal(result.score, 0);
-  const regionOnly = scoreRound({ rules, ...none, regionMatched: true, companyMatched: true, hints: ["region"], tokens: 1000 });
-  assert.equal(regionOnly.score, 0);
-  assert.equal(regionOnly.breakdown.at(-1)?.label, "Floor at 0");
+  const originOnly = scoreRound({ rules, ...none, originMatched: true, companyMatched: true, hints: ["origin"], tokens: 1000 });
+  assert.equal(originOnly.score, 0);
+  assert.equal(originOnly.breakdown.at(-1)?.label, "Floor at 0");
 });
 
 test("500 tokens or fewer is 20×, and 1,000 tokens is still 10×", () => {
@@ -301,17 +301,17 @@ test("difficulty multiplies after the token factor and the no-hint multiplier", 
       ["Difficulty · Impossible", null, "×3"],
     ],
   );
-  const half = scoreRound({ rules, ...none, regionMatched: true, tokens: 16000, difficulty: "hard" });
+  const half = scoreRound({ rules, ...none, originMatched: true, tokens: 16000, difficulty: "hard" });
   assert.equal(half.score, 125);
   assert.equal(scoreRound({ rules, ...none, namedModel: true, tokens: 500 }).breakdown.some((line) => line.label.startsWith("Difficulty")), false);
 });
 
 test("the total rounds half up once, after both multipliers", () => {
-  assert.equal(scoreRound({ rules, ...none, regionMatched: true, tokens: 16000 }).score, 63);
-  assert.equal(scoreRound({ rules, ...none, regionMatched: true, tokens: 15000 }).score, 67);
-  const result = scoreRound({ rules, ...none, regionMatched: true, tokens: 16000 });
+  assert.equal(scoreRound({ rules, ...none, originMatched: true, tokens: 16000 }).score, 63);
+  assert.equal(scoreRound({ rules, ...none, originMatched: true, tokens: 15000 }).score, 67);
+  const result = scoreRound({ rules, ...none, originMatched: true, tokens: 16000 });
   assert.equal(result.breakdown.find((line) => line.label.startsWith("Tokens"))?.points, null);
-  assert.equal(scoreRound({ rules, ...none, regionMatched: true, tokens: 16000, noHint: true }).score, 125);
+  assert.equal(scoreRound({ rules, ...none, originMatched: true, tokens: 16000, noHint: true }).score, 125);
 });
 
 test("the total never goes below 0", () => {
@@ -322,39 +322,39 @@ test("the total never goes below 0", () => {
   assert.equal(result.breakdown.at(-1)?.points, 16000);
   assert.equal(result.breakdown.find((line) => line.label.startsWith("Tokens"))?.multiplier, "×20");
   assert.match(result.explanation.join("\n"), /shown as 0/);
-  const small = scoreRound({ rules, ...none, regionMatched: true, wrongGuesses: 1, tokens: 1000 });
+  const small = scoreRound({ rules, ...none, originMatched: true, wrongGuesses: 1, tokens: 1000 });
   assert.equal(small.score, 0);
   assert.equal(small.breakdown.some((line) => line.label === "Floor at 0"), false);
 });
 
-test("a revealed company or region is known and narrows the list", () => {
+test("a revealed company or origin is known and narrows the list", () => {
   const models = [
-    model({ id: "haiku", name: "Haiku", companyId: "anthropic", companyName: "Anthropic", region: "us" }),
-    model({ id: "luna", name: "Luna", companyId: "openai", companyName: "OpenAI", region: "us" }),
-    model({ id: "flash", name: "Flash", companyId: "deepseek", companyName: "DeepSeek", region: "cn" }),
+    model({ id: "haiku", name: "Haiku", companyId: "anthropic", companyName: "Anthropic", origin: "us" }),
+    model({ id: "luna", name: "Luna", companyId: "openai", companyName: "OpenAI", origin: "us" }),
+    model({ id: "flash", name: "Flash", companyId: "deepseek", companyName: "DeepSeek", origin: "cn" }),
   ];
   const traits = buildTraits(models);
   const hidden = traits.models.flash;
   assert.ok(hidden);
-  const byRegion = knownValues({ traits, hidden, guesses: [], hints: ["region"], noHint: false });
-  assert.deepEqual(filterCandidates(traits, byRegion).map((row) => row.id), ["flash"]);
+  const byOrigin = knownValues({ traits, hidden, guesses: [], hints: ["origin"], noHint: false });
+  assert.deepEqual(filterCandidates(traits, byOrigin).map((row) => row.id), ["flash"]);
   const byCompany = knownValues({ traits, hidden, guesses: [], hints: ["company"], noHint: false });
   assert.equal(byCompany.companyId, "deepseek");
 });
 
 test("a hint is not offered for a trait the round already showed", () => {
   const models = [
-    model({ id: "haiku", name: "Haiku", companyId: "anthropic", companyName: "Anthropic", region: "us" }),
-    model({ id: "sonnet", name: "Sonnet", companyId: "anthropic", companyName: "Anthropic", region: "us", year: 2025 }),
+    model({ id: "haiku", name: "Haiku", companyId: "anthropic", companyName: "Anthropic", origin: "us" }),
+    model({ id: "sonnet", name: "Sonnet", companyId: "anthropic", companyName: "Anthropic", origin: "us", year: 2025 }),
   ];
   const traits = buildTraits(models);
-  assert.deepEqual(traits.given.sort(), ["company", "region", "size"]);
+  assert.deepEqual(traits.given.sort(), ["company", "origin", "size"]);
   const hidden = traits.models.haiku;
   assert.ok(hidden);
   const ask = (key: HintKey, extra: Partial<Parameters<typeof hintOffered>[0]> = {}) =>
     hintOffered({ key, traits, hidden, guesses: [], hints: [], noHint: false, ...extra });
   assert.equal(ask("company"), false);
-  assert.equal(ask("region"), false);
+  assert.equal(ask("origin"), false);
   assert.equal(ask("size"), false);
   assert.equal(ask("year"), true);
   assert.equal(ask("year", { hints: ["year"] }), false);
@@ -363,28 +363,28 @@ test("a hint is not offered for a trait the round already showed", () => {
 
 test("a match shown by a guess is not offered as a hint", () => {
   const models = [
-    model({ id: "haiku", name: "Haiku", companyId: "anthropic", companyName: "Anthropic", region: "us" }),
-    model({ id: "luna", name: "Luna", companyId: "openai", companyName: "OpenAI", region: "cn" }),
+    model({ id: "haiku", name: "Haiku", companyId: "anthropic", companyName: "Anthropic", origin: "us" }),
+    model({ id: "luna", name: "Luna", companyId: "openai", companyName: "OpenAI", origin: "cn" }),
   ];
   const traits = buildTraits(models);
   const hidden = traits.models.haiku;
   assert.ok(hidden);
-  const guesses = [{ modelCorrect: false, companyCorrect: true, regionCorrect: false }];
+  const guesses = [{ modelCorrect: false, companyCorrect: true, originCorrect: false }];
   const offer = (key: HintKey) => hintOffered({ key, traits, hidden, guesses, hints: [], noHint: false });
   assert.equal(offer("company"), false);
-  assert.equal(offer("region"), true);
+  assert.equal(offer("origin"), true);
 });
 
 test("no-hint mode does not narrow the list on a match", () => {
   const models = [
-    model({ id: "haiku", name: "Haiku", companyId: "anthropic", companyName: "Anthropic", region: "us" }),
-    model({ id: "luna", name: "Luna", companyId: "openai", companyName: "OpenAI", region: "us" }),
-    model({ id: "flash", name: "Flash", companyId: "deepseek", companyName: "DeepSeek", region: "cn" }),
+    model({ id: "haiku", name: "Haiku", companyId: "anthropic", companyName: "Anthropic", origin: "us" }),
+    model({ id: "luna", name: "Luna", companyId: "openai", companyName: "OpenAI", origin: "us" }),
+    model({ id: "flash", name: "Flash", companyId: "deepseek", companyName: "DeepSeek", origin: "cn" }),
   ];
   const traits = buildTraits(models);
   const hidden = traits.models.haiku;
   assert.ok(hidden);
-  const guesses = [{ modelCorrect: false, companyCorrect: true, regionCorrect: true }];
+  const guesses = [{ modelCorrect: false, companyCorrect: true, originCorrect: true }];
   const open = knownValues({ traits, hidden, guesses, hints: [], noHint: false });
   const blind = knownValues({ traits, hidden, guesses, hints: [], noHint: true });
   assert.deepEqual(filterCandidates(traits, open).map((row) => row.id), ["haiku"]);
@@ -404,7 +404,7 @@ test("a wrong company leaves the guess search only in hint mode", () => {
     model({ id: "opus", name: "Opus", companyId: "anthropic", companyName: "Anthropic" }),
     model({ id: "luna", name: "Luna", companyId: "openai", companyName: "OpenAI" }),
     model({ id: "gpt", name: "GPT", companyId: "openai", companyName: "OpenAI" }),
-    model({ id: "flash", name: "Flash", companyId: "deepseek", companyName: "DeepSeek", region: "cn" }),
+    model({ id: "flash", name: "Flash", companyId: "deepseek", companyName: "DeepSeek", origin: "cn" }),
   ];
   const traits = buildTraits(models);
   const hidden = traits.models.haiku;
@@ -434,7 +434,7 @@ test("a wrong company leaves the guess search only in hint mode", () => {
     modelId,
     modelCorrect: false,
     companyCorrect,
-    regionCorrect: traits.models[modelId]?.region === hidden.region,
+    originCorrect: traits.models[modelId]?.origin === hidden.origin,
   });
 
   assert.deepEqual(listed([guess("luna", false)], false), ["haiku", "opus", "sonnet"]);
@@ -445,13 +445,13 @@ test("a wrong company leaves the guess search only in hint mode", () => {
   assert.deepEqual(eliminatedCompanyIds(traits, [guess("luna", false)], true), []);
 });
 
-test("a wrong region removes that region's models from the list", () => {
+test("a wrong origin removes that origin's models from the list", () => {
   const models = [
-    model({ id: "haiku", name: "Haiku", companyId: "anthropic", companyName: "Anthropic", region: "us" }),
-    model({ id: "luna", name: "Luna", companyId: "openai", companyName: "OpenAI", region: "us" }),
-    model({ id: "flash", name: "Flash", companyId: "deepseek", companyName: "DeepSeek", region: "cn" }),
-    model({ id: "qwen", name: "Qwen", companyId: "alibaba", companyName: "Alibaba", region: "cn" }),
-    model({ id: "mistral", name: "Mistral", companyId: "mistral", companyName: "Mistral", region: "eu" }),
+    model({ id: "haiku", name: "Haiku", companyId: "anthropic", companyName: "Anthropic", origin: "us" }),
+    model({ id: "luna", name: "Luna", companyId: "openai", companyName: "OpenAI", origin: "us" }),
+    model({ id: "flash", name: "Flash", companyId: "deepseek", companyName: "DeepSeek", origin: "cn" }),
+    model({ id: "qwen", name: "Qwen", companyId: "alibaba", companyName: "Alibaba", origin: "cn" }),
+    model({ id: "mistral", name: "Mistral", companyId: "mistral", companyName: "Mistral", origin: "eu" }),
   ];
   const traits = buildTraits(models);
   const listed = (guesses: RecordedGuess[], noHint = false) =>
@@ -474,7 +474,7 @@ test("a wrong region removes that region's models from the list", () => {
       breakdown: null,
       explanation: null,
     }).candidates.map((row) => row.id);
-  const regionsLeft = (ids: string[]) => ids.map((id) => traits.models[id]?.region);
+  const originsLeft = (ids: string[]) => ids.map((id) => traits.models[id]?.origin);
 
   const afterModel = listed([
     {
@@ -482,24 +482,24 @@ test("a wrong region removes that region's models from the list", () => {
       modelId: "flash",
       modelCorrect: false,
       companyCorrect: false,
-      regionCorrect: false,
+      originCorrect: false,
     },
   ]);
-  assert.equal(regionsLeft(afterModel).includes("cn"), false);
+  assert.equal(originsLeft(afterModel).includes("cn"), false);
   assert.deepEqual(afterModel, ["haiku", "mistral", "luna"]);
 
-  const afterRegion = listed([
+  const afterOrigin = listed([
     {
       turn: 1,
       modelId: null,
-      region: "eu",
+      origin: "eu",
       modelCorrect: false,
       companyCorrect: false,
-      regionCorrect: false,
+      originCorrect: false,
     },
   ]);
-  assert.equal(regionsLeft(afterRegion).includes("eu"), false);
-  assert.deepEqual(afterRegion, ["qwen", "haiku", "flash", "luna"]);
+  assert.equal(originsLeft(afterOrigin).includes("eu"), false);
+  assert.deepEqual(afterOrigin, ["qwen", "haiku", "flash", "luna"]);
 
   const blind = listed(
     [
@@ -508,7 +508,7 @@ test("a wrong region removes that region's models from the list", () => {
         modelId: "flash",
         modelCorrect: false,
         companyCorrect: false,
-        regionCorrect: false,
+        originCorrect: false,
       },
     ],
     true,
@@ -519,9 +519,9 @@ test("a wrong region removes that region's models from the list", () => {
 
 test("a wrong guess keeps the model and names the traits it missed", () => {
   const models = [
-    model({ id: "haiku", name: "Haiku", companyId: "anthropic", companyName: "Anthropic", region: "us" }),
-    model({ id: "luna", name: "Luna", companyId: "openai", companyName: "OpenAI", region: "us" }),
-    model({ id: "flash", name: "Flash", companyId: "deepseek", companyName: "DeepSeek", region: "cn" }),
+    model({ id: "haiku", name: "Haiku", companyId: "anthropic", companyName: "Anthropic", origin: "us" }),
+    model({ id: "luna", name: "Luna", companyId: "openai", companyName: "OpenAI", origin: "us" }),
+    model({ id: "flash", name: "Flash", companyId: "deepseek", companyName: "DeepSeek", origin: "cn" }),
   ];
   const traits = buildTraits(models);
   const guesses = [
@@ -530,21 +530,21 @@ test("a wrong guess keeps the model and names the traits it missed", () => {
       modelId: "flash",
       modelCorrect: false,
       companyCorrect: false,
-      regionCorrect: false,
+      originCorrect: false,
     },
     {
       turn: 1,
       modelId: "luna",
       modelCorrect: false,
       companyCorrect: false,
-      regionCorrect: true,
+      originCorrect: true,
     },
     {
       turn: 3,
       modelId: "haiku",
       modelCorrect: true,
       companyCorrect: true,
-      regionCorrect: true,
+      originCorrect: true,
     },
   ];
   const named = missedGuesses(traits, guesses, false);
@@ -552,7 +552,7 @@ test("a wrong guess keeps the model and names the traits it missed", () => {
     named.map((guess) => guess.id),
     ["flash", "luna"],
   );
-  assert.deepEqual(named[0]?.wrong, ["company", "region"]);
+  assert.deepEqual(named[0]?.wrong, ["company", "origin"]);
   assert.equal(named[0]?.message, 2);
   assert.deepEqual(named[1]?.wrong, ["company"]);
   assert.equal(named[1]?.message, 1);
@@ -603,12 +603,12 @@ test("hints are possible on daily, all models, company, category, and custom", (
   assert.equal(gameModeAllowsHints("company"), true);
   assert.equal(gameModeAllowsHints("class"), true);
   assert.equal(gameModeAllowsHints("custom"), true);
-  for (const gameMode of ["region", "latest"]) {
+  for (const gameMode of ["origin", "latest"]) {
     assert.equal(gameModeAllowsHints(gameMode), false, gameMode);
   }
 });
 
-test("a finished round lists company, region, year, and size", () => {
+test("a finished round lists company, origin, year, and size", () => {
   const models = [
     model({ id: "haiku", name: "Haiku", companyId: "anthropic", companyName: "Anthropic" }),
     model({ id: "luna", name: "Luna", companyId: "openai", companyName: "OpenAI" }),
@@ -634,7 +634,7 @@ test("a finished round lists company, region, year, and size", () => {
     explanation: [],
   });
   assert.deepEqual(
-    game.model && [game.model.companyName, game.model.region, game.model.year, game.model.size],
+    game.model && [game.model.companyName, game.model.origin, game.model.year, game.model.size],
     ["Anthropic", "USA", 2026, "Small"],
   );
   assert.equal(game.model && "family" in game.model, false);

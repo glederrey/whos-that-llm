@@ -48,11 +48,26 @@ The table is part of the baseline migration, with its comments, row level securi
 |---|---|---|
 | `id` | text, pk | `anthropic` |
 | `name` | text | |
-| `region` | text | `us`, `cn`, `eu`. Shown as USA, China, Europe |
+| `origin` | text, fk `origins` | `us`, `cn`, `eu`, or any origin an admin added. Never free text |
 | `logo_path` | text | `logos/{company_id}.png` in the public `logos` bucket, or an `https` URL |
 | `created_at` | timestamptz | default `now()` |
 
 The uploaded objects are `anthropic.png`, `openai.png`, `deepseek.png`, and `mistral.png`. The bucket also accepts SVG and WebP, at most 1 MB. The game reads `logo_path`. A missing file shows no image. The bucket is public, so those URLs load. There is no SELECT policy, so clients cannot list the objects. Each object is cached for a year. The URL stays the same between visits.
+
+### `origins`
+
+Where a lab comes from. `companies.origin` and `guesses.guessed_origin` point here. An origin is never deleted.
+
+| Column | Type | Notes |
+|---|---|---|
+| `id` | text, pk | `us`, `cn`, `eu`. Lowercase letters, digits, and dashes, up to 31 characters, starting with a letter |
+| `name` | text | Up to 40 characters. USA, China, Europe |
+| `flag` | text | One emoji, drawn as Twemoji. 🇺🇸 🇨🇳 🇪🇺 |
+| `sort_order` | int | Button order in the Origin game. Default 100 |
+| `enabled` | boolean | Default true. False removes the origin from the Origin game: no button, none of its models drawn. It changes nothing in the other modes, and the origin hint still works |
+| `created_at` | timestamptz | |
+
+Rows are readable by everyone. `anon` and `authenticated` cannot write. `service_role` can select, insert, and update, and has no delete or truncate grant. The three starting rows are inserted by the Origin migration. That migration is applied on the dev Supabase project first. Production gets it only from `deploy.yml` on a release.
 
 ### `categories`
 
@@ -109,11 +124,11 @@ Checks:
 
 `open_weights` and `reasoning` stay on the row so admin can see them and so a seed can record them. They are not copied into `games.traits`. They are not on `models_public`. They are not chips, hints, filters, or score terms.
 
-Region is not a column here. It comes from the company. The year hint uses `extract(year from released_on)` at the moment the round starts, then reads the frozen year.
+Origin is not a column here. It comes from the company. The year hint uses `extract(year from released_on)` at the moment the round starts, then reads the frozen year.
 
 `enabled` is the on/off switch. Turning it off is how a model is removed from play. The row stays, so old rounds still resolve the name from `games.traits`. A hard delete is allowed only when no `games.model_id` points at it.
 
-Editing `company_id`, `size`, `released_on`, or the company region applies to new games only. A round already started keeps `games.traits`.
+Editing `company_id`, `size`, `released_on`, or the company origin applies to new games only. A round already started keeps `games.traits`.
 
 anon and authenticated cannot insert, update, or delete `models` or `companies`. The server key does that after the owner check. There is no public function for the private roster counts.
 
@@ -143,16 +158,16 @@ The lobby and the leaderboard read this table. The built-in rows are seeded and 
 
 | Column | Type | Notes |
 |---|---|---|
-| `id` | text, pk | `daily`, `all`, `class`, `company`, `region`, `custom`. Never changes. `games.game_mode` stores it |
+| `id` | text, pk | `daily`, `all`, `class`, `company`, `origin`, `custom`. Never changes. `games.game_mode` stores it |
 | `name` | text | Card title |
 | `blurb` | text | The one sentence on the main page and on the card |
 | `enabled` | boolean | False hides the lobby card. The main page still shows the blurb, with **Coming soon.** Past rounds stay |
 | `leaderboard` | boolean | True for `all`, `daily`, `company`, and `class`. False for the others. A Company or Category board lists one row per player and can be narrowed to one company or category through `p_company` |
-| `hints_allowed` | boolean | True for `daily`, `all`, `company`, `class`, and `custom`. False for `region` and every other row |
+| `hints_allowed` | boolean | True for `daily`, `all`, `company`, `class`, and `custom`. False for `origin` and every other row |
 | `sort_order` | int | Main page and lobby order |
 | `created_at` | timestamptz | |
 
-`daily`, `all`, `company`, and `class` are enabled and have a leaderboard. The category_icons migration turned `class` on. `region` and `custom` stay off until they are built. The leaderboard bar shows Daily, All models, Company, and Category. Region and Custom are not on that bar.
+`daily`, `all`, `company`, `class`, and `origin` are enabled. All but `origin` have a leaderboard. `custom` stays off until it is built. The leaderboard bar shows Daily, All models, Company, and Category. Origin and Custom are not on that bar. The Origin migration replaced the old `region` row with `origin` (blurb: Ten messages, one guess: where does this model come from?) and repointed `games.game_mode`.
 
 Every scored round uses the formula in [Rules](rules.md). The category row does not store a multiplier.
 
@@ -186,7 +201,7 @@ One row per round.
 | `user_id` | uuid, null, fk `profiles` | on delete set null, so deleting the account clears this and `username`. The round stays. A null `user_id` is off the leaderboard |
 | `username` | text, null | Copied at insert, then rewritten when that user renames. Cleared when the account is deleted. Leaderboard name for that round |
 | `game_mode` | text, fk `game_modes` | |
-| `pool_key` | text, null | A company id for `company`, a `categories.id` for `class`, `us`, `cn`, or `eu` for `region`. Null for `all`, `daily`, and `custom` |
+| `pool_key` | text, null | A company id for `company`, a `categories.id` for `class`. Null for `all`, `daily`, `origin`, and `custom` |
 | `difficulty` | smallint, null | `1` easy, `2` medium, `3` hard, `4` impossible. The difficulty the round was played at. Null for a round that has no difficulty, including Custom and rounds from before difficulties |
 | `pool_model_ids` | text[] | The models that were legal when the round started |
 | `model_id` | text, fk `models` | |
@@ -239,30 +254,30 @@ The first start of that day and difficulty inserts the row. The inserted model m
   "maxUserChars": 500,
   "maxOutputTokens": 2000,
   "modelBase": 2000,
-  "regionPoints": 100,
+  "originPoints": 100,
   "companyPoints": 300,
   "tokenScale": 10000,
   "tokenCap": 20,
-  "hintCosts": { "year": 100, "size": 100, "region": 400, "company": 600 },
+  "hintCosts": { "year": 100, "size": 100, "origin": 400, "company": 600 },
   "wrongGuessCost": 100,
   "noHintMultiplier": 2,
   "hintsAllowed": true
 }
 ```
 
-`hintsAllowed` is copied from `game_modes.hints_allowed` at start. The other fields are copied from config. Scoring reads the current config numbers when the round ends, so a stored copy from an older version does not change the score. `hints` may only contain `company`, `region`, `year`, and `size`, each once. The route checks that.
+`hintsAllowed` is copied from `game_modes.hints_allowed` at start. The other fields are copied from config. Scoring reads the current config numbers when the round ends, so a stored copy from an older version does not change the score. `hints` may only contain `company`, `origin`, `year`, and `size`, each once. The route checks that.
 
 `traits` shape:
 
 ```json
 {
-  "given": ["region"],
+  "given": ["origin"],
   "models": {
     "claude-sonnet-5-5": {
       "name": "Claude Sonnet 5.5",
       "companyId": "anthropic",
       "companyName": "Anthropic",
-      "region": "us",
+      "origin": "us",
       "size": "medium",
       "year": 2026,
       "logoPath": "https://example.supabase.co/storage/v1/object/public/logos/anthropic.png"
@@ -292,19 +307,21 @@ Unique `(game_id, turn, role)`. The system prompt is not a row.
 
 ### `guesses`
 
-One row per submitted guess, including the solve and a wrong fifth guess. Give-up writes nothing here. Unique `(game_id, turn)`, which is what makes "one guess per message" true even if two requests race: the second insert fails. Origin is the exception later: it has at most one guess row, and `turn` is the message the guess was submitted on.
+One row per submitted guess, including the solve and a wrong fifth guess. Give-up writes nothing here. Unique `(game_id, turn)`, which is what makes "one guess per message" true even if two requests race: the second insert fails. Origin is the exception: it has at most one guess row, and `turn` is the message the guess was submitted on.
 
 | Column | Type | Notes |
 |---|---|---|
 | `id` | uuid, pk | |
 | `game_id` | uuid, fk | |
 | `turn` | int | |
-| `guessed_model_id` | text, fk `models`, null | The model the player named |
-| `guessed_region` | text, null | `us` / `cn` / `eu`. For a model guess, copy it from the frozen company |
+| `guessed_model_id` | text, fk `models`, null | The model the player named. Null on an Origin guess |
+| `guessed_origin` | text, fk `origins`, null | For a model guess, copy it from the frozen company. For an Origin guess, the origin the player chose |
 | `model_correct` | boolean | True when the named model is the hidden one |
 | `company_correct` | boolean | |
-| `region_correct` | boolean | |
+| `origin_correct` | boolean | |
 | `created_at` | timestamptz | |
+
+An Origin guess sets `model_correct` and `origin_correct` to the same value and `company_correct` to false.
 
 There is no year, size, weights, or reasoning column on a guess. Those are not match traits. Year and size live in `games.hints`.
 

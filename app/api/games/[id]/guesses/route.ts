@@ -1,6 +1,6 @@
 import { isUuid } from "@/lib/paths";
 import { apiError, apiJson, readJsonBody } from "@/lib/http";
-import { readPublicGame, submitGuess } from "@/lib/rounds";
+import { readPublicGame, submitGuess, submitOriginGuess } from "@/lib/rounds";
 import { requireUser } from "@/lib/session";
 
 export async function POST(request: Request, context: { params: Promise<{ id: string }> }) {
@@ -9,7 +9,12 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
   const { user } = auth;
   const { id } = await context.params;
   if (!isUuid(id)) return apiJson({ error: "not_found" }, 404);
-  const body = (await readJsonBody(request)) as { modelId?: string };
+  const body = (await readJsonBody(request)) as { modelId?: string; origin?: string };
+  if (body.origin) {
+    const originFailure = await submitOriginGuess(id, user.id, body.origin);
+    if (originFailure) return apiError(originFailure);
+    return apiJson(await readPublicGame(id, user.id));
+  }
   if (!body.modelId) return apiJson({ error: "conflict" }, 409);
   const failure = await submitGuess(id, user.id, body.modelId);
   if (failure) return apiError(failure);

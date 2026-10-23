@@ -124,7 +124,7 @@ export function useRound(initial: PublicGame, { closeList, closeDialog }: { clos
       const response = await fetch(`/api/games/${game.id}/guesses`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ modelId: selected }),
+        body: JSON.stringify(game.gameMode === "origin" ? { origin: selected } : { modelId: selected }),
       });
       if (response.status === 401) {
         login();
@@ -132,7 +132,7 @@ export function useRound(initial: PublicGame, { closeList, closeDialog }: { clos
       }
       const body = await readJson(response);
       if (!response.ok) {
-        setNotice("That model is not in the list.");
+        setNotice(game.gameMode === "origin" ? "That guess did not go through." : "That model is not in the list.");
         return;
       }
       if (body.status && body.status !== "active") {

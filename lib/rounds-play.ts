@@ -2,12 +2,13 @@ import { difficultyFromStored } from "./difficulty";
 import {
   compareModel,
   eliminatedCompanyIds,
-  eliminatedRegions,
+  eliminatedOrigins,
   filterCandidates,
   hintAllowedForMode,
   hintOffered,
   knownValues,
   playableHints,
+  originChoices,
   toPublicGame,
   type PublicGame,
   type ScoreLine,
@@ -34,7 +35,7 @@ export async function readPublicGame(gameId: string, userId: string): Promise<Pu
     client.from("messages").select("turn, role, content").eq("game_id", gameId).order("turn").order("role"),
     client
       .from("guesses")
-      .select("turn, guessed_model_id, guessed_region, model_correct, company_correct, region_correct")
+      .select("turn, guessed_model_id, guessed_origin, model_correct, company_correct, origin_correct")
       .eq("game_id", gameId)
       .order("turn"),
   ]);
@@ -142,7 +143,7 @@ export async function submitGuess(gameId: string, userId: string, modelId: strin
 
   const { data: guesses } = await client
     .from("guesses")
-    .select("guessed_model_id, guessed_region, model_correct, company_correct, region_correct")
+    .select("guessed_model_id, guessed_origin, model_correct, company_correct, origin_correct")
     .eq("game_id", gameId);
   const previous = previousGuesses(guesses ?? []);
   const guessedModelIds = previous
@@ -165,7 +166,7 @@ export async function submitGuess(gameId: string, userId: string, modelId: strin
       known,
       guessedModelIds,
       eliminatedCompanyIds(game.traits, previous, game.no_hint),
-      eliminatedRegions(game.traits, previous, game.no_hint),
+      eliminatedOrigins(game.traits, previous, game.no_hint),
     ).map((row) => row.id),
   );
   if (!allowed.has(modelId)) return fail(409, "conflict");
@@ -188,14 +189,33 @@ export async function submitGuess(gameId: string, userId: string, modelId: strin
       p_game_id: gameId,
       p_user_id: userId,
       p_model_id: modelId,
-      p_region: guessed.region,
+      p_origin: guessed.origin,
       p_model_correct: flags.modelCorrect,
       p_company_correct: flags.companyCorrect,
-      p_region_correct: flags.regionCorrect,
+      p_origin_correct: flags.originCorrect,
       p_finish: finish,
       p_score: score,
       p_breakdown: breakdown,
       p_explanation: explanation,
+    }),
+  );
+}
+
+/** Origin guess: one origin. Right ends the round solved, wrong ends it missed. No score. */
+export async function submitOriginGuess(gameId: string, userId: string, origin: string): Promise<ApiFailure | null> {
+  const client = serviceOrThrow();
+  const game = await loadGame(client, gameId, userId);
+  if (!game) return fail(404, "not_found");
+  if (game.game_mode !== "origin" || !game.awaiting_guess || game.status !== "active") return fail(409, "turn");
+  const hidden = game.traits.models[game.model_id];
+  if (!hidden) return fail(409, "conflict");
+  if (!originChoices(game.traits).some((choice) => choice.id === origin)) return fail(409, "conflict");
+  return fromRpc(
+    await rpc(client, "apply_origin_guess", {
+      p_game_id: gameId,
+      p_user_id: userId,
+      p_origin: origin,
+      p_correct: hidden.origin === origin,
     }),
   );
 }
@@ -211,7 +231,7 @@ export async function buyHint(gameId: string, userId: string, key: string): Prom
   if (!hidden) return fail(409, "conflict");
   const { data: guesses } = await client
     .from("guesses")
-    .select("model_correct, company_correct, region_correct")
+    .select("model_correct, company_correct, origin_correct")
     .eq("game_id", gameId);
   const flags = guessFlags(guesses ?? []);
   const offered = hintOffered({
@@ -234,10 +254,10 @@ export async function giveUp(gameId: string, userId: string): Promise<ApiFailure
   let score: number | null = null;
   let breakdown: ScoreLine[] | null = null;
   let explanation: string[] | null = null;
-  if (game.message_count >= 1) {
+  if (game.message_count >= 1 && game.game_mode !== "origin") {
     const { data: guesses } = await client
       .from("guesses")
-      .select("model_correct, company_correct, region_correct")
+      .select("model_correct, company_correct, origin_correct")
       .eq("game_id", gameId);
     const scored = await scoreFrom(client, game, guessFlags(guesses ?? []), false);
     score = scored.score;

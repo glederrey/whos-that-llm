@@ -1,11 +1,13 @@
 import { SectionNav } from "@/components/section-nav";
+import { loadOriginOptions } from "@/lib/admin-origins";
 import { loadCompanyList } from "@/lib/admin-roster";
-import { regionLabel } from "@/lib/game";
+import { originLabel } from "@/lib/game";
 
 export const dynamic = "force-dynamic";
 
 export default async function CompaniesPage() {
-  const companies = await loadCompanyList();
+  const [companies, origins] = await Promise.all([loadCompanyList(), loadOriginOptions()]);
+  const originNames = new Map(origins.map((item) => [item.id, item.name]));
 
   return (
     <div className="stack">
@@ -17,7 +19,7 @@ export default async function CompaniesPage() {
           <thead>
             <tr>
               <th>Name</th>
-              <th>Region</th>
+              <th>Origin</th>
               <th>Models</th>
             </tr>
           </thead>
@@ -32,7 +34,7 @@ export default async function CompaniesPage() {
               companies.map((company) => (
                 <tr key={company.id}>
                   <td>{company.name}</td>
-                  <td>{regionLabel(company.region)}</td>
+                  <td>{originNames.get(company.origin) ?? originLabel(company.origin)}</td>
                   <td>{company.modelCount.toLocaleString("en-US")}</td>
                 </tr>
               ))

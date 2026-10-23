@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   description:
-    "Start a round. Daily, All models, and Company are open. You have ten messages with a hidden model, then you name it.",
+    "Start a round. Daily, All models, Company, Category, and Origin are open. You have ten messages with a hidden model. Most modes ask you to name it; in Origin you get one guess at where it comes from.",
 };
 
 export default async function PlayPage() {

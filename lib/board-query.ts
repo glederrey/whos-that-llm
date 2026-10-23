@@ -24,7 +24,7 @@ export type BoardMiddle =
   | { kind: "class"; disabled: boolean }
   | { kind: "company"; disabled: boolean };
 
-/** Modes that have a leaderboard. Company sits above Category. Region and Custom do not. */
+/** Modes that have a leaderboard. Company sits above Category. Origin and Custom do not. */
 const boardModeIds = ["daily", "all", "company", "class"] as const;
 
 /** Daily and All models. Company uses a company list. Category uses a dropdown. */

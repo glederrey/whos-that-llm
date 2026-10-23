@@ -19,7 +19,7 @@ export async function loadGameMetrics(): Promise<GameMetrics> {
   await requireOwner();
   const client = serviceOrThrow();
   const [games, usage, guesses] = await Promise.all([
-    readAll(client, "games", "id, model_id, status, message_count, started_at, finished_at"),
+    readAll(client, "games", "id, model_id, status, game_mode, message_count, started_at, finished_at"),
     readAll(
       client,
       "usage",
@@ -27,7 +27,10 @@ export async function loadGameMetrics(): Promise<GameMetrics> {
     ),
     readAll(client, "guesses", "id, game_id, model_correct"),
   ]);
-  const gameFacts: GameFact[] = games.map((row) => ({
+  // Origin rounds stay out of the game figures, like the All modes figures on /statistics.
+  // Their usage rows stay in, because the ledger is real spend.
+  const originGames = new Set(games.filter((row) => row.game_mode === "origin").map((row) => row.id as string));
+  const gameFacts: GameFact[] = games.filter((row) => !originGames.has(row.id as string)).map((row) => ({
     id: row.id as string,
     modelId: row.model_id as string,
     status: row.status as string,
@@ -44,10 +47,12 @@ export async function loadGameMetrics(): Promise<GameMetrics> {
     costUsd: Number(row.cost_usd ?? 0),
     failed: row.error_code !== null && row.error_code !== undefined,
   }));
-  const guessFacts: GuessFact[] = guesses.map((row) => ({
-    gameId: row.game_id as string,
-    modelCorrect: Boolean(row.model_correct),
-  }));
+  const guessFacts: GuessFact[] = guesses
+    .filter((row) => !originGames.has(row.game_id as string))
+    .map((row) => ({
+      gameId: row.game_id as string,
+      modelCorrect: Boolean(row.model_correct),
+    }));
   return computeGameMetrics(gameFacts, usageFacts, guessFacts);
 }
 

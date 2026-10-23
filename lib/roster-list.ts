@@ -1,9 +1,9 @@
 import { difficultyNumber, type Difficulty } from "./difficulty";
-import { regionLabel, type Region, type Size } from "./game";
+import { originLabel, type Origin, type Size } from "./game";
 
 export const rosterPageSize = 10;
 
-export const rosterSortColumns = ["name", "company", "region", "year", "size", "difficulty", "input", "output", "categories"] as const;
+export const rosterSortColumns = ["name", "company", "origin", "year", "size", "difficulty", "input", "output", "categories"] as const;
 
 export type RosterSortColumn = (typeof rosterSortColumns)[number];
 
@@ -13,7 +13,7 @@ type Searchable = { name: string; companyName: string; categoryNames: string };
 
 type Sortable = Searchable & {
   id: string;
-  region: Region;
+  origin: Origin;
   year: string;
   size: Size;
   difficulty: Difficulty | null;
@@ -44,7 +44,7 @@ export function sortRoster<T extends Sortable>(rows: T[], sort: RosterSort): T[]
 function compareRows(a: Sortable, b: Sortable, column: RosterSortColumn): number {
   if (column === "name") return compareText(a.name, b.name);
   if (column === "company") return compareText(a.companyName, b.companyName);
-  if (column === "region") return compareText(regionLabel(a.region), regionLabel(b.region));
+  if (column === "origin") return compareText(originLabel(a.origin), originLabel(b.origin));
   if (column === "year") return compareMissingLast(yearNumber(a.year), yearNumber(b.year));
   if (column === "size") return sizeRank[a.size] - sizeRank[b.size];
   if (column === "difficulty") {

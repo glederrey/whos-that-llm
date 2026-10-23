@@ -1,6 +1,7 @@
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { ImageResponse } from "next/og";
+import { readFlagImage } from "@/lib/share-card-flag";
 import { readModelLogo } from "@/lib/share-card-logo";
 import { shareCardHeight, shareCardImage, shareCardWidth } from "@/lib/share-card-image";
 import { readShareCard } from "@/lib/share-card-load";
@@ -39,9 +40,14 @@ export async function GET(request: Request, context: { params: Promise<{ gameId:
   const url = new URL(request.url);
   const theme = shareCardTheme(url.searchParams.get("theme"));
   const download = url.searchParams.has("download");
-  const [loaded, modelLogo] = await Promise.all([loadAssets(), readModelLogo(card.modelLogoPath)]);
+  const [loaded, modelLogo, guessedFlag, actualFlag] = await Promise.all([
+    loadAssets(),
+    readModelLogo(card.modelLogoPath),
+    card.origin?.guessed ? readFlagImage(card.origin.guessed.flag) : null,
+    card.origin ? readFlagImage(card.origin.actual.flag) : null,
+  ]);
   const logo = theme === "dark" ? loaded.dark : loaded.light;
-  return new ImageResponse(shareCardImage(card, logo, modelLogo, theme), {
+  return new ImageResponse(shareCardImage(card, logo, modelLogo, theme, { guessed: guessedFlag, actual: actualFlag }), {
     width: shareCardWidth,
     height: shareCardHeight,
     fonts: [

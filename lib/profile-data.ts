@@ -1,5 +1,5 @@
 import type { Difficulty } from "./difficulty";
-import { regionLabel, sizeLabel, type FrozenModel, type GameStatus, type ScoreLine, type Traits } from "./game";
+import { originChoiceFor, originChoiceOf, originLabel, sizeLabel, type FrozenModel, type GameStatus, type OriginView, type ScoreLine, type Traits } from "./game";
 import { avatarPublicUrl, profileStats, publicImageCacheControl, readImage, traitFound, type ProfileStats } from "./profile";
 import { presentLogo, serviceOrThrow } from "./rounds";
 import { playedRoundFacts, roundPlace, type RoundPlace } from "./round-facts";
@@ -18,7 +18,8 @@ export type HistoryRow = {
   companyName: string | null;
   logoPath: string | null;
   companyFound: boolean;
-  regionFound: boolean;
+  originFound: boolean;
+  origin: OriginView | null;
   mode: string;
   difficulty: Difficulty | null;
   place: RoundPlace | null;
@@ -54,7 +55,7 @@ type ModelRef = {
   logo_path: string | null;
   size: FrozenModel["size"] | null;
   released_on: string | null;
-  companies: { name: string; region: FrozenModel["region"]; logo_path: string } | { name: string; region: FrozenModel["region"]; logo_path: string }[] | null;
+  companies: { name: string; origin: FrozenModel["origin"]; logo_path: string } | { name: string; origin: FrozenModel["origin"]; logo_path: string }[] | null;
 };
 
 export async function loadHistory(userId: string, page: number) {
@@ -72,7 +73,7 @@ export async function loadHistory(userId: string, page: number) {
     client
       .from("games")
       .select(
-        "id, status, score, message_count, started_at, traits, game_mode, pool_key, pool_model_ids, difficulty, no_hint, model_id, daily_key, score_breakdown, models(name, company_id, logo_path, size, released_on, companies(name, region, logo_path))",
+        "id, status, score, message_count, started_at, traits, game_mode, pool_key, pool_model_ids, difficulty, no_hint, model_id, daily_key, score_breakdown, models(name, company_id, logo_path, size, released_on, companies(name, origin, logo_path))",
       )
       .eq("user_id", userId)
       .order("started_at", { ascending: false })
@@ -98,8 +99,9 @@ export async function loadHistory(userId: string, page: number) {
   }
 
   const ids = (data ?? []).map((row) => row.id as string);
-  const flags = new Map<string, { company: boolean; region: boolean }>();
+  const flags = new Map<string, { company: boolean; origin: boolean }>();
   const tokens = new Map<string, number>();
+  const guessedOrigins = new Map<string, string>();
   if (ids.length > 0) {
     const { data: usage, error: usageError } = await client
       .from("usage")
@@ -114,15 +116,16 @@ export async function loadHistory(userId: string, page: number) {
 
     const { data: guesses, error: guessError } = await client
       .from("guesses")
-      .select("game_id, company_correct, region_correct")
+      .select("game_id, company_correct, origin_correct, guessed_origin")
       .in("game_id", ids);
     if (guessError) throw new Error("Could not read profile history.");
     for (const guess of guesses ?? []) {
       const key = guess.game_id as string;
-      const current = flags.get(key) ?? { company: false, region: false };
+      if (typeof guess.guessed_origin === "string") guessedOrigins.set(key, guess.guessed_origin);
+      const current = flags.get(key) ?? { company: false, origin: false };
       flags.set(key, {
         company: current.company || Boolean(guess.company_correct),
-        region: current.region || Boolean(guess.region_correct),
+        origin: current.origin || Boolean(guess.origin_correct),
       });
     }
   }
@@ -132,7 +135,7 @@ export async function loadHistory(userId: string, page: number) {
     const given = Array.isArray((row.traits as { given?: unknown } | null)?.given)
       ? (row.traits as { given: string[] }).given
       : [];
-    const seen = flags.get(row.id as string) ?? { company: false, region: false };
+    const seen = flags.get(row.id as string) ?? { company: false, origin: false };
     const model = first(row.models as ModelRef | ModelRef[] | null);
     const company = model ? first(model.companies) : null;
     const finished = status !== "active";
@@ -156,6 +159,16 @@ export async function loadHistory(userId: string, page: number) {
           dailyKey: typeof row.daily_key === "string" ? row.daily_key : null,
         })
       : null;
+    const frozenTraits = traits ?? { given: [], models: {} };
+    const guessedId = guessedOrigins.get(row.id as string);
+    const origin: OriginView | null =
+      finished && row.game_mode === "origin" && frozen
+        ? {
+            choices: [],
+            guessed: guessedId ? originChoiceFor(frozenTraits, guessedId) : null,
+            actual: originChoiceOf(frozen),
+          }
+        : null;
     const facts = playedRoundFacts({
       gameModeId: row.game_mode as string,
       gameModeName: gameModeNames.get(row.game_mode as string),
@@ -177,12 +190,13 @@ export async function loadHistory(userId: string, page: number) {
           )
         : null,
       modelFacts: finished
-        ? modelFacts(frozen, company?.name ?? null, company?.region ?? null, model?.size ?? null, model?.released_on ?? null)
+        ? modelFacts(frozen, company?.name ?? null, company?.origin ?? null, model?.size ?? null, model?.released_on ?? null)
         : [],
       breakdown: finished ? breakdown : null,
       shareText: card ? shareText(card) : null,
-      companyFound: traitFound({ status, given, companyCorrect: seen.company, regionCorrect: seen.region, trait: "company" }),
-      regionFound: traitFound({ status, given, companyCorrect: seen.company, regionCorrect: seen.region, trait: "region" }),
+      companyFound: traitFound({ status, given, companyCorrect: seen.company, originCorrect: seen.origin, trait: "company" }),
+      originFound: traitFound({ status, given, companyCorrect: seen.company, originCorrect: seen.origin, trait: "origin" }),
+      origin,
       mode: facts.mode,
       difficulty: facts.difficulty,
       place: roundPlace(
@@ -259,17 +273,17 @@ function asBreakdown(value: unknown): ScoreLine[] | null {
 function modelFacts(
   frozen: FrozenModel | null,
   companyName: string | null,
-  region: FrozenModel["region"] | null,
+  origin: FrozenModel["origin"] | null,
   size: FrozenModel["size"] | null,
   releasedOn: string | null,
 ): string[] {
   if (frozen) {
-    return [frozen.companyName, regionLabel(frozen.region), String(frozen.year), sizeLabel(frozen.size)].filter(
+    return [frozen.companyName, originLabel(frozen.origin), String(frozen.year), sizeLabel(frozen.size)].filter(
       (fact) => fact.trim().length > 0,
     );
   }
   const year = releasedOn ? new Date(`${releasedOn}T00:00:00Z`).getUTCFullYear() : null;
-  return [companyName ?? "", region ? regionLabel(region) : "", year ? String(year) : "", size ? sizeLabel(size) : ""].filter(
+  return [companyName ?? "", origin ? originLabel(origin) : "", year ? String(year) : "", size ? sizeLabel(size) : ""].filter(
     (fact) => fact.trim().length > 0,
   );
 }

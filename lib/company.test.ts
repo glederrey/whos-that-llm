@@ -47,9 +47,9 @@ test("a finished company round scores like all models, and the company takes the
   const shared = {
     rules,
     namedModel: true,
-    regionMatched: true,
+    originMatched: true,
     companyMatched: true,
-    regionGiven: true,
+    originGiven: true,
     companyGiven: true,
     tokens: 500,
     noHint: false,
@@ -69,13 +69,13 @@ test("a finished company round scores like all models, and the company takes the
   assert.equal(blind.score, 80000);
 
   const traits: Traits = {
-    given: ["company", "region"],
+    given: ["company", "origin"],
     models: {
       haiku: {
         name: "Haiku",
         companyId: "anthropic",
         companyName: "Anthropic",
-        region: "us",
+        origin: "us",
         size: "small",
         year: 2026,
         logoPath: "logos/anthropic.png",
@@ -105,13 +105,13 @@ test("a finished company round scores like all models, and the company takes the
   assert.equal(html.includes("Difficulty"), false);
 });
 
-test("a company round can buy the year and the size, and not the lab or the region", () => {
+test("a company round can buy the year and the size, and not the lab or the origin", () => {
   assert.equal(gameModeAllowsHints("company"), true);
   assert.equal(hintAllowedForMode("company", "year"), true);
   assert.equal(hintAllowedForMode("company", "size"), true);
   assert.equal(hintAllowedForMode("company", "company"), false);
-  assert.equal(hintAllowedForMode("company", "region"), false);
-  assert.equal(hintAllowedForMode("region", "year"), false);
+  assert.equal(hintAllowedForMode("company", "origin"), false);
+  assert.equal(hintAllowedForMode("origin", "year"), false);
 
   const traits = buildTraits([
     {
@@ -119,7 +119,7 @@ test("a company round can buy the year and the size, and not the lab or the regi
       name: "Haiku",
       companyId: "anthropic",
       companyName: "Anthropic",
-      region: "us",
+      origin: "us",
       size: "small",
       year: 2024,
       logoPath: "logos/anthropic.png",
@@ -129,7 +129,7 @@ test("a company round can buy the year and the size, and not the lab or the regi
       name: "Opus",
       companyId: "anthropic",
       companyName: "Anthropic",
-      region: "us",
+      origin: "us",
       size: "large",
       year: 2026,
       logoPath: "logos/anthropic.png",
@@ -137,11 +137,11 @@ test("a company round can buy the year and the size, and not the lab or the regi
   ]);
   const hidden = traits.models.opus;
   assert.ok(hidden);
-  assert.deepEqual(traits.given, ["company", "region"]);
-  const offer = (key: "company" | "region" | "year" | "size") =>
+  assert.deepEqual(traits.given, ["company", "origin"]);
+  const offer = (key: "company" | "origin" | "year" | "size") =>
     hintOffered({ key, traits, hidden, guesses: [], hints: [], noHint: false });
   assert.equal(offer("company"), false);
-  assert.equal(offer("region"), false);
+  assert.equal(offer("origin"), false);
   assert.equal(offer("year"), true);
   assert.equal(offer("size"), true);
 
@@ -166,7 +166,7 @@ test("company mode is enabled in the schema", () => {
   assert.match(sql, /as company_name/);
   assert.match(sql, /as company_logo/);
   const home = fs.readFileSync(path.join(root, "components/home-board.tsx"), "utf8");
-  assert.match(home, /\["daily", "all", "company", "class", "region", "custom"\]/);
+  assert.match(home, /\["daily", "all", "company", "class", "origin", "custom"\]/);
   assert.match(home, /Choose company/);
   assert.match(home, /CompanyLogo/);
   assert.match(home, /companyModelCounts|company\.models/);

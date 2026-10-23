@@ -1,4 +1,4 @@
-import type { Region } from "./game";
+import type { Origin } from "./game";
 
 /** OpenRouter org slug to a company id already on the roster. An org that is not here stays blank. */
 const openRouterOrgCompanyId: Record<string, string> = {
@@ -16,12 +16,12 @@ const openRouterOrgCompanyId: Record<string, string> = {
   mistralai: "mistral",
 };
 
-export type CompanyChoice = { id: string; name: string; region: Region };
+export type CompanyChoice = { id: string; name: string; origin: Origin };
 
 export type ModelDraft = {
   name: string;
   company: string;
-  region: string;
+  origin: string;
   releasedOn: string;
 };
 
@@ -49,7 +49,7 @@ export function draftFromOpenRouter(
   return {
     name: typeof model.name === "string" ? model.name.trim() : "",
     company: company?.name ?? "",
-    region: company?.region ?? "",
+    origin: company?.origin ?? "",
     releasedOn: releasedOnFromCreated(model.created),
   };
 }

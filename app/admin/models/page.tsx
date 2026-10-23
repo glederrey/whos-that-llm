@@ -2,6 +2,7 @@ import { RosterBrowser } from "@/components/roster-browser";
 import { RosterSync } from "@/components/roster-sync";
 import { SectionNav } from "@/components/section-nav";
 import { rosterNotice } from "@/lib/admin-model";
+import { loadOriginOptions } from "@/lib/admin-origins";
 import { loadRoster, type RosterRow } from "@/lib/admin-roster";
 import { loadOpenRouterCatalog } from "@/lib/openrouter-catalog";
 import { pageOf, rosterSortOf, searchRoster, sortRoster } from "@/lib/roster-list";
@@ -20,7 +21,7 @@ function rosterStamp(rows: RosterRow[]): string {
         row.name,
         row.openrouterId,
         row.companyName,
-        row.region,
+        row.origin,
         row.year,
         row.size,
         row.difficulty ?? "",
@@ -40,7 +41,7 @@ export default async function ModelsPage({
 }) {
   const params = await searchParams;
   const notice = rosterNotice(params.notice);
-  const [roster, catalog] = await Promise.all([loadRoster(), loadOpenRouterCatalog()]);
+  const [roster, catalog, origins] = await Promise.all([loadRoster(), loadOpenRouterCatalog(), loadOriginOptions()]);
   const { companies, categories } = roster;
   // Prices are not stored. When OpenRouter does not answer, the roster still renders with "—".
   const rows = withListPrices(roster.rows, catalog.ok ? catalog.models : null);
@@ -73,6 +74,7 @@ export default async function ModelsPage({
         key={rosterStamp(rows)}
         rows={rows}
         categories={categories}
+        origins={origins}
         initialQuery={query}
         initialSort={sort}
         initialActive={active.page}

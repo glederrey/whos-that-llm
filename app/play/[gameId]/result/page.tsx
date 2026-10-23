@@ -28,7 +28,7 @@ export default async function ResultPage({ params }: { params: Promise<{ gameId:
   const categoryName =
     game.gameMode === "class" && game.poolKey ? await readCategoryName(serviceOrThrow(), game.poolKey) : null;
   const onBoard = Boolean(mode?.leaderboard);
-  const again = game.gameMode === "region" ? `/play/new?gameMode=${game.gameMode}` : "/play";
+  const again = "/play";
   const leaderboardHref =
     game.gameMode === "company"
       ? `/leaderboard?gameMode=company${game.poolKey ? `&company=${encodeURIComponent(game.poolKey)}` : ""}&period=week`
@@ -55,7 +55,7 @@ export default async function ResultPage({ params }: { params: Promise<{ gameId:
         model={{
           name: game.model.name,
           logoPath: game.model.logoPath,
-          facts: [game.model.companyName, game.model.region, String(game.model.year), game.model.size],
+          facts: [game.model.companyName, game.model.origin, String(game.model.year), game.model.size],
         }}
         score={game.score ?? null}
         messages={game.messageNumber}
@@ -66,6 +66,7 @@ export default async function ResultPage({ params }: { params: Promise<{ gameId:
         poolSize={card?.poolSize ?? null}
         noHint={game.noHint}
         breakdown={game.breakdown ?? null}
+        origin={game.origin ?? null}
         share={card ? { gameId: card.id, text: shareText(card) } : null}
         actions={nextRound}
       />
