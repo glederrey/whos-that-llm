@@ -392,6 +392,31 @@ test("Custom rounds get their own tab and stay out of the all-modes figures", ()
   assert.equal(stats.gameModes.find((mode) => mode.id === "custom")?.games, 2);
 });
 
+test("Custom rounds report pool sizes and the most picked models", () => {
+  const stats = computePublicStats(
+    [
+      game("c1", "opus", "solved", 4, { gameMode: "custom", poolModelIds: ["opus", "haiku"] }),
+      game("c2", "opus", "miss", 10, { gameMode: "custom", poolModelIds: ["opus", "haiku", "kimi", "gpt", "grok", "llama"] }),
+      game("c3", "kimi", "solved", 3, { gameMode: "custom", poolModelIds: ["kimi", "opus"] }),
+      game("c4", "kimi", "solved", 3, { gameMode: "custom" }),
+    ],
+    [],
+    [],
+    [{ id: "all", name: "All models" }, { id: "custom", name: "Custom" }],
+    [],
+    now,
+  );
+  const custom = stats.gameModes.find((mode) => mode.id === "custom")?.custom;
+  assert.equal(custom?.avgModels, (2 + 6 + 2) / 3);
+  assert.deepEqual(
+    custom?.sizes.map((bucket) => [bucket.label, bucket.rounds]),
+    [["2", 2], ["3-5", 0], ["6-10", 1], ["11-20", 0], ["21-50", 0], ["51+", 0]],
+  );
+  assert.deepEqual(custom?.picked.slice(0, 2).map((row) => [row.modelId, row.rounds]), [["opus", 3], ["haiku", 2]]);
+  assert.equal(custom?.picked[0].share, 3 / 3);
+  assert.equal(stats.gameModes.find((mode) => mode.id === "all")?.custom ?? null, null);
+});
+
 test("the public stats page does not read prices, billing, or account rows", () => {
   const loader = fs.readFileSync(path.join(root, "lib/public-stats-data.ts"), "utf8");
   const page = fs.readFileSync(path.join(root, "app/statistics/page.tsx"), "utf8");

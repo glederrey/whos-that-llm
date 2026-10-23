@@ -18,7 +18,7 @@ export type PublicStatsPayload = {
 export async function loadPublicStats(): Promise<PublicStatsPayload> {
   const client = serviceOrThrow();
   const [games, usage, guesses, gameModes, models, categories, memberships, originRows] = await Promise.all([
-    readAll(client, "games", "id, model_id, status, message_count, started_at, finished_at, game_mode, traits"),
+    readAll(client, "games", "id, model_id, status, message_count, started_at, finished_at, game_mode, traits, pool_model_ids"),
     readAll(client, "usage", "id, game_id, model_id, input_tokens, output_tokens"),
     readAll(client, "guesses", "id, game_id, guessed_model_id, guessed_origin, model_correct, origin_correct"),
     readAll(client, "game_modes", "id, name, sort_order"),
@@ -72,6 +72,7 @@ function gameFact(row: Record<string, unknown>, categoryIds: string[]): PublicGa
     size: trait.size,
     origin: trait.origin,
     categoryIds,
+    poolModelIds: Array.isArray(row.pool_model_ids) ? row.pool_model_ids.flatMap((id) => (typeof id === "string" ? [id] : [])) : [],
   };
 }
 

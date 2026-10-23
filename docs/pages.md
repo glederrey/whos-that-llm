@@ -365,6 +365,7 @@ A game counts only when `finished_at` is set. A round that was started and not f
 - Wrong names: hidden model, the model named instead, and how often
 - Size and origin of the hidden model
 - The Origin view: solve rate, messages and tokens per game, a table by real origin (games, found, and a Picked column with one count per origin), and the hardest and easiest models. Origin and Custom rounds stay out of the All modes figures.
+- The Custom view: the same blocks, except that the last figure is **Models per round** (the average size of the pool the player picked) in place of **Origin found**. Under **Games over time** come **Models per round**, a bar chart of finished rounds by pool size (2, 3-5, 6-10, 11-20, 21-50, 51+) with the bucket labels shown on a phone too, and **Most picked models**, a table of the 15 models that sat in the most pools: rounds and share of the finished Custom rounds. A model counts once per round. A round with no saved pool is left out of both.
 - **All models** uses the same blocks for that category. A category with no finished games says **No finished games in this category yet.** It does not show a made-up rate
 - **Category** shows the blocks above for the Category mode, then a **By category** table of the categories that are turned on. A category that is turned off is left out.
 

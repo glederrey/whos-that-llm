@@ -8,6 +8,7 @@ import { originLabel, sizeLabel, type Origin, type Size } from "@/lib/game";
 import {
   statisticModes,
   type CategoryStat,
+  type CustomReport,
   type GameModeReport,
   type ConfusionPair,
   type ModelOutcome,
@@ -97,9 +98,10 @@ function ModeStats({ report, nameFor }: { report: GameModeReport | undefined; na
   return (
     <>
       <h2>{report.name}</h2>
-      <Figures items={gameFigures(report.outcome)} />
+      <Figures items={gameFigures(report.outcome, report.custom)} />
       <h2>Games over time</h2>
       <DayBars days={report.days} />
+      {report.custom ? <CustomStats custom={report.custom} total={report.finished} nameFor={nameFor} /> : null}
       <h2>Which models are hardest to find</h2>
       <p className="muted">Hidden models, hardest first. Solve rate is solved over finished games.</p>
       <ModelTable rows={report.models} nameFor={nameFor} />
@@ -226,7 +228,60 @@ function CategoryMode({
   );
 }
 
-function gameFigures(outcome: Outcome): Figure[] {
+function CustomStats({ custom, total, nameFor }: { custom: CustomReport; total: number; nameFor: (id: string) => string }) {
+  const peak = Math.max(1, ...custom.sizes.map((bucket) => bucket.rounds));
+  return (
+    <>
+      <h2>Models per round</h2>
+      <div className="card">
+        <div className="daybars poolbars" role="img" aria-label="Custom rounds by number of models picked">
+          {custom.sizes.map((bucket) => (
+            <div key={bucket.label} className="daybar" title={`${bucket.label} models: ${bucket.rounds} rounds`}>
+              <span className="daybar-count">{bucket.rounds}</span>
+              <span className="daybar-track">
+                <i className="daybar-all" style={{ height: `${(bucket.rounds / peak) * 100}%`, background: "var(--teal)" }} />
+              </span>
+              <span className="daybar-date">{bucket.label}</span>
+            </div>
+          ))}
+        </div>
+        <p className="muted">Finished Custom rounds by the number of models in the pool.</p>
+      </div>
+      <h2>Most picked models</h2>
+      <p className="muted">Models that were in the most Custom pools. Share is the part of the {total.toLocaleString("en-US")} finished rounds that held the model.</p>
+      <div className="card roster-card">
+        <table className="roster compact">
+          <thead>
+            <tr>
+              <th>Model</th>
+              <th>Rounds</th>
+              <th>Share</th>
+            </tr>
+          </thead>
+          <tbody>
+            {custom.picked.length === 0 ? (
+              <tr>
+                <td colSpan={3} className="muted">
+                  No games yet.
+                </td>
+              </tr>
+            ) : (
+              custom.picked.map((row) => (
+                <tr key={row.modelId}>
+                  <td>{nameFor(row.modelId)}</td>
+                  <td>{row.rounds.toLocaleString("en-US")}</td>
+                  <td>{percent(row.share)}</td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+    </>
+  );
+}
+
+function gameFigures(outcome: Outcome, custom: CustomReport | null = null): Figure[] {
   return [
     {
       label: "Solve rate",
@@ -245,11 +300,13 @@ function gameFigures(outcome: Outcome): Figure[] {
     },
     { label: "Messages per game", value: decimal(outcome.messagesPerGame), note: "Finished games" },
     { label: "Tokens per game", value: compact(outcome.tokensPerGame), note: "Prompt plus completion" },
-    {
-      label: "Origin found",
-      value: percent(outcome.originFoundRate),
-      note: "Finished games where a guess got the origin",
-    },
+    custom
+      ? { label: "Models per round", value: decimal(custom.avgModels), note: "Average size of the pool the player picked" }
+      : {
+          label: "Origin found",
+          value: percent(outcome.originFoundRate),
+          note: "Finished games where a guess got the origin",
+        },
   ];
 }
 

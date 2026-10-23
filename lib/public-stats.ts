@@ -24,6 +24,8 @@ export type PublicGameFact = GameFact & {
   size: Size | null;
   origin: Origin | null;
   categoryIds: string[];
+  /** `games.pool_model_ids`: the models the round drew from. Custom reports count them. */
+  poolModelIds?: string[];
 };
 
 export type PublicGuessFact = GuessFact & {
@@ -97,6 +99,45 @@ export type OriginPickRow = {
   picks: { origin: Origin; count: number }[];
 };
 
+/** How many models Custom rounds were played with, and which models were picked most. */
+export type CustomReport = {
+  /** Mean number of models in a round's pool. */
+  avgModels: number | null;
+  /** Rounds by pool size, in fixed buckets from small to large. */
+  sizes: { label: string; rounds: number }[];
+  /** Models in the most pools, most picked first. `share` is the part of the rounds that held the model. */
+  picked: { modelId: string; rounds: number; share: number }[];
+};
+
+const customSizeBuckets = [
+  { label: "2", min: 2, max: 2 },
+  { label: "3-5", min: 3, max: 5 },
+  { label: "6-10", min: 6, max: 10 },
+  { label: "11-20", min: 11, max: 20 },
+  { label: "21-50", min: 21, max: 50 },
+  { label: "51+", min: 51, max: Infinity },
+];
+
+/** Most picked models listed on the Custom tab. */
+export const customPickedLimit = 15;
+
+function customReport(games: PublicGameFact[]): CustomReport {
+  const pools = games.map((game) => game.poolModelIds ?? []).filter((pool) => pool.length > 0);
+  const counts = new Map<string, number>();
+  for (const pool of pools) for (const id of new Set(pool)) counts.set(id, (counts.get(id) ?? 0) + 1);
+  return {
+    avgModels: pools.length > 0 ? pools.reduce((sum, pool) => sum + pool.length, 0) / pools.length : null,
+    sizes: customSizeBuckets.map((bucket) => ({
+      label: bucket.label,
+      rounds: pools.filter((pool) => pool.length >= bucket.min && pool.length <= bucket.max).length,
+    })),
+    picked: [...counts.entries()]
+      .map(([modelId, rounds]) => ({ modelId, rounds, share: rounds / pools.length }))
+      .sort((a, b) => b.rounds - a.rounds || a.modelId.localeCompare(b.modelId))
+      .slice(0, customPickedLimit),
+  };
+}
+
 export type GameModeReport = {
   id: string;
   name: string;
@@ -110,6 +151,8 @@ export type GameModeReport = {
   sizes: TraitRow[];
   origins: TraitRow[];
   originPicks: OriginPickRow[];
+  /** Only on the Custom tab. */
+  custom: CustomReport | null;
 };
 
 export const statisticModes = [
@@ -324,6 +367,7 @@ function gameModeReport(
       sizes: [],
       origins: [],
       originPicks: [],
+      custom: null,
     };
   }
   const ids = new Set(rows.map((game) => game.id));
@@ -363,6 +407,7 @@ function gameModeReport(
     sizes: originMode ? [] : traitRows(named, usage, guesses, "size", sizes),
     origins: originMode ? [] : traitRows(named, usage, guesses, "origin", originOrder(named)),
     originPicks: originMode ? originPickRows(rows, guesses) : [],
+    custom: gameMode.id === "custom" ? customReport(rows) : null,
   };
 }
 
