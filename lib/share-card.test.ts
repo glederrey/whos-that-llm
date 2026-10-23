@@ -369,7 +369,7 @@ test("the public picture and the download are the same card", () => {
   assert.match(quietImage, /border:1px solid #D4D4D8/i);
   assert.doesNotMatch(quietImage, /background:#1c7c43|background:#c41b15/);
   const quietDark = renderToStaticMarkup(shareCardImage(quiet, "data:image/png;base64,aaaa", null, "dark"));
-  assert.match(quietDark, /background:#262626/i);
+  assert.match(quietDark, /background:#383838/i);
   assert.match(quietDark, /color:#EBEBEB/i);
   assert.match(quietDark, /border:1px solid #2E2E2E/i);
 
