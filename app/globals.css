@@ -1513,9 +1513,8 @@ html[data-theme="dark"] .md a { color: var(--teal); }
 @media (max-width: 560px) {
   .history-filters { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
   .history-filters .history-field:first-child { grid-column: 1 / -1; }
-  .history-filters .button-quiet { justify-self: end; align-self: end; height: 40px; line-height: 40px; padding: 0 2px; border: 0; background: none; color: var(--teal-press); font-weight: 600; }
-  .history-filters > .button-quiet:nth-child(4) { grid-column: 1 / -1; height: auto; line-height: normal; }
-  .history-filters .button-quiet:hover { background: none; color: var(--teal); }
+  .history-filters .button-quiet { align-self: end; }
+  .history-filters > .button-quiet:nth-child(4) { grid-column: 1 / -1; }
 }
 .history-body { display: grid; gap: 12px; transition: opacity 0.15s ease; }
 .history-body[data-busy="true"] { opacity: 0.55; }
