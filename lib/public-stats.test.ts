@@ -326,7 +326,7 @@ test("today's Daily rounds stay in the totals and leave the named breakdowns", (
   assert.equal(all?.origins.find((row) => row.key === "eu")?.games, 1);
 });
 
-test("Daily, Company, Category, and Origin can be selected, and Custom stays closed", () => {
+test("Every mode button can be selected", () => {
   assert.deepEqual(
     statisticModes.map((mode) => [mode.name, mode.enabled]),
     [
@@ -336,7 +336,7 @@ test("Daily, Company, Category, and Origin can be selected, and Custom stays clo
       ["Company", true],
       ["Category", true],
       ["Origin", true],
-      ["Custom", false],
+      ["Custom", true],
     ],
   );
 });
@@ -372,6 +372,24 @@ test("Origin rounds get their own pick table and stay out of the all-modes figur
   assert.equal(rows[1].givenUp, 1);
   assert.deepEqual(rows[1].picks, []);
   assert.equal(rows[3].games, 1);
+});
+
+test("Custom rounds get their own tab and stay out of the all-modes figures", () => {
+  const stats = computePublicStats(
+    [
+      game("c1", "opus", "solved", 4, { gameMode: "custom" }),
+      game("c2", "opus", "miss", 10, { gameMode: "custom" }),
+      game("a1", "haiku", "solved", 2),
+    ],
+    [],
+    [],
+    [{ id: "all", name: "All models" }, { id: "custom", name: "Custom" }],
+    [],
+    now,
+  );
+  assert.equal(stats.outcome.games, 1);
+  assert.deepEqual(stats.models.map((row) => row.modelId), ["haiku"]);
+  assert.equal(stats.gameModes.find((mode) => mode.id === "custom")?.games, 2);
 });
 
 test("the public stats page does not read prices, billing, or account rows", () => {

@@ -119,7 +119,7 @@ export const statisticModes = [
   { id: "company", name: "Company", enabled: true },
   { id: "class", name: "Category", enabled: true },
   { id: "origin", name: "Origin", enabled: true },
-  { id: "custom", name: "Custom", enabled: false },
+  { id: "custom", name: "Custom", enabled: true },
 ] as const;
 
 export type StatisticModeId = (typeof statisticModes)[number]["id"];
@@ -376,7 +376,8 @@ export function computePublicStats(
 ): PublicStats {
   const finished = games.filter((game) => hasFinishedAt(game));
   // Origin rounds guess an origin, not a model: they have their own tab and stay out of the all-modes figures.
-  const counted = finished.filter((game) => game.gameMode !== "origin");
+  // Custom rounds use a pool the player picked, so they have their own tab too and would skew the shared lists.
+  const counted = finished.filter((game) => game.gameMode !== "origin" && game.gameMode !== "custom");
   const today = utcDate(now);
   const named = withoutTodayDaily(counted, today);
   const playable = gameModes.filter((gameMode) => gameMode.id !== "family");
