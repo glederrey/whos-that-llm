@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { bestSolvedScore, cleanDay, dayWindow, isBestSolved, levelColumn, parseHistoryFilter } from "./profile-filter";
+import { bestSolvedScore, cleanDay, dayWindow, isBestSolved, levelQuery, parseHistoryFilter } from "./profile-filter";
 
 test("a bad value in the query string reads as no filter", () => {
   assert.deepEqual(parseHistoryFilter({ from: "2026-02-30", to: "tomorrow", status: "won", mode: "No Way!", level: "easy" }), {});
@@ -22,11 +22,11 @@ test("the last day is included in the window", () => {
 });
 
 test("the level filter reads a difficulty, a category or a company, and nothing for Origin and Custom", () => {
-  assert.equal(levelColumn("daily", "hard"), "difficulty");
-  assert.equal(levelColumn("all", "nonsense"), null);
-  assert.equal(levelColumn("class", "nano"), "pool_key");
-  assert.equal(levelColumn("company", "openai"), "pool_key");
-  assert.equal(levelColumn("custom", "easy"), null);
+  assert.deepEqual(levelQuery("daily", "hard"), { column: "difficulty", value: "3" });
+  assert.equal(levelQuery("all", "nonsense"), null);
+  assert.deepEqual(levelQuery("class", "nano"), { column: "pool_key", value: "nano" });
+  assert.deepEqual(levelQuery("company", "openai"), { column: "pool_key", value: "openai" });
+  assert.equal(levelQuery("custom", "easy"), null);
 });
 
 test("the cup goes only to a solved round, even when a failed round scored higher", () => {

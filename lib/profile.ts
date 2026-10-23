@@ -66,10 +66,6 @@ export function bestScore(games: { status: GameStatus; score: number | null }[])
   return scores.length === 0 ? null : Math.max(...scores);
 }
 
-export function isBestGame(game: { status: GameStatus; score: number | null }, best: number | null): boolean {
-  return best !== null && game.status !== "active" && game.score !== null && game.score === best;
-}
-
 export function profileStats(games: CountedGame[]): ProfileStats {
   const solvedGames = games.filter((game) => game.status === "solved");
   const missed = games.filter((game) => game.status === "miss").length;

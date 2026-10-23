@@ -4,7 +4,7 @@ import { avatarPublicUrl, profileStats, publicImageCacheControl, readImage, trai
 import { presentLogo, serviceOrThrow } from "./rounds";
 import { modeHasDifficulty, modeLabel, playedRoundFacts, roundPlace, type RoundPlace } from "./round-facts";
 import { poolSizeFrom } from "./game-labels";
-import { bestSolvedScore, dayWindow, levelColumn, type HistoryFilter } from "./profile-filter";
+import { bestSolvedScore, dayWindow, levelQuery, type HistoryFilter } from "./profile-filter";
 import { buildShareCard, shareText } from "./share-card";
 import { publicEnv } from "./supabase/env";
 
@@ -72,8 +72,8 @@ function narrow<Q>(query: Q, filter: HistoryFilter): Q {
   if (filter.status) next = next.eq("status", filter.status) as unknown as Chain<Q>;
   if (filter.mode) next = next.eq("game_mode", filter.mode) as unknown as Chain<Q>;
   if (filter.mode && filter.level) {
-    const column = levelColumn(filter.mode, filter.level);
-    if (column) next = next.eq(column, filter.level) as unknown as Chain<Q>;
+    const target = levelQuery(filter.mode, filter.level);
+    if (target) next = next.eq(target.column, target.value) as unknown as Chain<Q>;
   }
   return next as unknown as Q;
 }

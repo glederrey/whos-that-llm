@@ -1,4 +1,4 @@
-import { isDifficulty } from "./difficulty";
+import { difficultyNumber, isDifficulty } from "./difficulty";
 import type { GameStatus } from "./game";
 
 /** What the Games list on the profile can be narrowed by. Every field is optional. */
@@ -53,11 +53,14 @@ export function dayWindow(filter: HistoryFilter): { since: string | null; before
   return { since, before };
 }
 
-/** A level filter on a difficulty mode is a difficulty name, and on Category or Company it is the pool key. */
-export function levelColumn(mode: string | undefined, level: string): "difficulty" | "pool_key" | null {
-  if (mode === "company" || mode === "class") return "pool_key";
+/**
+ * The column and value a level filter reads. A difficulty mode takes a difficulty name, stored as a number 1 to 4.
+ * Category and Company take the pool key. Origin and Custom have no level.
+ */
+export function levelQuery(mode: string | undefined, level: string): { column: "difficulty" | "pool_key"; value: string } | null {
+  if (mode === "company" || mode === "class") return { column: "pool_key", value: level };
   if (mode === "origin" || mode === "custom") return null;
-  return isDifficulty(level) ? "difficulty" : null;
+  return isDifficulty(level) ? { column: "difficulty", value: String(difficultyNumber[level]) } : null;
 }
 
 /** The best score among solved rounds only. A failed or given-up round never takes the cup. */
