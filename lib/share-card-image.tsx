@@ -149,8 +149,10 @@ export function shareCardImage(
           }),
         ),
         box(
-          { flexDirection: "column", alignItems: "flex-end" },
+          { flexDirection: "column", alignItems: "stretch" },
           text(display.status, {
+            justifyContent: "center",
+            width: "100%",
             fontSize: 36,
             fontWeight: 700,
             color: status.color,
@@ -230,7 +232,7 @@ function factLine(facts: string[], tone: Tone): ReactElement {
 function metaTable(rows: ShareMeta[], tone: Tone): ReactElement {
   const cell = { height: 36, alignItems: "center", marginTop: 8 } as const;
   return box(
-    { marginTop: 8 },
+    { marginTop: 8, justifyContent: "flex-end" },
     box(
       { flexDirection: "column", alignItems: "flex-end", marginRight: 16 },
       ...rows.map((row) => text(row.label, { ...cell, fontSize: 26, color: tone.mute })),
