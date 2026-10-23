@@ -6,6 +6,7 @@ import type { HistoryFacets } from "@/lib/profile-data";
 import type { HistoryFilter } from "@/lib/profile-filter";
 import type { HistoryItem } from "@/lib/profile-history";
 import { DateRangePicker } from "./date-range-picker";
+import { MenuSelect } from "./menu-select";
 import { HistoryList } from "./history-list";
 
 type Page = { items: HistoryItem[]; total: number; page: number; pageCount: number };
@@ -78,40 +79,31 @@ export function ProfileGames({ initial, facets }: { initial: Page; facets: Histo
           Dates
           <DateRangePicker from={filter.from} to={filter.to} onChange={(from, to) => change({ from, to })} />
         </div>
-        <label>
+        <div className="history-field">
           Status
-          <select value={filter.status ?? ""} onChange={(event) => change({ status: (event.target.value || undefined) as HistoryFilter["status"] })}>
-            <option value="">All</option>
-            {statusOptions.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label>
+          <MenuSelect
+            value={filter.status ?? ""}
+            options={[{ value: "", label: "All" }, ...statusOptions]}
+            onChange={(value) => change({ status: (value || undefined) as HistoryFilter["status"] })}
+          />
+        </div>
+        <div className="history-field">
           Game mode
-          <select value={filter.mode ?? ""} onChange={(event) => change({ mode: event.target.value || undefined, level: undefined })}>
-            <option value="">All</option>
-            {facets.modes.map((mode) => (
-              <option key={mode.id} value={mode.id}>
-                {mode.name}
-              </option>
-            ))}
-          </select>
-        </label>
+          <MenuSelect
+            value={filter.mode ?? ""}
+            options={[{ value: "", label: "All" }, ...facets.modes.map((mode) => ({ value: mode.id, label: mode.name }))]}
+            onChange={(value) => change({ mode: value || undefined, level: undefined })}
+          />
+        </div>
         {level ? (
-          <label>
+          <div className="history-field">
             {level.label}
-            <select value={filter.level ?? ""} onChange={(event) => change({ level: event.target.value || undefined })}>
-              <option value="">All</option>
-              {level.options.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </label>
+            <MenuSelect
+              value={filter.level ?? ""}
+              options={[{ value: "", label: "All" }, ...level.options]}
+              onChange={(value) => change({ level: value || undefined })}
+            />
+          </div>
         ) : null}
         {filtered ? (
           <button type="button" className="button-quiet" onClick={() => change({ from: undefined, to: undefined, status: undefined, mode: undefined, level: undefined })}>
