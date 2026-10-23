@@ -158,20 +158,6 @@ export function shareCardImage(
           { flexDirection: "column", alignItems: "stretch" },
           box(
             { flexDirection: "column", alignItems: "stretch", width: "100%" },
-            display.noHint
-              ? text("No hints", {
-                  justifyContent: "center",
-                  fontSize: 30,
-                  fontWeight: 700,
-                  color: tone.ink,
-                  background: tone.noHint,
-                  border: `2px solid ${tone.noHintBorder}`,
-                  borderRadius: 999,
-                  padding: "8px 22px",
-                  marginBottom: 10,
-                  alignSelf: "flex-end",
-                })
-              : null,
             text(display.status, {
               justifyContent: "center",
               fontSize: 36,
@@ -182,6 +168,20 @@ export function shareCardImage(
               padding: "12px 22px",
               ...(status.border ? { border: status.border } : {}),
             }),
+            display.noHint
+              ? text("No hints", {
+                  justifyContent: "center",
+                  fontSize: 30,
+                  fontWeight: 700,
+                  color: tone.ink,
+                  background: tone.noHint,
+                  border: `2px solid ${tone.noHintBorder}`,
+                  borderRadius: 999,
+                  padding: "8px 22px",
+                  marginTop: 10,
+                  alignSelf: "flex-end",
+                })
+              : null,
           ),
           metaTable(display.meta, tone),
         ),
