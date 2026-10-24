@@ -25,7 +25,6 @@ export function ProfileForm({
   const [file, setFile] = useState<File | null>(null);
   const [fileKey, setFileKey] = useState(0);
   const [error, setError] = useState("");
-  const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
   const [passwordOpen, setPasswordOpen] = useState(false);
 
@@ -33,7 +32,6 @@ export function ProfileForm({
     event.preventDefault();
     setBusy(true);
     setError("");
-    setNote("");
     if (file && avatarFileError(file)) {
       setBusy(false);
       setError(avatarError);
@@ -110,7 +108,6 @@ export function ProfileForm({
               onChange={(event) => {
                 const next = event.target.files?.[0] ?? null;
                 setFile(next);
-                setNote("");
                 setError(next ? (avatarFileError(next) ?? "") : "");
                 pictureButtonRef.current?.focus();
               }}
@@ -137,10 +134,9 @@ export function ProfileForm({
             Save
           </button>
         </div>
-        {file || note || error ? (
+        {file || error ? (
           <div className="profile-status">
             {file ? <span className="profile-file-name muted">{file.name}</span> : null}
-            {note ? <p className="muted">{note}</p> : null}
             {error ? <p className="error">{error}</p> : null}
           </div>
         ) : null}
@@ -151,7 +147,6 @@ export function ProfileForm({
           onChanged={() => {
             setPasswordOpen(false);
             setError("");
-            setNote("Password changed.");
           }}
         />
       ) : null}
