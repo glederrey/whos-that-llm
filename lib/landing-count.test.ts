@@ -77,7 +77,7 @@ test("players on the main page are distinct accounts with a finished game", () =
   assert.match(controls, /This month/);
 });
 
-test("companies on the phone homepage are labs with a model in play", () => {
+test("companies on the homepage are labs with a model in play", () => {
   const companies =
     /'companies',\s*\(\s*select count\(distinct company_id\)::int\s*from public\.models\s*where enabled\s*\)/;
   const sql = publicStats();
@@ -89,5 +89,5 @@ test("companies on the phone homepage are labs with a model in play", () => {
   assert.match(home, /className="stat-companies"/);
   assert.match(home, /<dt>Companies<\/dt>/);
   const css = fs.readFileSync(path.join(root, "app/globals.css"), "utf8");
-  assert.match(css, /\.landing \.stat-companies \{ display: none; \}/);
+  assert.doesNotMatch(css, /\.landing \.stat-companies \{ display: none; \}/);
 });

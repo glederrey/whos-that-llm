@@ -23,7 +23,12 @@ export type PublicGameFact = GameFact & {
   gameMode: string;
   size: Size | null;
   origin: Origin | null;
-  categoryIds: string[];
+  /** `games.pool_key`: the company id (Company mode) or category id (Category mode). */
+  poolKey: string | null;
+  /** `games.difficulty`: 1 easy to 4 impossible. Null where the mode has none. */
+  difficulty: number | null;
+  noHint: boolean;
+  score: number | null;
   /** `games.pool_model_ids`: the models the round drew from. Custom reports count them. */
   poolModelIds?: string[];
 };
@@ -60,8 +65,13 @@ export type Outcome = {
   correctGuesses: number;
   guessAccuracy: number | null;
   messagesPerGame: number | null;
+  medianMessages: number | null;
   tokensPerGame: number | null;
+  medianTokens: number | null;
   originFoundRate: number | null;
+  /** Mean and best score over finished rounds that have one. Null where the mode has no score. */
+  avgScore: number | null;
+  bestScore: number | null;
 };
 
 export type ModelOutcome = {
@@ -87,6 +97,7 @@ export type TraitRow = {
   avgMessagesWhenSolved: number | null;
   tokensPerGame: number | null;
   originFoundRate: number | null;
+  avgScore: number | null;
 };
 
 /** One real origin in the Origin mode: how often it was found, and what people picked instead. */
@@ -150,6 +161,10 @@ export type GameModeReport = {
   days: DayCount[];
   sizes: TraitRow[];
   origins: TraitRow[];
+  /** Easy to Impossible. Only Daily and All models have a difficulty. */
+  difficulties: TraitRow[];
+  /** Rounds with hints against rounds played with no hints. */
+  hints: TraitRow[];
   originPicks: OriginPickRow[];
   /** Only on the Custom tab. */
   custom: CustomReport | null;
@@ -174,7 +189,10 @@ export type PublicStats = {
   confusion: ConfusionPair[];
   sizes: TraitRow[];
   origins: TraitRow[];
+  difficulties: TraitRow[];
+  hints: TraitRow[];
   categories: CategoryStat[];
+  companies: CategoryStat[];
   gameModes: GameModeReport[];
 };
 
@@ -208,6 +226,12 @@ function originFoundRate(games: PublicGameFact[], guesses: PublicGuessFact[]): n
   return hits / games.length;
 }
 
+function scoreStats(games: PublicGameFact[]): { avgScore: number | null; bestScore: number | null } {
+  const scores = games.flatMap((game) => (game.score === null ? [] : [game.score]));
+  if (scores.length === 0) return { avgScore: null, bestScore: null };
+  return { avgScore: scores.reduce((sum, score) => sum + score, 0) / scores.length, bestScore: Math.max(...scores) };
+}
+
 function outcomeFrom(games: PublicGameFact[], usage: PublicUsageFact[], guesses: PublicGuessFact[], now?: Date): Outcome {
   const ids = new Set(games.map((game) => game.id));
   const metrics = computeGameMetrics(games, tiedUsage(usage, ids), asGuesses(guesses.filter((guess) => ids.has(guess.gameId))), now);
@@ -224,12 +248,17 @@ function outcomeFrom(games: PublicGameFact[], usage: PublicUsageFact[], guesses:
     correctGuesses: metrics.correctGuesses,
     guessAccuracy: metrics.guessAccuracy,
     messagesPerGame: metrics.messagesPerGame,
+    medianMessages: metrics.medianMessages,
     tokensPerGame: metrics.tokensPerGame,
+    medianTokens: metrics.medianTokens,
     originFoundRate: originFoundRate(games, guesses),
+    ...scoreStats(games),
   };
 }
 
-function modelsFrom(games: PublicGameFact[], usage: PublicUsageFact[], guesses: PublicGuessFact[]): ModelOutcome[] {
+/** A round given up before any message says nothing about the model, so it is left out. */
+function modelsFrom(all: PublicGameFact[], usage: PublicUsageFact[], guesses: PublicGuessFact[]): ModelOutcome[] {
+  const games = all.filter((game) => game.messageCount > 0);
   const ids = new Set(games.map((game) => game.id));
   const metrics = computeGameMetrics(games, tiedUsage(usage, ids), asGuesses(guesses.filter((guess) => ids.has(guess.gameId))));
   return metrics.models.map((row) => ({
@@ -287,13 +316,13 @@ function traitRows(
   games: PublicGameFact[],
   usage: PublicUsageFact[],
   guesses: PublicGuessFact[],
-  key: "size" | "origin",
+  keyOf: (game: PublicGameFact) => string | null,
   order: readonly string[],
 ): TraitRow[] {
   const keys = [...order];
-  if (games.some((game) => game[key] === null)) keys.push("unknown");
+  if (games.some((game) => keyOf(game) === null)) keys.push("unknown");
   return keys.map((value) => {
-    const subset = games.filter((game) => (game[key] ?? "unknown") === value);
+    const subset = games.filter((game) => (keyOf(game) ?? "unknown") === value);
     const outcome = outcomeFrom(subset, usage, guesses);
     const solvedMessages = subset.reduce((sum, game) => (game.status === "solved" ? sum + game.messageCount : sum), 0);
     const solved = subset.filter((game) => game.status === "solved").length;
@@ -305,20 +334,35 @@ function traitRows(
       avgMessagesWhenSolved: solved > 0 ? solvedMessages / solved : null,
       tokensPerGame: outcome.tokensPerGame,
       originFoundRate: outcome.originFoundRate,
+      avgScore: outcome.avgScore,
     };
   });
 }
 
-function categoryRows(
+const difficultyKeys = ["1", "2", "3", "4"];
+const hintKeys = ["hints", "no-hints"];
+
+function difficultyRows(games: PublicGameFact[], usage: PublicUsageFact[], guesses: PublicGuessFact[]): TraitRow[] {
+  const rated = games.filter((game) => game.difficulty !== null);
+  return traitRows(rated, usage, guesses, (game) => String(game.difficulty), difficultyKeys);
+}
+
+function hintRows(games: PublicGameFact[], usage: PublicUsageFact[], guesses: PublicGuessFact[]): TraitRow[] {
+  return traitRows(games, usage, guesses, (game) => (game.noHint ? "no-hints" : "hints"), hintKeys);
+}
+
+/** One row per company (Company mode) or category (Category mode): the rounds played on that pool. */
+function poolRows(
   games: PublicGameFact[],
   usage: PublicUsageFact[],
   guesses: PublicGuessFact[],
-  categories: NamedCategory[],
+  items: NamedCategory[],
+  gameMode: string,
 ): CategoryStat[] {
-  return [...categories]
+  return [...items]
     .sort((a, b) => a.name.localeCompare(b.name) || a.id.localeCompare(b.id))
     .map((item) => {
-      const subset = games.filter((game) => game.categoryIds.includes(item.id));
+      const subset = games.filter((game) => game.gameMode === gameMode && game.poolKey === item.id);
       const outcome = outcomeFrom(subset, usage, guesses);
       const solved = subset.filter((game) => game.status === "solved").length;
       const solvedMessages = subset.reduce((sum, game) => (game.status === "solved" ? sum + game.messageCount : sum), 0);
@@ -331,6 +375,7 @@ function categoryRows(
         avgMessagesWhenSolved: solved > 0 ? solvedMessages / solved : null,
         tokensPerGame: outcome.tokensPerGame,
         originFoundRate: outcome.originFoundRate,
+        avgScore: outcome.avgScore,
       };
     });
 }
@@ -366,6 +411,8 @@ function gameModeReport(
       days: [],
       sizes: [],
       origins: [],
+      difficulties: [],
+      hints: [],
       originPicks: [],
       custom: null,
     };
@@ -373,12 +420,11 @@ function gameModeReport(
   const ids = new Set(rows.map((game) => game.id));
   const named = withoutTodayDaily(rows, today);
   const originMode = gameMode.id === "origin";
-  const metrics = computeGameMetrics(
-    rows,
-    tiedUsage(usage, ids),
-    asGuesses(guesses.filter((guess) => ids.has(guess.gameId))),
-    now,
-  );
+  // An Origin guess is an origin, so it is right when the origin is.
+  const modeGuesses = guesses
+    .filter((guess) => ids.has(guess.gameId))
+    .map((guess) => (originMode ? { ...guess, modelCorrect: guess.originCorrect } : guess));
+  const metrics = computeGameMetrics(rows, tiedUsage(usage, ids), asGuesses(modeGuesses), now);
   return {
     id: gameMode.id,
     name: gameMode.name,
@@ -398,14 +444,19 @@ function gameModeReport(
       correctGuesses: metrics.correctGuesses,
       guessAccuracy: metrics.guessAccuracy,
       messagesPerGame: metrics.messagesPerGame,
+      medianMessages: metrics.medianMessages,
       tokensPerGame: metrics.tokensPerGame,
+      medianTokens: metrics.medianTokens,
       originFoundRate: originFoundRate(rows, guesses),
+      ...scoreStats(rows),
     },
     models: modelsFrom(named, usage, guesses),
     confusion: originMode ? [] : confusionPairs(named, guesses),
     days: metrics.days,
-    sizes: originMode ? [] : traitRows(named, usage, guesses, "size", sizes),
-    origins: originMode ? [] : traitRows(named, usage, guesses, "origin", originOrder(named)),
+    sizes: originMode ? [] : traitRows(named, usage, guesses, (game) => game.size, sizes),
+    origins: originMode ? [] : traitRows(named, usage, guesses, (game) => game.origin, originOrder(named)),
+    difficulties: gameMode.id === "daily" || gameMode.id === "all" ? difficultyRows(named, usage, guesses) : [],
+    hints: originMode ? [] : hintRows(named, usage, guesses),
     originPicks: originMode ? originPickRows(rows, guesses) : [],
     custom: gameMode.id === "custom" ? customReport(rows) : null,
   };
@@ -416,13 +467,15 @@ export function computePublicStats(
   usage: PublicUsageFact[],
   guesses: PublicGuessFact[],
   gameModes: NamedGameMode[],
-  categories: NamedCategory[] = [],
+  pools: { categories?: NamedCategory[]; companies?: NamedCategory[] } = {},
   now: Date = new Date(),
 ): PublicStats {
   const finished = games.filter((game) => hasFinishedAt(game));
-  // Origin rounds guess an origin, not a model: they have their own tab and stay out of the all-modes figures.
-  // Custom rounds use a pool the player picked, so they have their own tab too and would skew the shared lists.
-  const counted = finished.filter((game) => game.gameMode !== "origin" && game.gameMode !== "custom");
+  // Every mode counts in All modes. Origin rounds guess an origin, not a model, so they stay out of the guess
+  // figures and of every table that names a model.
+  const scored = finished;
+  const counted = scored.filter((game) => game.gameMode !== "origin");
+  const hinted = withoutTodayDaily(counted, utcDate(now));
   const today = utcDate(now);
   const named = withoutTodayDaily(counted, today);
   const playable = gameModes.filter((gameMode) => gameMode.id !== "family");
@@ -430,35 +483,42 @@ export function computePublicStats(
   const extra = [...new Set(finished.map((game) => game.gameMode).filter((id) => id !== "family" && !known.has(id)))].sort();
   const listed = [...playable, ...extra.map((id) => ({ id, name: id }))];
   const countedIds = new Set(counted.map((game) => game.id));
+  const scoredIds = new Set(scored.map((game) => game.id));
   const overall = computeGameMetrics(
-    counted,
-    tiedUsage(usage, countedIds),
+    scored,
+    tiedUsage(usage, scoredIds),
     asGuesses(guesses.filter((guess) => countedIds.has(guess.gameId))),
     now,
   );
   return {
     outcome: {
-      games: counted.length,
+      games: scored.length,
       open: 0,
-      finished: counted.length,
+      finished: scored.length,
       solved: overall.solved,
       missed: overall.missed,
       givenUp: overall.givenUp,
-      solveRate: counted.length > 0 ? overall.solved / counted.length : null,
-      giveUpRate: counted.length > 0 ? overall.givenUp / counted.length : null,
+      solveRate: scored.length > 0 ? overall.solved / scored.length : null,
+      giveUpRate: scored.length > 0 ? overall.givenUp / scored.length : null,
       guesses: overall.guesses,
       correctGuesses: overall.correctGuesses,
       guessAccuracy: overall.guessAccuracy,
       messagesPerGame: overall.messagesPerGame,
+      medianMessages: overall.medianMessages,
       tokensPerGame: overall.tokensPerGame,
+      medianTokens: overall.medianTokens,
       originFoundRate: originFoundRate(counted, guesses),
+      ...scoreStats(scored),
     },
     models: modelsFrom(named, usage, guesses),
     days: overall.days,
     confusion: confusionPairs(named, guesses),
-    sizes: traitRows(named, usage, guesses, "size", sizes),
-    origins: traitRows(named, usage, guesses, "origin", originOrder(named)),
-    categories: categoryRows(named, usage, guesses, categories),
+    sizes: traitRows(named, usage, guesses, (game) => game.size, sizes),
+    origins: traitRows(named, usage, guesses, (game) => game.origin, originOrder(named)),
+    difficulties: difficultyRows(named, usage, guesses),
+    hints: hintRows(hinted, usage, guesses),
+    categories: poolRows(named, usage, guesses, pools.categories ?? [], "class"),
+    companies: poolRows(named, usage, guesses, pools.companies ?? [], "company"),
     gameModes: listed.map((gameMode) => gameModeReport(gameMode, finished, usage, guesses, today, now)),
   };
 }

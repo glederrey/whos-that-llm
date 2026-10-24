@@ -1,9 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import { DayBars } from "@/components/day-bars";
 import { OriginFlag } from "@/components/origin-flag";
 import { Twemoji } from "@/components/twemoji";
-import { compact, decimal, percent, type DayCount } from "@/lib/admin-metrics";
+import { compact, decimal, percent } from "@/lib/admin-metrics";
+import { difficultyFromStored, difficultyLabel } from "@/lib/difficulty";
 import { originLabel, sizeLabel, type Origin, type Size } from "@/lib/game";
 import {
   statisticModes,
@@ -54,7 +56,25 @@ export function StatisticsBoard({
       {mode === "main" ? (
         <MainStats stats={stats} nameFor={nameFor} />
       ) : mode === "class" ? (
-        <CategoryMode categories={stats.categories} report={selected} nameFor={nameFor} />
+        <PoolMode
+          rows={stats.categories}
+          report={selected}
+          nameFor={nameFor}
+          column="Category"
+          title="By category"
+          intro="Rounds played on each category. A category that is turned off is left out."
+          empty="No categories turned on yet."
+        />
+      ) : mode === "company" ? (
+        <PoolMode
+          rows={stats.companies}
+          report={selected}
+          nameFor={nameFor}
+          column="Company"
+          title="By company"
+          intro="Rounds played on each company."
+          empty="No companies yet."
+        />
       ) : mode === "origin" ? (
         <OriginMode report={selected} nameFor={nameFor} origins={origins} />
       ) : (
@@ -67,53 +87,62 @@ export function StatisticsBoard({
 function MainStats({ stats, nameFor }: { stats: PublicStats; nameFor: (id: string) => string }) {
   return (
     <>
-      <h2>Games</h2>
       <Figures items={gameFigures(stats.outcome)} />
       <h2>Games over time</h2>
-      <DayBars days={stats.days} />
+      <GamesOverTime days={stats.days} />
       <h2>Which models are hardest to find</h2>
-      <p className="muted">Hidden models, hardest first. Solve rate is solved over finished games.</p>
+      <p className="muted">Hidden models, hardest first. Solve rate is solved over games played. Rounds given up before any message are left out.</p>
       <ModelTable rows={stats.models} nameFor={nameFor} />
       <h2>Models people mix up</h2>
-      <p className="muted">Wrong names on finished games. Each row is the hidden model and the one that was named instead.</p>
+      <p className="muted">Wrong names on games. Each row is the hidden model and the one that was named instead.</p>
       <ConfusionTable rows={stats.confusion} nameFor={nameFor} />
       <h2>Size</h2>
       <p className="muted">By the size of the hidden model.</p>
-      <TraitTable kind="size" rows={stats.sizes} />
+      <TraitTable kind="size" rows={stats.sizes.filter((row) => row.finished > 0)} />
       <h2>Origin</h2>
-      <p className="muted">By the origin of the hidden model. Origin found is a finished game where a guess got the origin.</p>
+      <p className="muted">By the origin of the hidden model. Origin found is a game where a guess got the origin.</p>
       <TraitTable kind="origin" rows={stats.origins} />
+      <DifficultyAndHints difficulties={stats.difficulties} hints={stats.hints} />
     </>
   );
 }
 
-function ModeStats({ report, nameFor }: { report: GameModeReport | undefined; nameFor: (id: string) => string }) {
+function ModeStats({
+  report,
+  nameFor,
+  afterChart,
+}: {
+  report: GameModeReport | undefined;
+  nameFor: (id: string) => string;
+  afterChart?: React.ReactNode;
+}) {
   if (!report || report.outcome === null) {
     return (
       <div className="card empty">
-        <p>No finished games in this game mode yet.</p>
+        <p>No games in this game mode yet.</p>
       </div>
     );
   }
   return (
     <>
-      <h2>{report.name}</h2>
-      <Figures items={gameFigures(report.outcome, report.custom)} />
+      <Figures items={gameFigures(report.outcome)} />
       <h2>Games over time</h2>
-      <DayBars days={report.days} />
+      <GamesOverTime days={report.days} />
+      {afterChart}
       {report.custom ? <CustomStats custom={report.custom} total={report.finished} nameFor={nameFor} /> : null}
       <h2>Which models are hardest to find</h2>
-      <p className="muted">Hidden models, hardest first. Solve rate is solved over finished games.</p>
+      <p className="muted">Hidden models, hardest first. Solve rate is solved over games played. Rounds given up before any message are left out.</p>
       <ModelTable rows={report.models} nameFor={nameFor} />
       <h2>Models people mix up</h2>
-      <p className="muted">Wrong names on finished games. Each row is the hidden model and the one that was named instead.</p>
+      <p className="muted">Wrong names on games. Each row is the hidden model and the one that was named instead.</p>
       <ConfusionTable rows={report.confusion} nameFor={nameFor} />
       <h2>Size</h2>
       <p className="muted">By the size of the hidden model.</p>
-      <TraitTable kind="size" rows={report.sizes} />
+      <TraitTable kind="size" rows={report.sizes.filter((row) => row.finished > 0)} />
       <h2>Origin</h2>
-      <p className="muted">By the origin of the hidden model. Origin found is a finished game where a guess got the origin.</p>
+      <p className="muted">By the origin of the hidden model. Origin found is a game where a guess got the origin.</p>
       <TraitTable kind="origin" rows={report.origins} />
+      <DifficultyAndHints difficulties={report.difficulties} hints={report.hints} />
     </>
   );
 }
@@ -130,7 +159,7 @@ function OriginMode({
   if (!report || report.outcome === null) {
     return (
       <div className="card empty">
-        <p>No finished games in this game mode yet.</p>
+        <p>No games in this game mode yet.</p>
       </div>
     );
   }
@@ -143,23 +172,16 @@ function OriginMode({
   );
   return (
     <>
-      <h2>{report.name}</h2>
-      <Figures
-        items={[
-          { label: "Solve rate", value: percent(outcome.solveRate), note: `${outcome.solved} solved of ${outcome.finished} finished` },
-          { label: "Messages per game", value: decimal(outcome.messagesPerGame), note: "Finished games" },
-          { label: "Tokens per game", value: compact(outcome.tokensPerGame), note: "Prompt plus completion" },
-        ]}
-      />
+      <Figures items={gameFigures(outcome)} />
       <h2>Games over time</h2>
-      <DayBars days={report.days} />
+      <GamesOverTime days={report.days} />
       <h2>By real origin</h2>
       <p className="muted">
         For each real origin: how often it was found, and how many times each origin was picked.
       </p>
       <OriginPickTable rows={report.originPicks} label={label} />
       <h2>Hardest and easiest models</h2>
-      <p className="muted">Hidden models, hardest first. Solve rate is solved over finished games.</p>
+      <p className="muted">Hidden models, hardest first. Solve rate is solved over games played. Rounds given up before any message are left out.</p>
       <ModelTable rows={report.models} nameFor={nameFor} />
     </>
   );
@@ -206,24 +228,46 @@ function OriginPickTable({ rows, label }: { rows: OriginPickRow[]; label: (id: s
   );
 }
 
-function CategoryMode({
-  categories,
+function PoolMode({
+  rows,
   report,
   nameFor,
+  column,
+  title,
+  intro,
+  empty,
 }: {
-  categories: CategoryStat[];
+  rows: CategoryStat[];
   report: GameModeReport | undefined;
   nameFor: (id: string) => string;
+  column: string;
+  title: string;
+  intro: string;
+  empty: string;
 }) {
+  const table = (
+    <>
+      <h2>{title}</h2>
+      <p className="muted">{intro}</p>
+      {rows.length === 0 ? <div className="card empty">{empty}</div> : <CategoryTable rows={rows} column={column} />}
+    </>
+  );
+  return <ModeStats report={report} nameFor={nameFor} afterChart={table} />;
+}
+
+function DifficultyAndHints({ difficulties, hints }: { difficulties: TraitRow[]; hints: TraitRow[] }) {
   return (
     <>
-      {report?.outcome ? <ModeStats report={report} nameFor={nameFor} /> : null}
-      <h2>By category</h2>
-      <p className="muted">
-        By the categories of the hidden model. A round counts in each category that model belongs to. A model with no
-        category is left out.
-      </p>
-      {categories.length === 0 ? <div className="card empty">No categories turned on yet.</div> : <CategoryTable rows={categories} />}
+      {difficulties.length > 0 ? (
+        <>
+          <h2>Difficulty</h2>
+          <p className="muted">By the difficulty the player chose. Only Daily and All models have one.</p>
+          <TraitTable kind="difficulty" rows={difficulties} />
+        </>
+      ) : null}
+      <h2>Hints</h2>
+      <p className="muted">Rounds where hints could be bought against rounds played with no hints.</p>
+      <TraitTable kind="hints" rows={hints} />
     </>
   );
 }
@@ -245,10 +289,10 @@ function CustomStats({ custom, total, nameFor }: { custom: CustomReport; total: 
             </div>
           ))}
         </div>
-        <p className="muted">Finished Custom rounds by the number of models in the pool.</p>
+        <p className="muted">Custom rounds by the number of models in the pool.</p>
       </div>
       <h2>Most picked models</h2>
-      <p className="muted">Models that were in the most Custom pools. Share is the part of the {total.toLocaleString("en-US")} finished rounds that held the model.</p>
+      <p className="muted">Models that were in the most Custom pools. Share is the part of the {total.toLocaleString("en-US")} rounds that held the model.</p>
       <div className="card roster-card">
         <table className="roster compact">
           <thead>
@@ -281,38 +325,29 @@ function CustomStats({ custom, total, nameFor }: { custom: CustomReport; total: 
   );
 }
 
-function gameFigures(outcome: Outcome, custom: CustomReport | null = null): Figure[] {
+function gameFigures(outcome: Outcome): Figure[] {
+  const share = (count: number) => percent(outcome.finished > 0 ? count / outcome.finished : null);
   return [
     {
       label: "Solve rate",
       value: percent(outcome.solveRate),
-      note: `${outcome.solved} solved of ${outcome.finished} finished`,
+      note: `${outcome.solved} of ${outcome.finished} games`,
     },
-    {
-      label: "Give-ups",
-      value: outcome.givenUp.toLocaleString("en-US"),
-      note: `${percent(outcome.giveUpRate)} of finished. ${outcome.missed} missed`,
-    },
+    { label: "Failed", value: share(outcome.missed), note: `${outcome.missed} of ${outcome.finished} games` },
+    { label: "Give-ups", value: share(outcome.givenUp), note: `${outcome.givenUp} of ${outcome.finished} games` },
     {
       label: "Correct guesses",
       value: percent(outcome.guessAccuracy),
-      note: `${outcome.correctGuesses} of ${outcome.guesses} guesses on finished games`,
+      note: `${outcome.correctGuesses} of ${outcome.guesses} guesses`,
     },
-    { label: "Messages per game", value: decimal(outcome.messagesPerGame), note: "Finished games" },
-    { label: "Tokens per game", value: compact(outcome.tokensPerGame), note: "Prompt plus completion" },
-    custom
-      ? { label: "Models per round", value: decimal(custom.avgModels), note: "Average size of the pool the player picked" }
-      : {
-          label: "Origin found",
-          value: percent(outcome.originFoundRate),
-          note: "Finished games where a guess got the origin",
-        },
+        { label: "Median messages", value: decimal(outcome.medianMessages), note: "Per game played" },
+    { label: "Median tokens", value: compact(outcome.medianTokens), note: "Prompt plus completion" },
   ];
 }
 
 function Figures({ items }: { items: Figure[] }) {
   return (
-    <dl className="stats">
+    <dl className="stats stats-figures">
       {items.map((item) => (
         <div key={item.label}>
           <dt>{item.label}</dt>
@@ -394,17 +429,19 @@ function ConfusionTable({ rows, nameFor }: { rows: ConfusionPair[]; nameFor: (id
   );
 }
 
-function CategoryTable({ rows }: { rows: CategoryStat[] }) {
+function CategoryTable({ rows, column }: { rows: CategoryStat[]; column: string }) {
+  const scored = rows.some((row) => row.avgScore !== null);
   return (
     <div className="card roster-card">
       <table className="roster compact">
         <thead>
           <tr>
-            <th>Category</th>
+            <th>{column}</th>
             <th>Games</th>
             <th>Solve rate</th>
             <th>Messages when solved</th>
             <th>Tokens per game</th>
+            {scored ? <th>Average score</th> : null}
           </tr>
         </thead>
         <tbody>
@@ -415,6 +452,7 @@ function CategoryTable({ rows }: { rows: CategoryStat[] }) {
               <td>{row.finished === 0 ? "n/a" : percent(row.solveRate)}</td>
               <td>{decimal(row.avgMessagesWhenSolved)}</td>
               <td>{compact(row.tokensPerGame)}</td>
+              {scored ? <td>{compact(row.avgScore)}</td> : null}
             </tr>
           ))}
         </tbody>
@@ -423,18 +461,22 @@ function CategoryTable({ rows }: { rows: CategoryStat[] }) {
   );
 }
 
-function TraitTable({ kind, rows }: { kind: "size" | "origin"; rows: TraitRow[] }) {
+type TraitKind = "size" | "origin" | "difficulty" | "hints";
+
+function TraitTable({ kind, rows }: { kind: TraitKind; rows: TraitRow[] }) {
+  const scored = rows.some((row) => row.avgScore !== null);
   return (
     <div className="card roster-card">
       <table className="roster compact">
         <thead>
           <tr>
-            <th>{kind === "size" ? "Size" : "Origin"}</th>
+            <th>{traitHeading[kind]}</th>
             <th>Games</th>
             <th>Solve rate</th>
             <th>Messages when solved</th>
             {kind === "origin" ? <th>Origin found</th> : null}
             <th>Tokens per game</th>
+            {scored ? <th>Average score</th> : null}
           </tr>
         </thead>
         <tbody>
@@ -455,6 +497,7 @@ function TraitTable({ kind, rows }: { kind: "size" | "origin"; rows: TraitRow[] 
               <td>{decimal(row.avgMessagesWhenSolved)}</td>
               {kind === "origin" ? <td>{row.finished === 0 ? "n/a" : percent(row.originFoundRate)}</td> : null}
               <td>{compact(row.tokensPerGame)}</td>
+              {scored ? <td>{compact(row.avgScore)}</td> : null}
             </tr>
           ))}
         </tbody>
@@ -463,30 +506,25 @@ function TraitTable({ kind, rows }: { kind: "size" | "origin"; rows: TraitRow[] 
   );
 }
 
-function traitLabel(kind: "size" | "origin", key: string): string {
+const traitHeading: Record<TraitKind, string> = { size: "Size", origin: "Origin", difficulty: "Difficulty", hints: "Hints" };
+
+function traitLabel(kind: TraitKind, key: string): string {
   if (key === "unknown") return "Not recorded";
   if (kind === "size") return sizeLabel(key as Size);
+  if (kind === "difficulty") {
+    const difficulty = difficultyFromStored(key);
+    return difficulty ? difficultyLabel[difficulty] : "Not recorded";
+  }
+  if (kind === "hints") return key === "no-hints" ? "No hints" : "With hints";
   return originLabel(key as Origin);
 }
 
-function DayBars({ days }: { days: DayCount[] }) {
-  const peak = Math.max(1, ...days.map((day) => day.games));
+function GamesOverTime({ days }: { days: PublicStats["days"] }) {
   return (
-    <div className="card">
-      <div className="daybars" role="img" aria-label="Finished games started per UTC day, last 14 days">
-        {days.map((day) => (
-          <div key={day.date} className="daybar" title={`${day.date}: ${day.games} finished games, ${day.solved} solved`}>
-            <span className="daybar-count">{day.games}</span>
-            <span className="daybar-track">
-              <i className="daybar-all" style={{ height: `${(day.games / peak) * 100}%` }}>
-                <i className="daybar-solved" style={{ height: day.games ? `${(day.solved / day.games) * 100}%` : 0 }} />
-              </i>
-            </span>
-            <span className="daybar-date">{day.date.slice(5)}</span>
-          </div>
-        ))}
-      </div>
-      <p className="muted">Finished games started per UTC day, last 14 days. The teal part is solved.</p>
-    </div>
+    <DayBars
+      days={days}
+      label="Games started per UTC day, last 14 days"
+      note="Games started per UTC day, last 14 days."
+    />
   );
 }

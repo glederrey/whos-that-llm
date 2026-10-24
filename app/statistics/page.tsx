@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   description:
-    "Figures from finished rounds: how often players solve, give up, or miss, and which hidden models are the hardest to name.",
+    "Figures from played rounds: how often players solve, give up, or miss, and which hidden models are the hardest to name.",
 };
 
 export default async function StatisticsPage() {

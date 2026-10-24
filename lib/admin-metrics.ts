@@ -38,7 +38,7 @@ export type ModelDifficulty = {
   costPerGame: number | null;
 };
 
-export type DayCount = { date: string; games: number; solved: number };
+export type DayCount = { date: string; games: number; solved: number; missed: number; givenUp: number };
 
 export type GameMetrics = {
   games: number;
@@ -56,7 +56,9 @@ export type GameMetrics = {
   unfinished: number;
   unfinishedRate: number | null;
   messagesPerGame: number | null;
+  medianMessages: number | null;
   tokensPerGame: number | null;
+  medianTokens: number | null;
   costPerGame: number | null;
   costPerSolvedGame: number | null;
   ledgerCostUsd: number;
@@ -156,7 +158,9 @@ export function computeGameMetrics(
     unfinished,
     unfinishedRate: ratio(unfinished, games.length),
     messagesPerGame: ratio(finishedMessages, finished),
+    medianMessages: median(games.filter((game) => isFinished(game.status)).map((game) => game.messageCount)),
     tokensPerGame: ratio(finishedTokens, finished),
+    medianTokens: median([...finishedIds].map((id) => gameTokens.get(id) ?? 0)),
     costPerGame: ratio(finishedCost, finished),
     costPerSolvedGame: ratio(finishedCost, solved),
     ledgerCostUsd,
@@ -167,6 +171,13 @@ export function computeGameMetrics(
     days: dayRows(games, lastDays(dayCount, now)),
   };
 
+}
+
+function median(values: number[]): number | null {
+  if (values.length === 0) return null;
+  const sorted = [...values].sort((a, b) => a - b);
+  const mid = Math.floor(sorted.length / 2);
+  return sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
 }
 
 function modelRows(games: GameFact[], usage: UsageFact[]): ModelDifficulty[] {
@@ -225,13 +236,15 @@ export function compareDifficulty(a: ModelDifficulty, b: ModelDifficulty): numbe
   return a.solveRate - b.solveRate || b.finished - a.finished || a.modelId.localeCompare(b.modelId);
 }
 
-function dayRows(games: GameFact[], days: string[]): DayCount[] {
-  const rows = new Map(days.map((date) => [date, { date, games: 0, solved: 0 }]));
+export function dayRows(games: { status: string; startedAt: string }[], days: string[]): DayCount[] {
+  const rows = new Map(days.map((date) => [date, { date, games: 0, solved: 0, missed: 0, givenUp: 0 }]));
   for (const game of games) {
     const row = rows.get(utcDate(game.startedAt));
     if (!row) continue;
     row.games += 1;
     if (game.status === SOLVED) row.solved += 1;
+    else if (game.status === MISSED) row.missed += 1;
+    else if (game.status === GAVE_UP) row.givenUp += 1;
   }
   return days.map((date) => rows.get(date)!);
 }

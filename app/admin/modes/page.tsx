@@ -46,7 +46,7 @@ export default async function ModesPage() {
                   <td>{row.finished.toLocaleString("en-US")}</td>
                   <td>{row.solved.toLocaleString("en-US")}</td>
                   <td>{percent(row.solveRate)}</td>
-                  <td>{row.id === "origin" ? "—" : row.givenUp.toLocaleString("en-US")}</td>
+                  <td>{row.givenUp.toLocaleString("en-US")}</td>
                 </tr>
               ))
             )}

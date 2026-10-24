@@ -33,6 +33,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
         maxOutputTokens: hidden.game.rules.maxOutputTokens,
         transcript: hidden.transcript,
         userText: trimmed,
+        context: hidden.context,
         onWord(word) {
           send({ type: "word", text: word });
         },

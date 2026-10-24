@@ -64,9 +64,9 @@ test("rates use finished games and cost follows the ledger", () => {
   assert.equal(metrics.failedRequests, 1);
   assert.equal(metrics.ledgerRequests, 6);
   assert.deepEqual(metrics.days, [
-    { date: "2026-10-08", games: 0, solved: 0 },
-    { date: "2026-10-09", games: 2, solved: 0 },
-    { date: "2026-10-10", games: 3, solved: 2 },
+    { date: "2026-10-08", games: 0, solved: 0, missed: 0, givenUp: 0 },
+    { date: "2026-10-09", games: 2, solved: 0, missed: 1, givenUp: 1 },
+    { date: "2026-10-10", games: 3, solved: 2, missed: 0, givenUp: 0 },
   ]);
   assert.deepEqual(metrics.models.map((row) => row.modelId), ["m1", "m2"]);
   assert.equal(metrics.models[0].solveRate, 0.5);

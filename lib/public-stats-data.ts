@@ -17,14 +17,14 @@ export type PublicStatsPayload = {
 
 export async function loadPublicStats(): Promise<PublicStatsPayload> {
   const client = serviceOrThrow();
-  const [games, usage, guesses, gameModes, models, categories, memberships, originRows] = await Promise.all([
-    readAll(client, "games", "id, model_id, status, message_count, started_at, finished_at, game_mode, traits, pool_model_ids"),
+  const [games, usage, guesses, gameModes, models, categories, companies, originRows] = await Promise.all([
+    readAll(client, "games", "id, model_id, status, message_count, started_at, finished_at, game_mode, traits, pool_model_ids, pool_key, difficulty, no_hint, score"),
     readAll(client, "usage", "id, game_id, model_id, input_tokens, output_tokens"),
     readAll(client, "guesses", "id, game_id, guessed_model_id, guessed_origin, model_correct, origin_correct"),
     readAll(client, "game_modes", "id, name, sort_order"),
     readAll(client, "models", "id, name"),
     readAll(client, "categories", "id, name, enabled"),
-    readAll(client, "model_categories", "model_id, category_id", ["model_id", "category_id"]),
+    readAll(client, "companies", "id, name"),
     readAll(client, "origins", "id, name, flag"),
   ]);
   const names: Record<string, string> = {};
@@ -35,30 +35,22 @@ export async function loadPublicStats(): Promise<PublicStatsPayload> {
     .map(({ id, name }) => ({ id, name }));
   // A category that is turned off is left out; its games stay in the other tables.
   const categoryNames: NamedCategory[] = categories.flatMap((row) => (row.enabled ? [{ id: row.id as string, name: row.name as string }] : []));
-  const categoriesByModel = new Map<string, string[]>();
-  for (const row of memberships) {
-    const modelId = row.model_id as string;
-    const categoryId = row.category_id as string;
-    const current = categoriesByModel.get(modelId) ?? [];
-    if (!current.includes(categoryId)) current.push(categoryId);
-    categoriesByModel.set(modelId, current);
-  }
   const origins: PublicStatsPayload["origins"] = {};
   for (const row of originRows) origins[row.id as string] = { name: row.name as string, flag: row.flag as string };
   return {
     names,
     origins,
     stats: computePublicStats(
-      games.map((row) => gameFact(row, categoriesByModel.get(row.model_id as string) ?? [])),
+      games.map(gameFact),
       usage.map(usageFact),
       guesses.map(guessFact),
       listed,
-      categoryNames,
+      { categories: categoryNames, companies: companies.map((row) => ({ id: row.id as string, name: row.name as string })) },
     ),
   };
 }
 
-function gameFact(row: Record<string, unknown>, categoryIds: string[]): PublicGameFact {
+function gameFact(row: Record<string, unknown>): PublicGameFact {
   const modelId = row.model_id as string;
   const trait = hiddenTrait(row.traits, modelId);
   return {
@@ -71,7 +63,10 @@ function gameFact(row: Record<string, unknown>, categoryIds: string[]): PublicGa
     gameMode: row.game_mode as string,
     size: trait.size,
     origin: trait.origin,
-    categoryIds,
+    poolKey: typeof row.pool_key === "string" && row.pool_key.length > 0 ? row.pool_key : null,
+    difficulty: row.difficulty === null || row.difficulty === undefined ? null : Number(row.difficulty),
+    noHint: Boolean(row.no_hint),
+    score: row.score === null || row.score === undefined ? null : Number(row.score),
     poolModelIds: Array.isArray(row.pool_model_ids) ? row.pool_model_ids.flatMap((id) => (typeof id === "string" ? [id] : [])) : [],
   };
 }
