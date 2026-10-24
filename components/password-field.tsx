@@ -9,18 +9,20 @@ export function PasswordField({
   onChange,
   autoComplete,
   showRules,
+  label = "Password",
 }: {
   id: string;
   value: string;
   onChange: (value: string) => void;
   autoComplete: string;
   showRules: boolean;
+  label?: string;
 }) {
   const [showPassword, setShowPassword] = useState(false);
 
   return (
     <div className="password-block">
-      <label htmlFor={id}>Password</label>
+      <label htmlFor={id}>{label}</label>
       <div className="password-field">
         <input
           id={id}

@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
 import test from "node:test";
-import { isWeakPasswordError, passwordChecks, passwordProblem, passwordRulesText, passwordStrength, weakPasswordNotice } from "./password-rules";
+import { hasPasswordLogin, isWeakPasswordError, passwordChecks, passwordProblem, passwordRulesText, passwordStrength, weakPasswordNotice } from "./password-rules";
 
 const root = path.resolve(import.meta.dirname, "..");
 
@@ -136,4 +136,23 @@ test("the password reset applies the sign-up rules and spends the token with the
   assert.ok(reset.indexOf("auth.updateUser") < reset.indexOf("auth.signOut"));
   assert.match(reset, /weakPasswordNotice/);
   assert.match(reset, /code !== "same_password"/);
+});
+
+test("only an account with an email identity has a password to change", () => {
+  assert.equal(hasPasswordLogin({ identities: [{ provider: "email" }] }), true);
+  assert.equal(hasPasswordLogin({ identities: [{ provider: "google" }, { provider: "email" }] }), true);
+  assert.equal(hasPasswordLogin({ identities: [{ provider: "google" }] }), false);
+  assert.equal(hasPasswordLogin({ identities: null }), false);
+  assert.equal(hasPasswordLogin({}), false);
+});
+
+test("changing the password applies the rules, then checks the current password, then saves", () => {
+  const actions = fs.readFileSync(path.join(root, "app/auth/actions.ts"), "utf8");
+  const change = actions.slice(actions.indexOf("function changePassword"));
+  assert.ok(change.indexOf("passwordProblem(password)") < change.indexOf("auth.signInWithPassword"));
+  assert.ok(change.indexOf("hasPasswordLogin(user)") < change.indexOf("auth.signInWithPassword"));
+  assert.ok(change.indexOf("auth.signInWithPassword") < change.indexOf("auth.updateUser"));
+  assert.match(change, /code === "same_password"/);
+  assert.match(change, /weakPasswordNotice/);
+  assert.equal(change.includes("auth.signOut"), false);
 });

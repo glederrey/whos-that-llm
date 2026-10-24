@@ -16,6 +16,11 @@ export function passwordChecks(password: string): { label: string; met: boolean 
 
 export const passwordRulesText = "At least 8 characters, a lowercase letter, an uppercase letter, a digit, and a symbol.";
 
+// Only an account with an email identity has a password to change. A Google-only account has none.
+export function hasPasswordLogin(user: { identities?: { provider: string }[] | null }): boolean {
+  return (user.identities ?? []).some((identity) => identity.provider === "email");
+}
+
 export function passwordStrength(password: string): number {
   return checks.reduce((count, check) => count + (check.met(password) ? 1 : 0), 0);
 }

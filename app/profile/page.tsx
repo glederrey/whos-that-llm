@@ -6,6 +6,7 @@ import { ProfileForm } from "@/components/profile-form";
 import type { ProfileStats } from "@/lib/profile";
 import { loadHistory, loadHistoryFacets, loadProfileStats, profilePageSize } from "@/lib/profile-data";
 import { historyItem } from "@/lib/profile-history";
+import { hasPasswordLogin } from "@/lib/password-rules";
 import { currentProfile } from "@/lib/session";
 
 export const dynamic = "force-dynamic";
@@ -51,7 +52,7 @@ export default async function ProfilePage({
   return (
     <div className="stack">
       <h1>Profile</h1>
-      <ProfileForm username={username} avatarUrl={avatarUrl} userId={user.id} />
+      <ProfileForm username={username} avatarUrl={avatarUrl} userId={user.id} canChangePassword={hasPasswordLogin(user)} />
       <h2 className="profile-heading">Stats</h2>
       <dl className="stats profile-stats">
         {figures.map((figure) => (

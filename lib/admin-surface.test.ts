@@ -144,9 +144,9 @@ test("account deletion uses only the signed-in user", () => {
   assert.match(form, /This removes your profile and picture, and your name on the leaderboard/);
   assert.doesNotMatch(form, /and games/);
   assert.match(form, /deleteNotice\(notice\)/);
-  assert.match(form, /name="confirm"/);
-  assert.match(form, /preventDefault\(\)/);
-  assert.match(form, /returnTo !== "profile"/);
+  assert.match(form, /name="confirm" value="yes"/);
+  assert.match(form, /deleteConfirmed\(typed\)/);
+  assert.match(form, /showModal\(\)/);
   assert.doesNotMatch(form, /name="(?:id|userId|user_id|email)"/);
   const menu = fs.readFileSync(path.join(root, "components/account-menu.tsx"), "utf8");
   assert.equal(menu.includes("/account/delete"), false);
