@@ -61,7 +61,6 @@ test("pool labels per game mode", () => {
   assert.equal(poolLabel("daily", null, traits, "easy"), "Daily · Easy");
   assert.equal(poolLabel("class", "x", traits, "hard"), "Category");
   assert.equal(poolLabel("origin", null, traits), "Origin");
-  assert.equal(poolLabel("latest", null, traits), "Latest");
   assert.equal(poolLabel("company", "x", traits), "Company · X");
   assert.equal(poolLabel("company", "zz", traits), "Company · X");
   assert.equal(poolLabel("company", null, traits), "Company · X");

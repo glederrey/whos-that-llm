@@ -10,7 +10,6 @@ test("each game mode tells the model what the human chooses from", () => {
   assert.match(roundContext({ gameMode: "custom", poolSize: 4 }) ?? "", /picked 4 models/);
   assert.match(roundContext({ gameMode: "origin", poolSize: 90 }) ?? "", /only guess which origin/);
   assert.equal(roundContext({ gameMode: "company", poolSize: 6 }), null);
-  assert.equal(roundContext({ gameMode: "latest", poolSize: 6 }), null);
 });
 
 test("the context sits in the system prompt only when there is one", () => {

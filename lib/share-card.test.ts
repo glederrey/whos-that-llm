@@ -103,7 +103,7 @@ test("a finished round becomes a score card", () => {
 
   const hard = card({ gameMode: "all", difficulty: "hard", status: "miss", score: 400 });
   assert.equal(hard.modeLine, "All models · Hard");
-  assert.equal(hard.outcome, "Not solved");
+  assert.equal(hard.outcome, "Failed");
   assert.equal(hard.modelName, hidden);
   assert.equal(hard.modelLogoPath, "logos/anthropic.png");
   assert.deepEqual(hard.modelFacts, ["Anthropic", "USA", "2026", "Large"]);

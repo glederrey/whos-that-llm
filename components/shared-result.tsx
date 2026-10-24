@@ -18,7 +18,7 @@ function playLink(card: ShareCard): string {
 /** The public result. The score table, with no chat and no share buttons. */
 export function SharedResult({ card }: { card: ShareCard }) {
   const display = shareCardDisplay(card);
-  const state = display.outcome === "Solved" ? "solved" : display.outcome === "Not solved" ? "miss" : "given-up";
+  const state = display.outcome === "Solved" ? "solved" : display.outcome === "Failed" ? "miss" : "given-up";
   const scored = card.score !== null;
   const noHint = display.details.some((detail) => detail.label === "No-hint");
   const title = shareGameTitle(card.playerName);
