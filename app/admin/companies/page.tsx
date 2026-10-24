@@ -6,10 +6,12 @@ import { companyNotice, maxCompanyName } from "@/lib/admin-company";
 import { loadOriginOptions } from "@/lib/admin-origins";
 import type { OriginOption } from "@/lib/admin-origin";
 import { loadCompanyList, type CompanyListRow } from "@/lib/admin-roster";
+import { requireOwner } from "@/lib/admin-access";
 
 export const dynamic = "force-dynamic";
 
 export default async function CompaniesPage({ searchParams }: { searchParams: Promise<{ notice?: string }> }) {
+  await requireOwner();
   const params = await searchParams;
   const notice = companyNotice(params.notice);
   const [companies, origins] = await Promise.all([loadCompanyList(), loadOriginOptions()]);
