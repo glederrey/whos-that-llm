@@ -326,15 +326,14 @@ function ModelRow({
               />
             </div>
             {row.reasoning ? (
-              <label className="check">
-                <input type="checkbox" name="reasoningOff" value="1" defaultChecked={row.reasoningOff} />
-                Turn reasoning off
-              </label>
+              <>
+                <label className="check reasoning-off">
+                  <input type="checkbox" name="reasoningOff" value="1" defaultChecked={row.reasoningOff} />
+                  Turn reasoning off
+                </label>
+                <p className="muted">Otherwise it is sent at the lowest effort. The Costs page shows how much each model thinks.</p>
+              </>
             ) : null}
-            {row.reasoning ? (
-              <p className="muted">Otherwise it is sent at the lowest effort. The Costs page shows how much each model thinks.</p>
-            ) : null}
-            <p className="muted">Origin belongs to the company. Change it on the Companies page.</p>
             <div className="row">
               <button className="button" type="submit">
                 Save
