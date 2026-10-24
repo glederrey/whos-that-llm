@@ -345,15 +345,12 @@ export function filterCandidates(
     .sort((a, b) => a.companyName.localeCompare(b.companyName) || a.name.localeCompare(b.name));
 }
 
-export function isCreditError(status: number | undefined, message: string): boolean {
-  if (status === 402) return true;
-  const text = message.toLowerCase();
-  return (
-    text.includes("credit") ||
-    text.includes("insufficient") ||
-    text.includes("payment required") ||
-    text.includes("quota")
-  );
+/**
+ * Only an HTTP 402 pauses the game for everyone. Matching words in the message
+ * or body would let one user pause it with a crafted prompt echoed in an error.
+ */
+export function isCreditError(status: number | undefined): boolean {
+  return status === 402;
 }
 
 /**
