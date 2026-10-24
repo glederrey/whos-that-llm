@@ -1398,8 +1398,8 @@ html[data-theme="dark"] .md a { color: var(--teal); }
 .profile-picture { grid-column: 1; grid-row: 1; align-self: center; }
 .profile-name { grid-column: 2; grid-row: 1; }
 .profile-photo { grid-column: 3; grid-row: 1; }
-.profile-password { grid-column: 4; grid-row: 1; }
-.profile-save { grid-column: 5; grid-row: 1; }
+.profile-password { grid-column: 5; grid-row: 1; }
+.profile-save { grid-column: 4; grid-row: 1; }
 .profile-status { grid-column: 1 / -1; grid-row: 2; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 .profile-status .muted, .profile-status .error { margin: 0; }
 .profile-picture {
