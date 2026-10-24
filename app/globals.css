@@ -590,6 +590,7 @@ html[data-theme="dark"] .hour-status strong { color: var(--teal); }
   color: inherit;
   text-align: left;
 }
+.category-toggle > span:first-child { flex: 1; min-width: 0; }
 .category-toggle svg { width: 18px; height: 18px; flex: none; color: var(--mute); transition: transform 0.15s ease; }
 .category-toggle[aria-expanded="true"] svg { transform: rotate(180deg); }
 .difficulty-panel { display: grid; gap: 8px; padding: 12px 0 4px; }
