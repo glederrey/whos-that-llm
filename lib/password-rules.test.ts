@@ -93,8 +93,8 @@ test("sign-up checks the rules before the auth call and sign-in stays generic", 
   assert.match(form, /<PasswordField/);
   assert.ok(form.indexOf('className="auth-confirm"') > form.indexOf('type="submit"'));
   assert.match(form, /setNote\("The confirmation email has been sent\."\)/);
-  assert.equal(form.includes("Supabase will email you a confirmation link. Check your email."), false);
-  assert.match(form, /signingIn \|\| confirmationSent \? null : <p className="auth-confirm">Supabase will email you a confirmation link\.<\/p>/);
+  assert.equal(form.includes("We will email you a confirmation link. Check your email."), false);
+  assert.match(form, /signingIn \|\| confirmationSent \? null : <p className="auth-confirm">We will email you a confirmation link\.<\/p>/);
   assert.match(form, /An account with this email already exists\./);
   assert.equal(form.includes("That email is already registered."), false);
   assert.match(form, /<p className="error auth-error">\{error\}<\/p>/);

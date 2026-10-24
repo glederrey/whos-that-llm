@@ -6,6 +6,7 @@ import { addCategory, saveCategory, toggleCategory } from "@/app/admin/actions";
 import { categoryNotice, maxCategoryDescription } from "@/lib/admin-category";
 import type { CustomModel } from "@/lib/custom-mode";
 import { loadCategoryList, type CategoryListRow } from "@/lib/admin-roster";
+import { requireOwner } from "@/lib/admin-access";
 
 export const dynamic = "force-dynamic";
 
@@ -16,6 +17,7 @@ export default async function CategoriesPage({
 }: {
   searchParams: Promise<{ notice?: string }>;
 }) {
+  await requireOwner();
   const params = await searchParams;
   const notice = categoryNotice(params.notice);
   const { categories, companies, models } = await loadCategoryList();

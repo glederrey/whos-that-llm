@@ -4,7 +4,8 @@ name: Deploy
 # App env stays on the Vercel project, not in this workflow:
 # NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY, SUPABASE_SECRET_KEY,
 # OPENROUTER_API_KEY, OPENROUTER_MANAGEMENT_KEY.
-# The database migrations run first, in the same release. They connect with one
+# The database migrations run after the build succeeds and just before the deploy,
+# so a broken build never leaves the database ahead of the code. They connect with one
 # secret, SUPABASE_DB_URL (the session pooler connection string, which works over
 # IPv4), kept in the production environment and passed only to the Supabase steps.
 # There is no access token and no `supabase link`.
@@ -41,16 +42,6 @@ jobs:
         with:
           version: 2.121.0
 
-      - name: Preview the database migrations
-        run: supabase db push --dry-run --db-url "$SUPABASE_DB_URL"
-        env:
-          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
-
-      - name: Apply the database migrations
-        run: supabase db push --db-url "$SUPABASE_DB_URL"
-        env:
-          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
-
       - name: Install Vercel CLI
         run: npm install --global vercel@65.0.0
 
@@ -76,6 +67,16 @@ jobs:
           du -sh .vercel/output
           find .vercel/output -type f | wc -l
           find .vercel/output -type l | wc -l
+
+      - name: Preview the database migrations
+        run: supabase db push --dry-run --db-url "$SUPABASE_DB_URL"
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+
+      - name: Apply the database migrations
+        run: supabase db push --db-url "$SUPABASE_DB_URL"
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
 
       - name: Deploy to production
         run: vercel deploy --prebuilt --prod --archive=tgz

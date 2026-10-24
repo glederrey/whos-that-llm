@@ -6,7 +6,7 @@ import { deleteConfirmed, deleteWord } from "@/lib/delete-confirm";
 
 export function deleteNotice(code: string | undefined): string | null {
   if (code === "confirm") return "Confirm that you want to delete your account.";
-  if (code === "save") return "Could not delete this account.";
+  if (code === "save") return "Could not delete your account. Try again.";
   return null;
 }
 
@@ -23,7 +23,7 @@ export function DeleteAccountForm({ notice, returnTo }: { notice?: string; retur
   return (
     <div className="card stack">
       {returnTo === "profile" ? <h2>Delete account</h2> : null}
-      <p>This removes your profile and picture, and your name on the leaderboard. This cannot be undone.</p>
+      <p>This removes your profile, your picture, your name on the leaderboard and your sign-in account. Your finished games stay in the statistics without your name. This cannot be undone.</p>
       {serverNotice ? (
         <p className="error" role="alert">
           {serverNotice}
@@ -43,7 +43,7 @@ export function DeleteAccountForm({ notice, returnTo }: { notice?: string; retur
       >
         <form action={deleteAccount}>
           <h2>Delete account</h2>
-          <p>This removes your profile and picture, and your name on the leaderboard. This cannot be undone.</p>
+          <p>This removes your profile, your picture, your name on the leaderboard and your sign-in account. Your finished games stay in the statistics without your name. This cannot be undone.</p>
           <input type="hidden" name="confirm" value="yes" />
           {returnTo === "profile" ? <input type="hidden" name="return" value="profile" /> : null}
           <label>

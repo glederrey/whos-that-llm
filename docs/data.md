@@ -4,7 +4,7 @@ One Supabase Postgres database. The catalog, the rounds, and the cost ledger are
 
 ## Migrations
 
-The schema is the timestamped files in `supabase/migrations/`, run by the Supabase CLI in name order. `20261021080000_baseline.sql` is the whole schema as it stood on 21 Oct 2026: a fresh database (local, CI, a new project) runs it first, and production is marked as already applied: its 35 old history rows are first marked reverted, then `supabase migration repair --status applied 20261021080000`. `20261022151319_category_icons.sql` gives `categories` an icon and opens the Category mode. `20261022185816_category_enabled_default_icon.sql` adds `categories.enabled` and the `default` icon kind. `20261021090000_hardening.sql` revokes every table privilege from `anon` and `authenticated` on the tables they must never touch. `supabase/seed.sql` is a snapshot of the production catalog (roster, companies, categories, `openrouter_providers` slugs, `app_settings`) with no player data; it upserts, so it is safe on top of the baseline's own rows, and `supabase db reset` runs it after the migrations. A change is a new file from `npm run db:new <name>`. An applied file is never edited. A new table gets its explicit `GRANT` and its row level security in the same file. Production receives migrations only from the deploy workflow on a release. The bucket rows for `avatars` and `logos` are created by the baseline, not by `config.toml`.
+The schema is the timestamped files in `supabase/migrations/`, run by the Supabase CLI in name order. `20261021080000_baseline.sql` is the whole schema as it stood on 21 Oct 2026: a fresh database (local, CI, a new project) runs it first, and production is marked as already applied: its 35 old history rows are first marked reverted, then `supabase migration repair --status applied 20261021080000`. `20261021090000_hardening.sql` revokes every table privilege from `anon` and `authenticated` on the tables they must never touch. `20261022090000_drop_model_prices.sql` drops the price columns from `models`. `20261022151319_category_icons.sql` gives `categories` an icon and opens the Category mode. `20261022185816_category_enabled_default_icon.sql` adds `categories.enabled` and the `default` icon kind. `20261023124535_origin_mode.sql` adds the `origins` table and the Origin mode. `20261023160000_custom_mode.sql` opens the Custom mode. `20261024072757_company_enabled.sql` adds `companies.enabled`. `20261024120000_launch_audit.sql` drops the `avatars_read` policy on `storage.objects`, sets `search_path = public, pg_temp` on every security definer function, adds the indexes `usage(game_id)` and `usage(created_at)`, and adds the `games_score_check` constraint (`score` is null or at least 0). `supabase/seed.sql` is a snapshot of the production catalog (roster, companies, categories, `openrouter_providers` slugs, `app_settings`) with no player data; it upserts, so it is safe on top of the baseline's own rows, and `supabase db reset` runs it after the migrations. A change is a new file from `npm run db:new <name>`. An applied file is never edited. A new table gets its explicit `GRANT` and its row level security in the same file. Production receives migrations only from the deploy workflow on a release. The bucket rows for `avatars` and `logos` are created by the baseline, not by `config.toml`.
 
 The browser may read `companies` and the view `models_public`. Those rows are the roster a player is allowed to see. `models_public` is `models` where `enabled` is true, and the columns are `id`, `name`, `company_id`, and `logo_path`. It omits `openrouter_id`, `provider_settings`, `size`, `released_on`, `open_weights`, and `reasoning`. The guess list for a round does not come from this view. The server sends logo, company, and name for the models that are still legal. `categories` and `model_categories` are admin tables. The lobby, the leaderboard, and the share card read them on the server. The browser does not read those tables. The Category game mode (`game_modes.id = 'class'`) is open.
 
@@ -24,19 +24,23 @@ The text is kept. Later analysis reads `messages` joined to `games` on `game_id`
 
 A failed call writes `usage` and does not write `messages`, because there is no stored reply. The system prompt is not a row.
 
-The table is part of the baseline migration, with its comments, row level security, and service-role grant.
+The `messages` table is part of the baseline migration, with its comments, row level security, and service-role grant.
 
 ## Access
 
 | Table | `anon` / `authenticated` | Service role |
 |---|---|---|
-| `companies`, `models_public`, `game_modes` | `select`. The table grant is required as well as the policy. A new Supabase project does not add it | write on the base tables |
-| `categories`, `model_categories` | no privileges | read and write |
-| `profiles` | `select` own row. No direct `update`: the username is set and renamed through `set_username` | write |
+| `companies`, `models_public`, `game_modes`, `origins` | `select`. The table grant is required as well as the policy. A new Supabase project does not add it | write on the base tables. `origins`: select, insert, update only |
+| `models` | `select` on the columns `id`, `name`, `company_id`, `logo_path`, `enabled` only | read and write |
+| `categories`, `model_categories`, `daily_models`, `openrouter_providers`, `app_settings` | no privileges | read and write |
+| `profiles` | `authenticated` can `select` its own row. `anon` has no grant. No direct `update`: the username is set and renamed through `set_username` | write |
 | `games`, `messages`, `guesses`, `usage` | no privileges | read and write |
-| `leaderboard(game_mode, since, viewer, p_difficulty, p_company)` | `execute` | execute |
+| `leaderboard(game_mode, since, viewer, p_difficulty, p_company)`, `public_stats()` | `execute` | execute |
+| `set_username(text)` | `execute` for `authenticated` only | execute |
+| `start_game`, `claim_model_call`, `apply_*`, `abort_reply` | no privileges | execute |
+| `avatars` storage bucket | public, so a picture URL loads. No list policy, so clients cannot list the objects | read and write |
 
-`leaderboard` is a security definer function, not a view of game rows. It returns rank, name, score, whether the row is the signed-in player, and that player's `avatar_path`. The page shows the public picture, or the generated mark when there is no file. The function also returns `user_id`, and the API strips it before the page sees it. `anon` can call it, so the landing page can show the top 5 before login.
+`leaderboard` is a security definer function, not a view of game rows. It returns rank, name, score, whether the row is the signed-in player, and that player's `avatar_path`. The page shows the public picture, or the generated mark when there is no file. The function also returns `user_id`. That id is a random uuid and not a secret (the avatar path contains it too). The API turns it into a short hash for the avatar mark and never returns another player's id. `anon` can call it, so the landing page can show the top 5 before login.
 
 `profiles` is created by a trigger on `auth.users`. The user does not insert their own profile row.
 
@@ -63,12 +67,12 @@ Where a lab comes from. `companies.origin` and `guesses.guessed_origin` point he
 |---|---|---|
 | `id` | text, pk | `us`, `cn`, `eu`. Lowercase letters, digits, and dashes, up to 31 characters, starting with a letter |
 | `name` | text | Up to 40 characters. USA, China, Europe |
-| `flag` | text | One emoji, drawn as Twemoji. 🇺🇸 🇨🇳 🇪🇺 |
+| `flag` | text | One emoji, up to 40 characters, drawn as Twemoji. 🇺🇸 🇨🇳 🇪🇺 |
 | `sort_order` | int | Button order in the Origin game. Default 100 |
 | `enabled` | boolean | Default true. False removes the origin from the Origin game: no button, none of its models drawn. It changes nothing in the other modes, and the origin hint still works |
 | `created_at` | timestamptz | |
 
-Rows are readable by everyone. `anon` and `authenticated` cannot write. `service_role` can select, insert, and update, and has no delete or truncate grant. The three starting rows are inserted by the Origin migration. That migration is applied on the dev Supabase project first. Production gets it only from `deploy.yml` on a release.
+Rows are readable by everyone. `anon` and `authenticated` cannot write. `service_role` can select, insert, and update, and has no delete or truncate grant. The three starting rows are inserted by the Origin migration. Production gets it from `deploy.yml` on a release.
 
 ### `categories`
 
@@ -109,7 +113,7 @@ anon and authenticated cannot read or write these two tables. The server key doe
 | `size` | text | `nano`, `small`, `medium`, `large`, `xxl`. A hint. Not a point trait and not a category |
 | `difficulty` | smallint | `1` easy, `2` medium, `3` hard, `4` impossible. Set by admin. OpenRouter does not fill it. The screens show the name. A game at X draws enabled models whose difficulty is `<= X` |
 | `open_weights` | boolean | Admin fact. Play does not read it |
-| `reasoning` | boolean | Admin fact. Play does not read it |
+| `reasoning` | boolean | Admin fact. Play does not read it. Whether reasoning is sent off or at lowest effort is `provider_settings.reasoning` |
 | `provider_settings` | jsonb | default `{}`. Passed through on the call. Not a player-facing trait |
 | `released_on` | date | Required while `enabled`. The year hint reads the calendar year |
 | `enabled` | boolean | default false. False keeps the row and pulls the model out of every draw |
@@ -179,7 +183,7 @@ One row, `id = 1`.
 | Column | Type | Notes |
 |---|---|---|
 | `id` | int, pk | Check `id = 1` |
-| `paused` | boolean | True refuses new rounds and new messages. Set by admin, and by a credit error |
+| `paused` | boolean | True refuses new rounds and new messages. Set when OpenRouter answers HTTP 402. No admin page writes it: clear it by hand in the database after topping up |
 
 ### `profiles`
 
@@ -210,7 +214,7 @@ One row per round.
 | `status` | text | `active`, `solved`, `miss`, `given_up` |
 | `no_hint` | boolean | |
 | `rules` | jsonb | The config snapshot. Scoring reads this, not today's file |
-| `hints` | text[] | default `'{}'`. `year`, `size`, or both. Empty when no-hint, and when the category disallows hints |
+| `hints` | text[] | default `'{}'`. Any of `company`, `origin`, `year`, and `size`, each at most once. Empty when no-hint, and when the category disallows hints. Company rounds allow only `year` and `size`; Origin has none |
 | `message_count` | int | 0–10. User messages stored. Also the number of stored replies |
 | `awaiting_guess` | boolean | True after a stored reply. False after a guess, and while the next message is being called. A failed call sets it true again when that turn still has a reply and no guess. Give-up ends the round instead |
 | `score` | int, null | Written once, at the end, when `message_count` is at least 1. Never negative. Null when they give up before any reply |
@@ -225,13 +229,14 @@ The share card at `/r/{id}` reads this row: mode, pool, difficulty, status, mess
 
 Indexes:
 
-- `(user_id, started_at desc)` for the hourly count and, later, the profile history
-- unique `(user_id, game_mode, difficulty)` where `status = 'active'`. One unfinished round per mode and difficulty. Easy can stay open while Medium starts. It replaces the older unique `(user_id)` index.
-- unique `(user_id, daily_key)` where `daily_key is not null`. One Daily round per account per difficulty per UTC day, because the key includes the difficulty. `start_game` writes `daily_key` only for `daily`
-- unique `(user_id, game_mode, pool_key)` where `status = 'active'` and `game_mode` is `company` or `class`. One unfinished Company round per company, one unfinished Category round per category
-- unique `(user_id)` where `status = 'active'` and `game_mode = 'custom'` (`games_one_active_custom_idx`). One unfinished Custom round per account
-- unique `(user_id)` where `status = 'active'` and `game_mode = 'origin'` (`games_one_active_origin_idx`). One unfinished Origin round per account
-- `(game_mode, status, finished_at)` for the leaderboard
+- `games_user_started_idx`: `(user_id, started_at desc)` for the hourly count and the profile history
+- `games_one_active_per_difficulty_idx`: unique `(user_id, game_mode, difficulty)` where `status = 'active'`. One unfinished round per mode and difficulty. Easy can stay open while Medium starts. A null difficulty counts as distinct, so this index does not limit Company, Category, Origin, or Custom rounds. It replaces the older unique `(user_id)` index.
+- `games_daily_idx`: unique `(user_id, daily_key)` where `daily_key is not null`. One Daily round per account per difficulty per UTC day, because the key includes the difficulty. `start_game` writes `daily_key` only for `daily`
+- `games_one_active_per_company_idx`: unique `(user_id, game_mode, pool_key)` where `status = 'active'`, `game_mode = 'company'` and `pool_key` is not null. One unfinished Company round per company
+- `games_one_active_per_category_idx`: the same for `game_mode = 'class'`. One unfinished Category round per category
+- `games_one_active_custom_idx`: unique `(user_id)` where `status = 'active'` and `game_mode = 'custom'`. One unfinished Custom round per account
+- `games_one_active_origin_idx`: unique `(user_id)` where `status = 'active'` and `game_mode = 'origin'`. One unfinished Origin round per account
+- `games_leaderboard_idx`: `(game_mode, status, finished_at)` for the leaderboard
 
 ### `daily_models`
 

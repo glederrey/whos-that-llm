@@ -35,7 +35,7 @@ export function shareFileName(gameId: string): string {
   return `whos-that-llm-${gameId}.png`;
 }
 
-export const shareOutcomes = ["Solved", "Not solved", "Given up"] as const;
+export const shareOutcomes = ["Solved", "Failed", "Given up"] as const;
 
 export type ShareOutcome = (typeof shareOutcomes)[number];
 
@@ -218,7 +218,7 @@ function shownModel(traits: Traits, modelId: string, hidden: boolean) {
 
 function outcomeFor(status: string): ShareOutcome {
   if (status === "solved") return "Solved";
-  if (status === "miss") return "Not solved";
+  if (status === "miss") return "Failed";
   return "Given up";
 }
 
@@ -361,11 +361,7 @@ export function shareCardDisplay(card: ShareCard): ShareCardDisplay {
   }
   if (card.poolSize !== null) meta.push({ label: poolSizeLabel, value: poolSizeValue(card.poolSize), color: null });
   const status =
-    card.outcome === "Solved"
-      ? `Solved on message ${formatShareNumber(card.messages)}`
-      : card.outcome === "Not solved"
-        ? "Failed"
-        : "Given up";
+    card.outcome === "Solved" ? `Solved on message ${formatShareNumber(card.messages)}` : card.outcome;
   return {
     title: shareBrand,
     mode,

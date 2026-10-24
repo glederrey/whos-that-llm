@@ -10,6 +10,7 @@ function MarkdownMessage({ text }: { text: string }) {
     <div className="md">
       <ReactMarkdown
         skipHtml
+        disallowedElements={["img"]}
         urlTransform={(url) => (safeUrl.test(url.trim()) ? url.trim() : "")}
       >
         {text}

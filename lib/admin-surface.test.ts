@@ -141,7 +141,7 @@ test("account deletion uses only the signed-in user", () => {
   assert.match(theme, /prefers-color-scheme: dark/);
   assert.match(theme, /text\/plain/);
   const form = fs.readFileSync(path.join(root, "components/delete-account-form.tsx"), "utf8");
-  assert.match(form, /This removes your profile and picture, and your name on the leaderboard/);
+  assert.match(form, /This removes your profile, your picture, your name on the leaderboard and your sign-in account/);
   assert.doesNotMatch(form, /and games/);
   assert.match(form, /deleteNotice\(notice\)/);
   assert.match(form, /name="confirm" value="yes"/);

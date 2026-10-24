@@ -345,15 +345,12 @@ export function filterCandidates(
     .sort((a, b) => a.companyName.localeCompare(b.companyName) || a.name.localeCompare(b.name));
 }
 
-export function isCreditError(status: number | undefined, message: string): boolean {
-  if (status === 402) return true;
-  const text = message.toLowerCase();
-  return (
-    text.includes("credit") ||
-    text.includes("insufficient") ||
-    text.includes("payment required") ||
-    text.includes("quota")
-  );
+/**
+ * Only an HTTP 402 pauses the game for everyone. Matching words in the message
+ * or body would let one user pause it with a crafted prompt echoed in an error.
+ */
+export function isCreditError(status: number | undefined): boolean {
+  return status === 402;
 }
 
 /**
@@ -613,7 +610,7 @@ export function toPublicGame(input: {
           company: companyGiven ? null : companyMatched ? "match" : "miss",
           origin: originGiven ? null : originMatched ? "match" : "miss",
           companyValue: !companyGiven && companyMatched ? hidden.companyName : null,
-          originValue: !originGiven && originMatched ? originLabel(hidden.origin) : null,
+          originValue: !originGiven && originMatched ? (hidden.originName ?? originLabel(hidden.origin)) : null,
         }
       : null,
     hints: {
@@ -650,7 +647,7 @@ export function toPublicGame(input: {
       name: hidden.name,
       companyName: hidden.companyName,
       logoPath: hidden.logoPath,
-      origin: originLabel(hidden.origin),
+      origin: hidden.originName ?? originLabel(hidden.origin),
       year: hidden.year,
       size: sizeLabel(hidden.size),
     };

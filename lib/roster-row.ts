@@ -16,6 +16,9 @@ export type RosterRow = {
   outputUsdPerMtok: number | null;
   enabled: boolean;
   available: boolean;
+  /** A reasoning model. Only these can have reasoning turned off. */
+  reasoning: boolean;
+  reasoningOff: boolean;
   logoUrl: string;
   categoryIds: string[];
   categoryNames: string;

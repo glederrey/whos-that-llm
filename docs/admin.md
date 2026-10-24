@@ -35,7 +35,7 @@ The money page.
 - **Our ledger**: cost per game, ledger spend, and failed calls. Tokens and cost are the `usage` rows saved from each OpenRouter reply. This is not the OpenRouter bill above it.
 - **Spend by hidden model**: the model that was the answer in the game. Requests, tokens, cost, and cost per game, from our ledger, all time, highest cost first. This table does not sort and has no paging.
 
-The game pauses for everyone when OpenRouter returns 402 or an explicit credit error (`app_settings.paused`). No admin page flips that flag. After topping up credits on OpenRouter, clear `app_settings.paused` in the database. The site does not take a payment for credits.
+The game pauses for everyone only when OpenRouter answers HTTP 402 (`app_settings.paused`). The status code decides, not the message text. No admin page flips that flag. After topping up credits on OpenRouter, clear `app_settings.paused` in the database. The site does not take a payment for credits.
 
 ## Modes (`/admin/modes`)
 
@@ -57,7 +57,7 @@ Columns: logo and name, company, origin, year, size, difficulty, input price, ou
 
 **Add.** Start with an OpenRouter id and press **Look up**. It fills the display name, the company, and the release date. The company is found from the lab in the OpenRouter name (`Moonshot AI: Kimi K3` matches the company Moonshot), then from the org in the id; it is a select, so change it when the guess is wrong. Size, difficulty, and categories stay empty, because OpenRouter does not set them. The id of the model is a slug of the last part of the OpenRouter id. A new model is inserted off, with `reasoning` false, `open_weights` false, and empty `provider_settings`. A model never creates a company: add a missing one on `/admin/companies` first.
 
-**Edit.** Name (1–80 characters), OpenRouter id, company (a select of the existing companies; its origin follows the company), release year (2010–2100) or date, size (nano up to xxl), difficulty, and categories as checkboxes from the categories that already exist. A model can be in several. Edit does not touch `reasoning`, `open_weights`, or `provider_settings`. Saving keeps the current search.
+**Edit.** Name (1–80 characters), OpenRouter id, company (a select of the existing companies; its origin follows the company), release year (2010–2100) or date, size (nano up to xxl), difficulty, and categories as checkboxes from the categories that already exist. A model can be in several. For a reasoning model, Edit also shows **Turn reasoning off**. Ticked, it stores `provider_settings.reasoning = { "enabled": false }`; unticked, `{ "effort": "low" }`. The other keys of `provider_settings` stay. Edit does not touch `reasoning` or `open_weights`. Saving keeps the current search.
 
 **On.** Refused, with a notice, when the model is unavailable on OpenRouter, has no release date, or is a reasoning model with empty `provider_settings`.
 
@@ -67,7 +67,7 @@ Columns: logo and name, company, origin, year, size, difficulty, input price, ou
 
 **Search for new models.** Lists text models created on OpenRouter in the last 30 days that are not on the roster. Each card asks for a size and a difficulty. **Add models** inserts the picked ones (200 at most) as off.
 
-Play one round and read `reasoning_tokens` on `/admin/costs` before leaving a thinking model enabled.
+Play one round and read the **Reasoning by hidden model** table on `/admin/costs` (replies, average, highest, share of output, and the current setting, highest average first; failed requests and models with no reasoning tokens are left out) before leaving a thinking model enabled.
 
 ### Availability API
 

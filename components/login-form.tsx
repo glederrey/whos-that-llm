@@ -38,6 +38,7 @@ export function LoginForm({
     if (notice === "exists") return "An account with this email already exists.";
     if (notice === "confirm") return "Confirm your email, then come back.";
     if (notice === "rate") return "The confirmation email could not be sent. Try again in a minute.";
+    if (notice === "auth") return "Something went wrong. Try again.";
     return "Wrong email or password.";
   }
 
@@ -49,7 +50,7 @@ export function LoginForm({
       window.location.assign(result.url);
       return;
     }
-    setError("Google sign-in was cancelled.");
+    setError("Could not start Google sign-in. Try again.");
     setBusy(false);
   }
 
@@ -112,7 +113,7 @@ export function LoginForm({
     setNote("");
     await sendPasswordReset(email);
     setBusy(false);
-    setNote("Check your email.");
+    setNote("If an account exists for that email, a reset link is on its way.");
   }
 
   const signingIn = tab === "sign-in";
@@ -129,7 +130,7 @@ export function LoginForm({
             <input type="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} required />
           </label>
           <button type="submit" className="button" disabled={busy}>
-            Send request to change password
+            Send reset link
           </button>
         </form>
         {note ? <p className="muted auth-note">{note}</p> : null}
@@ -189,13 +190,13 @@ export function LoginForm({
             {storedOpen ? (
               <div className="disclose-panel">
                 <p>
-                  We keep your username and your games. A game is the messages you send, the replies you receive, and the
-                  guesses you make. They are kept for research. The developer is a data scientist and studies how people
-                  question a hidden model.
+                  I keep your username and your games. A game is the messages you send, the replies you receive, and the
+                  guesses you make. They are kept for research: I am a data scientist and I study how people question a
+                  hidden model.
                 </p>
                 <p>
-                  Nothing else is kept. The email address is not saved with the game. Sign-in goes through Supabase, which
-                  uses it only to confirm the account and to keep automated sign-ups out.
+                  Nothing else is kept. The email address is not saved with the game. Signing in goes through Supabase (and
+                  Google, if you choose it), which use it only to confirm the account and to keep automated sign-ups out.
                 </p>
               </div>
             ) : null}
@@ -209,7 +210,7 @@ export function LoginForm({
             Forgot password
           </button>
         ) : null}
-        {signingIn || confirmationSent ? null : <p className="auth-confirm">Supabase will email you a confirmation link.</p>}
+        {signingIn || confirmationSent ? null : <p className="auth-confirm">We will email you a confirmation link.</p>}
       </form>
       {note ? <p className="muted auth-note">{note}</p> : null}
       {error ? <p className="error auth-error">{error}</p> : null}

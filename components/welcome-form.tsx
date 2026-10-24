@@ -51,7 +51,7 @@ export function WelcomeForm({ next }: { next: string }) {
       return;
     }
     if (!response.ok) {
-      setError("3 to 20 characters.");
+      setError(response.status === 422 ? "3 to 20 characters." : "Try again.");
       return;
     }
     router.push(next);

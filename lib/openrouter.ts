@@ -393,8 +393,7 @@ function createWordOut(onWord: (word: string) => void) {
 function fail(error: unknown, sent: SentTurn[]): StreamedReply {
   const message = error instanceof Error ? error.message : "The reply failed.";
   const status = APICallError.isInstance(error) ? error.statusCode : undefined;
-  const body = APICallError.isInstance(error) ? JSON.stringify(error.responseBody ?? "") : "";
-  return { ok: false, paused: isCreditError(status, `${message} ${body}`), message, sent };
+  return { ok: false, paused: isCreditError(status), message, sent };
 }
 
 /** The model call a round uses: the game system prompt, then the transcript plus the new player message. */

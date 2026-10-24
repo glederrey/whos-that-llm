@@ -3,10 +3,12 @@ import { SectionNav } from "@/components/section-nav";
 import { Twemoji } from "@/components/twemoji";
 import { maxOriginName, originNotice } from "@/lib/admin-origin";
 import { loadOriginList, type OriginRow } from "@/lib/admin-origins";
+import { requireOwner } from "@/lib/admin-access";
 
 export const dynamic = "force-dynamic";
 
 export default async function OriginsPage({ searchParams }: { searchParams: Promise<{ notice?: string }> }) {
+  await requireOwner();
   const params = await searchParams;
   const notice = originNotice(params.notice);
   const origins = await loadOriginList();

@@ -325,7 +325,15 @@ function ModelRow({
                 categoryIds={row.categoryIds}
               />
             </div>
-            <p className="muted">Origin belongs to the company. Change it on the Companies page.</p>
+            {row.reasoning ? (
+              <>
+                <label className="check reasoning-off">
+                  <input type="checkbox" name="reasoningOff" value="1" defaultChecked={row.reasoningOff} />
+                  Turn reasoning off
+                </label>
+                <p className="muted">Otherwise it is sent at the lowest effort. The Costs page shows how much each model thinks.</p>
+              </>
+            ) : null}
             <div className="row">
               <button className="button" type="submit">
                 Save

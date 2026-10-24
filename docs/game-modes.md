@@ -40,7 +40,7 @@ The result is shareable. The card shows the model and what the player guessed. W
 
 Origins are never deleted. An admin adds them, renames them, and turns them on or off.
 
-The statistics page has an Origin view: solve rate, how often each real origin was found, how many times each origin was picked, and the hardest and easiest models. Origin rounds are left out of the All modes figures, because nobody names a model in them. Custom rounds are left out too, because the pool is the player's own.
+The statistics page has an Origin view: solve rate, how often each real origin was found, how many times each origin was picked, and the hardest and easiest models. In the All modes view, Origin rounds count in the outcome figures and the chart, but they are left out of the guess figures and the model tables, because nobody names a model in them. Custom rounds count in full.
 
 ## Custom
 

@@ -6,6 +6,7 @@ import { loadRoster, type RosterRow } from "@/lib/admin-roster";
 import { loadOpenRouterCatalog } from "@/lib/openrouter-catalog";
 import { pageOf, rosterSortOf, searchRoster, sortRoster } from "@/lib/roster-list";
 import { withListPrices } from "@/lib/roster-sync";
+import { requireOwner } from "@/lib/admin-access";
 
 export const dynamic = "force-dynamic";
 
@@ -39,6 +40,7 @@ export default async function ModelsPage({
 }: {
   searchParams: Promise<{ notice?: string; q?: string; active?: string; inactive?: string; unavailable?: string; sort?: string; dir?: string }>;
 }) {
+  await requireOwner();
   const params = await searchParams;
   const notice = rosterNotice(params.notice);
   const [roster, catalog] = await Promise.all([loadRoster(), loadOpenRouterCatalog()]);

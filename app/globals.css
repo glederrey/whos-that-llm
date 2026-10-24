@@ -1730,6 +1730,7 @@ html[data-theme="dark"] .history-score[data-best="true"] { color: var(--teal); }
 .roster.models .button-on,
 .roster.models .button-off,
 .roster.models .button-quiet { padding: 6px 10px; }
+.roster.models .roster-edit .button-quiet { padding: 10px 18px; }
 .roster.models td, .roster.categories td { vertical-align: middle; }
 .roster.categories { min-width: 0; }
 .roster.categories th:nth-child(1),
@@ -2239,3 +2240,4 @@ html[data-theme="dark"] .emoji-picker { color-scheme: dark; }
 .custom-remove { flex: none; display: inline-grid; place-items: center; width: 28px; height: 28px; border: 0; border-radius: 8px; background: var(--miss-press); color: #fff; font: inherit; font-size: 14px; font-weight: 700; line-height: 1; cursor: pointer; }
 .custom-remove:hover, .custom-remove:focus-visible { background: var(--miss); }
 .dialog.custom-selected .row { display: flex; justify-content: space-between; gap: 8px; }
+.check.reasoning-off { color: var(--text); font-size: inherit; }

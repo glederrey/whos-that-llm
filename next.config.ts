@@ -35,6 +35,9 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   agentRules: false,
+  // Dev logs every server action with its arguments, so a sign-in or password
+  // change would print the password in the terminal (also under `dev:prod`).
+  logging: { serverFunctions: false },
   // The category form carries an image of up to 1 MB.
   experimental: { serverActions: { bodySizeLimit: "2mb" } },
   // app/emoji/[code]/route.ts reads a Twemoji file by a computed name, which

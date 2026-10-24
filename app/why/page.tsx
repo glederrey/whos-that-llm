@@ -40,9 +40,14 @@ export default function WhyPage() {
       <h2>What data do I store?</h2>
       <p>
         I keep your username and your game data: the messages, token counts, your guesses, which model you were talking
-        to, and the other details of each round. That&apos;s it. I don&apos;t collect any other personal information. Sign
-        in is handled by Supabase. Your email is stored there only so you can log in, and I never use it for anything
-        else. I never see your password.
+        to, and the other details of each round. That&apos;s it. I don&apos;t collect any other personal information.
+        Signing in is handled by Supabase, and by Google if you choose it. Your email is stored there only so you can
+        log in, and I never use it for anything else. I never see your password.
+      </p>
+      <p>
+        Your messages are sent to OpenRouter and to the company that runs the model you are talking to, so they can
+        write the reply. Their own policies apply to what they receive. The site is hosted on Vercel, which also counts
+        page views with Vercel Analytics. That count does not use cookies and is not tied to your account.
       </p>
       <p>
         You can delete your account at any time from your <a href="/profile">profile</a>. Your username comes off the

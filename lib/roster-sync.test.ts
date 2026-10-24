@@ -132,6 +132,8 @@ function rosterRow(id: string, openrouterId: string): RosterRow {
     outputUsdPerMtok: null,
     enabled: true,
     available: true,
+    reasoning: false,
+    reasoningOff: false,
     logoUrl: "",
     categoryIds: [],
     categoryNames: "",

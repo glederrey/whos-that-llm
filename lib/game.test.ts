@@ -603,9 +603,7 @@ test("hints are possible on daily, all models, company, category, and custom", (
   assert.equal(gameModeAllowsHints("company"), true);
   assert.equal(gameModeAllowsHints("class"), true);
   assert.equal(gameModeAllowsHints("custom"), true);
-  for (const gameMode of ["origin", "latest"]) {
-    assert.equal(gameModeAllowsHints(gameMode), false, gameMode);
-  }
+  assert.equal(gameModeAllowsHints("origin"), false);
 });
 
 test("a finished round lists company, origin, year, and size", () => {

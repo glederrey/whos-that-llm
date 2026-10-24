@@ -5,7 +5,8 @@ import { sseResponse } from "@/lib/reply-events";
 import { abortReply, claimCall, hiddenCall, readPublicGame, saveReply } from "@/lib/rounds";
 import { requireUser } from "@/lib/session";
 
-export const maxDuration = 300;
+// Shorter than the 3 minute claim in claim_model_call, so a slow call cannot outlive its lock.
+export const maxDuration = 170;
 
 export async function POST(request: Request, context: { params: Promise<{ id: string }> }) {
   const auth = await requireUser();

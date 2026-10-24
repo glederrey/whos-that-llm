@@ -31,6 +31,7 @@ import type { Origin, Size } from "./game";
 import type { CategoryRow, RosterRow } from "./roster-row";
 
 export type { CategoryRow, RosterRow } from "./roster-row";
+import { reasoningOff } from "./provider-check";
 import { planReasoningUpdates, type CatalogModel } from "./roster-sync";
 import { randomBytes } from "node:crypto";
 import { categoryImagePath, companyUploadPath, logoBucketPath, readLogo } from "./logos";
@@ -75,7 +76,7 @@ export async function loadRoster(): Promise<{ rows: RosterRow[]; companies: Comp
   const [{ data, error }, companies, categories] = await Promise.all([
     client
       .from("models")
-      .select("id, openrouter_id, name, size, difficulty, released_on, enabled, available, logo_path, company_id, companies(name, origin, logo_path), model_categories(category_id)")
+      .select("id, openrouter_id, name, size, difficulty, released_on, enabled, available, reasoning, provider_settings, logo_path, company_id, companies(name, origin, logo_path), model_categories(category_id)")
       .order("enabled", { ascending: false })
       .order("name"),
     loadCompanies(client),
@@ -101,6 +102,8 @@ export async function loadRoster(): Promise<{ rows: RosterRow[]; companies: Comp
       outputUsdPerMtok: null,
       enabled: Boolean(row.enabled),
       available: row.available !== false,
+      reasoning: Boolean(row.reasoning),
+      reasoningOff: Boolean(row.reasoning) && reasoningOff(row.provider_settings),
       logoUrl: presentLogo((row.logo_path as string | null) || company?.logo_path || "", companyId),
       categoryIds,
       categoryNames: categoryIds.map((id) => categoryName.get(id) ?? id).join(", "),
@@ -163,6 +166,7 @@ export async function updateRosterModel(raw: {
   size?: string;
   difficulty?: string;
   categoryIds?: string[];
+  reasoningOff?: boolean;
 }): Promise<RosterNotice | null> {
   await requireOwner();
   const id = parseModelId(raw.id ?? "");
@@ -170,7 +174,11 @@ export async function updateRosterModel(raw: {
   const categoryIds = parseCategoryIds(raw.categoryIds ?? []);
   if (!id || !fields || !categoryIds) return "invalid";
   const client = serviceOrThrow();
-  const current = await client.from("models").select("id, released_on").eq("id", id).maybeSingle();
+  const current = await client
+    .from("models")
+    .select("id, released_on, reasoning, provider_settings")
+    .eq("id", id)
+    .maybeSingle();
   if (current.error || !current.data) return "save";
   const duplicate = await client.from("models").select("id").eq("openrouter_id", fields.openrouterId).maybeSingle();
   if (duplicate.error) return "save";
@@ -186,6 +194,11 @@ export async function updateRosterModel(raw: {
     released_on: fields.releasedOn ?? releasedOnForYear(current.data.released_on as string | null, fields.year),
     updated_at: new Date().toISOString(),
   };
+  if (current.data.reasoning) {
+    const stored = current.data.provider_settings;
+    const rest = stored && typeof stored === "object" && !Array.isArray(stored) ? stored : {};
+    patch.provider_settings = { ...rest, reasoning: raw.reasoningOff ? { enabled: false } : { effort: "low" } };
+  }
   const { error } = await client.from("models").update(patch).eq("id", id);
   if (error) return error.code === "23505" ? "duplicate" : "save";
   return replaceModelCategories(client, id, categoryIds);

@@ -20,13 +20,27 @@ export function sseResponse(start: (send: (payload: unknown) => void) => Promise
   const encoder = new TextEncoder();
   const stream = new ReadableStream({
     async start(controller) {
+      // The player may close the tab mid-reply. The model call was already paid
+      // for, so the work goes on and only the writes to the dead stream stop.
+      let open = true;
       const send = (payload: unknown) => {
-        controller.enqueue(encoder.encode(`data: ${JSON.stringify(payload)}\n\n`));
+        if (!open) return;
+        try {
+          controller.enqueue(encoder.encode(`data: ${JSON.stringify(payload)}\n\n`));
+        } catch {
+          open = false;
+        }
       };
       try {
         await start(send);
       } finally {
-        controller.close();
+        if (open) {
+          try {
+            controller.close();
+          } catch {
+            // already closed by the client
+          }
+        }
       }
     },
   });

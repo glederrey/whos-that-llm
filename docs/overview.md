@@ -4,13 +4,13 @@ A chat game. A hidden model answers. The player has ten messages. They can name 
 
 The name on the site is **Who's that LLM?**.
 
-## First build
+## The game
 
-**All models** is the game to build first. One site. A player signs up or logs in before they can play. They get ten messages, a word-by-word reply, an optional guess, year and size hints, no-hint mode, and a result page.
+One site. A player signs up or logs in before they can play. They get ten messages, a word-by-word reply, an optional guess, hints, no-hint mode, and a result page.
 
-The playable roster is six small models: Claude Haiku 4.5, Claude Haiku 5.5, GPT-5.6 Luna, GPT-5.6 Luna Pro, GPT-6 Luna, and DeepSeek V4 Flash. Every other seeded model stays off. OpenRouter lists no other small Anthropic model, so Haiku 4.5 is the only extra Anthropic row. Adding more is an admin job, and admin comes later.
+The roster is the `models` table. [`supabase/seed.sql`](../supabase/seed.sql) loads a snapshot of it: about 145 models from 11 companies (Alibaba, Anthropic, DeepSeek, Google, Meta, Mistral, Moonshot, OpenAI, Perplexity, xAI, Z.ai), nearly all on. A few are seeded off, such as the Fable rows, and a few old Anthropic rows are unavailable. The seed also holds two categories (Opus and Sonnet), the OpenRouter provider slugs, and the pause flag set to `false`. The owner changes the roster in `/admin/models`.
 
-Daily uses the same rules as All models, once per account per difficulty per UTC day. Company and Category are specified in [Rules](rules.md) and are open. Origin and Custom are open too. The home page lists those cards. All of them can be started. Hints are possible on Daily, All models, Company, Category, and Custom. Size is a hint, not a category. The profile page is in this prototype. The home weekly top 5, daily result stats, and the admin screens come later. The pause flag exists from the first build, because a credit error pauses everyone.
+Daily uses the same rules as All models, once per account per difficulty per UTC day. Company, Category, Origin, and Custom are specified in [Rules](rules.md) and [Game modes](game-modes.md). The home page lists a card for each, and all of them can be started. Hints are possible on Daily, All models, Company, Category, and Custom. Size is a hint, not a category. The home page shows the weekly top 5, and the profile page shows a player's history. The pause flag is set when OpenRouter answers HTTP 402, because a credit error pauses everyone.
 
 ## Stack
 
@@ -20,14 +20,13 @@ Daily uses the same rules as All models, once per account per difficulty per UTC
 | Vercel AI SDK `ai` v7 and `@openrouter/ai-sdk-provider` | One call shape for every model. Replies stream word by word |
 | Supabase Auth | Google and email/password, same user table |
 | Supabase Postgres | Catalog, games, the message transcript, guesses, cost ledger |
-| Supabase Storage | Later. Company logos, with a URL as the fallback |
+| Supabase Storage | Company logos (`logos` bucket) and profile pictures (`avatars` bucket) |
 | OpenRouter | One API key, one bill, USA / Europe / China models |
 | Vercel Hobby | Hosting, HTTPS, a `*.vercel.app` URL |
-| A Python notebook later | Charts the admin page does not have |
 
 The browser never receives the OpenRouter key, the Supabase secret key, or the hidden model id of an active round. The guess list the browser receives is logo, company, and name for the models the server has already kept.
 
-Pages and route handlers are one Next.js app. The handlers are the backend: they hold the keys, call OpenRouter, and write the game. There is no second server. A split would add another deploy and another hop on every message, for a site with one client. Supabase is the database and the login, not an application server. The Python notebook stays outside, for charts.
+Pages and route handlers are one Next.js app. The handlers are the backend: they hold the keys, call OpenRouter, and write the game. There is no second server. A split would add another deploy and another hop on every message, for a site with one client. Supabase is the database and the login, not an application server.
 
 ## Hosting
 
@@ -35,7 +34,7 @@ Publishing a GitHub Release deploys that tag to Vercel production. A push or a p
 
 The game is on a `something.vercel.app` address before any domain exists. Buy a domain when the game is worth showing. In the Vercel project, Settings → Domains, add the name. At the registrar, add the records Vercel shows:
 
-- an **A** record for the bare name (`whosthatllm.com`)
+- an **A** record for the bare name (`whos-that-llm.com`)
 - a **CNAME** for `www`, aimed at the target Vercel gives that project
 
 Leave the nameservers at the registrar. Vercel issues the certificate once the records propagate. A domain is about ten to fifteen francs a year. The API bill is the cost that matters.
@@ -74,7 +73,7 @@ A signed-in player can delete their own account from the profile page. They conf
 
 ## Credits
 
-OpenRouter 402, or an explicit credit error, sets `app_settings.paused` and pauses the game for everyone. Admin can also pause. Gael tops up credits on OpenRouter himself. There is no top-up inside the site. Unpause from the admin switch once that screen exists. Until then, clear the flag in the database after the credit is topped up.
+An HTTP 402 from OpenRouter sets `app_settings.paused` and pauses the game for everyone. Only the status code counts, not the message text. Gael tops up credits on OpenRouter himself. There is no top-up inside the site. No admin page writes the flag, so clear it in the database after the credit is topped up.
 
 ## Limits the player can see
 
@@ -108,4 +107,8 @@ Ten replies are 20,000 output tokens, plus the growing transcript on the way in.
 | Large | Opus 5.5 | about 10 cents, more when the model spends heavily before the visible reply |
 | Leave out | Fable | several times an Opus round |
 
-Ten Opus rounds in an hour is about a dollar for that player. The OpenRouter monthly cap is the backstop. Every call stores `cost_usd` and `reasoning_tokens`. A model whose spend stays high gets disabled from the admin page, once that page exists.
+Ten Opus rounds in an hour is about a dollar for that player. The OpenRouter monthly cap is the backstop. Every call stores `cost_usd` and `reasoning_tokens`. A model whose spend stays high can be disabled from `/admin/models`.
+
+## Privacy
+
+A player's messages are sent to OpenRouter and on to the provider of the hidden model. Vercel Analytics counts page views. Google sign-in is optional: email and password works too. The profile page can delete the account.
