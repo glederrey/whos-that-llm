@@ -181,7 +181,7 @@ test("the admin chat reuses the play send path and writes nothing", () => {
   assert.match(game, /streamPlayedReply/);
   assert.match(game, /saveReply\(id, user\.id, trimmed, reply\.text, reply\.usage\)/);
   assert.doesNotMatch(game, /reply\.tokens/);
-  assert.match(openrouter, /const system = systemPrompt\(\)/);
+  assert.match(openrouter, /const system = systemPrompt\(new Date\(\), input\.context \?\? null\)/);
   assert.match(openrouter, /system,/);
   assert.match(openrouter, /export async function streamPlayedReply/);
   assert.doesNotMatch(route, /streamText|systemPrompt\(|saveReply|from\("games"\)|from\("messages"\)|from\("guesses"\)|from\("usage"\)|\.insert\(|\.update\(|\.upsert\(|\.delete\(/);

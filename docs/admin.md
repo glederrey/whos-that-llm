@@ -1,6 +1,6 @@
 # Admin
 
-Ten pages, all behind one owner check: `/admin`, `/admin/costs`, `/admin/games`, `/admin/modes`, `/admin/categories`, `/admin/companies`, `/admin/origins`, `/admin/models`, `/admin/providers`, and `/admin/chat`. There is no other admin surface.
+Nine pages, all behind one owner check: `/admin`, `/admin/costs`, `/admin/modes`, `/admin/categories`, `/admin/companies`, `/admin/origins`, `/admin/models`, `/admin/providers`, and `/admin/chat`. There is no other admin surface.
 
 The server reads the signed-in Supabase user and allows admin only when `app_metadata.admin === true`. Players cannot write `app_metadata`. A profile edit cannot grant access. There is no role column and no client flag. A missing flag matches nobody.
 
@@ -12,11 +12,20 @@ Google and email/password both work when that session has the flag. A second per
 
 Roster changes are server actions. Each one repeats the check, then writes with the server key. anon and authenticated cannot insert, update, or delete `models`, `companies`, `categories`, or `model_categories`. The counts on `/admin` are not a public function.
 
-A subnav sits on every admin page: **Stats, Costs, Games, Modes, Categories, Companies, Origins, Models, Providers, Chat.** (**Stats** is `/admin`.) It is part of the admin layout, so it never appears on the public site.
+A subnav sits on every admin page: **Stats, Costs, Modes, Categories, Companies, Origins, Models, Providers, Chat.** (**Stats** is `/admin`.) It is part of the admin layout, so it never appears on the public site.
 
 ## Stats (`/admin`)
 
-Five counts: models in the roster, active models, players, games today (UTC), and total games. Players are accounts that have started a game. The page does not load OpenRouter, and it does not list game results or modes.
+Six counts, centered in their cards: models in the roster, active models, players, games today (UTC), total games, and total cost (every usage row, including calls outside a round). Players are accounts that have started a game. Games today counts games with `finished_at` today, like the home page. The page does not load OpenRouter. It does not repeat the public Statistics page (solve rates, hardest models); it shows what only the owner needs:
+
+- **Games over time**: every game started per UTC day in any mode, stacked solved, failed and given up. A round still open is the light rest of the bar.
+- **Players per day**: new accounts (`profiles.created_at`), accounts that started a game, and games started.
+- **Rounds per player**: accounts by finished games (1, 2-5, 6-20, 21+) and how many played on two UTC days or more.
+- **Open and abandoned rounds**: rounds still open by mode and age (under a day, 1 to 7 days, over 7 days).
+- **Hint use**: share of the rounds that sold each hint where it was bought, plus the count played with no hints. Origin rounds are left out, and Company rounds count only for the year and size hints.
+- **Cost per mode**: ledger spend on each mode's rounds over its finished games. Ledger rows with no game are left out. Click a header to reorder the table.
+- **Failed calls by model**: the 15 models with the most failed ledger calls: calls, failed, rate, most common error, last failure.
+- **Roster coverage**: every active model (on and available) with how often it was drawn as the hidden model, most drawn first, 10 per page with Previous / Next, and how many were never drawn. Click a header to reorder the table. A Daily model counts once for each player who got it.
 
 ## Costs (`/admin/costs`)
 
@@ -28,13 +37,9 @@ The money page.
 
 The game pauses for everyone when OpenRouter returns 402 or an explicit credit error (`app_settings.paused`). No admin page flips that flag. After topping up credits on OpenRouter, clear `app_settings.paused` in the database. The site does not take a payment for credits.
 
-## Games (`/admin/games`)
-
-Play, without money columns: six figures (solve rate, give-ups, correct guesses, messages, tokens), a bar chart of games started per UTC day for 14 days with the solved part shaded, and which models are hardest to find (games, solve rate, messages when solved). That table does not sort.
-
 ## Modes (`/admin/modes`)
 
-Read-only. One row per game mode, with games, open, finished, solved, solve rate, and give-ups. The Origin row shows a dash for give-ups. Nothing on this page edits a mode (see Game modes below).
+Read-only. One row per game mode, with games, open, finished, solved, solve rate, and give-ups. Nothing on this page edits a mode (see Game modes below).
 
 ## Companies (`/admin/companies`)
 
