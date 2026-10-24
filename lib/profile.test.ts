@@ -7,6 +7,8 @@ test("a username trims and rejects an empty name", () => {
   assert.equal(cleanUsername("A!"), null);
   assert.equal(cleanUsername("   "), null);
   assert.equal(cleanUsername("ok\nname"), null);
+  assert.equal(cleanUsername("fuck"), null);
+  assert.equal(cleanUsername("Scunthorpe"), "Scunthorpe");
 });
 
 test("stats count finished games and leave an empty player blank", () => {

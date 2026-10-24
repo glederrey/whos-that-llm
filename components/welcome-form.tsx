@@ -15,7 +15,7 @@ export function WelcomeForm({ next }: { next: string }) {
     event.preventDefault();
     const name = cleanUsername(username);
     if (!name) {
-      setError("3 to 20 characters.");
+      setError("3 to 20 characters, no bad words.");
       return;
     }
     setBusy(true);
@@ -51,7 +51,7 @@ export function WelcomeForm({ next }: { next: string }) {
       return;
     }
     if (!response.ok) {
-      setError(response.status === 422 ? "3 to 20 characters." : "Try again.");
+      setError(response.status === 422 ? "3 to 20 characters, no bad words." : "Try again.");
       return;
     }
     router.push(next);
