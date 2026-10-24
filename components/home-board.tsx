@@ -341,7 +341,7 @@ export function HomeBoard({
               <strong>{gameMode.name}</strong>
               <br />
               <span className="muted">{gameMode.blurb}</span>
-              {gameMode.id === "origin" && openGames.some((game) => game.mode === "origin") ? (
+              {(gameMode.id === "origin" || custom) && openGames.some((game) => game.mode === gameMode.id) ? (
                 <>
                   <br />
                   <span className="difficulty-resume">{unfinishedLine}</span>
