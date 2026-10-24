@@ -125,7 +125,7 @@ export function ProfileForm({
         {canChangePassword ? (
           <button
             type="button"
-            className="button-quiet profile-password"
+            className="button-danger profile-password"
             aria-expanded={passwordOpen}
             aria-controls="change-password-card"
             onClick={() => setPasswordOpen((open) => !open)}

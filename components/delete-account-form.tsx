@@ -61,7 +61,7 @@ export function DeleteAccountForm({
         I want to delete my account.
       </label>
       <div>
-        <button className="button-danger" type="submit" onClick={onClick}>
+        <button className="button-off" type="submit" onClick={onClick}>
           Delete account
         </button>
       </div>
