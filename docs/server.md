@@ -171,6 +171,16 @@ You may talk about other models by name, as long as that does not give away your
 A reply past 2,000 tokens is cut off mid-sentence. Finish the thought before that. This is a ceiling, not a length to aim for.
 ```
 
+Inside a round, one more paragraph follows the line about other models, built by `roundContext` in `lib/prompt.ts` from the game row when the call starts, so it does not change during the round. It gives the pool size and what the human guesses from:
+
+- All models and Daily: `This round: the human guesses from a list of {n} models, and you are one of them.`
+- Company: `This round: the human knows you are one of {n} models made by {company}, and they will guess among those {n}.`
+- Category: `This round: the human knows you are one of {n} models in the category "{name}", and they will guess among those {n}.`
+- Custom: `This round: the human picked {n} models themselves, and you are one of them. They will guess among those {n}.`
+- Origin: `This round: you are one of {n} models in play. The human does not have to name you. They only guess which origin you come from, and you must not state or hint at it.`
+
+The admin chat has no round and sends none of these. The paragraph is part of the first prompt, so the token score counts it once, like the rest of the system prompt.
+
 The prompt stays this English text, apart from the date. Do not tell the model which language to answer in. A reply in French or in English is a clue.
 
 Call settings, the same for every model except `provider_settings`:

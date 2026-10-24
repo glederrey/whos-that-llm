@@ -122,9 +122,10 @@ export async function streamHiddenReply(input: {
   reasoning: boolean;
   maxOutputTokens: number;
   messages: ModelMessage[];
+  context?: string | null;
   onWord: (word: string) => void;
 }): Promise<StreamedReply> {
-  const system = systemPrompt();
+  const system = systemPrompt(new Date(), input.context ?? null);
   const messages = input.messages;
   const sent = callInput(system, messages);
   const apiKey = readServerEnv("OPENROUTER_API_KEY");
@@ -404,9 +405,11 @@ export async function streamPlayedReply(input: {
   maxOutputTokens: number;
   transcript: { role: "user" | "assistant"; content: string }[];
   userText: string;
+  context?: string | null;
   onWord: (word: string) => void;
 }): Promise<StreamedReply> {
   return streamHiddenReply({
+    context: input.context,
     openrouterId: input.openrouterId,
     providerSettings: input.providerSettings,
     reasoning: input.reasoning,
