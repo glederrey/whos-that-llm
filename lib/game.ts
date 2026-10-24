@@ -610,7 +610,7 @@ export function toPublicGame(input: {
           company: companyGiven ? null : companyMatched ? "match" : "miss",
           origin: originGiven ? null : originMatched ? "match" : "miss",
           companyValue: !companyGiven && companyMatched ? hidden.companyName : null,
-          originValue: !originGiven && originMatched ? originLabel(hidden.origin) : null,
+          originValue: !originGiven && originMatched ? (hidden.originName ?? originLabel(hidden.origin)) : null,
         }
       : null,
     hints: {
@@ -647,7 +647,7 @@ export function toPublicGame(input: {
       name: hidden.name,
       companyName: hidden.companyName,
       logoPath: hidden.logoPath,
-      origin: originLabel(hidden.origin),
+      origin: hidden.originName ?? originLabel(hidden.origin),
       year: hidden.year,
       size: sizeLabel(hidden.size),
     };
