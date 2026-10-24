@@ -2,8 +2,8 @@
 
 import { headers } from "next/headers";
 import { allowedAuthUrl, authRedirectOrigin } from "@/lib/auth-cookies";
-import { signUpFailureNotice } from "@/lib/auth-notices";
-import { passwordProblem, weakPasswordNotice } from "@/lib/password-rules";
+import { signUpFailureNotice, type ChangePasswordResult } from "@/lib/auth-notices";
+import { hasPasswordLogin, passwordProblem, weakPasswordNotice } from "@/lib/password-rules";
 import { publicEnv } from "@/lib/supabase/env";
 import { createSessionClient } from "@/lib/supabase/server";
 
@@ -87,4 +87,26 @@ export async function resetPassword(tokenHash: string, password: string): Promis
 export async function signOut(): Promise<void> {
   const supabase = await createSessionClient();
   if (supabase) await supabase.auth.signOut();
+}
+
+// The profile card asks for the current password first, so an unlocked session alone cannot take the account.
+export async function changePassword(
+  current: string,
+  password: string,
+): Promise<ChangePasswordResult> {
+  const problem = passwordProblem(password);
+  if (problem) return { rules: problem };
+  if (password === current) return "same";
+  const supabase = await createSessionClient();
+  if (!supabase) return "auth";
+  const { data } = await supabase.auth.getUser();
+  const user = data.user;
+  if (!user?.email || !hasPasswordLogin(user)) return "auth";
+  const { error: verifyError } = await supabase.auth.signInWithPassword({ email: user.email, password: current });
+  if (verifyError) return "invalid";
+  const { error } = await supabase.auth.updateUser({ password });
+  if (!error) return null;
+  if (error.code === "same_password") return "same";
+  const weak = weakPasswordNotice(password, error);
+  return weak ? { rules: weak } : "auth";
 }

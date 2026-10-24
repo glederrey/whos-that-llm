@@ -15,3 +15,13 @@ export function signUpFailureNotice(error: { message?: string; code?: string }):
   if (text.includes("confirm")) return "confirm";
   return "invalid";
 }
+
+export type ChangePasswordResult = "auth" | "invalid" | "same" | { rules: string } | null;
+
+export function changePasswordNotice(result: ChangePasswordResult): string {
+  if (result === null) return "";
+  if (typeof result === "object") return result.rules;
+  if (result === "invalid") return "The current password is not right.";
+  if (result === "same") return "Choose a password different from the current one.";
+  return "Could not change the password. Try again.";
+}

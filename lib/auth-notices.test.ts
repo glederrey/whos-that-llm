@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { signUpFailureNotice } from "./auth-notices";
+import { changePasswordNotice, signUpFailureNotice } from "./auth-notices";
 
 test("an existing email is not a wrong password", () => {
   assert.equal(signUpFailureNotice({ message: "User already registered", code: "user_already_exists" }), "exists");
@@ -21,4 +21,12 @@ test("a project email cap is not a wrong password and does not claim the account
 test("sign-up still tells an unconfirmed address to confirm, and leaves other failures invalid", () => {
   assert.equal(signUpFailureNotice({ message: "Email not confirmed", code: "email_not_confirmed" }), "confirm");
   assert.equal(signUpFailureNotice({ message: "Invalid login credentials", code: "invalid_credentials" }), "invalid");
+});
+
+test("the change password notices name what went wrong", () => {
+  assert.equal(changePasswordNotice(null), "");
+  assert.equal(changePasswordNotice({ rules: "Password needs a digit." }), "Password needs a digit.");
+  assert.match(changePasswordNotice("invalid"), /current password is not right/);
+  assert.match(changePasswordNotice("same"), /different/);
+  assert.match(changePasswordNotice("auth"), /Could not change/);
 });

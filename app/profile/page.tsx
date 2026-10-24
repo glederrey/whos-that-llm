@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
+import { ChangePasswordForm } from "@/components/change-password-form";
 import { DeleteAccountForm } from "@/components/delete-account-form";
 import { ProfileGames } from "@/components/profile-games";
 import { ProfileForm } from "@/components/profile-form";
 import type { ProfileStats } from "@/lib/profile";
 import { loadHistory, loadHistoryFacets, loadProfileStats, profilePageSize } from "@/lib/profile-data";
 import { historyItem } from "@/lib/profile-history";
+import { hasPasswordLogin } from "@/lib/password-rules";
 import { currentProfile } from "@/lib/session";
 
 export const dynamic = "force-dynamic";
@@ -72,6 +74,7 @@ export default async function ProfilePage({
           pageCount: Math.max(1, Math.ceil(history.total / profilePageSize())),
         }}
       />
+      {hasPasswordLogin(user) ? <ChangePasswordForm /> : null}
       <DeleteAccountForm notice={params.notice} returnTo="profile" />
     </div>
   );
