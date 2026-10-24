@@ -1,20 +1,23 @@
 # Build
 
-**All models** is the first build. Auth, one round, hints, no-hint mode, the score, the result page, and the profile. The other modes, the admin pages, and the profile are built since. The weekly top 5 and daily stats come later. Do not publish this spec as a site page.
+This page covers the repo layout, the env, the config numbers, the seed roster, and the checks. Do not publish this spec as a site page.
 
 ## Layout
 
 ```
 app/
-  page.tsx                      landing, and the return target for email links
-  login/page.tsx
-  welcome/page.tsx
+  page.tsx, layout.tsx          landing (with the weekly top 5), and the return target for email links
+  not-found.tsx, robots.ts, sitemap.ts, apple-icon.png, globals.css, fonts/
+  login/, welcome/, reset-password/, profile/
+  account/delete/               delete-account action
+  auth/actions.ts               sign in, sign up, sign out
   play/page.tsx                 lobby
-  play/new/page.tsx             pool picker, later
   play/[gameId]/page.tsx        round
   play/[gameId]/result/page.tsx
-  leaderboard/page.tsx
-  admin/                        later, the pages in Admin
+  r/[gameId]/                   shared result page, and card.png for its image
+  leaderboard/, statistics/, scoring/, why/
+  emoji/[code]/                 Twemoji SVG route
+  admin/                        owner pages: costs, modes, categories, companies, origins, models, providers, chat (+ chat/send), actions.ts
   api/                          the routes in Server
 lib/
   config.ts                     the numbers, imported by POST /api/games
@@ -29,18 +32,28 @@ lib/
   rounds-start.ts               game modes, lobby, starting a round
   rounds-play.ts                reading a round, claim, reply, guess, hint, give up
   rounds-board.ts, rounds-user.ts  leaderboard and landing counts, username
-  openrouter.ts                 one streaming call, usage parsed out
-  supabase/server.ts            session client and service-role client
-components/                     feedback, hints, guess bar, transcript, theme toggle, footer
+  board-query.ts, board-seed.ts leaderboard choice (mode, period, difficulty) and the avatar seed
+  public-stats*.ts              figures for the statistics page
+  openrouter*.ts                the streaming call, usage, spend, catalog, providers
+  admin-*.ts                    owner-page data and checks
+  share-card*.ts, site.ts       share card and the site origin
+  session.ts, http.ts           current user, JSON and error helpers
+  supabase/                     env, session client and service-role client
+components/                     round board, hints, guess bar, transcript, markdown message, theme toggle, footer, admin panels
   round-board.tsx               the round screen. State and requests live in use-round.ts
   use-round.ts, use-guess-fit.ts  the round hook, and the sizing of the previous guesses card
-app/globals.css                 light and dark tokens. Default follows the system
-public/brand/                   site logo copies. tail_right when the text is on the right, tail_left when it is on the left
+proxy.ts                        session refresh on every request
+next.config.ts                  security headers
+public/brand/, public/emoji-data/  site logo copies and Twemoji data. tail_right when the text is on the right, tail_left when it is on the left
+logo/                           source logos
+scripts/                        copy-logos, cache-public-images, copy-emoji-data, dev-prod, reset and placeholder helpers
 supabase/migrations/            timestamped SQL for the tables in Data, run by the Supabase CLI
 supabase/seed.sql               catalog snapshot loaded by `supabase db reset`
+supabase/templates/             the two auth emails
+.github/workflows/              ci.yml, db-dry-run.yml, deploy.yml
 ```
 
-There is no `rules/page.tsx`. There is no `me/page.tsx` in the first build.
+There is no `rules/page.tsx`. The game lives under `/play`, and `/profile` is the player's page.
 
 `lib/game.ts` is the only place that decides a match, a hint, a filter, or a score. Routes load rows and call it. Components render the public object and do not reimplement the rules. `lib/game-labels.ts` only words what `game.ts` decided.
 
@@ -88,66 +101,24 @@ The two auth emails are custom, in `supabase/templates/`. Supabase does not read
 
 The reset template is not cosmetic. Its link is `{{ .SiteURL }}/reset-password?token_hash={{ .TokenHash }}&type=recovery`, so opening it signs nobody in before the new password is chosen. The default `{{ .ConfirmationURL }}` signs the visitor in on arrival and must not stay.
 
-## First roster
+## Seed roster
 
-Verify every slug on OpenRouter before enabling it. Dates below are for seeding. Prices are not stored, and billing uses `usage.cost_usd`. All models can draw any enabled model.
+[`supabase/seed.sql`](../supabase/seed.sql) is a snapshot of the production catalog: about 145 models from 11 companies, nearly all enabled. A few rows are seeded off (the Fable rows, for cost) and a few old Anthropic rows are unavailable. The seed also inserts two categories (Opus and Sonnet), the OpenRouter provider slugs, and `app_settings` with `paused = false`. Prices are not stored, and billing uses `usage.cost_usd`. All models can draw any enabled model.
 
-The prototype turns on six small models and leaves every other row disabled. The owner can change that roster from `/admin/models`. This seed is the roster you can try:
+Verify every slug on OpenRouter before enabling a new one, and set `released_on` first. The owner adds, edits, and disables models in `/admin/models`.
 
-- Claude Haiku 4.5 (`claude-haiku-4-5`)
-- Claude Haiku 5.5 (`claude-haiku-5-5`)
-- GPT-5.6 Luna (`gpt-5-6-luna`)
-- GPT-5.6 Luna Pro (`gpt-5-6-luna-pro`)
-- GPT-6 Luna (`gpt-6-luna`)
-- DeepSeek V4 Flash (`deepseek-v4-flash`)
+The reasoning setting is an admin fact for `provider_settings` and for cost. It is not a chip. For each reasoning model, start with `{ "reasoning": { "effort": "low" } }`. Play one round of each new model. If `reasoning_tokens` stays high, set that model back to `enabled = false` and change the object before turning it on again.
 
-That pool has three companies and two origins, USA and China, so a guess can hit or miss both point traits. A wrong name can now stay inside Anthropic or OpenAI. OpenRouter has no other small Anthropic model, so Haiku 4.5 is the only extra Anthropic row. A full round on Haiku 5.5, the Lunas, or Flash is under about 1 cent. Haiku 4.5 is a few cents. More models wait until admin exists.
+Labels on screen are USA, China, and Europe. Company logos are the PNG files in the Supabase `logos` bucket.
 
-Slugs checked against public listings in October 2026. Re-check on the day of the seed. `released_on` is required before enable, and several of these dates still need to be copied off the model page.
+The seed inserts missing ids and does not update a row whose `updated_at` is newer than the seed file. Admin edits survive a re-seed. Built-in categories get `sort_order` in the order of the blurb table in [Pages](pages.md). Seed leaderboard and hint flags as in [Data](data.md).
 
-| Our id | OpenRouter id | Company | Size | Reasoning | Notes |
-|---|---|---|---|---|---|
-| `claude-opus-4-8` | `anthropic/claude-opus-4.8` | Anthropic | large | yes | Pair with Opus 5.5 |
-| `claude-opus-5-5` | `anthropic/claude-opus-5.5` | Anthropic | large | yes | Confirm the slug. Expensive. |
-| `claude-sonnet-5` | `anthropic/claude-sonnet-5` | Anthropic | medium | yes | |
-| `claude-sonnet-5-5` | `anthropic/claude-sonnet-5.5` | Anthropic | medium | yes | Released 2026-09-28. |
-| `claude-haiku-4-5` | `anthropic/claude-haiku-4.5` | Anthropic | small | yes | Starts enabled. Released 2025-10-15. The only other small Anthropic id on OpenRouter. $1 / $5 per million tokens |
-| `claude-haiku-5-5` | `anthropic/claude-haiku-5.5` | Anthropic | small | yes | Starts enabled. Released 2026-10-07. |
-| `gpt-5-6-luna` | `openai/gpt-5.6-luna` | OpenAI | small | yes | Starts enabled |
-| `gpt-5-6-luna-pro` | `openai/gpt-5.6-luna-pro` | OpenAI | small | yes | Starts enabled. Released 2026-07-09. Same list price as GPT-5.6 Luna |
-| `gpt-6-luna` | `openai/gpt-6-luna` | OpenAI | small | yes | Starts enabled. Released 2026-09-22. $0.10 / $0.50 per million tokens |
-| `gpt-5-6-sol` | `openai/gpt-5.6-sol` | OpenAI | medium | yes | |
-| `gpt-5-6-terra` | `openai/gpt-5.6-terra` | OpenAI | large | yes | |
-| `deepseek-v4-flash` | `deepseek/deepseek-v4-flash` | DeepSeek | small | yes | Starts enabled. China. Open weights is an admin fact. Confirm it on the model page. Play does not use it |
-| `deepseek-v4-pro` | `deepseek/deepseek-v4-pro` | DeepSeek | large | yes | |
-| `mistral-medium-3-5` | `mistralai/mistral-medium-3-5` | Mistral | medium | confirm | Europe |
-| `mistral-large-2512` | `mistralai/mistral-large-2512` | Mistral | large | confirm | |
+## Checks
 
-Leave Fable out. The Reasoning column is an admin fact for `provider_settings` and for cost. It is not a chip. For each reasoning model, the seed starts with `{ "reasoning": { "effort": "low" } }`. Play one round of each enabled model. If `reasoning_tokens` stays high, set that model back to `enabled = false` and change the object before turning it on again.
-
-Companies to insert first: Anthropic `us`, OpenAI `us`, DeepSeek `cn`, Mistral `eu`. Labels on screen are USA, China, and Europe. Company logos are the PNG files in the Supabase `logos` bucket.
-
-The seed script inserts missing ids and does not update a row whose `updated_at` is newer than the seed file. Admin edits survive a re-seed. Built-in categories get `sort_order` in the order of the blurb table in [Pages](pages.md). Seed All models enabled. Seed the other categories disabled. Seed leaderboard and hint flags as in [Data](data.md).
-
-## Order
-
-The first build is a playable All models round. Gael plays it locally, then the other categories.
-
-1. Migration from [Data](data.md). Seed the roster. Enable Haiku 4.5, Haiku 5.5, GPT-5.6 Luna, GPT-5.6 Luna Pro, GPT-6 Luna, and DeepSeek V4 Flash. Leave every other company disabled. Seed All models enabled as a category, and the other categories disabled.
-2. App shell: landing page, login, welcome, footer, theme. Email links return to `/`. A session is required before `/play`.
-3. `lib/openrouter.ts` and `lib/prompt.ts`. Stream the reply word by word. Play one round on Haiku. Read `reasoning_tokens` and the transcript. Confirm it does not name itself. Confirm an empty successful reply still spends the message.
-4. `lib/game.ts`: frozen traits, server-filtered guess list, compare, hints, no-hint mode, score. All models, ten messages, a guess the player can skip, give up. The result page shows the breakdown and links to How scoring works. The total is never below 0. Play across the enabled models.
-5. The hourly cap and one active round. A credit error sets `app_settings.paused` for everyone.
-6. Leaderboard for All models: rank, name, best score.
-7. Built: daily, company, origin, custom, and class (Category). They are pool filters plus the given-trait rule. Origin is built apart: its own guess function, its own buttons, no score. Custom is the player's own choice of models (at least 2), hints can be on, and it has no leaderboard. Hints are on for every mode except Origin, and Company allows only the year and the size. There is no Latest category. `models.is_latest` is dropped.
-8. Later: home weekly top 5 and daily result stats. The profile, with stats, past games, and username changes, is in this prototype.
-9. Built: admin pages for spend, games, modes, roster, categories, companies, origins, providers, and chat. Category icons are uploaded to Supabase Storage.
-10. Publish a GitHub Release. That deploys the release tag to the `*.vercel.app` URL. A domain comes after someone besides us is playing.
-
-Step 4 is allowed to set models `enabled = false`. It is not allowed to add a mechanic that is not in [Rules](rules.md). The token factor's only cap is `tokenCap`. If a credit error pauses the game before the admin page exists, clear `app_settings.paused` after topping up on OpenRouter.
+Run `npm run typecheck` and `npm test` before calling a change done. A round must not let the hidden model name itself, an empty successful reply still spends the message, and the total is never below 0. The token factor's only cap is `tokenCap`. A credit error sets `app_settings.paused`: after topping up on OpenRouter, clear it in the database. A GitHub Release deploys the release tag to Vercel.
 
 ## Security headers and CI
 
-`next.config.ts` sets `X-Content-Type-Options`, `Referrer-Policy`, `X-Frame-Options: DENY`, `Permissions-Policy`, and a Content-Security-Policy on every route. HSTS is not set here: Vercel sends it on its own, and a header from the app would make browsers force HTTPS on `localhost` during development. `script-src` is `'self' 'unsafe-inline'`, because Next streams inline bootstrap scripts and the theme snippet is inline; nonces would make every page dynamic. `connect-src` allows the Supabase origin. Images may come from any `https:` host (Supabase storage, markdown). There is no `form-action`, since sign-in forms redirect to Google and Supabase.
+`next.config.ts` sets `X-Content-Type-Options`, `Referrer-Policy`, `X-Frame-Options: DENY`, `Permissions-Policy`, and a Content-Security-Policy on every route. HSTS is not set here: Vercel sends it on its own, and a header from the app would make browsers force HTTPS on `localhost` during development. `script-src` is `'self' 'unsafe-inline'`, because Next streams inline bootstrap scripts and the theme snippet is inline; nonces would make every page dynamic. `connect-src` allows the Supabase origin. Images may come from any `https:` host (Supabase storage, mostly). Model replies never render images. There is no `form-action`, since sign-in forms redirect to Google and Supabase.
 
 `.github/workflows/ci.yml` runs typecheck and tests on pull requests and on pushes to `main`, plus a `migrations` job that replays every migration and the seed on a fresh local Supabase stack (`supabase db reset`). That job touches no real project. Real databases migrate elsewhere: production only from `deploy.yml` on a release (it previews, then applies), and the dev project by hand. `db-dry-run.yml` is a manual check of the production secret that previews pending migrations and changes nothing. `deploy.yml` pins the Vercel CLI and the actions, and gives the Vercel secrets only to the steps that call it. Dependabot proposes weekly npm and Actions updates, grouped by minor and patch.

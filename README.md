@@ -84,7 +84,7 @@ This repo is set up for agents as well as humans. Point yours at these, in order
 2. [`docs/README.md`](docs/README.md): the spec. If the code and a doc disagree, change one of them in the same pass so they match again.
 3. [`lib/config.ts`](lib/config.ts): every game number. A round copies them onto `games.rules` when it starts, so editing them never rewrites a game in progress.
 
-Ground rules for agents and humans alike: no secrets or real keys anywhere in the repo, server-only values stay behind `server-only` modules, database changes go through `supabase/` and must match [`docs/data.md`](docs/data.md), and new test files must be added to the `test` script in `package.json`.
+Ground rules for agents and humans alike: no secrets or real keys anywhere in the repo, server-only values stay behind `server-only` modules, database changes go through `supabase/` and must match [`docs/data.md`](docs/data.md), and tests are `lib/**/*.test.ts` files, which `npm test` picks up on its own.
 
 ## License
 

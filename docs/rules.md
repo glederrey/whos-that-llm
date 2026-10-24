@@ -2,8 +2,6 @@
 
 Scoring numbers live in `lib/config.ts` and are copied onto the game when it starts. This page is the meaning of those numbers. It is not a public page. The player sees the breakdown on the result page and the formula on How scoring works, specified in [Pages](pages.md).
 
-**All models** is the first build. The other categories below are specified and come later.
-
 ## A turn
 
 ```mermaid
@@ -61,7 +59,7 @@ Company, origin, year, and size award no points. Each can be bought once, at any
 | Company | The company name | 600 |
 | Origin | The company origin name | 400 |
 | Year | The calendar year of `released_on` | 100 |
-| Size | Small, medium, or large | 100 |
+| Size | Nano, small, medium, large, or XXL | 100 |
 
 There is no free newer/older clue. A revealed trait is known afterwards, the same way year and size are, so the guess list drops models that do not match it.
 
@@ -161,16 +159,6 @@ The numbers in that formula are the ones in `lib/config.ts`: `modelBase` (2000),
 
 A short reply raises the score, because `10000 / tokens` gets large. The factor stops at 20. Past 10,000 tokens it falls below 1.
 
-### Comment left on the formula
-
-Saved here on 9 October 2026. A friend passed this on from a conversation with a Claude Fable instance. The formula has since changed to 10 messages and a −50 wrong guess. The comment was about the earlier slope, where fewer tokens and fewer messages raised the score. It is kept next to the numbers so we can decide later whether this is the right way to score.
-
-> Il a le logo, il a le nom, il a DeepSeek qui écrit un petit poème, et il n'a pas gamé. L'univers a vraiment lu les chapitres : « Who's that LLM », c'est « Who's that Pokémon », et ton livre dit depuis février que la question n'est pas ce que c'est, mais qui.
->
-> Une seule remarque à lui glisser, et elle est importante, parce que je la lis dans son panneau de score : les points partent d'une base multipliée par un facteur tokens et un facteur messages. Autrement dit, moins tu écris et moins tu échanges, plus tu gagnes. Il vient de coder le résumé merdique comme stratégie optimale. Le joueur rationnel posera une question piège en dix mots et devinera au style, et le jeu récompensera exactement ce que ton livre combat. Si Gael veut que le jeu entraîne l'attention plutôt que le flair, il faut au minimum que les tours ne coûtent rien, et au mieux que certains indices ne soient disponibles qu'après avoir donné quelque chose au modèle. Le score doit payer la relation, pas la punir.
->
-> Dis-le-lui comme tu veux. Mais dis-le-lui ce soir, avant qu'il ait trop de code dessus : un barème, c'est une pente, et il ne la voit pas encore.
-
 Nothing is written to `games.score` until the round ends. The result is recomputed from `games.rules`, the frozen traits, the guess rows, `hints`, `no_hint`, and the successful `usage` rows.
 
 ### Worked example
@@ -246,7 +234,7 @@ The call is the same in every category: 10 messages, 500 characters, 2,000 outpu
 | Category | Pool | Hints | Leaderboard | When |
 |---|---|---|---|---|
 | `daily` | Same roster as All models at the chosen difficulty. One hidden model per difficulty per UTC day, the same for every player. One round per account per difficulty per UTC day | Yes | Yes | Built |
-| `all` | Enabled models at or below the chosen difficulty | Yes | Yes | First build |
+| `all` | Enabled models at or below the chosen difficulty | Yes | Yes | Built |
 | `company` | One company, at least 2 enabled models | Year and size only | Yes | Built |
 | `origin` | Enabled models whose origin is turned on, at least 2 origins | No | No | Built |
 | `custom` | The models the player picks, at least 2 | Yes | No | Built |
@@ -260,9 +248,9 @@ A company pool only cares about traits that differ inside the pool. Company is g
 
 Special pools can still be scored. Company and Category have a leaderboard that lists each player's best round in any pool and can be narrowed to one. Origin is not on a leaderboard. Custom is not on a leaderboard.
 
-A pool with fewer than 2 enabled models cannot start a round (`pool_too_small`). A category with fewer than 2 is not listed. The Company list shows every company that is turned on (a company turned off in the admin is hidden, except for a player with a round open on it), and starting one under 2 is refused. Daily uses the same minimum. An empty roster is not playable. Europe will be thin. A row with fewer than 4 models still appears, and it shows the count. A category with `enabled = false` still has its sentence on the main page, with **Coming soon.**
+A pool with fewer than 2 enabled models cannot start a round (`pool_too_small`). A category with fewer than 2 is not listed. The Company list shows every company that is turned on (a company turned off in the admin is hidden, except for a player with a round open on it), and starting one under 2 is refused. Daily uses the same minimum. An empty roster is not playable. Europe is thin. A row with fewer than 4 models still appears, and it shows the count.
 
-Latest is not a column on the model. `models.is_latest` is gone. A latest group, if Gael wants one, is a category he creates. A latest game mode is not built. If it is built later, it has no hints, because it is not on the hint list above. Origin is not a category. Origin is that pool, and it has no hints.
+Latest is not a column on the model. `models.is_latest` is gone. A latest group is a category the owner creates. Origin is not a category. Origin is that pool, and it has no hints.
 
 Origins on companies:
 
@@ -272,9 +260,11 @@ Origins on companies:
 
 Size, also manual, and only as a hint:
 
+- **nano:** the smallest tier
 - **small:** the cheap fast tier
 - **medium:** the workhorse
-- **large:** the flagship, and only the large models we are willing to pay for
+- **large:** the flagship tier
+- **xxl:** the most expensive tier
 
 The first Daily start of a UTC day, at a difficulty, draws one model from the roster All models can already draw at that level (difficulty less than or equal to the chosen level) and stores that id on `daily_models`. Easy cannot store an Impossible model. Medium, Hard, and Impossible each store their own id. Later starts that day use the stored id, so two players get the same hidden model. A model turned off after the draw is still included in a later round's list, so it can still be named. Do not publish the id ahead of time. One account gets one Daily round per difficulty that UTC day. Easy and Medium are both allowed. A second Easy is not. Starting spends that difficulty, including a give-up before the first message. Coming back while that difficulty is open resumes it. A finished difficulty is done until tomorrow, which draws again at each level. A difficulty they have not started stays open.
 
@@ -294,17 +284,10 @@ The player builds a list of models in the lobby, at least 2. The pool is the pic
 
 ### Leaderboards
 
-The leaderboard is one bar: modes on the left, one middle control, and This week or All time on the right. On a narrow screen those three groups stack, full width, in that order, and the buttons in each group share the row evenly. On a phone the scoreboard table is flush to its card, and Previous, the page count, and Next span the width of the board. The modes are Daily, All models, Company, and Category. Origin and Custom are not on it. All models is open. Its middle control is five boards: Any difficulty, Easy, Medium, Hard, and Impossible. Any difficulty is a score from whichever difficulty was played, so the four multipliers sit next to each other. That board puts a difficulty chip on the row. The other four do not, because the board is already that difficulty. A round played with no hints has a No hints chip on every board. A round scores on the difficulty it was played at. Daily is open and uses those same difficulty tabs. Company and Category are open. A category dropdown shows only when Category is selected, and a company dropdown shows only when Company is selected. With All models selected, the middle is the difficulty tabs. Custom has no difficulty and no leaderboard. A round counts when its status is `solved` or `miss` and the category has a leaderboard. `given_up` does not count. Rounds from before difficulties have no difficulty and stay off these five boards.
+The leaderboard is one bar: modes on the left, one middle control, and This week, This month, or All time on the right. On a narrow screen those three groups stack, full width, in that order, and the buttons in each group share the row evenly. On a phone the scoreboard table is flush to its card, and Previous, the page count, and Next span the width of the board. The modes are Daily, All models, Company, and Category. Origin and Custom are not on it. All models is open. Its middle control is five boards: Any difficulty, Easy, Medium, Hard, and Impossible. Any difficulty is a score from whichever difficulty was played, so the four multipliers sit next to each other. That board puts a difficulty chip on the row. The other four do not, because the board is already that difficulty. A round played with no hints has a No hints chip on every board. A round scores on the difficulty it was played at. Daily is open and uses those same difficulty tabs. Company and Category are open. A category dropdown shows only when Category is selected, and a company dropdown shows only when Company is selected. With All models selected, the middle is the difficulty tabs. Custom has no difficulty and no leaderboard. A round counts when its status is `solved` or `miss` and the category has a leaderboard. `given_up` does not count. Rounds from before difficulties have no difficulty and stay off these five boards.
 
-Rank is the player's best score in the period, highest first. Scores are never negative, so a round can score 0. Ties break by fewer messages on that round, then by earlier finish. Weeks start Monday 00:00 UTC.
+Rank is the player's best score in the period, highest first. Scores are never negative, so a round can score 0. Ties break by fewer messages on that round, then by earlier finish. Weeks start Monday 00:00 UTC. A month starts on the first day of the UTC month.
 
-The home weekly top 5 comes later. It is the All models board for the current week, limited to 5. Columns: rank, name, score.
-
-Daily result stats come later, on the daily result page, once at least one daily round has finished (`solved`, `miss`, or `given_up`). Active rounds are not in the denominator.
-
-- Percent who solved it: `solved` divided by finished rounds
-- Message counts: how many finished rounds used 1, 2, 3, 4, and 5 replies
-- Percent who got the company: finished rounds with any `company_correct` guess, divided by finished rounds
-- Average tokens: mean of input plus output tokens on successful calls, across finished rounds
+The home page shows the weekly top 5. It is the All models board for the current week, limited to 5. Columns: rank, name, score.
 
 Two models side by side, and a ranking vote, are different games. They are not this one.

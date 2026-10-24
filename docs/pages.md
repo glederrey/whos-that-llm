@@ -6,7 +6,7 @@ There is no `/rules` page. The design doc stays private. The main page has a sho
 
 The words below are the copy. Change them here before changing them in components.
 
-The site is English. A second language waits until there is a translation to ship. Until then there is no locale prefix, no dictionary, and no translation columns. Error codes stay codes, so a later translation does not rewrite the API. The system prompt stays English and is not told a language, so the model's reply language can still be a clue.
+The site is English. There is no second language, so there is no locale prefix, no dictionary, and no translation columns. Error codes stay codes, so a translation would not rewrite the API. The system prompt stays English and is not told a language, so the model's reply language can still be a clue.
 
 ## Theme
 
@@ -62,9 +62,8 @@ Admin is usable on a phone and comfortable on a computer. Playing a round is the
 
 On every page, including the round and admin. The shared result page is the exception: it shows only the card.
 
-- A line separates the footer from the page.
 - **The API bill is winning, a little help?**, with the Ko-fi cup, opens `tipUrl` in `lib/config.ts` in a new tab. An empty string keeps the sentence as a placeholder: **The models invoice the developer. A Ko-fi will sit here when you feel like covering a round.**
-- **Created by one human and two AIs**, then three icon-only links, each with an `aria-label` and a hover title: a silhouette of Gael Lederrey (`public/brand/gael.svg`, links to `https://github.com/glederrey`), the Cursor logo (`https://cursor.com`) and the Claude Code mascot (`public/brand/claude-code.svg`, links to `https://claude.com/product/claude-code`). All three icons use the link color. One line on desktop, after the Ko-fi line; on a phone it comes first, above the Ko-fi line, and wraps centered.
+- **Created by one human and two AIs**, then three icon-only links, each with an `aria-label` and a hover title: a silhouette of Gael Lederrey (links to `https://github.com/glederrey`), the Cursor logo (`https://cursor.com`) and the Claude Code mascot (links to `https://claude.com/product/claude-code`), all drawn inline. All three icons use the link color. One line on desktop, after the Ko-fi line; on a phone it comes first, above the Ko-fi line, and wraps centered.
 
 A tip does not raise the hourly cap, change a score, or put a name on the leaderboard.
 
@@ -127,7 +126,7 @@ Requires a session. No session goes to `/login?next=/play`. No username goes to 
 | Custom | Pick your own models, at least two, and guess which one is hiding. |
 
 - Daily opens the same way as All models: **Choose difficulty**, then Easy, Medium, Hard, and Impossible, and **Play without hints.** Its sentence is **One round per difficulty. Everyone at that level gets the same model. A new puzzle tomorrow.** That sentence is the card, even when the stored blurb is still the old line. Daily is open on this page. It does not show **Coming soon.** A finished difficulty is grayed out, says **Already played.**, and cannot be started again until tomorrow. An unfinished round of that difficulty stays open and resumes. A difficulty they have not started is not grayed out. Easy and Medium on the same day are two rounds.
-- Weekly top 5, later: rank, name, and score from the All models board for the current week, limited to 5. If the week has no counted round: **No finished games this week.**
+- Weekly top 5: rank, name, and score from the All models board for the current week, limited to 5. If the week has no counted round: **No finished games this week.**
 - Daily, All models, Company, Category, Origin, and Custom open. A mode that is not enabled stays closed, with the **Coming soon** badge and no expand chevron. Origin has no difficulty, no category, and no hint choice, so its row is a plain button: a click starts the round, or resumes the open one. Inside an open mode, **Choose difficulty** lists Easy, Medium, Hard, and Impossible on one line each: the name, then the short line beside it, and the turned-on model count on the right. The colors match the leaderboard: Easy `#1c7c43`, Medium `#d4a017`, Hard `#c41b15`, Impossible `#a78bfa`, on the name and the left edge. Daily and All models can start a round. Custom has no difficulty: the player builds the pool (see below).
 - An unfinished Daily or All models difficulty replaces the model count with **Game isn't finished yet. Continue?** The line is teal: `#007278` on a light page and `#00bbc9` on a dark page. Clicking that row resumes the round. The mode header has no Continue button. Origin and Custom have no rows, so while a round of that mode is open their header shows the same teal line on the right, before the arrow. Clicking either resumes the round at once. Custom then has no picker to open and its arrow points right, like Origin's. A difficulty with no open round still shows the model count and can start. A second round cannot start on a difficulty that already has an unfinished one.
 - On All models, a difficulty is disabled when the hour is full, the game is paused, or that pool has fewer than 2 turned-on models. An unfinished difficulty stays enabled and resumes, including while paused or at the hourly cap. On Daily, a finished difficulty is grayed out. A difficulty they have not started stays available. The open round of a difficulty can still be resumed.
@@ -137,6 +136,14 @@ Requires a session. No session goes to `/login?next=/play`. No username goes to 
 - Inside an open Custom row, **Choose models** shows a search box and the models grouped by company, one model per row on a phone and on a computer (two columns on a wide screen). Each company header stays in view while its models scroll, and shows the logo, the name, the company's origin with its flag, the picked count, and **Add all** or **Drop all**. A model row has a check circle, the name, and the year and size on the right, such as **2026 · Large**. One tap toggles it. Under the list a button says **N models picked** and opens a window with the picks split by company (logo and name as the divider, each model with its year and size and a red button with a white cross to remove it), and the window has **Clear all** and **Done**. There are no chips under the list. **Play without hints.** sits as in the other modes. **Start** is enabled at 2 or more picked models. The last selection is remembered in this browser (`localStorage` key `custom-models`). A Custom round that is still open replaces the form with **Game isn't finished yet. Continue?**, because only one Custom round can be open per account. The start sends `{ gameMode: "custom", modelIds, noHint }`. Hints can be on, and Custom has no leaderboard.
 
 Category, Origin, and Custom are open on `/play` itself, with no picker page. There is no Family card and no Latest card.
+
+Hints are possible on Daily, All models, Company (year and size), Category, and Custom. Origin has none. The no-hint checkbox is on every open mode except Origin. Custom has no leaderboard.
+
+Start calls `POST /api/games` and routes to `/play/[gameId]`. Failures:
+
+- **You already have a game open.** Link: **Continue**
+- **Hourly limit reached. Next game at 14:22.**
+- **You already played that difficulty today.** Only the daily card can produce this.
 
 ## Username (`/welcome`)
 
@@ -149,24 +156,6 @@ Shown once, when `profiles.username` is null.
 - Capitals and punctuation are allowed. Shared names are allowed. Save stores the name on that profile.
 - Save goes to `/play`, or back to the play URL they were trying to open.
 - **Picture** is optional. A JPEG, PNG, or WebP under 1 MB. Anything else shows **Use a JPEG, PNG, or WebP under 1 MB.** Skipping it leaves the generated mark. They can add one later from the profile.
-
-## Pool picker (`/play/new`)
-
-Later, for Company. Heading is the category name. The list is legal pools only.
-
-Each row: pool name, model count, button **Start**. The row does not list model names. A count under 4 adds **Small set.**
-
-Latest is not a card. A latest group is a category, and that mode is not built. Fewer than two models and a later card says **Not enough models.**
-
-Empty state: **Nothing to play in this category yet.** Link back to the lobby.
-
-Hints are possible on Daily, All models, Company, Category, and Custom. Origin and latest have none. The no-hint checkbox is on every open mode. Custom can turn hints on and has no leaderboard.
-
-Start calls `POST /api/games` and routes to `/play/[gameId]`. Failures:
-
-- **You already have a game open.** Link: **Continue**
-- **Hourly limit reached. Next game at 14:22.**
-- **You already played that difficulty today.** Only the daily card can produce this.
 
 ## Round (`/play/[gameId]`)
 
@@ -187,7 +176,7 @@ The score is not shown in the header. It is computed when the round ends.
 
 ### Transcript
 
-User and assistant bubbles. The system prompt is never rendered. The user bubble is plain text. The assistant bubble is Markdown: bold, lists, and code. Raw HTML is not rendered. The assistant bubble streams word by word. Until the first word arrives, the bubble shows a waiting animation. The guess stays closed until the full reply is stored.
+User and assistant bubbles. The system prompt is never rendered. The user bubble is plain text. The assistant bubble is Markdown: bold, lists, and code. Raw HTML is not rendered. Images are not rendered: a reply shows text only, and links open only for http, https, and mailto. The assistant bubble streams word by word. Until the first word arrives, the bubble shows a waiting animation. The guess stays closed until the full reply is stored.
 
 Input under the transcript:
 
@@ -235,7 +224,7 @@ One click. The button disables until the response returns. A revealed year shows
 ### Failures on the round
 
 - Model call failed, not a credit error: **The reply failed. Send it again.** The draft stays in the input. The message was not counted.
-- OpenRouter 402 or an explicit credit error: **The game is paused. Try again later.** The draft stays. The message was not counted. Every player is paused, not only this one.
+- OpenRouter answers HTTP 402: **The game is paused. Try again later.** The draft stays. The message was not counted. Every player is paused, not only this one.
 - Already paused: **The game is paused. Try again later.**
 - Hint rejected: **That hint is not available.**
 - Lost the session: redirect to `/login`, then back to this round.
@@ -267,20 +256,13 @@ A page, not a popup. Only for `solved`, `miss`, and `given_up`. An active round 
 
   Daily leaves out the model paragraph. A company or category round replaces the difficulty line with that name, such as **Company: Anthropic.** A round with no score leaves out the points and the challenge. If **By message** fails: **Try again.** If the copy fails: **The message could not be copied.**
 - The transcript
-- **Play again** and **Leaderboard** sit at the top right, level with the model name. **Play again** returns to the lobby. It does not start a round. A company round returns to that category's pool picker. Latest returns to the lobby. **Leaderboard** is shown when this category has a leaderboard and the status is `solved` or `miss`. A Custom round has no leaderboard, so only **Play again** shows, and it goes to `/play`. On a phone those two buttons sit side by side just under the score card, and together they fill the width.
+- **Play again** and **Leaderboard** sit at the top right, level with the model name. **Play again** returns to the lobby. It does not start a round. **Leaderboard** is shown when this category has a leaderboard and the status is `solved` or `miss`. A Custom round has no leaderboard, so only **Play again** shows, and it goes to `/play`. On a phone those two buttons sit side by side just under the score card, and together they fill the width.
 
 The score is the integer from [Rules](rules.md), never below 0. When the total comes to less than 0 before the floor, a **Floor at 0** line brings it to 0.
 
 The breakdown is the lines from [Rules](rules.md), in that order. Each line has the change and an **After** column, the score once that line is applied. Point lines add. The row **Before the multiplier** is the subtotal those points reach. Each later row multiplies that subtotal, and **After** shows the result. **Total** repeats the stored score. Penalty lines are minus points. The token line and the no-hint line are multiplier rows: token count and the × factor, not points removed. A finished game keeps the factor it was scored with. The scoring page states the current cap, ×20. A give-up before any reply has no score and no breakdown.
 
 **How scoring works** opens `/scoring` in a new tab, including when the round has no score. The public page states the formula once, with one worked example.
-
-Daily stats, later, on a daily result, once at least one daily round has finished:
-
-- **41% solved it.**
-- **Messages: 3 used 1 reply · 10 used 2 · …**
-- **55% got the company.**
-- **Average tokens: 1,420.**
 
 ## Shared result (`/r/[gameId]`)
 
@@ -300,7 +282,7 @@ The breakdown is the full score: each line, the change, and **After**, including
 
 Under the card, a scored round says **Try to beat this score**. A round with no score says **Try a round**. That link goes to the home page.
 
-Download still saves the picture from `/r/[gameId]/card.png`. The file is `whos-that-llm-` plus the game id, then `.png`. The picture is not the page. It has a teal frame and rounded corners. The question-mark logo and **Who's that LLM?** sit at the top, at the same height. The score sits on the left, with the same **{Name}'s score** label. On the right: the status, then **Game mode**, **Difficulty** and **Pool** in the same two columns as the page: labels right-aligned, values left-aligned, with the same colors. Under the breakdown: **Can you beat my score of 9,500?** when there is a score, or **Come try a round** when there is not, then **https://whos-that-llm.com** in teal. The picture does not show the chat. Download uses the theme already chosen in the browser: dark mode gets the dark logo and a dark card, light mode gets the light logo and a light card.
+Download still saves the picture from `/r/[gameId]/card.png`. The file is `whos-that-llm-` plus the game id, then `.png`. The picture is not the page. It has a teal frame and rounded corners. The question-mark logo and **Who's that LLM?** sit at the top, at the same height. The score sits on the left, with the same **{Name}'s score** label. On the right: the status, then **Game mode**, **Difficulty** and **Pool** in the same two columns as the page: labels right-aligned, values left-aligned, with the same colors. Under the breakdown: **Can you beat my score of 9,500?** when there is a score, or **Come try a round** when there is not, then the bare host **whos-that-llm.com** in teal (no `https://`, no `www`). Every link in a share message uses `https://www.whos-that-llm.com`. The picture does not show the chat. Download uses the theme already chosen in the browser: dark mode gets the dark logo and a dark card, light mode gets the light logo and a light card.
 
 The link preview is that same picture. It is drawn when a share preview requests it, and it is not stored. A preview that asks for the picture without a theme gets the light card. X and Facebook are given this page, and they read the preview from `/r/[gameId]/card.png`. They are not given the PNG file, and they are not given the homepage.
 
@@ -403,6 +385,6 @@ Any URL that does not exist, and any `/admin` URL for a visitor who is not the o
 
 `/admin/modes` shows each game category, including one with zero games: games, open, finished, solved, solve rate, and give-ups. The Category mode is one row, not one per category.
 
-This build's admin pages are `/admin`, `/admin/costs`, `/admin/modes`, `/admin/models`, `/admin/categories`, `/admin/companies`, and `/admin/origins`. `/admin/companies` and `/admin/origins` each show an active and an inactive table with an On/Off button and an Edit popover, and a closed Add dropdown; see `docs/admin.md`. `/admin/models` has a closed **Add a model** dropdown, a search box (display name, company, category), and two tables: active models first, inactive second. Each lists display name, company, origin, year, size, input price, output price, and categories, 10 per page with **Previous** and **Next**, paged on its own. Clicking a data header sorts both tables ascending. Clicking it again sorts descending. A third click clears the sort and returns the default order. Clicking a different column starts that column at ascending. The turn-on and edit controls are not a sort column. Paging keeps the scroll position. **On** is green. **Off** is red, and **Edit** sits next to it. **Reset** sits by the search box only while a search is active, and saving an edit stays on that search. Turning a model off leaves it out of new rounds. Add starts with an OpenRouter id. Looking it up fills the display name, the company (matched from the lab in the OpenRouter name, then the org), and the release date. Size and categories stay empty until he fills them. He can change any filled value before saving. Edit those fields on a row, including the categories. Input and output prices are read live from OpenRouter on each load and are not edited. A new model starts off. Past games keep the traits they froze. `/admin/categories` creates, edits, turns on or off, and deletes a category: name, a short description, and an icon (an uploaded image, an emoji, a company logo, or the default logo, first one filled wins; an emoji is drawn as a Twemoji picture, see `docs/admin.md`). It lists active and inactive categories in two tables. Company logos come from the `logos` bucket. Scoring settings are not on these pages.
+The admin pages are `/admin`, `/admin/costs`, `/admin/modes`, `/admin/models`, `/admin/categories`, `/admin/companies`, `/admin/origins`, `/admin/providers`, and `/admin/chat`. Each is specified in [Admin](admin.md): the roster, categories, companies, origins, providers, and the owner chat. Scoring settings are not on these pages.
 
-There is no pause switch, confusion page or transcript page. The admin pages are listed in [Admin](admin.md).
+There is no pause switch, confusion page or transcript page.

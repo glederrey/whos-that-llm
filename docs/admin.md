@@ -35,7 +35,7 @@ The money page.
 - **Our ledger**: cost per game, ledger spend, and failed calls. Tokens and cost are the `usage` rows saved from each OpenRouter reply. This is not the OpenRouter bill above it.
 - **Spend by hidden model**: the model that was the answer in the game. Requests, tokens, cost, and cost per game, from our ledger, all time, highest cost first. This table does not sort and has no paging.
 
-The game pauses for everyone when OpenRouter returns 402 or an explicit credit error (`app_settings.paused`). No admin page flips that flag. After topping up credits on OpenRouter, clear `app_settings.paused` in the database. The site does not take a payment for credits.
+The game pauses for everyone only when OpenRouter answers HTTP 402 (`app_settings.paused`). The status code decides, not the message text. No admin page flips that flag. After topping up credits on OpenRouter, clear `app_settings.paused` in the database. The site does not take a payment for credits.
 
 ## Modes (`/admin/modes`)
 

@@ -30,8 +30,9 @@ type PublicGame = {
     companyValue: string | null;        // set on a company match
     originValue: string | null;         // the origin name (such as "USA") on an origin match
   };
-  pastGuesses: {                   // wrong model guesses, oldest first. Empty traits in no-hint mode
+  pastGuesses: {                   // wrong model guesses, newest first. Empty traits in no-hint mode
     id: string;
+    message: number;   // the turn the guess was made on
     name: string;
     companyName: string;
     logoPath: string;
@@ -41,7 +42,7 @@ type PublicGame = {
     company: string | null;  // the company name once bought, else null
     origin: string | null;   // the origin name (such as "USA") once bought, else null
     year: string | null;     // "2026" once bought, else null
-    size: string | null;     // "Small", "Medium", or "Large" once bought, else null
+    size: string | null;     // "Nano", "Small", "Medium", "Large", or "XXL" once bought, else null
   };
   candidates: { id: string; name: string; companyName: string; logoPath: string }[];
   origin?: { choices: OriginChoice[]; guessed: OriginChoice | null; actual: OriginChoice | null };  // Origin rounds only
@@ -81,17 +82,10 @@ Do not tell the client which traits the highlighted row would hit. That preview 
 | `PATCH /api/me` | Set `{ username }`. Also rewrites `games.username` for that user id |
 | `GET /api/me/history` | The signed-in player's Games list: `page` and the filters `from`, `to` (`YYYY-MM-DD`, UTC, last day included), `status` (`solved`, `miss`, or `given_up`), `mode`, and `level` (a difficulty, or a category or company id; it needs `mode`). A bad value is dropped. Returns `items`, `total`, `page`, `pageCount`, and puts `best` on the best solved round of the filter. `401` when signed out |
 | `POST /api/me/avatar` | Upload a picture. Field `avatar`. JPEG, PNG, or WebP, at most 1 MB. Anything else is `422` `avatar`. A body over 1 MB plus a little multipart slack, or one without `Content-Length`, is `413` before it is read |
-| `GET /api/admin/spend` | Admin, later |
-| `GET /api/admin/stats` | Admin, later |
-| `PATCH /api/admin/settings` | Admin, later. `{ paused }` |
-| `POST /api/admin/models` | Admin, later. Create a model, `enabled` false unless the body says otherwise and the checks pass |
-| `PATCH /api/admin/models/:id` | Admin, later. Including `enabled`. Trait edits apply to new games only |
-| `DELETE /api/admin/models/:id` | Admin, later. Rejected when a game references it |
-| `PATCH /api/admin/categories/:id` | Admin, later. Name, blurb, enabled, leaderboard, hints_allowed, sort |
-| `POST /api/admin/logos` | Admin, later. Upload to Supabase Storage. The response is the path to store |
 | `POST /api/admin/availability` | Bot. `Authorization: Bearer $AVAILABILITY_TOKEN`, no session. A dry run unless the query is exactly `?apply=true`. Wrong or missing token, or no token set: `404` with no body. See Availability API in `admin.md` |
+| `POST /admin/chat/send` | Owner only (`404` for anyone else). Body `{ modelId, text, transcript }`, validated (`422` `invalid`). An unknown model, or one with no OpenRouter id, is `404` `not_found`. Streams `word` events, then a `done` event; a failure is an `error` event `{ type: "error", message, sent }`. No round, no usage row for a game. See Chat in `admin.md` |
 
-The roster pages check `app_metadata.admin === true` on the signed-in Supabase user in a server-only module. Players cannot write `app_metadata`. A missing flag matches nobody. Anyone else gets `404`, the same shape as a missing route. The account menu includes **Admin** only for that session, rendered on the server, with no admin flag in client JavaScript. Roster edits are server actions that repeat the check, then write with the server key. anon and authenticated cannot write the roster tables. The counts on `/admin` are not granted to the public API. Spend on `/admin/costs` is read on the server with the OpenRouter key. There is no admin client flag. The `/api/admin` routes in the table above wait until the rest of admin is built. The pause flag itself is written from the first build, by a credit error.
+The roster pages check `app_metadata.admin === true` on the signed-in Supabase user in a server-only module. Players cannot write `app_metadata`. A missing flag matches nobody. Anyone else gets `404`, the same shape as a missing route. The account menu includes **Admin** only for that session, rendered on the server, with no admin flag in client JavaScript. Roster edits are server actions that repeat the check, then write with the server key. anon and authenticated cannot write the roster tables. The counts on `/admin` are not granted to the public API. Spend on `/admin/costs` is read on the server with the OpenRouter key. There is no admin client flag. The only admin routes are `POST /api/admin/availability` and `POST /admin/chat/send`. Everything else on the admin pages is a server action. No admin route or page writes the pause flag: a credit error (HTTP 402) sets it, and it is cleared in the database.
 
 Deleting an account is a server action, not a route that accepts an account id. It checks the session, then clears `user_id` and `username` on that user's games and `user_id` on their usage rows. If that fails, it stops. It then removes the avatar and deletes the auth user. Messages and guesses stay with the games. The leaderboard skips a null `user_id`, so the name leaves the board and does not become a blank row. A client request cannot name another user or skip the session check.
 
@@ -121,11 +115,11 @@ Lock the game row for the rest of the transaction. A second request waits, then 
 
 Then call OpenRouter. The response is `200` with a `text/event-stream`: one `{ "type": "word", "text" }` event per word, then a final `{ "type": "game", "game": PublicGame }`, or `{ "type": "error", "error", "paused" }` when something failed. The guess stays closed until the assistant row is stored. On success, insert the user row and the assistant row for `turn = message_count + 1`, insert `usage`, set `message_count` and `awaiting_guess = true`, and send the `game` event with `PublicGame`. If the successful text is empty or whitespace, still do that. The message is spent.
 
-On failure, including a stream that drops before a completed reply, insert `usage` with `cost_usd = 0` and `error_code`, leave `message_count` unchanged, and return `502`. If that turn still has a stored assistant reply and no guess, set `awaiting_guess` true again so the skipped guess comes back. For HTTP 402, and for an explicit credit error, set `app_settings.paused = true` in the same failure path and return `paused: true`. Otherwise `paused: false`. The client keeps the draft either way. Do not leave a user row without its assistant row.
+On failure, including a stream that drops before a completed reply, insert `usage` with `cost_usd = 0` and `error_code`, leave `message_count` unchanged, and send an `error` event on the stream (the response is already `200`, so there is no HTTP 502). If that turn still has a stored assistant reply and no guess, set `awaiting_guess` true again so the skipped guess comes back. For HTTP 402, and only 402, set `app_settings.paused = true` in the same failure path and return `paused: true`. Otherwise `paused: false`. The client keeps the draft either way. Do not leave a user row without its assistant row.
 
 The call sends the full chat: the new user text plus every earlier user and assistant turn, in order. The system prompt stays separate. It does not include previous rounds.
 
-An explicit credit error is a response whose status or error code says the key is out of credits, even when the status is not 402.
+The status code decides. The error text is not read.
 
 ### `POST /api/games/:id/guesses`
 
@@ -217,6 +211,14 @@ JSON body `{ error: string, ... }`. The page copy for each code is in [Pages](pa
 | 422 | `hint` | Hint rejected |
 | 429 | `hourly_cap` | Body includes `nextAt` |
 | 422 | `turn` | A message that is empty or over `maxUserChars` |
+| 422 | `difficulty` | Missing or unknown difficulty on All models or Daily |
+| 422 | `company` | Missing or unknown company on a Company round |
+| 422 | `category` | Unknown category on a Category round |
+| 422 | `models` | Custom `modelIds` is not a valid id array |
+| 422 | `avatar` | Picture is not a JPEG, PNG, or WebP of at most 1 MB |
+| 413 | `avatar` | Upload body is too large, or has no `Content-Length` |
+| 422 | `invalid` | Admin chat body is not valid |
+| 500 | `server` | A database read failed |
 | — | `upstream` | OpenRouter failed. Sent as an `error` event on the message stream (the response is already `200`), with `paused` |
 
 ## Leaderboard and profile
