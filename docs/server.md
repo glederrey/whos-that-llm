@@ -13,7 +13,8 @@ There is no skip route.
 ```ts
 type PublicGame = {
   id: string;
-  category: string;
+  gameMode: string;
+  poolKey?: string | null;
   poolLabel: string;
   noHint: boolean;
   hintsAllowed: boolean;
@@ -43,6 +44,7 @@ type PublicGame = {
     size: string | null;     // "Small", "Medium", or "Large" once bought, else null
   };
   candidates: { id: string; name: string; companyName: string; logoPath: string }[];
+  origin?: { choices: OriginChoice[]; guessed: OriginChoice | null; actual: OriginChoice | null };  // Origin rounds only
   transcript: { turn: number; role: "user" | "assistant"; content: string }[];
   model?: {
     name: string;
@@ -52,6 +54,7 @@ type PublicGame = {
     year: number;
     size: string;
   };
+  difficulty?: "easy" | "medium" | "hard" | "impossible" | null;
   score?: number;            // present when the round has a score, never negative
   breakdown?: { label: string; points: number | null; multiplier?: string }[];
   explanation?: string[];    // the short public lines
@@ -60,7 +63,7 @@ type PublicGame = {
 
 `feedback` is null for the whole round when `noHint` is true, and on Origin. On an Origin round `candidates` is empty and `origin` holds `{ choices, guessed, actual }`: the buttons, the player's guess, and (once the round ends) the real origin. Each choice is `{ id, name, flag }`, read from the traits frozen at the start. `given` is still sent. `candidates` is the filtered list: logo, company, and name only. The server removes models that contradict a known trait, and models already guessed, before it sends the list. The client does not receive origin, year, size, weights, or reasoning, and it does not filter.
 
-Known traits are given values, bought hints, and matched company and origin. When hints are on, a company miss also removes every model from that company. A company hit leaves that company's other models. In no-hint mode, matches are stored on the guess row and do not become known, and a company miss removes nothing, so they do not narrow `candidates`.
+Known traits are given values, bought hints, and matched company and origin. When hints are on, a company miss also removes every model from that company, and an origin miss removes every model from that origin. A company hit leaves that company's other models. In no-hint mode, matches are stored on the guess row and do not become known, and a company miss removes nothing, so they do not narrow `candidates`.
 
 Do not tell the client which traits the highlighted row would hit. That preview would be the answer.
 
@@ -74,7 +77,7 @@ Do not tell the client which traits the highlighted row would hit. That preview 
 | `POST /api/games/:id/guesses` | One guess for the open turn |
 | `POST /api/games/:id/hints` | Buy a company, origin, year, or size hint (not on Origin) |
 | `POST /api/games/:id/give-up` | End the round, show the model, stay off the leaderboard |
-| `GET /api/leaderboard?category=&period=week\|all` | Rank, name, score |
+| `GET /api/leaderboard?gameMode=&period=week\|month\|all&difficulty=` | Rank, name, score |
 | `PATCH /api/me` | Set `{ username }`. Also rewrites `games.username` for that user id |
 | `GET /api/me/history` | The signed-in player's Games list: `page` and the filters `from`, `to` (`YYYY-MM-DD`, UTC, last day included), `status` (`solved`, `miss`, or `given_up`), `mode`, and `level` (a difficulty, or a category or company id; it needs `mode`). A bad value is dropped. Returns `items`, `total`, `page`, `pageCount`, and puts `best` on the best solved round of the filter. `401` when signed out |
 | `POST /api/me/avatar` | Upload a picture. Field `avatar`. JPEG, PNG, or WebP, at most 1 MB. Anything else is `422` `avatar`. A body over 1 MB plus a little multipart slack, or one without `Content-Length`, is `413` before it is read |
@@ -95,7 +98,7 @@ Deleting an account is a server action, not a route that accepts an account id. 
 
 ### `POST /api/games`
 
-Body: `{ gameMode, poolKey: string | null, noHint: boolean, difficulty, companyId }`. `gameMode` is `daily`, `all`, `company`, or `class`. `difficulty` is `easy`, `medium`, `hard`, or `impossible`. Daily and All models require it. The server stores `1`, `2`, `3`, or `4`. Company takes `companyId` and no difficulty. Category (`class`) takes `poolKey`, the category id, and no difficulty: the server checks that the category exists and has at least 2 enabled models (`422 pool_too_small` otherwise, `422 category` for a bad id), builds the pool from `model_categories`, and stores the id in `games.pool_key`.
+Body: `{ gameMode, poolKey: string | null, noHint: boolean, difficulty, companyId }`. `gameMode` is `daily`, `all`, `company`, `class`, `origin`, or `custom`. `difficulty` is `easy`, `medium`, `hard`, or `impossible`. Daily and All models require it. The server stores `1`, `2`, `3`, or `4`. Company takes `companyId` and no difficulty. Category (`class`) takes `poolKey`, the category id, and no difficulty: the server checks that the category exists and has at least 2 enabled models (`422 pool_too_small` otherwise, `422 category` for a bad id), builds the pool from `model_categories`, and stores the id in `games.pool_key`.
 
 In one transaction:
 
@@ -103,7 +106,7 @@ In one transaction:
 1. For `daily`, look up this account's row whose `daily_key` is today's UTC date plus this difficulty, `YYYY-MM-DD:1` through `:4`. If that row is still `active`, return that `gameId`. Coming back resumes that difficulty and does not draw again. If it is `solved`, `miss`, or `given_up`, return `409` `daily_done`. Easy and Medium are different keys, so both can be played the same day. A second Easy cannot. This happens before the pause check, so an open difficulty can be resumed while the game is paused.
 2. If `app_settings.paused`, return `503` `paused`.
 3. Reject if this user already has a row with `status = 'active'` for this game mode and this difficulty (`409`, `active_game`). A different difficulty can still start, and Daily and All models do not block each other. Reject if they have 20 rows with `started_at` in the last hour (`429`, `hourly_cap`, body includes `nextAt`).
-4. Load the mode and reject it unless `game_modes.enabled` (`404`). Build the pool. `all` and `daily` use enabled models whose `difficulty` is `<=` the chosen difficulty, so Easy never includes an Impossible model. `company` uses `poolKey` as a company id. `origin` takes no `poolKey`: the pool is every enabled model whose origin is turned on in `origins`, and the draw is uniform over it. A pool with fewer than 2 origins is `422` `pool_too_small`. `custom` takes `modelIds` (an array of model ids) instead of `poolKey`. A body where `modelIds` is not a valid id array is `422` `models`. Disabled and unknown ids are dropped, and fewer than 2 left is `422` `pool_too_small`. The pool is saved in `games.pool_model_ids`. `difficulty` and `pool_key` stay null. One active Custom round per account: a second start returns `active_game`. Reject a pool with fewer than 2 enabled models. The error is `422` `pool_too_small`. `poolKey` is required for company and category, and rejected for the others. A missing or unknown `difficulty` on All models or Daily is `422` `difficulty`.
+4. Load the mode and reject it unless `game_modes.enabled` (`404`). Build the pool. `all` and `daily` use enabled models whose `difficulty` is `<=` the chosen difficulty, so Easy never includes an Impossible model. `company` uses `companyId`, and a company with fewer than 2 enabled models is `422` `pool_too_small`. `origin` takes no `poolKey`: the pool is every enabled model whose origin is turned on in `origins`, and the draw is uniform over it. A pool with fewer than 2 origins is `422` `pool_too_small`. `custom` takes `modelIds` (an array of model ids) instead of `poolKey`. A body where `modelIds` is not a valid id array is `422` `models`. Disabled and unknown ids are dropped, and fewer than 2 left is `422` `pool_too_small`. The pool is saved in `games.pool_model_ids`. `difficulty` and `pool_key` stay null. One active Custom round per account: a second start returns `active_game`. Reject a pool with fewer than 2 enabled models. The error is `422` `pool_too_small`. `poolKey` is required for company and category, and rejected for the others. A missing or unknown `difficulty` on All models or Daily is `422` `difficulty`.
 5. All models draws a uniform model from that pool. Daily uses the row in `daily_models` for this UTC date and this difficulty. The first start inserts that row, and the insert only accepts a model whose `difficulty` is `<=` the chosen level. Medium, Hard, and Impossible each have their own row. A later player the same day reads that row. Two starts in the same instant share it: `insert ... on conflict (played_on, difficulty) do nothing`, then read the stored id back. Tomorrow is a new date and a new row at each level. The guess list is the pool at the moment this round starts. If the stored model has since been turned off, it is still included so it can be named.
 6. Freeze traits from the current catalog into `games.traits`. Insert `games` with `pool_model_ids` set to that pool, `rules` copied from config, `rules.hintsAllowed` copied from `game_modes.hints_allowed`, `username` copied from the profile, `hints = '{}'`, `message_count = 0`, `awaiting_guess = false`, `no_hint` from the body. Daily sets `daily_key` to the UTC date and the difficulty, such as `2026-10-12:2` for Medium. Every other mode leaves it null. Origin stores `no_hint` false and `hintsAllowed` false. Do not write a score on insert.
 
@@ -113,11 +116,11 @@ Response: `{ gameId }` and nothing else.
 
 Body: `{ text: string }`.
 
-Reject when the round is not `active`, when `app_settings.paused` (`503` `paused`), when `message_count` is already the limit, or when the trimmed text is empty or over `rules.maxUserChars`. A message is allowed while a guess is open. Claiming the call sets `awaiting_guess` false, so a guess submitted in the same moment loses.
+Reject when the round is not `active`, when `app_settings.paused` (`503` `paused`), when `message_count` is already the limit, or when the trimmed text is empty or over `rules.maxUserChars` (`422` `turn`). A message is allowed while a guess is open. Claiming the call sets `awaiting_guess` false, so a guess submitted in the same moment loses.
 
 Lock the game row for the rest of the transaction. A second request waits, then loses because a call is already in flight or the count has moved. That is what keeps a double click from paying for two calls. Guess, hint, and give-up lock the same row.
 
-Then call OpenRouter. The reply streams word by word to the client. The guess stays closed until the assistant row is stored. On success, insert the user row and the assistant row for `turn = message_count + 1`, insert `usage`, set `message_count` and `awaiting_guess = true`, and return `PublicGame`. If the successful text is empty or whitespace, still do that. The message is spent.
+Then call OpenRouter. The response is `200` with a `text/event-stream`: one `{ "type": "word", "text" }` event per word, then a final `{ "type": "game", "game": PublicGame }`, or `{ "type": "error", "error", "paused" }` when something failed. The guess stays closed until the assistant row is stored. On success, insert the user row and the assistant row for `turn = message_count + 1`, insert `usage`, set `message_count` and `awaiting_guess = true`, and send the `game` event with `PublicGame`. If the successful text is empty or whitespace, still do that. The message is spent.
 
 On failure, including a stream that drops before a completed reply, insert `usage` with `cost_usd = 0` and `error_code`, leave `message_count` unchanged, and return `502`. If that turn still has a stored assistant reply and no guess, set `awaiting_guess` true again so the skipped guess comes back. For HTTP 402, and for an explicit credit error, set `app_settings.paused = true` in the same failure path and return `paused: true`. Otherwise `paused: false`. The client keeps the draft either way. Do not leave a user row without its assistant row.
 
@@ -147,7 +150,7 @@ If this was the last message and the model was not named, set `status = 'miss'` 
 
 Body: `{ key: "company" | "origin" | "year" | "size" }`.
 
-Lock the game row. Reject when `no_hint`, when `rules.hintsAllowed` is false, when the round is not `active`, when the key is already in `hints`, when the key is not one of `company`, `origin`, `year`, or `size`, when that trait is given, and when a guess already matched that company or origin. Append the key. The next `candidates` list drops models whose frozen value for that trait disagrees. Return `PublicGame`. The price (company 600, origin 400, year 100, size 100) is not subtracted until the round ends. Hints are copied on only for Daily, All models, and Custom.
+Lock the game row. Reject when `no_hint`, when `rules.hintsAllowed` is false, when the round is not `active`, when the key is already in `hints`, when the key is not one of `company`, `origin`, `year`, or `size`, when that trait is given, and when a guess already matched that company or origin. Append the key. The next `candidates` list drops models whose frozen value for that trait disagrees. Return `PublicGame`. The price (company 600, origin 400, year 100, size 100) is not subtracted until the round ends. Hints are on for Daily, All models, Category, and Custom. Company allows only the year and the size. Origin has none.
 
 ### `POST /api/games/:id/give-up`
 
@@ -174,7 +177,7 @@ The prompt stays this English text, apart from the date. Do not tell the model w
 Call settings, the same for every model except `provider_settings`:
 
 - temperature `0.8`
-- `maxOutputTokens` = `rules.maxOutputTokens` (2,000), clamped in code even if a row says otherwise
+- `maxOutputTokens` = `rules.maxOutputTokens` (2,000), passed to OpenRouter as is
 - no tools, no web search
 - `provider_settings` spread into the OpenRouter provider options
 - stream the text word by word. A reasoning provider that is not trusted yet is held until the token check, then released a few words at a time
@@ -199,15 +202,16 @@ JSON body `{ error: string, ... }`. The page copy for each code is in [Pages](pa
 | 409 | `active_game` | This mode and difficulty already has an open round |
 | 409 | `daily_done` | Daily already started today |
 | 409 | `conflict` | The guess is not in the filtered list |
-| 409 | `turn` | Guess when no guess is open, a second guess on the same message, or a message while a guess is open |
+| 409 | `turn` | Guess when no guess is open, or a second guess on the same message |
 | 422 | `pool_too_small` | Fewer than 2 models in the pool, or an empty roster for daily |
 | 422 | `username` | Missing, or not 3–20 characters after trim |
 | 422 | `hint` | Hint rejected |
 | 429 | `hourly_cap` | Body includes `nextAt` |
-| 502 | `upstream` | OpenRouter failed. Body includes `paused` |
+| 422 | `turn` | A message that is empty or over `maxUserChars` |
+| — | `upstream` | OpenRouter failed. Sent as an `error` event on the message stream (the response is already `200`), with `paused` |
 
 ## Leaderboard and profile
 
-`GET /api/leaderboard` calls `leaderboard(category, since)` with the user-scoped client. The function is granted to `anon` and `authenticated`. A category with `leaderboard` false is `404`. `period=week` sets `since` to Monday 00:00 UTC of the current week. `period=all` uses no lower bound. The columns are rank, name, and score. The name is shown with that player's profile picture. Each row carries an avatar `seed` for the generated mark: the viewer's own row keeps their id so it matches the header, every other row gets a short hash. The API never returns another player's account id.
+`GET /api/leaderboard` reads `gameMode`, `period`, and `difficulty` (Daily and All models only). It calls `leaderboard(game_mode, since, viewer, p_difficulty, p_company)` with the user-scoped client. The function is granted to `anon` and `authenticated`. A game mode with `leaderboard` false is `404`. `period=week` sets `since` to Monday 00:00 UTC of the current week, `period=month` to the first of the month, and `period=all` uses no lower bound. The columns are rank, name, and score. The name is shown with that player's profile picture. Each row carries an avatar `seed` for the generated mark: the viewer's own row keeps their id so it matches the header, every other row gets a short hash. The API never returns another player's account id.
 
 `PATCH /api/me` calls `set_username` as the signed-in user. It sets `profiles.username` and every `games.username` for that user id. Empty, and any name outside 3–20 characters after trim, is `422` `username`. `POST /api/me/avatar` stores the file in the public `avatars` bucket and saves `profiles.avatar_path`. Only a JPEG, PNG, or WebP of at most 1 MB is accepted. The header shows that picture. Until then it keeps the generated mark.

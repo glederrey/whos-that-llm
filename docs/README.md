@@ -13,7 +13,7 @@ Read in this order the first time. After that, open the page for the thing you a
 | [Pages](pages.md) | Every screen, the states, the words on them |
 | [Data](data.md) | Postgres tables, constraints, access, the queries |
 | [Server](server.md) | Routes, the JSON the client receives, the model call, errors |
-| [Admin](admin.md) | Owner-only roster and counts. The rest of the cockpit is later |
+| [Admin](admin.md) | Owner-only pages: counts, spend, games, modes, roster, categories, origins, providers, chat |
 | [Build](build.md) | Repo layout, env, first roster, the order to build in |
 
 **All models** is the first build. The other categories are specified so the schema and the copy have a place to land. Do not build them in the first pass.

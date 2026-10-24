@@ -32,11 +32,11 @@ The table is part of the baseline migration, with its comments, row level securi
 |---|---|---|
 | `companies`, `models_public`, `game_modes` | `select`. The table grant is required as well as the policy. A new Supabase project does not add it | write on the base tables |
 | `categories`, `model_categories` | no privileges | read and write |
-| `profiles` | `select` own row. `update` own row only while `username` is null. A later rename goes through `set_username` | write |
+| `profiles` | `select` own row. No direct `update`: the username is set and renamed through `set_username` | write |
 | `games`, `messages`, `guesses`, `usage` | no privileges | read and write |
 | `leaderboard(game_mode, since, viewer, p_difficulty, p_company)` | `execute` | execute |
 
-`leaderboard` is a security definer function, not a view of game rows. It returns rank, name, score, whether the row is the signed-in player, and that player's `avatar_path`. The page shows the public picture, or the generated mark when there is no file. It does not show the account id. `anon` can call it, so the landing page can show the top 5 before login.
+`leaderboard` is a security definer function, not a view of game rows. It returns rank, name, score, whether the row is the signed-in player, and that player's `avatar_path`. The page shows the public picture, or the generated mark when there is no file. The function also returns `user_id`, and the API strips it before the page sees it. `anon` can call it, so the landing page can show the top 5 before login.
 
 `profiles` is created by a trigger on `auth.users`. The user does not insert their own profile row.
 
@@ -189,7 +189,7 @@ One row, `id = 1`.
 | `avatar_path` | text, null | Object path in the public `avatars` bucket, `{user id}/{timestamp}.{ext}`. Null keeps the generated mark. Cached for a year. A new upload uses a new path, so the new picture shows up |
 | `created_at` | timestamptz | |
 
-When `username` is not null, its trimmed length is 3–20. Capitals and punctuation are allowed. The check is on length after trim, not on a character class. Two profiles may share a username. The account is `id`.
+When `username` is not null, its trimmed length is 3–20. The name must equal its trimmed form and may not contain a line break. Capitals and punctuation are allowed. There is no character class. Two profiles may share a username. The account is `id`.
 
 ### `games`
 
@@ -229,6 +229,7 @@ Indexes:
 - unique `(user_id, daily_key)` where `daily_key is not null`. One Daily round per account per difficulty per UTC day, because the key includes the difficulty. `start_game` writes `daily_key` only for `daily`
 - unique `(user_id, game_mode, pool_key)` where `status = 'active'` and `game_mode` is `company` or `class`. One unfinished Company round per company, one unfinished Category round per category
 - unique `(user_id)` where `status = 'active'` and `game_mode = 'custom'` (`games_one_active_custom_idx`). One unfinished Custom round per account
+- unique `(user_id)` where `status = 'active'` and `game_mode = 'origin'` (`games_one_active_origin_idx`). One unfinished Origin round per account
 - `(game_mode, status, finished_at)` for the leaderboard
 
 ### `daily_models`
@@ -260,6 +261,7 @@ The first start of that day and difficulty inserts the row. The inserted model m
   "tokenScale": 10000,
   "tokenCap": 20,
   "hintCosts": { "year": 100, "size": 100, "origin": 400, "company": 600 },
+  "difficultyMultipliers": { "easy": 0.5, "medium": 1, "hard": 2, "impossible": 3 },
   "wrongGuessCost": 100,
   "noHintMultiplier": 2,
   "hintsAllowed": true
@@ -299,7 +301,7 @@ The transcript of one round. Keep these rows. Do not delete old transcripts to r
 |---|---|---|
 | `id` | uuid, pk | |
 | `game_id` | uuid, fk `games` on delete cascade | |
-| `turn` | int | 1–5 |
+| `turn` | int | 1–10 |
 | `role` | text | `user` or `assistant` |
 | `content` | text | Assistant content may be empty or whitespace. That row still counts |
 | `created_at` | timestamptz | |
@@ -357,7 +359,8 @@ security definer
 set search_path = public
 as $$
 begin
-  insert into public.profiles (id) values (new.id);
+  insert into public.profiles (id) values (new.id)
+  on conflict (id) do nothing;
   return new;
 end;
 $$;
@@ -369,7 +372,7 @@ for each row execute function public.handle_new_user();
 
 ## Queries
 
-Leaderboard, one game mode, one period (the Daily and All models shape; Company and Category boards filter on `pool_key` in place of the difficulty). The function body is this query. `since` is the start of the window, or `-infinity` for all time. Rank is the row number of the final order.
+Leaderboard, one game mode, one period (the Daily and All models shape; Company and Category boards filter on `pool_key` in place of the difficulty). The latest function body is in `20261022151319_category_icons.sql`; this is its shape, without the extra return columns (`user_id`, `avatar_path`, `difficulty`, `no_hint`, company or category id, name and logo). `since` is the start of the window, or `-infinity` for all time. Rank is the row number of the final order.
 
 ```sql
 with best as (
@@ -382,11 +385,14 @@ with best as (
   from games g
   join game_modes c on c.id = g.game_mode
   where c.leaderboard
+    and g.user_id is not null
+    and g.username is not null and btrim(g.username) <> ''
     and g.game_mode = game_mode
     and g.status in ('solved', 'miss')
     and g.score is not null
     and g.finished_at is not null
     and g.finished_at >= since
+    -- plus the difficulty or pool_key filter, see below
   order by g.user_id, g.score desc, g.message_count asc, g.finished_at asc
 )
 select username as name, score
