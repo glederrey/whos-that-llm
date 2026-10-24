@@ -53,7 +53,7 @@ export type AdminStats = {
 type CompanyRow = { id: string; name: string; origin: Origin };
 
 export type CategoryListRow = CategoryRow & { modelCount: number; modelIds: string[] };
-export type CompanyListRow = CompanyRow & { enabled: boolean; logoUrl: string; modelCount: number };
+export type CompanyListRow = CompanyRow & { enabled: boolean; logoPath: string; logoUrl: string; modelCount: number };
 
 export async function loadAdminStats(): Promise<AdminStats> {
   await requireOwner();
@@ -439,28 +439,29 @@ export async function loadCompanyList(): Promise<CompanyListRow[]> {
     name: row.name as string,
     origin: row.origin as Origin,
     enabled: Boolean(row.enabled),
+    logoPath: (row.logo_path as string | null) ?? "",
     logoUrl: presentLogo((row.logo_path as string | null) ?? "", row.id as string),
     modelCount: counts.byCompany.get(row.id as string) ?? 0,
   }));
 }
 
-type CompanyInput = { id?: string; name?: string; origin?: string; logo?: File | null };
+type CompanyInput = { id?: string; name?: string; origin?: string; logo?: File | null; logoPath?: string };
 
 export async function createCompany(raw: CompanyInput): Promise<CompanyNotice | null> {
   await requireOwner();
   const fields = parseCompanyFields(raw);
   const id = companyIdFromName(raw.name ?? "");
   if (!fields || !id) return "invalid";
-  if (!raw.logo || raw.logo.size === 0) return "logo";
   const client = serviceOrThrow();
   const companies = await loadCompanies(client);
   if (!companies) return "save";
   if (companies.some((company) => company.id === id || sameName(company.name, fields.name))) return "taken";
-  const logo = await uploadCompanyLogo(client, id, raw.logo);
+  const logo = await resolveCompanyLogo(client, id, raw);
   if (typeof logo === "string") return logo;
+  if (!logo) return "logo";
   const { error } = await client.from("companies").insert({ id, name: fields.name, origin: fields.origin, logo_path: logo.path });
   if (error) {
-    await client.storage.from("logos").remove([logoBucketPath(logo.path)]);
+    if (logo.uploaded) await client.storage.from("logos").remove([logoBucketPath(logo.path)]);
     return error.code === "23505" ? "taken" : "save";
   }
   return null;
@@ -479,22 +480,19 @@ export async function updateCompany(raw: CompanyInput): Promise<CompanyNotice | 
   if (current.error || !current.data || !companies) return "save";
   if (companies.some((company) => company.id !== id && sameName(company.name, fields.name))) return "taken";
   const patch: Record<string, unknown> = { name: fields.name, origin: fields.origin };
-  let uploaded: string | null = null;
-  if (raw.logo && raw.logo.size > 0) {
-    const logo = await uploadCompanyLogo(client, id, raw.logo);
-    if (typeof logo === "string") return logo;
-    uploaded = logo.path;
-    patch.logo_path = logo.path;
-  }
+  const old = (current.data.logo_path as string | null) ?? "";
+  const logo = await resolveCompanyLogo(client, id, raw);
+  if (typeof logo === "string") return logo;
+  if (logo) patch.logo_path = logo.path;
   const { error } = await client.from("companies").update(patch).eq("id", id);
   if (error) {
-    if (uploaded) await client.storage.from("logos").remove([logoBucketPath(uploaded)]);
+    if (logo?.uploaded) await client.storage.from("logos").remove([logoBucketPath(logo.path)]);
     return "save";
   }
-  // Only an image this form uploaded is removed. The seeded logos/{id}.png files stay.
-  const old = current.data.logo_path as string | null;
-  if (uploaded && old && logoBucketPath(old).startsWith("companies/")) {
-    await client.storage.from("logos").remove([logoBucketPath(old)]);
+  // The replaced file goes, unless another company still shows it.
+  if (logo && old && logoBucketPath(old) !== logoBucketPath(logo.path)) {
+    const shared = await client.from("companies").select("id", { count: "exact", head: true }).eq("logo_path", old);
+    if (!shared.error && (shared.count ?? 0) === 0) await client.storage.from("logos").remove([logoBucketPath(old)]);
   }
   return null;
 }
@@ -510,6 +508,23 @@ export async function setCompanyEnabled(idRaw: string, enabled: boolean): Promis
   if (!id) return "invalid";
   const { error } = await serviceOrThrow().from("companies").update({ enabled }).eq("id", id);
   return error ? "save" : null;
+}
+
+/** An uploaded file wins; otherwise a logo another company already shows; otherwise null (keep what it has). */
+async function resolveCompanyLogo(
+  client: SupabaseClient,
+  companyId: string,
+  raw: CompanyInput,
+): Promise<{ path: string; uploaded: boolean } | CompanyNotice | null> {
+  if (raw.logo && raw.logo.size > 0) {
+    const logo = await uploadCompanyLogo(client, companyId, raw.logo);
+    return typeof logo === "string" ? logo : { path: logo.path, uploaded: true };
+  }
+  const chosen = (raw.logoPath ?? "").trim();
+  if (!chosen) return null;
+  const { data, error } = await client.from("companies").select("id").eq("logo_path", chosen).limit(1);
+  if (error) return "save";
+  return data && data.length > 0 ? { path: chosen, uploaded: false } : "logo";
 }
 
 async function uploadCompanyLogo(client: SupabaseClient, companyId: string, file: File): Promise<{ path: string } | CompanyNotice> {

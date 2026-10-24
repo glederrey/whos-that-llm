@@ -126,6 +126,7 @@ function companyFields(formData: FormData) {
     name: text(formData, "name"),
     origin: text(formData, "origin"),
     logo: formData.get("logo") instanceof File ? (formData.get("logo") as File) : null,
+    logoPath: text(formData, "logoPath"),
   };
 }
 

@@ -13,7 +13,7 @@ export const maxCompanyName = 60;
 const notices: Record<CompanyNotice, string> = {
   invalid: "Give a name of up to 60 characters (letters or digits, at least 2) and pick an origin.",
   taken: "That company is already in the list.",
-  logo: "A logo is required. Use an SVG, PNG, or WebP under 1 MB.",
+  logo: "Pick a logo or upload one. Use an SVG, PNG, or WebP under 1 MB.",
   save: "Could not save that company.",
 };
 

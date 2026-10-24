@@ -40,8 +40,8 @@ Read-only. One row per game mode, with games, open, finished, solved, solve rate
 
 Two sections, **Active** (on) and **Inactive** (off), laid out like the models page. Columns: logo and name, origin (flag and name), how many of its models are on, then the On/Off button and an Edit popover. The page shows everything; nothing is deleted.
 
-- **Add** a company: a name (1–60 characters, at least 2 letters or digits), an origin (required, from the origins list), and a logo upload (required: an SVG, PNG, or WebP of at most 1 MB, with the same SVG checks as category icons). The id is a slug of the name and never changes. A name or id already taken says so. The image is stored in the `logos` bucket under `companies/` and `logo_path` is `logos/companies/{id}-{token}.{ext}`.
-- **Edit** the name, the origin, and the logo. The logo field left empty keeps the current one; a new one replaces it, and the old file is removed only when it was uploaded here (the seeded `logos/{id}.png` files stay). Changing the origin here is the one place a company moves to another origin.
+- **Add** a company: a name (1–60 characters, at least 2 letters or digits), an origin (required, picked from the origins list as radio buttons that show the flag as a Twemoji picture), and a logo (required: pick one a company already has, or upload an SVG, PNG, or WebP of at most 1 MB, with the same SVG checks as category icons; an upload wins over a pick). The id is a slug of the name and never changes. A name or id already taken says so. The image is stored in the `logos` bucket under `companies/` and `logo_path` is `logos/companies/{id}-{token}.{ext}`.
+- **Edit** the name, the origin, and the logo. The current logo is preselected, so leaving it alone keeps it. Picking another existing logo or uploading a new one replaces it, and the replaced file is deleted from the bucket unless another company still shows it. An upload is stored as `companies/{id}-{token}.{ext}`: the company id is the name, and the token keeps the one-year image cache from showing the old picture. Changing the origin here is the one place a company moves to another origin.
 - **Turn off or on.** Off, the company has no card in the Company game and a new Company round for it is refused. Its models stay in every other mode, a round already started on it stays playable (the lobby keeps its resume card), and the leaderboards and statistics do not change.
 
 ## Models (`/admin/models`)
@@ -129,7 +129,7 @@ Turning a mode off hides its card. Old rounds stay on the leaderboard as long as
 
 The list of origins a company can have. Two sections, **Active** and **Inactive**, like the models page. Each row shows the flag, the name, the number of companies that use it, the order, and an On/Off button with an Edit popover. The owner can:
 
-- **Add** an origin: a name (1–40 characters), one flag emoji, and an order (a whole number from 0 to 9999, 100 by default). The id comes from the name (`Latin America` is `latin-america`). A taken id says so.
+- **Add** an origin: a name (1–40 characters), a flag (type the two-letter country code, like `JP`, and it becomes the flag emoji; a pasted flag emoji also works), and an order (a whole number from 0 to 9999, 100 by default). The id comes from the name (`Latin America` is `latin-america`). A taken id says so.
 - **Edit** the name, the flag, and the order. The id never changes.
 - **Turn off or on.** Off, the origin has no button in the Origin game and none of its models is drawn there. Nothing else changes: the other modes, the origin hint, and past rounds stay as they are.
 

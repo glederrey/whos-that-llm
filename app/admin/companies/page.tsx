@@ -14,6 +14,12 @@ export default async function CompaniesPage({ searchParams }: { searchParams: Pr
   const notice = companyNotice(params.notice);
   const [companies, origins] = await Promise.all([loadCompanyList(), loadOriginOptions()]);
   const originOf = new Map(origins.map((item) => [item.id, item]));
+  const logos: LogoChoice[] = [];
+  for (const company of companies) {
+    if (company.logoPath && company.logoUrl && !logos.some((logo) => logo.path === company.logoPath)) {
+      logos.push({ path: company.logoPath, url: company.logoUrl, name: company.name });
+    }
+  }
 
   return (
     <div className="stack">
@@ -33,7 +39,7 @@ export default async function CompaniesPage({ searchParams }: { searchParams: Pr
         <summary>Add a company</summary>
         <form action={addCompany} className="stack">
           <div className="roster-form">
-            <CompanyInputs origins={origins} logoRequired />
+            <CompanyInputs origins={origins} logos={logos} />
           </div>
           <div>
             <button className="button" type="submit">
@@ -48,6 +54,7 @@ export default async function CompaniesPage({ searchParams }: { searchParams: Pr
         rows={companies.filter((row) => row.enabled)}
         origins={origins}
         originOf={originOf}
+        logos={logos}
       />
       <CompanySection
         title="Inactive companies"
@@ -55,6 +62,7 @@ export default async function CompaniesPage({ searchParams }: { searchParams: Pr
         rows={companies.filter((row) => !row.enabled)}
         origins={origins}
         originOf={originOf}
+        logos={logos}
       />
     </div>
   );
@@ -66,12 +74,14 @@ function CompanySection({
   rows,
   origins,
   originOf,
+  logos,
 }: {
   title: string;
   empty: string;
   rows: CompanyListRow[];
   origins: OriginOption[];
   originOf: Map<string, OriginOption>;
+  logos: LogoChoice[];
 }) {
   return (
     <section className="stack">
@@ -121,10 +131,9 @@ function CompanySection({
                           <h2>Edit {company.name}</h2>
                           <input type="hidden" name="id" value={company.id} />
                           <div className="roster-form">
-                            <CompanyInputs name={company.name} origin={company.origin} origins={origins} />
+                            <CompanyInputs name={company.name} origin={company.origin} origins={origins} logos={logos} logoPath={company.logoPath} />
                           </div>
-                          <p className="muted">Leave the logo empty to keep the current one.</p>
-                          <div className="row">
+                                                    <div className="row">
                             <button className="button" type="submit">
                               Save
                             </button>
@@ -146,38 +155,51 @@ function CompanySection({
   );
 }
 
+type LogoChoice = { path: string; url: string; name: string };
+
 function CompanyInputs({
   name = "",
   origin = "",
   origins,
-  logoRequired = false,
+  logos,
+  logoPath = "",
 }: {
   name?: string;
   origin?: string;
   origins: OriginOption[];
-  logoRequired?: boolean;
+  logos: LogoChoice[];
+  logoPath?: string;
 }) {
   return (
     <>
-      <label>
+      <label className="span-2">
         Name
         <input name="name" defaultValue={name} maxLength={maxCompanyName} required />
       </label>
-      <label>
-        Origin
-        <select name="origin" defaultValue={origin} required>
-          {origin ? null : <option value="">Choose</option>}
-          {origins.map((option) => (
-            <option key={option.id} value={option.id}>
-              {option.flag} {option.name}
-            </option>
+      <fieldset className="span-2 origin-picks">
+        <legend>Origin</legend>
+        {origins.map((option) => (
+          <label key={option.id}>
+            <input type="radio" name="origin" value={option.id} defaultChecked={option.id === origin} required />
+            <Twemoji emoji={option.flag} /> {option.name}
+          </label>
+        ))}
+      </fieldset>
+      <fieldset className="span-2 logo-picks">
+        <legend>Logo</legend>
+        <div className="logo-grid">
+          {logos.map((logo) => (
+            <label key={logo.path} title={logo.name}>
+              <input type="radio" name="logoPath" value={logo.path} defaultChecked={logo.path === logoPath} />
+              <CompanyLogo src={logo.url} />
+            </label>
           ))}
-        </select>
-      </label>
-      <label>
-        Logo
-        <input name="logo" type="file" accept="image/svg+xml,image/png,image/webp" required={logoRequired} />
-      </label>
+        </div>
+        <label>
+          Or upload a new one. It is saved under the company name, and a replaced file is deleted.
+          <input name="logo" type="file" accept="image/svg+xml,image/png,image/webp" />
+        </label>
+      </fieldset>
     </>
   );
 }

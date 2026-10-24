@@ -121,7 +121,7 @@ function OriginInputs({ name = "", flag = "", sortOrder }: { name?: string; flag
       </label>
       <label>
         Flag
-        <input name="flag" defaultValue={flag} placeholder="🇯🇵" required />
+        <input name="flag" defaultValue={flag} placeholder="JP" required />
       </label>
       <label>
         Order
