@@ -1,6 +1,7 @@
 {
   "name": "whos-that-llm",
   "private": true,
+  "license": "MIT",
   "scripts": {
     "dev": "next dev",
     "dev:prod": "node scripts/dev-prod.mjs",
