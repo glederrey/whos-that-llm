@@ -21,10 +21,9 @@ export function DeleteAccountForm({ notice, returnTo }: { notice?: string; retur
   }
 
   return (
-    <>
-      {returnTo === "account" ? (
-        <p>This removes your profile and picture, and your name on the leaderboard. This cannot be undone.</p>
-      ) : null}
+    <div className="card stack">
+      {returnTo === "profile" ? <h2>Delete account</h2> : null}
+      <p>This removes your profile and picture, and your name on the leaderboard. This cannot be undone.</p>
       {serverNotice ? (
         <p className="error" role="alert">
           {serverNotice}
@@ -61,6 +60,6 @@ export function DeleteAccountForm({ notice, returnTo }: { notice?: string; retur
           </div>
         </form>
       </dialog>
-    </>
+    </div>
   );
 }
