@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { companyForOrg, draftFromOpenRouter, releasedOnFromCreated, type CompanyChoice } from "./openrouter-draft";
+import { companyForModel, companyForOrg, draftFromOpenRouter, releasedOnFromCreated, type CompanyChoice } from "./openrouter-draft";
 
 const companies: CompanyChoice[] = [
   { id: "anthropic", name: "Anthropic", origin: "us" },
@@ -28,8 +28,7 @@ test("a draft fills name, a known company, and the date", () => {
   );
   assert.deepEqual(draft, {
     name: "Anthropic: Claude Opus 4.1",
-    company: "Anthropic",
-    origin: "us",
+    companyId: "anthropic",
     releasedOn: "2025-08-05",
   });
 });
@@ -44,8 +43,16 @@ test("company is filled only when the org is one of ours", () => {
     { id: "nousresearch/hermes", name: "Hermes", created: 1754411591 },
     companies,
   );
-  assert.equal(blank.company, "");
-  assert.equal(blank.origin, "");
+  assert.equal(blank.companyId, "");
   assert.equal("size" in blank, false);
   assert.equal("difficulty" in blank, false);
+});
+
+test("the lab in the model name picks the company before the org slug does", () => {
+  const list: CompanyChoice[] = [...companies, { id: "moonshot", name: "Moonshot", origin: "cn" }, { id: "zai", name: "Z.ai", origin: "cn" }];
+  assert.equal(companyForModel("moonshotai/kimi-k3", "MoonshotAI: Kimi K3", list)?.id, "moonshot");
+  assert.equal(companyForModel("z-ai/glm-5", "Z.AI: GLM 5", list)?.id, "zai");
+  assert.equal(companyForModel("somebody/model", "Anthropic: Something", list)?.id, "anthropic");
+  assert.equal(companyForModel("qwen/qwen3", "Qwen: Qwen3", list)?.id, "alibaba");
+  assert.equal(companyForModel("nousresearch/hermes", "Hermes", list), null);
 });

@@ -38,7 +38,11 @@ Read-only. One row per game mode, with games, open, finished, solved, solve rate
 
 ## Companies (`/admin/companies`)
 
-Read-only. Name, origin, and how many models the company has enabled. There is no create, edit, or logo form here. A company is created from the model form on `/admin/models`.
+Two sections, **Active** (on) and **Inactive** (off), laid out like the models page. Columns: logo and name, origin (flag and name), how many of its models are on, then the On/Off button and an Edit popover. The page shows everything; nothing is deleted.
+
+- **Add** a company: a name (1–60 characters, at least 2 letters or digits), an origin (required, picked from the origins list as radio buttons that show the flag as a Twemoji picture), and a logo (required: pick one a company already has, or upload an SVG, PNG, or WebP of at most 1 MB, with the same SVG checks as category icons; an upload wins over a pick). The id is a slug of the name and never changes. A name or id already taken says so. The image is stored in the `logos` bucket under `companies/` and `logo_path` is `logos/companies/{id}-{token}.{ext}`.
+- **Edit** the name, the origin, and the logo. The current logo is preselected, so leaving it alone keeps it. Picking another existing logo or uploading a new one replaces it, and the replaced file is deleted from the bucket unless another company still shows it. An upload is stored as `companies/{id}-{token}.{ext}`: the company id is the name, and the token keeps the one-year image cache from showing the old picture. Changing the origin here is the one place a company moves to another origin.
+- **Turn off or on.** Off, the company has no card in the Company game and a new Company round for it is refused. Its models stay in every other mode, a round already started on it stays playable (the lobby keeps its resume card), and the leaderboards and statistics do not change.
 
 ## Models (`/admin/models`)
 
@@ -46,9 +50,9 @@ Three sections, 10 rows per page each: **Active** (available and on), **Inactive
 
 Columns: logo and name, company, origin, year, size, difficulty, input price, output price, categories, then the On/Off toggle and an Edit popover. Difficulty is the name: Easy, Medium, Hard, or Impossible, and the column sorts Easy to Impossible. Input and output are the live OpenRouter list price in dollars per 1 million tokens. They are not stored on the model. The page asks OpenRouter on each load, and a price shows a dash when OpenRouter has none or does not answer. Clicking a header sorts ascending, again descending, a third time clears the sort. Clicking a different column starts that column at ascending. The sort applies to all three sections and puts missing values last. The toggle and Edit are not a sort column. **On** is green. **Off** is red.
 
-**Add.** Start with an OpenRouter id and press **Look up**. It fills the display name, the company when that org is one of ours, and the release date. Size, difficulty, and categories stay empty, because OpenRouter does not set them. The id of the model is a slug of the last part of the OpenRouter id. A new model is inserted off, with `reasoning` false, `open_weights` false, and empty `provider_settings`. Companies can be created from the form if the dropdown does not have them yet. The company form lists every origin, on or off, with the flag in front.
+**Add.** Start with an OpenRouter id and press **Look up**. It fills the display name, the company, and the release date. The company is found from the lab in the OpenRouter name (`Moonshot AI: Kimi K3` matches the company Moonshot), then from the org in the id; it is a select, so change it when the guess is wrong. Size, difficulty, and categories stay empty, because OpenRouter does not set them. The id of the model is a slug of the last part of the OpenRouter id. A new model is inserted off, with `reasoning` false, `open_weights` false, and empty `provider_settings`. A model never creates a company: add a missing one on `/admin/companies` first.
 
-**Edit.** Name (1–80 characters), OpenRouter id, company (created if new, and its origin updated if changed), origin, release year (2010–2100) or date, size (nano up to xxl), difficulty, and categories as checkboxes from the categories that already exist. A model can be in several. Edit does not touch `reasoning`, `open_weights`, or `provider_settings`. Saving keeps the current search.
+**Edit.** Name (1–80 characters), OpenRouter id, company (a select of the existing companies; its origin follows the company), release year (2010–2100) or date, size (nano up to xxl), difficulty, and categories as checkboxes from the categories that already exist. A model can be in several. Edit does not touch `reasoning`, `open_weights`, or `provider_settings`. Saving keeps the current search.
 
 **On.** Refused, with a notice, when the model is unavailable on OpenRouter, has no release date, or is a reasoning model with empty `provider_settings`.
 
@@ -123,9 +127,9 @@ Turning a mode off hides its card. Old rounds stay on the leaderboard as long as
 
 ## Origins (`/admin/origins`)
 
-The list of origins a company can have. Each row shows the flag, the name, the number of companies that use it, and an On/Off button, with an inline Edit form. The owner can:
+The list of origins a company can have. Two sections, **Active** and **Inactive**, like the models page. Each row shows the flag, the name, the number of companies that use it, the order, and an On/Off button with an Edit popover. The owner can:
 
-- **Add** an origin: a name (1–40 characters), one flag emoji, and an order (a whole number from 0 to 9999, 100 by default). The id comes from the name (`Latin America` is `latin-america`). A taken id says so.
+- **Add** an origin: a name (1–40 characters), a flag (type the two-letter country code, like `JP`, and it becomes the flag emoji; a pasted flag emoji also works), and an order (a whole number from 0 to 9999, 100 by default). The id comes from the name (`Latin America` is `latin-america`). A taken id says so.
 - **Edit** the name, the flag, and the order. The id never changes.
 - **Turn off or on.** Off, the origin has no button in the Origin game and none of its models is drawn there. Nothing else changes: the other modes, the origin hint, and past rounds stay as they are.
 

@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { CategoryCombobox, type LobbyCategory } from "@/components/category-combobox";
+import { CategoryIcon } from "@/components/category-icon";
 import { CompanyLogo } from "@/components/company-logo";
 import { CustomPicker } from "@/components/custom-picker";
+import type { CategoryIconData } from "@/lib/category-icon";
 import type { CustomModel } from "@/lib/custom-mode";
 import { canStartMode, presentDailyCard } from "@/lib/daily";
 import { difficulties, difficultyBlurb, difficultyLabel, type Difficulty } from "@/lib/difficulty";
@@ -18,6 +19,14 @@ import {
   unfinishedLine,
   type OpenGame,
 } from "@/lib/lobby-row";
+
+export type LobbyCategory = {
+  id: string;
+  name: string;
+  description: string;
+  icon: CategoryIconData | null;
+  models: number;
+};
 
 export type HomeGameMode = {
   id: string;
@@ -334,19 +343,20 @@ export function HomeBoard({
         {cards.map((gameMode) => {
           const playable = canStartMode(gameMode.id) && gameMode.enabled;
           const daily = gameMode.id === "daily";
-          const opened = gameMode.enabled && openId === gameMode.id;
           const custom = gameMode.id === "custom";
+          const openCustom = custom ? openGames.find((game) => game.mode === "custom") : undefined;
+          const opened = gameMode.enabled && openId === gameMode.id && !openCustom;
+          const resumeLine =
+            gameMode.id === "origin" && openGames.some((game) => game.mode === "origin") ? (
+              <span className="difficulty-resume">{unfinishedLine}</span>
+            ) : openCustom ? (
+              <span className="difficulty-resume">{unfinishedLine}</span>
+            ) : null;
           const label = (
             <span>
               <strong>{gameMode.name}</strong>
               <br />
               <span className="muted">{gameMode.blurb}</span>
-              {gameMode.id === "origin" && openGames.some((game) => game.mode === "origin") ? (
-                <>
-                  <br />
-                  <span className="difficulty-resume">{unfinishedLine}</span>
-                </>
-              ) : null}
               {playable && poolSize < 2 ? (
                 <>
                   <br />
@@ -366,6 +376,15 @@ export function HomeBoard({
                     onClick={() => void start("origin", null)}
                   >
                     {label}
+                    {resumeLine}
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                      <path fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="m9 6 6 6-6 6" />
+                    </svg>
+                  </button>
+                ) : gameMode.enabled && openCustom ? (
+                  <button type="button" className="category-toggle" onClick={() => router.push(`/play/${openCustom.id}`)}>
+                    {label}
+                    {resumeLine}
                     <svg viewBox="0 0 24 24" aria-hidden="true">
                       <path fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="m9 6 6 6-6 6" />
                     </svg>
@@ -400,12 +419,40 @@ export function HomeBoard({
                   ) : gameMode.id === "class" ? (
                     <>
                       <p className="difficulty-heading">Choose category</p>
-                      <CategoryCombobox
-                        categories={categories}
-                        openIds={openGames.flatMap((game) => (game.mode === "class" && game.categoryId ? [game.categoryId] : []))}
-                        disabled={!playable || paused || busy || full}
-                        onPick={(id) => void startPool("class", id)}
-                      />
+                      <div className="difficulty-list">
+                        {categories.map((category) => {
+                          const open = openCategoryOn(openGames, category.id);
+                          const blocked = difficultyBlocked({
+                            open: Boolean(open),
+                            finished: false,
+                            playable,
+                            paused,
+                            busy,
+                            full,
+                            count: category.models,
+                          });
+                          return (
+                            <button
+                              key={category.id}
+                              type="button"
+                              className="difficulty-choice company-choice"
+                              disabled={blocked}
+                              onClick={() => void startPool("class", category.id)}
+                            >
+                              <CategoryIcon icon={category.icon} />
+                              <span className="difficulty-name">
+                                <strong>{category.name}</strong>
+                                {category.description ? <span className="muted">{category.description}</span> : null}
+                              </span>
+                              {open ? (
+                                <span className="difficulty-resume">{unfinishedLine}</span>
+                              ) : (
+                                <span className="difficulty-count">{difficultyAside(category.models, false)}</span>
+                              )}
+                            </button>
+                          );
+                        })}
+                      </div>
                     </>
                   ) : gameMode.id === "company" ? (
                     <>

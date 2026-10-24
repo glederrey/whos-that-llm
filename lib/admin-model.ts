@@ -4,7 +4,7 @@ import type { Origin, Size } from "./game";
 export type RosterNotice = "invalid" | "duplicate" | "taken" | "year" | "reasoning" | "categories" | "unavailable" | "save";
 
 const notices: Record<RosterNotice, string> = {
-  invalid: "Check the OpenRouter id, name, company, origin, release date, size, and difficulty.",
+  invalid: "Check the OpenRouter id, name, company, release date, size, and difficulty.",
   duplicate: "That OpenRouter id is already on a model.",
   taken: "That model is already in the roster.",
   year: "Add a year before turning this model on.",
@@ -37,6 +37,11 @@ export function companyIdFromName(name: string): string | null {
   const slug = name.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
   if (!/^[a-z0-9-]{2,32}$/.test(slug)) return null;
   return slug;
+}
+
+export function parseCompanyId(value: string): string | null {
+  const id = value.trim();
+  return /^[a-z0-9][a-z0-9-]{1,31}$/.test(id) ? id : null;
 }
 
 export function parseModelId(value: string): string | null {
@@ -102,8 +107,7 @@ export function canTurnOn(input: { releasedOn: string | null; reasoning: boolean
 export type ModelFields = {
   openrouterId: string;
   name: string;
-  company: string;
-  origin: Origin;
+  companyId: string;
   year: number;
   releasedOn: string | null;
   size: Size;
@@ -113,8 +117,7 @@ export type ModelFields = {
 export function parseModelFields(raw: {
   openrouterId?: string;
   name?: string;
-  company?: string;
-  origin?: string;
+  companyId?: string;
   year?: string;
   releasedOn?: string;
   size?: string;
@@ -122,18 +125,17 @@ export function parseModelFields(raw: {
 }): ModelFields | null {
   const openrouterId = raw.openrouterId?.trim() ?? "";
   const name = raw.name?.trim() ?? "";
-  const company = raw.company?.trim() ?? "";
+  const companyId = parseCompanyId(raw.companyId ?? "");
   if (!validOpenRouterId(openrouterId)) return null;
   if (name.length < 1 || name.length > 80) return null;
-  if (!companyIdFromName(company)) return null;
-  const origin = parseOrigin(raw.origin ?? "");
+  if (!companyId) return null;
   const releasedOn = raw.releasedOn?.trim() ? parseReleasedOn(raw.releasedOn) : null;
   if (raw.releasedOn?.trim() && !releasedOn) return null;
   const year = releasedOn ? Number(releasedOn.slice(0, 4)) : parseYear(raw.year ?? "");
   const size = parseSize(raw.size ?? "");
   const difficulty = parseDifficulty(raw.difficulty);
-  if (!origin || year === null || !size || !difficulty) return null;
-  return { openrouterId, name, company, origin, year, releasedOn, size, difficulty };
+  if (year === null || !size || !difficulty) return null;
+  return { openrouterId, name, companyId, year, releasedOn, size, difficulty };
 }
 
 export function rosterNotice(code: string | undefined): string | null {

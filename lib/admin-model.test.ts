@@ -49,41 +49,27 @@ test("a reasoning model cannot turn on with empty settings", () => {
   assert.equal(canTurnOn({ releasedOn: "2026-01-01", reasoning: false, providerSettings: {} }), true);
 });
 
-test("model fields reject a bad origin or year", () => {
+test("model fields reject a bad company or year", () => {
   assert.equal(parseOrigin("USA"), "us");
   assert.equal(parseYear("1999"), null);
   assert.equal(
     parseModelFields({
       openrouterId: "openai/gpt-5.6-luna",
       name: "GPT-5.6 Luna",
-      company: "OpenAI",
-      origin: "USA",
-      year: "2026",
-      size: "small",
-      difficulty: "easy",
-    })?.origin,
-    "us",
-  );
-  assert.equal(
-    parseModelFields({
-      openrouterId: "openai/gpt-5.6-luna",
-      name: "GPT-5.6 Luna",
-      company: "OpenAI",
-      origin: "USA",
+      companyId: "openai",
       year: "2026",
       size: "small",
       difficulty: "medium",
-    })?.company,
-    "OpenAI",
+    })?.companyId,
+    "openai",
   );
-  assert.equal(parseModelFields({ openrouterId: "openai/gpt-5.6-luna", name: "GPT", company: "OpenAI", origin: "moon", year: "2026", size: "small" }), null);
-  assert.equal(parseModelFields({ openrouterId: "openai/gpt-5.6-luna", name: "GPT", company: "O", origin: "us", year: "2026", size: "small" }), null);
+  assert.equal(parseModelFields({ openrouterId: "openai/gpt-5.6-luna", name: "GPT", companyId: "", year: "2026", size: "small", difficulty: "easy" }), null);
+  assert.equal(parseModelFields({ openrouterId: "openai/gpt-5.6-luna", name: "GPT", companyId: "Open AI", year: "2026", size: "small", difficulty: "easy" }), null);
   assert.equal(
     parseModelFields({
       openrouterId: "openai/gpt-5.6-luna",
       name: "GPT",
-      company: "OpenAI",
-      origin: "us",
+      companyId: "openai",
       year: "2026",
       size: "small",
       difficulty: "famous",
@@ -99,8 +85,7 @@ test("a release date is kept", () => {
   const fields = parseModelFields({
     openrouterId: "anthropic/claude-opus-4.1",
     name: "Claude Opus 4.1",
-    company: "Anthropic",
-    origin: "us",
+    companyId: "anthropic",
     releasedOn: "2025-08-05",
     size: "large",
     difficulty: "hard",

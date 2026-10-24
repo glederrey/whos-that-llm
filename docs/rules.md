@@ -260,7 +260,7 @@ A company pool only cares about traits that differ inside the pool. Company is g
 
 Special pools can still be scored. Company and Category have a leaderboard that lists each player's best round in any pool and can be narrowed to one. Origin is not on a leaderboard. Custom is not on a leaderboard.
 
-A pool with fewer than 2 enabled models cannot start a round (`pool_too_small`). A category with fewer than 2 is not listed. The Company list shows every company, and starting one under 2 is refused. Daily uses the same minimum. An empty roster is not playable. Europe will be thin. A row with fewer than 4 models still appears, and it shows the count. A category with `enabled = false` still has its sentence on the main page, with **Coming soon.**
+A pool with fewer than 2 enabled models cannot start a round (`pool_too_small`). A category with fewer than 2 is not listed. The Company list shows every company that is turned on (a company turned off in the admin is hidden, except for a player with a round open on it), and starting one under 2 is refused. Daily uses the same minimum. An empty roster is not playable. Europe will be thin. A row with fewer than 4 models still appears, and it shows the count. A category with `enabled = false` still has its sentence on the main page, with **Coming soon.**
 
 Latest is not a column on the model. `models.is_latest` is gone. A latest group, if Gael wants one, is a category he creates. A latest game mode is not built. If it is built later, it has no hints, because it is not on the hint list above. Origin is not a category. Origin is that pool, and it has no hints.
 

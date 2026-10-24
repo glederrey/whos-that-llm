@@ -49,7 +49,7 @@ export async function lobbyState(userId: string) {
     client.from("games").select("id, game_mode, difficulty, pool_key").eq("user_id", userId).eq("status", "active"),
     client.from("games").select("status, difficulty").eq("user_id", userId).eq("game_mode", "daily").like("daily_key", `${day}:%`),
     loadCatalog(client),
-    client.from("companies").select("id, name, logo_path").order("name"),
+    client.from("companies").select("id, name, logo_path, enabled").order("name"),
     loadCategoryEntries(client),
     client.from("model_categories").select("model_id, category_id"),
   ]);
@@ -83,9 +83,17 @@ export async function lobbyState(userId: string) {
   const logos = new Map(
     (companyRows.data ?? []).map((row) => [row.id as string, (row.logo_path as string | null) ?? ""]),
   );
+  // A turned-off company has no card, unless the player has a round open on it: that one stays resumable.
+  const openCompanyIds = new Set(
+    (activeResult.data ?? []).flatMap((row) =>
+      row.game_mode === "company" && typeof row.pool_key === "string" ? [row.pool_key] : [],
+    ),
+  );
   const companies = companyModelCounts(
     (companyRows.data ?? []).flatMap((row) =>
-      typeof row.id === "string" && typeof row.name === "string" ? [{ id: row.id, name: row.name }] : [],
+      typeof row.id === "string" && typeof row.name === "string" && (row.enabled || openCompanyIds.has(row.id))
+        ? [{ id: row.id, name: row.name }]
+        : [],
     ),
     catalog.map((model) => ({ companyId: model.companyId, enabled: true })),
   ).map((company) => ({
@@ -143,7 +151,7 @@ export async function startCompany(userId: string, companyId: string, noHint = f
   const client = serviceOrThrow();
   const [{ data: gameMode, error }, { data: company, error: companyError }, catalog] = await Promise.all([
     client.from("game_modes").select("id, enabled, hints_allowed").eq("id", "company").maybeSingle(),
-    client.from("companies").select("id").eq("id", id).maybeSingle(),
+    client.from("companies").select("id").eq("id", id).eq("enabled", true).maybeSingle(),
     loadCatalog(client),
   ]);
   if (error) throw new Error(error.message);

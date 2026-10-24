@@ -7,12 +7,15 @@ import { requireOwner } from "@/lib/admin-access";
 import { parseDifficulty } from "@/lib/difficulty";
 import {
   createCategory,
+  createCompany,
   createRosterModel,
   insertDiscoveredModels,
   loadRoster,
   setCategoryEnabled,
+  setCompanyEnabled,
   setRosterEnabled,
   updateCategory,
+  updateCompany,
   updateRosterModel,
 } from "@/lib/admin-roster";
 import { createOrigin, setOriginEnabled, updateOrigin } from "@/lib/admin-origins";
@@ -36,8 +39,7 @@ function fields(formData: FormData) {
   return {
     openrouterId: text(formData, "openrouterId"),
     name: text(formData, "name"),
-    company: text(formData, "company"),
-    origin: text(formData, "origin"),
+    companyId: text(formData, "companyId"),
     year: text(formData, "year"),
     releasedOn: text(formData, "releasedOn"),
     size: text(formData, "size"),
@@ -109,6 +111,38 @@ export async function saveOrigin(formData: FormData) {
 export async function toggleOrigin(formData: FormData) {
   await requireOwner();
   finishOrigin(await setOriginEnabled(text(formData, "id"), text(formData, "enabled") === "1"));
+}
+
+function finishCompany(notice: string | null) {
+  revalidatePath("/admin/companies");
+  revalidatePath("/admin/origins");
+  revalidatePath("/admin/models");
+  revalidatePath("/play");
+  redirect(notice ? `/admin/companies?notice=${notice}` : "/admin/companies");
+}
+
+function companyFields(formData: FormData) {
+  return {
+    name: text(formData, "name"),
+    origin: text(formData, "origin"),
+    logo: formData.get("logo") instanceof File ? (formData.get("logo") as File) : null,
+    logoPath: text(formData, "logoPath"),
+  };
+}
+
+export async function addCompany(formData: FormData) {
+  await requireOwner();
+  finishCompany(await createCompany(companyFields(formData)));
+}
+
+export async function saveCompany(formData: FormData) {
+  await requireOwner();
+  finishCompany(await updateCompany({ id: text(formData, "id"), ...companyFields(formData) }));
+}
+
+export async function toggleCompany(formData: FormData) {
+  await requireOwner();
+  finishCompany(await setCompanyEnabled(text(formData, "id"), text(formData, "enabled") === "1"));
 }
 
 export async function addModel(formData: FormData) {

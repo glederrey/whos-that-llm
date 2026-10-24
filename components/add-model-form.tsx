@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { addModel } from "@/app/admin/actions";
 import { lookupOpenRouterModel } from "@/app/admin/model-lookup";
-import type { OriginOption } from "@/lib/admin-origin";
+import type { CompanyOption } from "@/lib/admin-company";
 import { validOpenRouterId } from "@/lib/admin-model";
 import type { ModelDraft } from "@/lib/openrouter-draft";
 import type { RosterSort } from "@/lib/roster-list";
@@ -12,7 +12,7 @@ import { RosterReturnFields } from "./roster-return-fields";
 
 export function AddModelForm({
   categories,
-  origins,
+  companies,
   query,
   sort,
   activePage,
@@ -20,7 +20,7 @@ export function AddModelForm({
   unavailablePage,
 }: {
   categories: ModelFieldCategory[];
-  origins: OriginOption[];
+  companies: CompanyOption[];
   query: string;
   sort: RosterSort;
   activePage: number;
@@ -86,16 +86,15 @@ export function AddModelForm({
               key={lookupKey}
               omitOpenRouterId
               name={draft.name}
-              company={draft.company}
-              origin={draft.origin}
-              origins={origins}
+              companyId={draft.companyId}
+              companies={companies}
               releasedOn={draft.releasedOn}
               size=""
               categories={categories}
             />
           </div>
           <p className="muted">
-            A new model stays off until you turn it on. A new company name is added to the list.
+            A new model stays off until you turn it on. The company was picked from the model name. Change it if it is wrong, or add a missing one on the <a href="/admin/companies">Companies</a> page first.
           </p>
           <div>
             <button className="button" type="submit">
@@ -109,5 +108,5 @@ export function AddModelForm({
 }
 
 function emptyDraft(): ModelDraft {
-  return { name: "", company: "", origin: "", releasedOn: "" };
+  return { name: "", companyId: "", releasedOn: "" };
 }

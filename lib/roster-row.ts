@@ -6,6 +6,7 @@ export type RosterRow = {
   id: string;
   openrouterId: string;
   name: string;
+  companyId: string;
   companyName: string;
   origin: Origin;
   year: string;
