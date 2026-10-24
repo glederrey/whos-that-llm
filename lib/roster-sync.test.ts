@@ -122,6 +122,7 @@ function rosterRow(id: string, openrouterId: string): RosterRow {
     id,
     openrouterId,
     name: id,
+    companyId: "co",
     companyName: "Co",
     origin: "us",
     year: "2026",
@@ -467,7 +468,7 @@ test("the model page loads live prices and keeps availability apart", () => {
   assert.match(turnOn, /available === false/);
   assert.match(turnOn, /return "unavailable"/);
   assert.doesNotMatch(turnOn, /\.delete\(/);
-  const insert = between(roster, "export async function insertDiscoveredModels", "async function resolveCompany");
+  const insert = between(roster, "export async function insertDiscoveredModels", "async function companyExists");
   for (const name of ["markRosterUnavailable", "markRosterAvailable", "writeReasoningFlags"]) {
     const checked = between(roster, `export async function ${name}(`, `export async function ${name}Unchecked(`);
     assert.match(checked, /await requireOwner\(\)/);
@@ -481,7 +482,7 @@ test("the model page loads live prices and keeps availability apart", () => {
   assert.match(insert, /enabled: false/);
   assert.match(insert, /openrouter_id: openrouterId/);
   assert.match(insert, /released_on:/);
-  assert.match(insert, /companyForOrg/);
+  assert.match(insert, /companyForModel/);
   assert.match(insert, /size,/);
   assert.match(insert, /difficulty: difficultyNumber\[difficulty\]/);
   assert.match(insert, /parseSize\(model\.size\)/);

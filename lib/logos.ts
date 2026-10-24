@@ -34,6 +34,11 @@ export function categoryImagePath(categoryId: string, ext: string, token: string
   return `categories/${categoryId}-${token}.${ext}`;
 }
 
+/** Where an uploaded company logo lives in the logos bucket. The stored `logo_path` is this with `logos/` in front. */
+export function companyUploadPath(companyId: string, ext: string, token: string): string {
+  return `companies/${companyId}-${token}.${ext}`;
+}
+
 /** The bucket path of a stored image, with or without the `logos/` prefix. */
 export function logoBucketPath(path: string): string {
   return path.replace(/^\/+/, "").replace(/^logos\//, "");

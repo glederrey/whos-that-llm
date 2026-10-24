@@ -6,7 +6,7 @@ import { CompanyLogo } from "@/components/company-logo";
 import { ModelFields } from "@/components/model-fields";
 import { RosterReturnFields } from "@/components/roster-return-fields";
 import { AddModelForm } from "@/components/add-model-form";
-import type { OriginOption } from "@/lib/admin-origin";
+import type { CompanyOption } from "@/lib/admin-company";
 import { difficultyLabel } from "@/lib/difficulty";
 import { originLabel, sizeLabel } from "@/lib/game";
 import { formatListPrice } from "@/lib/list-price";
@@ -28,7 +28,7 @@ const sortLabels: Record<RosterSortColumn, string> = {
 export function RosterBrowser({
   rows,
   categories,
-  origins,
+  companies,
   initialQuery,
   initialSort,
   initialActive,
@@ -37,7 +37,7 @@ export function RosterBrowser({
 }: {
   rows: RosterRow[];
   categories: CategoryRow[];
-  origins: OriginOption[];
+  companies: CompanyOption[];
   initialQuery: string;
   initialSort: RosterSort;
   initialActive: number;
@@ -74,7 +74,7 @@ export function RosterBrowser({
         <summary>Add a model</summary>
         <AddModelForm
           categories={categories}
-          origins={origins}
+          companies={companies}
           query={query}
           sort={sort}
           activePage={active.page}
@@ -100,7 +100,7 @@ export function RosterBrowser({
         query={query}
         sort={sort}
         categories={categories}
-        origins={origins}
+        companies={companies}
         activePage={active.page}
         inactivePage={inactive.page}
         unavailablePage={unavailable.page}
@@ -116,7 +116,7 @@ export function RosterBrowser({
         query={query}
         sort={sort}
         categories={categories}
-        origins={origins}
+        companies={companies}
         activePage={active.page}
         inactivePage={inactive.page}
         unavailablePage={unavailable.page}
@@ -132,7 +132,7 @@ export function RosterBrowser({
         query={query}
         sort={sort}
         categories={categories}
-        origins={origins}
+        companies={companies}
         activePage={active.page}
         inactivePage={inactive.page}
         unavailablePage={unavailable.page}
@@ -152,7 +152,7 @@ function RosterSection({
   query,
   sort,
   categories,
-  origins,
+  companies,
   activePage,
   inactivePage,
   unavailablePage,
@@ -167,7 +167,7 @@ function RosterSection({
   query: string;
   sort: RosterSort;
   categories: CategoryRow[];
-  origins: OriginOption[];
+  companies: CompanyOption[];
   activePage: number;
   inactivePage: number;
   unavailablePage: number;
@@ -205,7 +205,7 @@ function RosterSection({
                     key={row.id}
                     row={row}
                     categories={categories}
-                    origins={origins}
+                    companies={companies}
                     query={query}
                     sort={sort}
                     activePage={activePage}
@@ -246,7 +246,7 @@ function RosterSection({
 function ModelRow({
   row,
   categories,
-  origins,
+  companies,
   query,
   sort,
   activePage,
@@ -255,7 +255,7 @@ function ModelRow({
 }: {
   row: RosterRow;
   categories: CategoryRow[];
-  origins: OriginOption[];
+  companies: CompanyOption[];
   query: string;
   sort: RosterSort;
   activePage: number;
@@ -316,9 +316,8 @@ function ModelRow({
               <ModelFields
                 openrouterId={row.openrouterId}
                 name={row.name}
-                company={row.companyName}
-                origin={row.origin}
-                origins={origins}
+                companyId={row.companyId}
+                companies={companies}
                 year={row.year}
                 size={row.size}
                 difficulty={row.difficulty ?? ""}
@@ -326,7 +325,7 @@ function ModelRow({
                 categoryIds={row.categoryIds}
               />
             </div>
-            <p className="muted">Origin belongs to the company. New games use it.</p>
+            <p className="muted">Origin belongs to the company. Change it on the Companies page.</p>
             <div className="row">
               <button className="button" type="submit">
                 Save

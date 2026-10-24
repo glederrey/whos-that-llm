@@ -33,7 +33,7 @@ test("category and company pages share the enabled-model count", () => {
   assert.match(counts, /if \(!model\.enabled\) continue/);
   assert.match(roster, /enabledModelCounts\(memberships\)/);
   assert.match(roster, /modelCount: counts\.byCategory\.get\(row\.id\) \?\? 0/);
-  assert.match(roster, /modelCount: counts\.byCompany\.get\(company\.id\) \?\? 0/);
+  assert.match(roster, /modelCount: counts\.byCompany\.get\(row\.id as string\) \?\? 0/);
   assert.match(categories, /row\.modelCount\.toLocaleString\("en-US"\)/);
   assert.match(categories, /<th>Models<\/th>/);
   assert.match(companies, /company\.modelCount\.toLocaleString\("en-US"\)/);

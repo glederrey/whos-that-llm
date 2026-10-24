@@ -43,9 +43,5 @@ async function loadCompanies(): Promise<CompanyChoice[] | null> {
   const client = serviceOrThrow();
   const { data, error } = await client.from("companies").select("id, name, origin").order("name");
   if (error) return null;
-  return (data ?? []).flatMap((row) => {
-    const origin = row.origin as string;
-    if (origin !== "us" && origin !== "cn" && origin !== "eu") return [];
-    return [{ id: row.id as string, name: row.name as string, origin: origin as Origin }];
-  });
+  return (data ?? []).map((row) => ({ id: row.id as string, name: row.name as string, origin: row.origin as Origin }));
 }

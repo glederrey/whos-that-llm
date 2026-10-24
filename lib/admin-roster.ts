@@ -17,6 +17,7 @@ import { originFlag, originLabel, sizeLabel } from "./game-labels";
 import {
   canTurnOn,
   companyIdFromName,
+  parseCompanyId,
   modelIdFromOpenRouter,
   parseModelFields,
   parseModelId,
@@ -32,11 +33,12 @@ import type { CategoryRow, RosterRow } from "./roster-row";
 export type { CategoryRow, RosterRow } from "./roster-row";
 import { planReasoningUpdates, type CatalogModel } from "./roster-sync";
 import { randomBytes } from "node:crypto";
-import { categoryImagePath, companyLogoPath, logoBucketPath, readLogo } from "./logos";
+import { categoryImagePath, companyUploadPath, logoBucketPath, readLogo } from "./logos";
+import { parseCompanyFields, type CompanyNotice } from "./admin-company";
 import { loadCategoryEntries } from "./category-data";
 import { publicImageCacheControl } from "./profile";
 import { enabledModelCounts } from "./model-counts";
-import { companyForOrg, type CompanyChoice } from "./openrouter-draft";
+import { companyForModel, type CompanyChoice } from "./openrouter-draft";
 import { countedPlayerId } from "./anonymize-account";
 import { first, presentLogo, serviceOrThrow } from "./rounds";
 
@@ -51,7 +53,7 @@ export type AdminStats = {
 type CompanyRow = { id: string; name: string; origin: Origin };
 
 export type CategoryListRow = CategoryRow & { modelCount: number; modelIds: string[] };
-export type CompanyListRow = CompanyRow & { modelCount: number };
+export type CompanyListRow = CompanyRow & { enabled: boolean; logoUrl: string; modelCount: number };
 
 export async function loadAdminStats(): Promise<AdminStats> {
   await requireOwner();
@@ -89,6 +91,7 @@ export async function loadRoster(): Promise<{ rows: RosterRow[]; companies: Comp
       id: row.id as string,
       openrouterId: row.openrouter_id as string,
       name: row.name as string,
+      companyId,
       companyName: company?.name ?? companyId,
       origin: company?.origin ?? "us",
       year: String(row.released_on ?? "").slice(0, 4),
@@ -109,8 +112,7 @@ export async function loadRoster(): Promise<{ rows: RosterRow[]; companies: Comp
 export async function createRosterModel(raw: {
   openrouterId?: string;
   name?: string;
-  company?: string;
-  origin?: string;
+  companyId?: string;
   year?: string;
   releasedOn?: string;
   size?: string;
@@ -130,13 +132,13 @@ export async function createRosterModel(raw: {
   const duplicate = await client.from("models").select("id").eq("openrouter_id", fields.openrouterId).maybeSingle();
   if (duplicate.error) return "save";
   if (duplicate.data) return "duplicate";
-  const company = await resolveCompany(client, fields.company, fields.origin);
-  if (typeof company === "string") return company;
+  const known = await companyExists(client, fields.companyId);
+  if (known !== null) return known;
   const { error } = await client.from("models").insert({
     id,
     openrouter_id: fields.openrouterId,
     name: fields.name,
-    company_id: company.id,
+    company_id: fields.companyId,
     size: fields.size,
     difficulty: difficultyNumber[fields.difficulty],
     open_weights: false,
@@ -155,8 +157,7 @@ export async function updateRosterModel(raw: {
   id?: string;
   openrouterId?: string;
   name?: string;
-  company?: string;
-  origin?: string;
+  companyId?: string;
   year?: string;
   releasedOn?: string;
   size?: string;
@@ -174,12 +175,12 @@ export async function updateRosterModel(raw: {
   const duplicate = await client.from("models").select("id").eq("openrouter_id", fields.openrouterId).maybeSingle();
   if (duplicate.error) return "save";
   if (duplicate.data && duplicate.data.id !== id) return "duplicate";
-  const company = await resolveCompany(client, fields.company, fields.origin);
-  if (typeof company === "string") return company;
+  const known = await companyExists(client, fields.companyId);
+  if (known !== null) return known;
   const patch: Record<string, unknown> = {
     openrouter_id: fields.openrouterId,
     name: fields.name,
-    company_id: company.id,
+    company_id: fields.companyId,
     size: fields.size,
     difficulty: difficultyNumber[fields.difficulty],
     released_on: fields.releasedOn ?? releasedOnForYear(current.data.released_on as string | null, fields.year),
@@ -310,7 +311,7 @@ export async function insertDiscoveredModels(
   for (const model of models) {
     const openrouterId = model.id.trim();
     const id = modelIdFromOpenRouter(openrouterId);
-    const company = companyForOrg(openrouterId.slice(0, openrouterId.indexOf("/")), companies);
+    const company = companyForModel(openrouterId, model.name, companies);
     const name = model.name.trim().slice(0, 80);
     const size = parseSize(model.size);
     const difficulty = parseDifficulty(model.difficulty);
@@ -342,29 +343,11 @@ export async function insertDiscoveredModels(
   return added;
 }
 
-async function resolveCompany(client: SupabaseClient, name: string, origin: Origin): Promise<CompanyRow | RosterNotice> {
-  const id = companyIdFromName(name);
-  if (!id) return "invalid";
-  const companies = await loadCompanies(client);
-  if (!companies) return "save";
-  const trimmed = name.trim();
-  const existing = companies.find((company) => company.id === id || company.name.toLowerCase() === trimmed.toLowerCase());
-  if (!existing) {
-    const { error } = await client.from("companies").insert({
-      id,
-      name: trimmed,
-      origin,
-      logo_path: companyLogoPath(id),
-    });
-    if (error) return "save";
-    return { id, name: trimmed, origin };
-  }
-  if (existing.origin !== origin) {
-    const { error } = await client.from("companies").update({ origin }).eq("id", existing.id);
-    if (error) return "save";
-    existing.origin = origin;
-  }
-  return existing;
+/** Null when the company is on the list; "invalid" when it is not. A model never creates a company. */
+async function companyExists(client: SupabaseClient, companyId: string): Promise<RosterNotice | null> {
+  const { data, error } = await client.from("companies").select("id").eq("id", companyId).maybeSingle();
+  if (error) return "save";
+  return data ? null : "invalid";
 }
 
 async function loadCompanies(client: SupabaseClient): Promise<CompanyRow[] | null> {
@@ -446,9 +429,100 @@ export async function loadCategoryList(): Promise<{
 export async function loadCompanyList(): Promise<CompanyListRow[]> {
   await requireOwner();
   const client = serviceOrThrow();
-  const [companies, counts] = await Promise.all([loadCompanies(client), loadEnabledCounts(client)]);
-  if (!companies || !counts) throw new Error("Could not read companies.");
-  return companies.map((company) => ({ ...company, modelCount: counts.byCompany.get(company.id) ?? 0 }));
+  const [{ data, error }, counts] = await Promise.all([
+    client.from("companies").select("id, name, origin, logo_path, enabled").order("name"),
+    loadEnabledCounts(client),
+  ]);
+  if (error || !counts) throw new Error("Could not read companies.");
+  return (data ?? []).map((row) => ({
+    id: row.id as string,
+    name: row.name as string,
+    origin: row.origin as Origin,
+    enabled: Boolean(row.enabled),
+    logoUrl: presentLogo((row.logo_path as string | null) ?? "", row.id as string),
+    modelCount: counts.byCompany.get(row.id as string) ?? 0,
+  }));
+}
+
+type CompanyInput = { id?: string; name?: string; origin?: string; logo?: File | null };
+
+export async function createCompany(raw: CompanyInput): Promise<CompanyNotice | null> {
+  await requireOwner();
+  const fields = parseCompanyFields(raw);
+  const id = companyIdFromName(raw.name ?? "");
+  if (!fields || !id) return "invalid";
+  if (!raw.logo || raw.logo.size === 0) return "logo";
+  const client = serviceOrThrow();
+  const companies = await loadCompanies(client);
+  if (!companies) return "save";
+  if (companies.some((company) => company.id === id || sameName(company.name, fields.name))) return "taken";
+  const logo = await uploadCompanyLogo(client, id, raw.logo);
+  if (typeof logo === "string") return logo;
+  const { error } = await client.from("companies").insert({ id, name: fields.name, origin: fields.origin, logo_path: logo.path });
+  if (error) {
+    await client.storage.from("logos").remove([logoBucketPath(logo.path)]);
+    return error.code === "23505" ? "taken" : "save";
+  }
+  return null;
+}
+
+export async function updateCompany(raw: CompanyInput): Promise<CompanyNotice | null> {
+  await requireOwner();
+  const id = parseCompanyId(raw.id ?? "");
+  const fields = parseCompanyFields(raw);
+  if (!id || !fields) return "invalid";
+  const client = serviceOrThrow();
+  const [current, companies] = await Promise.all([
+    client.from("companies").select("id, logo_path").eq("id", id).maybeSingle(),
+    loadCompanies(client),
+  ]);
+  if (current.error || !current.data || !companies) return "save";
+  if (companies.some((company) => company.id !== id && sameName(company.name, fields.name))) return "taken";
+  const patch: Record<string, unknown> = { name: fields.name, origin: fields.origin };
+  let uploaded: string | null = null;
+  if (raw.logo && raw.logo.size > 0) {
+    const logo = await uploadCompanyLogo(client, id, raw.logo);
+    if (typeof logo === "string") return logo;
+    uploaded = logo.path;
+    patch.logo_path = logo.path;
+  }
+  const { error } = await client.from("companies").update(patch).eq("id", id);
+  if (error) {
+    if (uploaded) await client.storage.from("logos").remove([logoBucketPath(uploaded)]);
+    return "save";
+  }
+  // Only an image this form uploaded is removed. The seeded logos/{id}.png files stay.
+  const old = current.data.logo_path as string | null;
+  if (uploaded && old && logoBucketPath(old).startsWith("companies/")) {
+    await client.storage.from("logos").remove([logoBucketPath(old)]);
+  }
+  return null;
+}
+
+function sameName(a: string, b: string): boolean {
+  return a.trim().toLowerCase() === b.trim().toLowerCase();
+}
+
+/** Turns a company on or off. Off, it has no card in the Company game; its models stay in the other modes. */
+export async function setCompanyEnabled(idRaw: string, enabled: boolean): Promise<CompanyNotice | null> {
+  await requireOwner();
+  const id = parseCompanyId(idRaw);
+  if (!id) return "invalid";
+  const { error } = await serviceOrThrow().from("companies").update({ enabled }).eq("id", id);
+  return error ? "save" : null;
+}
+
+async function uploadCompanyLogo(client: SupabaseClient, companyId: string, file: File): Promise<{ path: string } | CompanyNotice> {
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  const found = readLogo(bytes);
+  if (!found) return "logo";
+  const bucketPath = companyUploadPath(companyId, found.ext, randomBytes(4).toString("hex"));
+  const { error } = await client.storage.from("logos").upload(bucketPath, new Blob([bytes as BlobPart], { type: found.mime }), {
+    contentType: found.mime,
+    cacheControl: publicImageCacheControl,
+  });
+  if (error) return "save";
+  return { path: `logos/${bucketPath}` };
 }
 
 type CategoryInput = {

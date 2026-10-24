@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { companyLogoPath, logoPathForPlay, logoPublicUrl, readLogo } from "./logos";
+import { companyLogoPath, companyUploadPath, logoBucketPath, logoPathForPlay, logoPublicUrl, readLogo } from "./logos";
 
 test("a company logo is logos/{id}.png in the public logos bucket", () => {
   assert.equal(companyLogoPath("anthropic"), "logos/anthropic.png");
@@ -34,4 +34,11 @@ test("a logo file is an svg, png, or webp under 1 MB", () => {
   assert.deepEqual(readLogo(png), { mime: "image/png", ext: "png" });
   assert.equal(readLogo(new Uint8Array(1024 * 1024 + 1)), null);
   assert.equal(readLogo(new TextEncoder().encode("not a logo")), null);
+});
+
+test("an uploaded company logo keeps its logos/ prefix when shown", () => {
+  const bucket = companyUploadPath("acme", "webp", "ab12cd34");
+  assert.equal(bucket, "companies/acme-ab12cd34.webp");
+  assert.equal(logoPathForPlay(`logos/${bucket}`, "acme"), `logos/${bucket}`);
+  assert.equal(logoBucketPath(`logos/${bucket}`), bucket);
 });
