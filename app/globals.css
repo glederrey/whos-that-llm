@@ -1718,8 +1718,17 @@ html[data-theme="dark"] .history-score[data-best="true"] { color: var(--teal); }
 .roster.categories .roster-buttons .button-quiet { padding: 6px 10px; }
 .roster-buttons { display: flex; gap: 8px; align-items: center; justify-content: flex-end; flex-wrap: nowrap; }
 .roster-buttons form { margin: 0; }
+.roster.companies td, .roster.origins td { vertical-align: middle; }
+.roster.companies .roster-buttons .button-on,
+.roster.companies .roster-buttons .button-off,
+.roster.companies .roster-buttons .button-quiet,
+.roster.origins .roster-buttons .button-on,
+.roster.origins .roster-buttons .button-off,
+.roster.origins .roster-buttons .button-quiet { padding: 6px 10px; }
 .roster.companies th:last-child,
-.roster.companies td:last-child { width: 1%; white-space: nowrap; text-align: right; }
+.roster.companies td:last-child,
+.roster.origins th:last-child,
+.roster.origins td:last-child { width: 1%; white-space: nowrap; text-align: right; }
 .roster-add > summary { cursor: pointer; font-size: 20px; font-weight: 600; list-style: none; }
 .roster-add > summary::-webkit-details-marker { display: none; }
 .roster-add > summary::before { content: "+"; display: inline-block; width: 1.2em; color: var(--mute); }

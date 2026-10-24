@@ -51,7 +51,7 @@ function OriginSection({ title, empty, rows }: { title: string; empty: string; r
         <div className="card empty">{empty}</div>
       ) : (
         <div className="card roster-card">
-          <table className="roster compact">
+          <table className="roster compact origins">
             <thead>
               <tr>
                 <th>Origin</th>
