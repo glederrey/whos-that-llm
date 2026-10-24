@@ -152,7 +152,7 @@ Shown once, when `profiles.username` is null.
 - **Pick a username.**
 - The username box starts empty. **Human** is the gray hint inside it. The first character they type replaces that hint.
 - Button: **Save**
-- An empty name, or any name outside 3 to 20 characters, shows **3 to 20 characters.** and is not stored.
+- An empty name, or any name outside 3 to 20 characters, or one with a bad word (English list, `obscenity`), shows **3 to 20 characters, no bad words.** and is not stored.
 - Capitals and punctuation are allowed. Shared names are allowed. Save stores the name on that profile.
 - Save goes to `/play`, or back to the play URL they were trying to open.
 - **Picture** is optional. A JPEG, PNG, or WebP under 1 MB. Anything else shows **Use a JPEG, PNG, or WebP under 1 MB.** Skipping it leaves the generated mark. They can add one later from the profile.

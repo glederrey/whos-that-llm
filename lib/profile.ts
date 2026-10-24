@@ -1,3 +1,4 @@
+import { englishDataset, englishRecommendedTransformers, RegExpMatcher } from "obscenity";
 import type { GameStatus } from "./game";
 
 const maxAvatarBytes = 1024 * 1024;
@@ -55,9 +56,12 @@ export type ProfileStats = {
   averageMessages: number | null;
 };
 
+const profanity = new RegExpMatcher({ ...englishDataset.build(), ...englishRecommendedTransformers });
+
 export function cleanUsername(raw: string): string | null {
   const username = raw.trim();
   if (username.length < 3 || username.length > 20 || /[\n\r]/.test(username)) return null;
+  if (profanity.hasMatch(username)) return null;
   return username;
 }
 

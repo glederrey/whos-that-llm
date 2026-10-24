@@ -15,7 +15,7 @@ test("an empty welcome name is refused before a picture upload", () => {
   const nameCheck = source.indexOf("const name = cleanUsername(username)");
   const upload = source.indexOf('fetch("/api/me/avatar"');
   assert.ok(nameCheck > 0 && upload > nameCheck);
-  assert.match(source, /if \(!name\) \{\s*setError\("3 to 20 characters\."\);\s*return;\s*\}/);
+  assert.match(source, /if \(!name\) \{\s*setError\("3 to 20 characters, no bad words\."\);\s*return;\s*\}/);
   assert.match(source, /JSON\.stringify\(\{ username: name \}\)/);
 });
 

@@ -55,7 +55,7 @@ export function ProfileForm({
     }
     if (!response.ok) {
       setBusy(false);
-      setError(response.status === 422 ? "3 to 20 characters." : "Try again.");
+      setError(response.status === 422 ? "3 to 20 characters, no bad words." : "Try again.");
       return;
     }
     if (file) {
