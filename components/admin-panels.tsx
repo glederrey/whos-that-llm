@@ -1,4 +1,4 @@
-import { compact, decimal, percent, usd, type GameMetrics } from "@/lib/admin-metrics";
+import { compact, percent, usd, type GameMetrics } from "@/lib/admin-metrics";
 import type { OpenRouterSpend } from "@/lib/openrouter-spend";
 import type { ActivityPeriod } from "@/lib/openrouter-usage";
 import { SpendActivityTable } from "@/components/spend-activity-table";
@@ -8,7 +8,7 @@ export type Figure = { label: string; value: string; note?: string };
 
 export function Figures({ items }: { items: Figure[] }) {
   return (
-    <dl className="stats">
+    <dl className="stats stats-figures">
       {items.map((item) => (
         <div key={item.label}>
           <dt>{item.label}</dt>
@@ -18,33 +18,6 @@ export function Figures({ items }: { items: Figure[] }) {
       ))}
     </dl>
   );
-}
-
-export function playFigures(metrics: GameMetrics): Figure[] {
-  return [
-    {
-      label: "Solve rate",
-      value: percent(metrics.solveRate),
-      note: `${metrics.solved} solved of ${metrics.finished} finished`,
-    },
-    {
-      label: "Give-ups",
-      value: metrics.givenUp.toLocaleString("en-US"),
-      note: `${percent(metrics.giveUpRate)} of finished. ${metrics.missed} missed, ${metrics.open} open`,
-    },
-    {
-      label: "Correct guesses",
-      value: percent(metrics.guessAccuracy),
-      note: `${metrics.correctGuesses} of ${metrics.guesses} guesses on finished games. ${decimal(metrics.guessesPerGame)} per finished game`,
-    },
-    { label: "Messages per game", value: decimal(metrics.messagesPerGame), note: "Finished games" },
-    { label: "Tokens per game", value: compact(metrics.tokensPerGame), note: "Prompt plus completion" },
-    {
-      label: "Unfinished games",
-      value: percent(metrics.unfinishedRate),
-      note: `${metrics.unfinished.toLocaleString("en-US")} of ${metrics.games.toLocaleString("en-US")}`,
-    },
-  ];
 }
 
 export function costFigures(metrics: GameMetrics): Figure[] {
@@ -101,26 +74,4 @@ export function Spend({ spend, nameFor }: { spend: OpenRouterSpend; nameFor: (sl
 
 function periodNote(period: ActivityPeriod): string {
   return `${period.requests.toLocaleString("en-US")} requests, ${compact(period.promptTokens + period.completionTokens)} tokens`;
-}
-
-export function DayBars({ days }: { days: GameMetrics["days"] }) {
-  const peak = Math.max(1, ...days.map((day) => day.games));
-  return (
-    <div className="card">
-      <div className="daybars" role="img" aria-label="Games started per UTC day, last 14 days">
-        {days.map((day) => (
-          <div key={day.date} className="daybar" title={`${day.date}: ${day.games} games, ${day.solved} solved`}>
-            <span className="daybar-count">{day.games}</span>
-            <span className="daybar-track">
-              <i className="daybar-all" style={{ height: `${(day.games / peak) * 100}%` }}>
-                <i className="daybar-solved" style={{ height: day.games ? `${(day.solved / day.games) * 100}%` : 0 }} />
-              </i>
-            </span>
-            <span className="daybar-date">{day.date.slice(5)}</span>
-          </div>
-        ))}
-      </div>
-      <p className="muted">Games started per UTC day, last 14 days. The teal part is solved.</p>
-    </div>
-  );
 }

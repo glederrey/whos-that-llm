@@ -13,6 +13,7 @@ import {
   type PublicGame,
   type ScoreLine,
 } from "./game";
+import { roundContext } from "./prompt";
 import { serviceOrThrow } from "./rounds-db";
 import { loadGame, rpc, scoreFrom } from "./rounds-queries";
 import { guessFinish } from "./rounds-score";
@@ -80,8 +81,20 @@ export async function hiddenCall(gameId: string, userId: string) {
     .select("turn, role, content")
     .eq("game_id", gameId)
     .order("turn");
+  const pool = Object.values(game.traits.models);
+  let categoryName: string | null = null;
+  if (game.game_mode === "class" && typeof game.pool_key === "string") {
+    const { data: category } = await client.from("categories").select("name").eq("id", game.pool_key).maybeSingle();
+    categoryName = (category?.name as string | undefined) ?? null;
+  }
   return {
     game,
+    context: roundContext({
+      gameMode: game.game_mode,
+      poolSize: pool.length,
+      companyName: pool.find((model) => model.companyId === game.pool_key)?.companyName ?? null,
+      categoryName,
+    }),
     openrouterId: data.openrouter_id as string,
     providerSettings: data.provider_settings,
     reasoning: Boolean(data.reasoning),

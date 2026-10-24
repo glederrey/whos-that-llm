@@ -24,7 +24,10 @@ function game(
     gameMode: "all",
     size: "small",
     origin: "us",
-    categoryIds: [],
+    poolKey: null,
+    difficulty: null,
+    noHint: false,
+    score: null,
     ...extra,
   };
 }
@@ -63,7 +66,7 @@ test("public stats keep outcomes and drop cost", () => {
       { id: "company", name: "Company" },
       { id: "custom", name: "Custom" },
     ],
-    [],
+    {},
     now,
   );
 
@@ -110,7 +113,7 @@ test("public stats keep outcomes and drop cost", () => {
 });
 
 test("an empty game mode list does not invent rows", () => {
-  const stats = computePublicStats([], [], [], [], [], now);
+  const stats = computePublicStats([], [], [], [], {}, now);
   assert.equal(stats.outcome.solveRate, null);
   assert.equal(stats.outcome.tokensPerGame, null);
   assert.equal(stats.models.length, 0);
@@ -126,7 +129,7 @@ test("a finished game mode outside the list is still shown", () => {
     [],
     [],
     [{ id: "all", name: "All models" }],
-    [],
+    {},
     now,
   );
   assert.deepEqual(
@@ -139,34 +142,74 @@ test("a finished game mode outside the list is still shown", () => {
   assert.equal(stats.sizes.find((row) => row.key === "unknown"), undefined);
 });
 
-test("a round counts in each category, and a model with no category adds no row", () => {
+test("Category and Company tables count the rounds played on each pool, not the hidden model's traits", () => {
   const stats = computePublicStats(
     [
-      game("1", "opus", "solved", 2, { categoryIds: ["opus", "latest"] }),
-      game("2", "haiku", "miss", 4, { categoryIds: ["haiku"] }),
-      game("3", "luna", "solved", 1, { categoryIds: [] }),
+      game("1", "opus", "solved", 2, { gameMode: "class", poolKey: "opus", score: 800 }),
+      game("2", "haiku", "miss", 4, { gameMode: "class", poolKey: "haiku", score: 100 }),
+      game("3", "luna", "solved", 1, { gameMode: "all", poolKey: null }),
+      game("4", "opus", "solved", 3, { gameMode: "company", poolKey: "anthropic", score: 600 }),
     ],
     [],
     [],
     [],
-    [
-      { id: "empty", name: "Empty" },
-      { id: "opus", name: "Opus" },
-      { id: "latest", name: "Latest" },
-      { id: "haiku", name: "Haiku" },
-    ],
+    {
+      categories: [
+        { id: "empty", name: "Empty" },
+        { id: "opus", name: "Opus" },
+        { id: "haiku", name: "Haiku" },
+      ],
+      companies: [{ id: "anthropic", name: "Anthropic" }],
+    },
     now,
   );
   assert.deepEqual(
-    stats.categories.map((row) => [row.name, row.games, row.solveRate]),
+    stats.categories.map((row) => [row.name, row.games, row.solveRate, row.avgScore]),
     [
-      ["Empty", 0, null],
-      ["Haiku", 1, 0],
-      ["Latest", 1, 1],
-      ["Opus", 1, 1],
+      ["Empty", 0, null, null],
+      ["Haiku", 1, 0, 100],
+      ["Opus", 1, 1, 800],
     ],
   );
-  assert.equal(stats.categories.some((row) => row.name === "luna" || row.key === "none"), false);
+  assert.deepEqual(
+    stats.companies.map((row) => [row.name, row.games, row.avgScore]),
+    [["Anthropic", 1, 600]],
+  );
+});
+
+test("difficulty and hint rows split the rounds, and the score figures follow the rounds that have one", () => {
+  const stats = computePublicStats(
+    [
+      game("1", "opus", "solved", 2, { difficulty: 1, score: 900 }),
+      game("2", "opus", "miss", 4, { difficulty: 1, score: 0 }),
+      game("3", "haiku", "solved", 3, { difficulty: 3, noHint: true, score: 1500 }),
+      game("4", "haiku", "given_up", 1, { gameMode: "company", poolKey: "x" }),
+    ],
+    [],
+    [],
+    [],
+    {},
+    now,
+  );
+  assert.deepEqual(
+    stats.difficulties.map((row) => [row.key, row.games, row.solveRate]),
+    [
+      ["1", 2, 0.5],
+      ["2", 0, null],
+      ["3", 1, 1],
+      ["4", 0, null],
+    ],
+  );
+  assert.deepEqual(
+    stats.hints.map((row) => [row.key, row.games, row.avgScore]),
+    [
+      ["hints", 3, 450],
+      ["no-hints", 1, 1500],
+    ],
+  );
+  assert.equal(stats.outcome.avgScore, 800);
+  assert.equal(stats.outcome.bestScore, 1500);
+  assert.equal(stats.gameModes.find((row) => row.id === "company")?.difficulties.length, 0);
 });
 
 test("a solved round with no finished_at does not count", () => {
@@ -190,7 +233,7 @@ test("a solved round with no finished_at does not count", () => {
       { id: "all", name: "All models" },
       { id: "daily", name: "Daily" },
     ],
-    [],
+    {},
     now,
   );
   assert.equal(stats.outcome.finished, 1);
@@ -215,7 +258,6 @@ test("today's Daily rounds stay in the totals and leave the named breakdowns", (
         gameMode: "daily",
         size: "xxl",
         origin: "us",
-        categoryIds: ["frontier"],
         startedAt: `${today}T08:00:00Z`,
         finishedAt: `${today}T09:00:00Z`,
       }),
@@ -223,7 +265,6 @@ test("today's Daily rounds stay in the totals and leave the named breakdowns", (
         gameMode: "daily",
         size: "medium",
         origin: "cn",
-        categoryIds: ["cn-labs"],
         startedAt: `${today}T00:05:00Z`,
         finishedAt: `${today}T01:00:00Z`,
       }),
@@ -231,7 +272,6 @@ test("today's Daily rounds stay in the totals and leave the named breakdowns", (
         gameMode: "daily",
         size: "large",
         origin: "eu",
-        categoryIds: ["opus"],
         startedAt: "2026-10-11T23:30:00Z",
         finishedAt: "2026-10-11T23:50:00Z",
       }),
@@ -239,7 +279,6 @@ test("today's Daily rounds stay in the totals and leave the named breakdowns", (
         gameMode: "all",
         size: "small",
         origin: "eu",
-        categoryIds: ["haiku"],
         startedAt: `${today}T10:00:00Z`,
         finishedAt: `${today}T11:00:00Z`,
       }),
@@ -256,12 +295,7 @@ test("today's Daily rounds stay in the totals and leave the named breakdowns", (
       { id: "all", name: "All models" },
       { id: "company", name: "Company" },
     ],
-    [
-      { id: "frontier", name: "Frontier" },
-      { id: "cn-labs", name: "CN labs" },
-      { id: "opus", name: "Opus" },
-      { id: "haiku", name: "Haiku" },
-    ],
+    {},
     clock,
   );
 
@@ -290,16 +324,6 @@ test("today's Daily rounds stay in the totals and leave the named breakdowns", (
   assert.equal(stats.origins.find((row) => row.key === "us")?.games, 0);
   assert.equal(stats.origins.find((row) => row.key === "cn")?.games, 0);
   assert.equal(stats.origins.find((row) => row.key === "eu")?.games, 2);
-  assert.deepEqual(
-    stats.categories.map((row) => [row.name, row.games]),
-    [
-      ["CN labs", 0],
-      ["Frontier", 0],
-      ["Haiku", 1],
-      ["Opus", 1],
-    ],
-  );
-
   const daily = stats.gameModes.find((row) => row.id === "daily");
   assert.equal(daily?.finished, 3);
   assert.equal(daily?.outcome?.solved, 1);
@@ -341,7 +365,7 @@ test("Every mode button can be selected", () => {
   );
 });
 
-test("Origin rounds get their own pick table and stay out of the all-modes figures", () => {
+test("Origin rounds get their own pick table and count in the all-modes figures but not in its model tables", () => {
   const stats = computePublicStats(
     [
       game("o1", "opus", "solved", 4, { gameMode: "origin", origin: "us" }),
@@ -357,11 +381,15 @@ test("Origin rounds get their own pick table and stay out of the all-modes figur
       { gameId: "o4", modelCorrect: false, guessedModelId: null, guessedOrigin: "us", originCorrect: false },
     ],
     [{ id: "all", name: "All models" }, { id: "origin", name: "Origin" }],
-    [],
+    {},
     now,
   );
-  assert.equal(stats.outcome.games, 1);
+  assert.equal(stats.outcome.games, 5);
+  assert.equal(stats.outcome.missed, 2);
+  assert.equal(stats.outcome.givenUp, 1);
+  assert.equal(stats.days.reduce((sum, day) => sum + day.missed, 0), 2);
   assert.deepEqual(stats.models.map((row) => row.modelId), ["haiku"]);
+  assert.deepEqual(stats.hints.map((row) => row.games), [1, 0]);
   const report = stats.gameModes.find((mode) => mode.id === "origin");
   assert.equal(report?.games, 4);
   assert.deepEqual(report?.confusion, []);
@@ -374,7 +402,7 @@ test("Origin rounds get their own pick table and stay out of the all-modes figur
   assert.equal(rows[3].games, 1);
 });
 
-test("Custom rounds get their own tab and stay out of the all-modes figures", () => {
+test("Custom rounds get their own tab and count in the all-modes figures", () => {
   const stats = computePublicStats(
     [
       game("c1", "opus", "solved", 4, { gameMode: "custom" }),
@@ -384,11 +412,12 @@ test("Custom rounds get their own tab and stay out of the all-modes figures", ()
     [],
     [],
     [{ id: "all", name: "All models" }, { id: "custom", name: "Custom" }],
-    [],
+    {},
     now,
   );
-  assert.equal(stats.outcome.games, 1);
-  assert.deepEqual(stats.models.map((row) => row.modelId), ["haiku"]);
+  assert.equal(stats.outcome.games, 3);
+  assert.deepEqual(stats.models.map((row) => row.modelId).sort(), ["haiku", "opus"]);
+  assert.deepEqual(stats.hints.map((row) => row.games), [3, 0]);
   assert.equal(stats.gameModes.find((mode) => mode.id === "custom")?.games, 2);
 });
 
@@ -403,7 +432,7 @@ test("Custom rounds report pool sizes and the most picked models", () => {
     [],
     [],
     [{ id: "all", name: "All models" }, { id: "custom", name: "Custom" }],
-    [],
+    {},
     now,
   );
   const custom = stats.gameModes.find((mode) => mode.id === "custom")?.custom;
@@ -428,7 +457,7 @@ test("the public stats page does not read prices, billing, or account rows", () 
     assert.equal(board.toLowerCase().includes(banned), false, banned);
   }
   assert.match(why, /Over time I think I could tell an Opus 4.5 from a 4.7 and a 4.8\. Like a wine\.\.\./);
-  assert.match(board, /No finished games in this game mode yet/);
+  assert.match(board, /No games in this game mode yet/);
   assert.match(board, /mode === "class"/);
   assert.doesNotMatch(board, /still open/);
   assert.doesNotMatch(board, /\$\{outcome\.open\}/);
@@ -437,7 +466,7 @@ test("the public stats page does not read prices, billing, or account rows", () 
   assert.match(board, /type="button"/);
   assert.doesNotMatch(board, /href=/);
   assert.doesNotMatch(board, /useRouter|router\.push|window\.location/);
-  assert.match(loader, /readAll\(client, "model_categories", "model_id, category_id", \["model_id", "category_id"\]\)/);
+  assert.match(loader, /readAll\(client, "companies", "id, name"\)/);
   assert.match(loader, /finished_at/);
   const home = fs.readFileSync(path.join(root, "components/home-board.tsx"), "utf8");
   assert.match(home, /\["daily", "all", "company", "class", "origin", "custom"\]/);
