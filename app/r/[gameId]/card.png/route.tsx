@@ -55,7 +55,7 @@ export async function GET(request: Request, context: { params: Promise<{ gameId:
       { name: "Roboto", data: loaded.bold, weight: 700, style: "normal" },
     ],
     headers: {
-      "Cache-Control": "no-store",
+      "Cache-Control": "public, max-age=60, s-maxage=600",
       "Content-Disposition": download ? `attachment; filename="${shareFileName(card.id)}"` : "inline",
     },
   });
