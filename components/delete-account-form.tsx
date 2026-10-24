@@ -29,7 +29,7 @@ export function DeleteAccountForm({ notice, returnTo }: { notice?: string; retur
           {serverNotice}
         </p>
       ) : null}
-      <div>
+      <div className="delete-action">
         <button type="button" className="button-off" onClick={open}>
           Delete account
         </button>

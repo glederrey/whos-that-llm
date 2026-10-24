@@ -1283,6 +1283,7 @@ html[data-theme="dark"] .hit { color: var(--teal); }
 }
 .dialog p { margin-bottom: 18px; }
 .dialog .button-danger { margin-left: auto; }
+.delete-action { display: flex; justify-content: center; }
 .dialog form { display: grid; gap: 14px; }
 .dialog form h2, .dialog form p { margin: 0; }
 .dialog form label { display: grid; gap: 6px; font-size: 14px; font-weight: 500; }
@@ -1936,6 +1937,7 @@ html[data-theme="dark"] .history-score[data-best="true"] { color: var(--teal); }
   .profile-password { grid-column: 1 / -1; grid-row: 3; width: 100%; text-align: center; }
   .profile-status { grid-row: 4; }
   .pager { width: 100%; }
+  .delete-action .button-off { width: 100%; text-align: center; }
   .pager > .row { flex: 1 1 auto; width: 100%; }
   .pager > .row > .button-quiet {
     flex: 1 1 0;
