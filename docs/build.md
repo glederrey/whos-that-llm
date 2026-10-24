@@ -1,6 +1,6 @@
 # Build
 
-**All models** is the first build. Auth, one round, hints, no-hint mode, the score, the result page, and the profile. The other modes, the admin pages, and the profile are built since. The weekly top 5, daily stats, and the full admin cockpit come later. Do not publish this spec as a site page.
+**All models** is the first build. Auth, one round, hints, no-hint mode, the score, the result page, and the profile. The other modes, the admin pages, and the profile are built since. The weekly top 5 and daily stats come later. Do not publish this spec as a site page.
 
 ## Layout
 
@@ -141,7 +141,7 @@ The first build is a playable All models round. Gael plays it locally, then the 
 6. Leaderboard for All models: rank, name, best score.
 7. Built: daily, company, origin, custom, and class (Category). They are pool filters plus the given-trait rule. Origin is built apart: its own guess function, its own buttons, no score. Custom is the player's own choice of models (at least 2), hints can be on, and it has no leaderboard. Hints are on for every mode except Origin, and Company allows only the year and the size. There is no Latest category. `models.is_latest` is dropped.
 8. Later: home weekly top 5 and daily result stats. The profile, with stats, past games, and username changes, is in this prototype.
-9. Built: admin pages for spend, games, modes, roster, categories, companies, origins, providers, and chat, with logos in Supabase Storage. Later: the pause switch and the recent-rounds page.
+9. Built: admin pages for spend, games, modes, roster, categories, companies, origins, providers, and chat. Category icons are uploaded to Supabase Storage.
 10. Publish a GitHub Release. That deploys the release tag to the `*.vercel.app` URL. A domain comes after someone besides us is playing.
 
 Step 4 is allowed to set models `enabled = false`. It is not allowed to add a mechanic that is not in [Rules](rules.md). The token factor's only cap is `tokenCap`. If a credit error pauses the game before the admin page exists, clear `app_settings.paused` after topping up on OpenRouter.
