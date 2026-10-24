@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { filterCandidates, parseOpenedHints, replyFailureNotice, withOpenedHint } from "./round-view";
+import { filterCandidates, hintShown, replyFailureNotice } from "./round-view";
 
 test("a paused game gets its own notice, any other failure the retry notice", () => {
   assert.equal(replyFailureNotice(true), "The game is paused. Try again later.");
@@ -19,11 +19,9 @@ test("candidates filter on model or company, ignoring case and spaces around", (
   assert.deepEqual(filterCandidates(rows, "zzz"), []);
 });
 
-test("opened hints parse from storage and never duplicate", () => {
-  assert.deepEqual(parseOpenedHints('["year"]'), ["year"]);
-  assert.deepEqual(parseOpenedHints("not json"), []);
-  const opened = withOpenedHint([], "year");
-  assert.deepEqual(opened, ["year"]);
-  assert.equal(withOpenedHint(opened, "year"), opened);
-  assert.deepEqual(withOpenedHint(opened, "size"), ["year", "size"]);
+test("year and size show once bought or when the pool shares them", () => {
+  assert.equal(hintShown({}, new Set(), "year"), false);
+  assert.equal(hintShown({ year: 2026 }, new Set(), "year"), true);
+  assert.equal(hintShown({}, new Set(["size"]), "size"), true);
+  assert.equal(hintShown({}, new Set(["size"]), "year"), false);
 });

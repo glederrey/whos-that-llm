@@ -15,6 +15,9 @@
   --miss: #ff4436;
   --miss-press: #c41b15;
   --miss-wash: #fdecec;
+  --bar-solved: #1c7c43;
+  --bar-failed: #c41b15;
+  --bar-gave-up: #7a7a82;
   --line: #d4d4d8;
   --line-strong: #b4b4ba;
   --shadow: 0 1px 2px rgba(20, 20, 20, 0.05), 0 1px 0 rgba(20, 20, 20, 0.03);
@@ -35,6 +38,7 @@ html[data-theme="dark"] {
   --text: #ebebeb;
   --mute: #a1a1aa;
   --miss-wash: #3a1212;
+  --bar-gave-up: #6b6b73;
   --line: #2e2e2e;
   --line-strong: #4a4a4a;
   --shadow: none;
@@ -223,6 +227,7 @@ a.kofi span { text-decoration: underline; text-underline-offset: 3px; }
 /* Type */
 h1 { font-size: 40px; line-height: 1.1; letter-spacing: -0.025em; margin: 8px 0 12px; }
 h2 { font-size: 20px; line-height: 1.25; letter-spacing: -0.01em; margin: 0 0 8px; }
+.stack > h2 { margin: 16px 0 -6px; }
 h3 { font-size: 18px; line-height: 1.3; margin: 8px 0 0; }
 p { margin: 0; }
 .goal { font-size: 34px; margin: 4px 0 0; }
@@ -238,7 +243,9 @@ p { margin: 0; }
 .landing { gap: 36px; }
 .landing .hero { padding-bottom: 0; }
 .landing .stats { margin: 0; }
-.landing .stat-companies { display: none; }
+.landing .stats { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.landing .stats div { text-align: center; }
+.stats-figures div { text-align: center; }
 .narrow { max-width: 720px; }
 .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
 
@@ -364,7 +371,14 @@ textarea { min-height: 76px; resize: vertical; }
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 16px;
 }
-.steps li { display: grid; gap: 4px; align-content: start; }
+.steps li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  column-gap: 10px;
+  row-gap: 6px;
+  align-items: center;
+}
+.steps .step-text { grid-column: 1 / -1; }
 .steps .step-no {
   width: 28px;
   height: 28px;
@@ -376,10 +390,11 @@ textarea { min-height: 76px; resize: vertical; }
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 6px;
 }
 .steps strong { font-size: 16px; }
 .steps .step-text { color: var(--mute); font-size: 14px; }
+
+
 /* Phone shows this title inside one card. A wide screen keeps the three columns and leaves the title out. */
 .how-round-title { display: none; }
 .section-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-top: 8px; }
@@ -918,7 +933,7 @@ html[data-theme="dark"] .company-menu summary { color: var(--text); }
   .company-menu summary,
   .company-menu-summary { width: 100%; }
 }
-.pager { align-items: center; justify-content: space-between; }
+.pager { align-items: center; justify-content: center; gap: 12px; }
 .pager .row { gap: 8px; }
 .pager .muted { font-size: 14px; }
 .empty { text-align: center; padding: 36px 20px; color: var(--mute); }
@@ -1453,6 +1468,7 @@ html[data-theme="dark"] .md a { color: var(--teal); }
 .profile-save { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 .profile-save .muted, .profile-save .error { margin: 0; }
 .profile-stats { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.profile-stats div { text-align: center; }
 .profile-stats dd { font-size: 28px; }
 .history { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
 .history-filters { display: flex; flex-wrap: wrap; align-items: end; gap: 12px; }
@@ -1600,8 +1616,16 @@ html[data-theme="dark"] .history-score[data-best="true"] { color: var(--teal); }
 .daybar { display: grid; grid-template-rows: auto 120px auto; gap: 4px; justify-items: center; }
 .daybar-count { font-size: 12px; color: var(--mute); font-variant-numeric: tabular-nums; }
 .daybar-track { width: 100%; height: 120px; display: flex; align-items: flex-end; }
-.daybar-all { display: flex; align-items: flex-end; width: 100%; min-height: 2px; background: var(--line-strong); border-radius: 4px 4px 0 0; overflow: hidden; }
-.daybar-solved { display: block; width: 100%; background: var(--teal); }
+.daybar-all { display: flex; flex-direction: column-reverse; width: 100%; min-height: 2px; background: var(--line-strong); border-radius: 4px 4px 0 0; overflow: hidden; }
+.daybar-all i { display: block; width: 100%; }
+.daybar-solved { background: var(--bar-solved); }
+.daybar-failed { background: var(--bar-failed); }
+.daybar-gave-up { background: var(--bar-gave-up); }
+.daybar-foot { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 6px 16px; margin: 14px 0 0; }
+.daybar-foot .muted { margin: 0; font-size: 13px; text-align: right; }
+.daybar-legend { display: flex; flex-wrap: wrap; gap: 6px 16px; margin: 0; padding: 0; list-style: none; font-size: 13px; color: var(--mute); }
+.daybar-legend li { display: inline-flex; align-items: center; gap: 6px; }
+.daybar-legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; }
 .daybar-date { font-size: 11px; color: var(--mute); }
 .daybars + .muted { margin: 14px 0 0; }
 .poolbars { grid-template-columns: repeat(6, minmax(0, 1fr)); }
@@ -1614,7 +1638,6 @@ html[data-theme="dark"] .history-score[data-best="true"] { color: var(--teal); }
 .shell:has(.providers-page) .header,
 .shell:has(.providers-page) .page,
 .shell:has(.providers-page) .footer-inner { width: min(1180px, calc(100% - 32px)); }
-.providers-page .pager { justify-content: center; }
 .roster.providers th,
 .roster.providers td { padding: 10px 8px; }
 .roster.providers th button.roster-sort { padding: 10px 8px; white-space: normal; line-height: 1.3; }
@@ -1850,12 +1873,11 @@ html[data-theme="dark"] .history-score[data-best="true"] { color: var(--teal); }
     font-size: 12px;
   }
   .how-round .steps strong { font-size: 15px; line-height: 1.25; }
-  .how-round .steps .step-text { font-size: 14px; line-height: 1.3; }
+  .how-round .steps .step-text { grid-column: 2; font-size: 14px; line-height: 1.3; }
   .landing .stats {
     grid-template-columns: 1fr 1fr;
     gap: 8px;
   }
-  .landing .stat-companies { display: block; }
   .landing .stats div { padding: 12px 14px; }
   .landing .stats dt {
     font-size: 12px;
@@ -1863,6 +1885,9 @@ html[data-theme="dark"] .history-score[data-best="true"] { color: var(--teal); }
     letter-spacing: 0.04em;
   }
   .landing .stats dd { margin-top: 4px; font-size: 24px; }
+  .stats-figures { grid-template-columns: 1fr 1fr; gap: 8px; }
+  .stats-figures div { padding: 12px 14px; }
+  .stats-figures dd { font-size: 26px; }
   .profile-stats { grid-template-columns: 1fr 1fr; }
   .profile-stats div { padding: 16px 12px; }
   .profile-stats dt { letter-spacing: 0.04em; }

@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { config } from "@/lib/config";
 import { upcomingMessageNumber, type PublicGame } from "@/lib/game";
-import { filterCandidates } from "@/lib/round-view";
+import { filterCandidates, hintShown as roundHintShown } from "@/lib/round-view";
 import { ChatComposer } from "./chat-composer";
 import { CompanyLogo } from "./company-logo";
 import { GuessHistory } from "./guess-history";
@@ -33,10 +33,8 @@ export function RoundBoard({ initial }: { initial: PublicGame }) {
     setSelected,
     guessBusy,
     hintBusy,
-    openedHints,
     freshGuessId,
     inputLocked,
-    revealGiven,
     sendMessage,
     guess,
     buy,
@@ -61,7 +59,7 @@ export function RoundBoard({ initial }: { initial: PublicGame }) {
   const selectedRow = game.candidates.find((row) => row.id === selected) ?? null;
 
   function hintShown(key: "year" | "size") {
-    return Boolean(game.hints[key]) || openedHints.includes(key);
+    return roundHintShown(game.hints, new Set(given.keys()), key);
   }
 
   function purchasable(key: "company" | "origin") {
@@ -76,9 +74,9 @@ export function RoundBoard({ initial }: { initial: PublicGame }) {
 
   function yearSizeReveal(key: "year" | "size") {
     return {
-      label: given.has(key) ? "Reveal" : `Reveal (−${game.hintCosts[key]} pts)`,
+      label: `Reveal (−${game.hintCosts[key]} pts)`,
       busy: hintBusy !== null,
-      onOpen: () => (given.has(key) ? revealGiven(key) : void buy(key)),
+      onOpen: () => void buy(key),
     };
   }
 

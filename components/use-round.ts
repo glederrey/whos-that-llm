@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { HintKey, PublicGame } from "@/lib/game";
 import { readReplyEvents } from "@/lib/reply-events";
-import { REPLY_FAILED, parseOpenedHints, replyFailureNotice, withOpenedHint, type OpenableHint } from "@/lib/round-view";
+import { REPLY_FAILED, replyFailureNotice } from "@/lib/round-view";
 
 // Round state and every request a round makes: send a message (SSE), guess,
 // buy a hint, give up. The component keeps only what touches the DOM.
@@ -20,7 +20,6 @@ export function useRound(initial: PublicGame, { closeList, closeDialog }: { clos
   const [selected, setSelected] = useState<string | null>(null);
   const [guessBusy, setGuessBusy] = useState(false);
   const [hintBusy, setHintBusy] = useState<HintKey | null>(null);
-  const [openedHints, setOpenedHints] = useState<OpenableHint[]>([]);
   const [freshGuessId, setFreshGuessId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -28,19 +27,7 @@ export function useRound(initial: PublicGame, { closeList, closeDialog }: { clos
     setSelected(null);
   }, [game.awaitingGuess]);
 
-  useEffect(() => {
-    const raw = window.sessionStorage.getItem(`hints:${game.id}`);
-    if (!raw) return;
-    setOpenedHints(parseOpenedHints(raw));
-  }, [game.id]);
-
   const inputLocked = busy || game.messageNumber >= game.messageLimit || game.status !== "active";
-
-  function revealGiven(key: OpenableHint) {
-    const next = withOpenedHint(openedHints, key);
-    setOpenedHints(next);
-    window.sessionStorage.setItem(`hints:${game.id}`, JSON.stringify(next));
-  }
 
   function login() {
     router.push(`/login?next=${encodeURIComponent(`/play/${game.id}`)}`);
@@ -212,10 +199,8 @@ export function useRound(initial: PublicGame, { closeList, closeDialog }: { clos
     setSelected,
     guessBusy,
     hintBusy,
-    openedHints,
     freshGuessId,
     inputLocked,
-    revealGiven,
     sendMessage,
     guess,
     buy,
