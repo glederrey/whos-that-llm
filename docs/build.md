@@ -1,6 +1,6 @@
 # Build
 
-**All models** is the first build. Auth, one round, hints, no-hint mode, the score, the result page, and the profile. The other categories, the weekly top 5, daily stats, and admin come later. Do not publish this spec as a site page.
+**All models** is the first build. Auth, one round, hints, no-hint mode, the score, the result page, and the profile. The other modes, the admin pages, and the profile are built since. The weekly top 5, daily stats, and the full admin cockpit come later. Do not publish this spec as a site page.
 
 ## Layout
 
@@ -59,6 +59,7 @@ Import server code from `@/lib/rounds`. The `rounds-*` files behind it are an im
   tokenScale: 10000,
   tokenCap: 20,
   hintCosts: { year: 100, size: 100, origin: 400, company: 600 },
+  difficultyMultipliers: { easy: 0.5, medium: 1, hard: 2, impossible: 3 },
   wrongGuessCost: 100,
   noHintMultiplier: 2,
   hourlyCap: 20,
@@ -76,8 +77,10 @@ Import server code from `@/lib/rounds`. The `rounds-*` files behind it are an im
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Browser and server. The publishable key |
 | `SUPABASE_SECRET_KEY` | Server only. The secret key. Bypasses row level security |
 | `OPENROUTER_API_KEY` | Server only |
+| `OPENROUTER_MANAGEMENT_KEY` | Server only. Reads spend for `/admin/costs`. Falls back to the API key. Also a `deploy.yml` secret |
+| `AVAILABILITY_TOKEN` | Server only. Guards `/api/admin/availability` |
 
-Those four names live in untracked env files at the repo root: `.env.development.local` (dev project, loaded by `npm run dev`), `.env.prod.local` (production, loaded by `npm run dev:prod`), and `.env.local` as the shared default. Comments in the file do not matter. The values stay in that file: do not open it to check them, and do not copy them into docs, chat, or git. The file stays untracked. Vercel gets the same names. The secret key and the OpenRouter key are sensitive. Do not prefix `SUPABASE_SECRET_KEY` with `NEXT_PUBLIC_`. Admin is `app_metadata.admin === true` on the signed-in user, not an env var.
+Those names live in untracked env files at the repo root: `.env.development.local` (dev project, loaded by `npm run dev`), `.env.prod.local` (production, loaded by `npm run dev:prod`), and `.env.local` as the shared default. Comments in the file do not matter. The values stay in that file: do not open it to check them, and do not copy them into docs, chat, or git. The file stays untracked. Vercel gets the same names. The secret key and the OpenRouter key are sensitive. Do not prefix `SUPABASE_SECRET_KEY` with `NEXT_PUBLIC_`. Admin is `app_metadata.admin === true` on the signed-in user, not an env var.
 
 In Supabase, set the site URL to the site root (each project: production, and `http://localhost:3000` for dev). Confirmation returns to the main page.
 
@@ -136,9 +139,9 @@ The first build is a playable All models round. Gael plays it locally, then the 
 4. `lib/game.ts`: frozen traits, server-filtered guess list, compare, hints, no-hint mode, score. All models, ten messages, a guess the player can skip, give up. The result page shows the breakdown and links to How scoring works. The total is never below 0. Play across the enabled models.
 5. The hourly cap and one active round. A credit error sets `app_settings.paused` for everyone.
 6. Leaderboard for All models: rank, name, best score.
-7. Later: daily, company, origin, custom, and class. They are pool filters plus the given-trait rule. Origin is built apart: its own guess function, its own buttons, no score. Custom is the player's own choice of models (at least 2), hints can be on, and it has no leaderboard. Class is not built. Hints are only on Daily, All models, and Custom. There is no Latest category. `models.is_latest` is dropped.
+7. Built: daily, company, origin, custom, and class (Category). They are pool filters plus the given-trait rule. Origin is built apart: its own guess function, its own buttons, no score. Custom is the player's own choice of models (at least 2), hints can be on, and it has no leaderboard. Hints are on for every mode except Origin, and Company allows only the year and the size. There is no Latest category. `models.is_latest` is dropped.
 8. Later: home weekly top 5 and daily result stats. The profile, with stats, past games, and username changes, is in this prototype.
-9. Later: admin. Spend, stats, roster, logos in Supabase Storage with a URL fallback, pause switch, recent rounds.
+9. Built: admin pages for spend, games, modes, roster, categories, companies, origins, providers, and chat, with logos in Supabase Storage. Later: the pause switch and the recent-rounds page.
 10. Publish a GitHub Release. That deploys the release tag to the `*.vercel.app` URL. A domain comes after someone besides us is playing.
 
 Step 4 is allowed to set models `enabled = false`. It is not allowed to add a mechanic that is not in [Rules](rules.md). The token factor's only cap is `tokenCap`. If a credit error pauses the game before the admin page exists, clear `app_settings.paused` after topping up on OpenRouter.
@@ -147,4 +150,4 @@ Step 4 is allowed to set models `enabled = false`. It is not allowed to add a me
 
 `next.config.ts` sets `X-Content-Type-Options`, `Referrer-Policy`, `X-Frame-Options: DENY`, `Permissions-Policy`, and a Content-Security-Policy on every route. HSTS is not set here: Vercel sends it on its own, and a header from the app would make browsers force HTTPS on `localhost` during development. `script-src` is `'self' 'unsafe-inline'`, because Next streams inline bootstrap scripts and the theme snippet is inline; nonces would make every page dynamic. `connect-src` allows the Supabase origin. Images may come from any `https:` host (Supabase storage, markdown). There is no `form-action`, since sign-in forms redirect to Google and Supabase.
 
-`.github/workflows/ci.yml` runs typecheck and tests on pull requests and on pushes to `main`. `deploy.yml` pins the Vercel CLI and the actions, and gives the Vercel secrets only to the steps that call it. Dependabot proposes weekly npm and Actions updates, grouped by minor and patch.
+`.github/workflows/ci.yml` runs typecheck and tests on pull requests and on pushes to `main`, plus a `migrations` job that replays every migration and the seed on a fresh local Supabase stack (`supabase db reset`). That job touches no real project. Real databases migrate elsewhere: production only from `deploy.yml` on a release (it previews, then applies), and the dev project by hand. `db-dry-run.yml` is a manual check of the production secret that previews pending migrations and changes nothing. `deploy.yml` pins the Vercel CLI and the actions, and gives the Vercel secrets only to the steps that call it. Dependabot proposes weekly npm and Actions updates, grouped by minor and patch.
