@@ -74,7 +74,6 @@ export function ProfileForm({
     setBusy(false);
     setFile(null);
     setFileKey((value) => value + 1);
-    setNote("Saved.");
     router.refresh();
   }
 
