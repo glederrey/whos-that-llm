@@ -49,7 +49,8 @@ The table is part of the baseline migration, with its comments, row level securi
 | `id` | text, pk | `anthropic` |
 | `name` | text | |
 | `origin` | text, fk `origins` | `us`, `cn`, `eu`, or any origin an admin added. Never free text |
-| `logo_path` | text | `logos/{company_id}.png` in the public `logos` bucket, or an `https` URL |
+| `logo_path` | text | `logos/{company_id}.png` in the public `logos` bucket (the seeded ones), `logos/companies/{id}-{token}.{ext}` for a logo uploaded from the admin form, or an `https` URL |
+| `enabled` | boolean | Default true. False takes the company out of the Company game: no card in the lobby (unless the player has a round open on it) and a new round is refused. Models, other modes, leaderboards and statistics do not change. Set from `/admin/companies` |
 | `created_at` | timestamptz | default `now()` |
 
 The uploaded objects are `anthropic.png`, `openai.png`, `deepseek.png`, and `mistral.png`. The bucket also accepts SVG and WebP, at most 1 MB. The game reads `logo_path`. A missing file shows no image. The bucket is public, so those URLs load. There is no SELECT policy, so clients cannot list the objects. Each object is cached for a year. The URL stays the same between visits.
