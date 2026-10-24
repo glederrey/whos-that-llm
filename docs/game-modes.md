@@ -34,7 +34,7 @@ The player does not name the model. The buttons are every origin that is turned 
 
 The pool is every turned-on model whose origin is turned on. At least two origins must be in that pool, or the round does not start. An origin that is turned off has no button and none of its models is drawn. It changes nothing in the other modes, and the origin hint still works there.
 
-No leaderboard. No hints. No difficulty, no category, and no hint choice, so choosing Origin on `/play` starts the round at once. The result is solved, failed, or given up. There is no score.
+No leaderboard. No hints. No difficulty, no category, and no hint choice, so choosing Origin on `/play` starts the round at once. The result is solved, miss, or given up. There is no score.
 
 The result is shareable. The card shows the model and what the player guessed. When the guess was wrong, or the round was given up, it also says where the model comes from. The on-site card, the public page, the link preview, and the downloaded PNG all say the same thing.
 

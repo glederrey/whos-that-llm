@@ -54,7 +54,7 @@ Each point trait pays at most once per round.
 
 ### Hints
 
-Company, origin, year, and size award no points. Each can be bought once, after at least one reply is stored, and only when the category allows hints. The price is subtracted from the base, before the token factor.
+Company, origin, year, and size award no points. Each can be bought once, at any time while the round is active (even before the first reply), and only when the category allows hints. The price is subtracted from the base, before the token factor.
 
 | Hint | What the player sees | Price |
 |---|---|---|
@@ -96,7 +96,7 @@ Consequences:
 
 A value becomes known when it is given, bought as a hint, or matched by a guess. Origin and company matches count. Every hint trait also counts once it is bought.
 
-When hints are on, a guess that misses the company removes every model from that company. A guess that hits the company and misses the model leaves the other models from that company.
+When hints are on, a guess that misses the company removes every model from that company. A guess that misses the origin removes every model from that origin. A guess that hits the company and misses the model leaves the other models from that company.
 
 In no-hint mode, matches are not shown and do not narrow the list. A company miss does not remove that company either. Narrowing would tell the player what they hit. The score still counts those matches. Given values can still be shown, because every model in the pool shares them.
 
@@ -260,7 +260,7 @@ A company pool only cares about traits that differ inside the pool. Company is g
 
 Special pools can still be scored. Company and Category have a leaderboard that lists each player's best round in any pool and can be narrowed to one. Origin is not on a leaderboard. Custom is not on a leaderboard.
 
-A pool with fewer than 2 enabled models is not listed. Daily uses that same rule. An empty roster is not playable. Europe will be thin. A row with fewer than 4 models still appears, and it shows the count. A category with `enabled = false` still has its sentence on the main page, with **Coming soon.**
+A pool with fewer than 2 enabled models cannot start a round (`pool_too_small`). A category with fewer than 2 is not listed. The Company list shows every company, and starting one under 2 is refused. Daily uses the same minimum. An empty roster is not playable. Europe will be thin. A row with fewer than 4 models still appears, and it shows the count. A category with `enabled = false` still has its sentence on the main page, with **Coming soon.**
 
 Latest is not a column on the model. `models.is_latest` is gone. A latest group, if Gael wants one, is a category he creates. A latest game mode is not built. If it is built later, it has no hints, because it is not on the hint list above. Origin is not a category. Origin is that pool, and it has no hints.
 

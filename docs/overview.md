@@ -1,6 +1,6 @@
 # Overview
 
-A chat game. A hidden model answers. The player has ten messages. They can name a model after a reply, or send the next message with no guess, or give up. Naming the model sets the base to 1000, and that is the maximum base. If they never name it, the base is 100 for the origin and 300 for the company, when those matched. A wrong model name subtracts 50 after the multipliers. Year and size can be bought as hints. They add no points.
+A chat game. A hidden model answers. The player has ten messages. They can name a model after a reply, or send the next message with no guess, or give up. Naming the model sets the base to 2000, and that is the maximum base. If they never name it, the base is 100 for the origin and 300 for the company, when those matched. A wrong model name subtracts 100 from the subtotal, before the multipliers. Year and size can be bought as hints. They add no points.
 
 The name on the site is **Who's that LLM?**.
 
@@ -84,7 +84,7 @@ These three are on the landing page, the lobby, and the round.
 |---|---|---|
 | Messages in a round | **10** | `Message 2 of 10` |
 | Guesses | **optional, one per message** | `Guess for message 2`, or send the next message |
-| Games | **10 per rolling hour** | `4 of 10 this hour`, plus when the next slot frees |
+| Games | **20 per rolling hour** | `4 of 20 this hour`, plus when the next slot frees |
 
 Also:
 
