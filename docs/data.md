@@ -113,7 +113,7 @@ anon and authenticated cannot read or write these two tables. The server key doe
 | `size` | text | `nano`, `small`, `medium`, `large`, `xxl`. A hint. Not a point trait and not a category |
 | `difficulty` | smallint | `1` easy, `2` medium, `3` hard, `4` impossible. Set by admin. OpenRouter does not fill it. The screens show the name. A game at X draws enabled models whose difficulty is `<= X` |
 | `open_weights` | boolean | Admin fact. Play does not read it |
-| `reasoning` | boolean | Admin fact. Play does not read it |
+| `reasoning` | boolean | Admin fact. Play does not read it. Whether reasoning is sent off or at lowest effort is `provider_settings.reasoning` |
 | `provider_settings` | jsonb | default `{}`. Passed through on the call. Not a player-facing trait |
 | `released_on` | date | Required while `enabled`. The year hint reads the calendar year |
 | `enabled` | boolean | default false. False keeps the row and pulls the model out of every draw |

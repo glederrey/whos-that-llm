@@ -8,6 +8,7 @@ import {
   emitPaced,
   canonicalProviderSlug,
   openRouterRequestOptions,
+  reasoningOff,
   formatOutputGap,
   outputAboveCount,
   providerBlacklisted,
@@ -115,6 +116,16 @@ test("reasoning calls send effort low and skip blacklisted providers", () => {
     usage: { include: true },
     provider: { ignore: ["old", "chutes"] },
     reasoning: { effort: "low" },
+  });
+});
+
+test("reasoning turned off in the settings is sent as enabled false", () => {
+  assert.equal(reasoningOff({ reasoning: { enabled: false } }), true);
+  assert.equal(reasoningOff({ reasoning: { effort: "low" } }), false);
+  assert.equal(reasoningOff({}), false);
+  assert.deepEqual(openRouterRequestOptions({ reasoning: { enabled: false } }, true, []), {
+    usage: { include: true },
+    reasoning: { enabled: false },
   });
 });
 

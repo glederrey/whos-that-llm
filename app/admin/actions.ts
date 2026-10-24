@@ -152,7 +152,7 @@ export async function addModel(formData: FormData) {
 
 export async function saveModel(formData: FormData) {
   await requireOwner();
-  finish(formData, await updateRosterModel({ id: text(formData, "id"), ...fields(formData) }));
+  finish(formData, await updateRosterModel({ id: text(formData, "id"), ...fields(formData), reasoningOff: formData.get("reasoningOff") === "1" }));
 }
 
 export async function setModelEnabled(formData: FormData) {

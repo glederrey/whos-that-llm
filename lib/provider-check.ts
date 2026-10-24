@@ -189,7 +189,7 @@ export function openRouterRequestOptions(
     if (merged.length > 0) provider.ignore = merged;
     next.provider = provider;
   }
-  if (reasoning) next.reasoning = { effort: "low" };
+  if (reasoning) next.reasoning = reasoningOff(settings) ? { enabled: false } : { effort: "low" };
   return next;
 }
 
@@ -201,6 +201,11 @@ export function providerSlug(value: unknown): string | null {
   const nested = plainObject(record.openrouter).provider;
   if (typeof nested === "string" && nested.trim()) return nested.trim();
   return null;
+}
+
+/** The admin turned reasoning off for this model: the stored settings say `reasoning.enabled` is false. */
+export function reasoningOff(settings: unknown): boolean {
+  return plainObject(plainObject(settings).reasoning).enabled === false;
 }
 
 export function lowReasoningSettings(): { reasoning: { effort: "low" } } {
