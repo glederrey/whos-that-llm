@@ -20,6 +20,7 @@ export default async function CostsPage() {
   const metrics = await metricsPromise;
   const byId = new Map(roster.rows.map((row) => [row.id, row.name]));
   const byOpenRouterId = new Map(roster.rows.map((row) => [row.openrouterId, row.name]));
+  const rosterById = new Map(roster.rows.map((row) => [row.id, row]));
   const byCost = [...metrics.models].sort((a, b) => b.costUsd - a.costUsd || a.modelId.localeCompare(b.modelId));
 
   return (
@@ -70,6 +71,47 @@ export default async function CostsPage() {
                   <td>{compact(row.tokens)}</td>
                   <td>{usd(row.costUsd)}</td>
                   <td>{usd(row.costPerGame)}</td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      <h2>Reasoning by hidden model</h2>
+      <p className="muted">
+        Reasoning tokens per successful reply, from our ledger, highest average first. A reasoning model is sent the
+        lowest effort, but some still think a lot, and those tokens are billed and eat the reply budget. To stop it,
+        open the model on the <a href="/admin/models">Models</a> page, choose Edit and tick Turn reasoning off.
+      </p>
+      <div className="card roster-card">
+        <table className="roster compact">
+          <thead>
+            <tr>
+              <th>Model</th>
+              <th>Setting</th>
+              <th>Replies</th>
+              <th>Average</th>
+              <th>Highest</th>
+              <th>Share of output</th>
+            </tr>
+          </thead>
+          <tbody>
+            {metrics.reasoning.length === 0 ? (
+              <tr>
+                <td colSpan={6} className="muted">
+                  No reasoning tokens recorded yet.
+                </td>
+              </tr>
+            ) : (
+              metrics.reasoning.map((row) => (
+                <tr key={row.modelId}>
+                  <td>{byId.get(row.modelId) ?? row.modelId}</td>
+                  <td>{rosterById.get(row.modelId)?.reasoningOff ? "Off" : "Lowest effort"}</td>
+                  <td>{row.requests.toLocaleString("en-US")}</td>
+                  <td>{row.avgReasoningTokens.toLocaleString("en-US")}</td>
+                  <td>{row.maxReasoningTokens.toLocaleString("en-US")}</td>
+                  <td>{row.share === null ? "-" : `${Math.round(row.share * 100)}%`}</td>
                 </tr>
               ))
             )}

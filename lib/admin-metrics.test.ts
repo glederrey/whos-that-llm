@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { computeGameMetrics, percent, usd, type GameFact, type UsageFact } from "./admin-metrics";
+import { computeGameMetrics, percent, reasoningRows, usd, type GameFact, type UsageFact } from "./admin-metrics";
 import { modeRows } from "./mode-rows";
 
 const now = new Date("2026-10-10T12:00:00Z");
@@ -115,4 +115,31 @@ test("money prints with enough digits for cents of a cent", () => {
   assert.equal(usd(0.0123), "$0.012");
   assert.equal(usd(0.00123), "$0.0012");
   assert.equal(usd(null), "n/a");
+});
+
+test("reasoning rows skip failures and silent models, highest average first", () => {
+  const think = (modelId: string, reasoning: number, output: number, failed = false): UsageFact => ({
+    gameId: "g",
+    modelId,
+    inputTokens: 100,
+    outputTokens: output,
+    reasoningTokens: reasoning,
+    costUsd: 0,
+    failed,
+  });
+  const rows = reasoningRows([
+    think("a", 100, 200),
+    think("a", 300, 400),
+    think("a", 5000, 5000, true),
+    think("b", 1000, 1500),
+    think("c", 0, 50),
+  ]);
+  assert.deepEqual(
+    rows.map((row) => [row.modelId, row.requests, row.avgReasoningTokens, row.maxReasoningTokens]),
+    [
+      ["b", 1, 1000, 1000],
+      ["a", 2, 200, 300],
+    ],
+  );
+  assert.equal(rows[1].share, 400 / 600);
 });

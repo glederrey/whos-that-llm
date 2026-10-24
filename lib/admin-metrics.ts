@@ -38,6 +38,16 @@ export type ModelDifficulty = {
   costPerGame: number | null;
 };
 
+export type ReasoningRow = {
+  modelId: string;
+  /** Successful requests only. */
+  requests: number;
+  avgReasoningTokens: number;
+  maxReasoningTokens: number;
+  /** Reasoning tokens over output tokens, 0 to 1. Null when the model returned no output. */
+  share: number | null;
+};
+
 export type DayCount = { date: string; games: number; solved: number; missed: number; givenUp: number };
 
 export type GameMetrics = {
@@ -66,6 +76,7 @@ export type GameMetrics = {
   ledgerRequests: number;
   failedRequests: number;
   models: ModelDifficulty[];
+  reasoning: ReasoningRow[];
   days: DayCount[];
 };
 
@@ -168,6 +179,7 @@ export function computeGameMetrics(
     ledgerRequests: usage.length,
     failedRequests,
     models: modelRows(games, usage),
+    reasoning: reasoningRows(usage),
     days: dayRows(games, lastDays(dayCount, now)),
   };
 
@@ -178,6 +190,30 @@ function median(values: number[]): number | null {
   const sorted = [...values].sort((a, b) => a - b);
   const mid = Math.floor(sorted.length / 2);
   return sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+}
+
+/** Highest average first, so the models that think the most are on top. Models that never reported reasoning tokens are left out. */
+export function reasoningRows(usage: UsageFact[]): ReasoningRow[] {
+  const sums = new Map<string, { requests: number; reasoning: number; output: number; max: number }>();
+  for (const entry of usage) {
+    if (entry.failed) continue;
+    const sum = sums.get(entry.modelId) ?? { requests: 0, reasoning: 0, output: 0, max: 0 };
+    sum.requests += 1;
+    sum.reasoning += entry.reasoningTokens;
+    sum.output += entry.outputTokens;
+    sum.max = Math.max(sum.max, entry.reasoningTokens);
+    sums.set(entry.modelId, sum);
+  }
+  return [...sums.entries()]
+    .filter(([, sum]) => sum.reasoning > 0)
+    .map(([modelId, sum]) => ({
+      modelId,
+      requests: sum.requests,
+      avgReasoningTokens: Math.round(sum.reasoning / sum.requests),
+      maxReasoningTokens: sum.max,
+      share: sum.output > 0 ? Math.min(1, sum.reasoning / sum.output) : null,
+    }))
+    .sort((a, b) => b.avgReasoningTokens - a.avgReasoningTokens || a.modelId.localeCompare(b.modelId));
 }
 
 function modelRows(games: GameFact[], usage: UsageFact[]): ModelDifficulty[] {
