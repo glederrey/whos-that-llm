@@ -1282,6 +1282,11 @@ html[data-theme="dark"] .hit { color: var(--teal); }
 }
 .dialog p { margin-bottom: 18px; }
 .dialog .button-danger { margin-left: auto; }
+.dialog form { display: grid; gap: 14px; }
+.dialog form h2, .dialog form p { margin: 0; }
+.dialog form label { display: grid; gap: 6px; font-size: 14px; font-weight: 500; }
+.dialog form .row { justify-content: flex-end; gap: 8px; }
+.dialog form button:disabled { opacity: 0.45; cursor: not-allowed; }
 .dialog::backdrop { background: rgba(20, 20, 20, 0.5); }
 
 /* Result */

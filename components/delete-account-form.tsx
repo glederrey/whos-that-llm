@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, type FormEvent, type MouseEvent } from "react";
+import { useRef, useState } from "react";
 import { deleteAccount } from "@/app/account/delete/actions";
+import { deleteConfirmed, deleteWord } from "@/lib/delete-confirm";
 
 export function deleteNotice(code: string | undefined): string | null {
   if (code === "confirm") return "Confirm that you want to delete your account.";
@@ -9,62 +10,57 @@ export function deleteNotice(code: string | undefined): string | null {
   return null;
 }
 
-export function DeleteAccountForm({
-  notice,
-  returnTo,
-}: {
-  notice?: string;
-  returnTo: "profile" | "account";
-}) {
-  const [blocked, setBlocked] = useState(false);
+export function DeleteAccountForm({ notice, returnTo }: { notice?: string; returnTo: "profile" | "account" }) {
+  const dialogRef = useRef<HTMLDialogElement>(null);
+  const [typed, setTyped] = useState("");
   const serverNotice = deleteNotice(notice);
 
-  function blockUnchecked(form: HTMLFormElement) {
-    if (returnTo !== "profile") return false;
-    if (new FormData(form).get("confirm") === "yes") return false;
-    setBlocked(true);
-    return true;
+  function open() {
+    setTyped("");
+    dialogRef.current?.showModal();
   }
-
-  function onSubmit(event: FormEvent<HTMLFormElement>) {
-    if (!blockUnchecked(event.currentTarget)) return;
-    event.preventDefault();
-  }
-
-  function onClick(event: MouseEvent<HTMLButtonElement>) {
-    const form = event.currentTarget.form;
-    if (!form || !blockUnchecked(form)) return;
-    event.preventDefault();
-  }
-
-  const shown = blocked ? "Confirm that you want to delete your account." : serverNotice;
 
   return (
-    <form action={deleteAccount} className="card stack" onSubmit={onSubmit}>
-      {returnTo === "profile" ? <h2>Delete account</h2> : null}
-      <p>This removes your profile and picture, and your name on the leaderboard. This cannot be undone.</p>
-      {shown ? (
+    <>
+      {returnTo === "account" ? (
+        <p>This removes your profile and picture, and your name on the leaderboard. This cannot be undone.</p>
+      ) : null}
+      {serverNotice ? (
         <p className="error" role="alert">
-          {shown}
+          {serverNotice}
         </p>
       ) : null}
-      {returnTo === "profile" ? <input type="hidden" name="return" value="profile" /> : null}
-      <label className="check">
-        <input
-          type="checkbox"
-          name="confirm"
-          value="yes"
-          onChange={(event) => {
-            if (event.target.checked) setBlocked(false);
-          }}
-        />
-        I want to delete my account.
-      </label>
       <div>
-        <button className="button-off" type="submit" onClick={onClick}>
+        <button type="button" className="button-off" onClick={open}>
           Delete account
         </button>
       </div>
-    </form>
+      <dialog
+        ref={dialogRef}
+        className="dialog"
+        onClick={(event) => {
+          if (event.target === dialogRef.current) dialogRef.current?.close();
+        }}
+      >
+        <form action={deleteAccount}>
+          <h2>Delete account</h2>
+          <p>This removes your profile and picture, and your name on the leaderboard. This cannot be undone.</p>
+          <input type="hidden" name="confirm" value="yes" />
+          {returnTo === "profile" ? <input type="hidden" name="return" value="profile" /> : null}
+          <label>
+            Type {deleteWord} to confirm
+            <input value={typed} onChange={(event) => setTyped(event.target.value)} autoComplete="off" />
+          </label>
+          <div className="row">
+            <button type="button" className="button-quiet" onClick={() => dialogRef.current?.close()}>
+              Cancel
+            </button>
+            <button type="submit" className="button-off" disabled={!deleteConfirmed(typed)}>
+              Delete account
+            </button>
+          </div>
+        </form>
+      </dialog>
+    </>
   );
 }
