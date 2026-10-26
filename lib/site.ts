@@ -26,7 +26,7 @@ export function siteSocialTitleHtml(name = siteName): string {
 }
 
 /** Pages a searcher should find. Admin, API, auth, and per-game URLs stay out. */
-export const publicPaths = ["/", "/scoring", "/leaderboard", "/statistics", "/why"] as const;
+export const publicPaths = ["/", "/scoring", "/leaderboard", "/statistics", "/models", "/why"] as const;
 
 /** Square PNGs with no color-scheme media query. 48 and 192 are multiples of 48px. */
 export const crawlableFavicons = [
