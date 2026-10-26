@@ -98,11 +98,11 @@ Anyone who holds the token can apply. The dry-run default guards against mistake
 
 **The guard.** The call answers `502` with `{ "error": "..." }` and writes nothing when any catalog page fails, the catalog is empty, or the catalog has fewer than 70% of the roster's available-model count (exactly 70% passes). A write that fails in the database answers `500`.
 
-**Auth.** `Authorization: Bearer <token>`, compared in constant time with `AVAILABILITY_TOKEN`. A missing header, a wrong token, or an unset `AVAILABILITY_TOKEN` all answer `404` with no body, like any admin route. The token is never logged.
+**Auth.** `Authorization: Bearer <token>`, compared in constant time with `API_TOKEN`. A missing header, a wrong token, or an unset `API_TOKEN` all answer `404` with no body, like any admin route. The token is never logged.
 
 **Generate the token.** `openssl rand -hex 32`
 
-**Where to set it.** Vercel project env var `AVAILABILITY_TOKEN` for Production, and the bot's secret store. For dev, put it in `.env.development.local`. `.env.example` lists the name with an empty value. Never commit the value.
+**Where to set it.** Vercel project env var `API_TOKEN` for Production, and the bot's secret store. For dev, put it in `.env.development.local`. `.env.example` lists the name with an empty value. Never commit the value.
 
 **Rotate it.** Generate a new value, set it in both places (Vercel and the bot's secret store), and redeploy. The old token stops working on the redeploy.
 
@@ -110,10 +110,22 @@ Anyone who holds the token can apply. The dry-run default guards against mistake
 
 ```sh
 # Dry run: report only
-curl -X POST -H "Authorization: Bearer $AVAILABILITY_TOKEN" https://<site>/api/admin/availability
+curl -X POST -H "Authorization: Bearer $API_TOKEN" https://<site>/api/admin/availability
 
 # Apply: write the changes
-curl -X POST -H "Authorization: Bearer $AVAILABILITY_TOKEN" "https://<site>/api/admin/availability?apply=true"
+curl -X POST -H "Authorization: Bearer $API_TOKEN" "https://<site>/api/admin/availability?apply=true"
+```
+
+### Expire API
+
+`POST /api/admin/expire-games` gives up every round that is still `active` more than 7 days after `started_at`, in every mode. It is for the bot, once a day. It uses the same give-up as a player, so the score, breakdown and `finished_at` are set the same way, and a round with no message ends with no score. A round whose account was deleted (`user_id` null) is left alone. A call handles at most 100 rounds, oldest first: the next call takes the rest.
+
+It is a dry run unless the query is exactly `?apply=true`. Auth, token generation and rotation are the same as for the Availability API above (`API_TOKEN`, `404` with no body on a missing or wrong token).
+
+It answers `{ applied, found, closed, failed }`. `found` is the number of stale rounds taken in this call, `closed` how many were given up (always `0` on a dry run), `failed` how many could not be closed. A database read that fails answers `500` `{ "error": "database" }`.
+
+```sh
+curl -X POST -H "Authorization: Bearer $API_TOKEN" "https://<site>/api/admin/expire-games?apply=true"
 ```
 
 ## Providers (`/admin/providers`)
