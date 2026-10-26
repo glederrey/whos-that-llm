@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { tokenMatches, wantsApply } from "./availability-request";
+import { tokenMatches, wantsApply } from "./api-request";
 
 test("the right token matches", () => {
   assert.equal(tokenMatches("Bearer secret-token", "secret-token"), true);
