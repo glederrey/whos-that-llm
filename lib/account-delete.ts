@@ -3,6 +3,7 @@ import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { clearedGameLink, clearedUsageLink } from "./anonymize-account";
 import { serviceOrThrow } from "./rounds";
+import { giveUp } from "./rounds-play";
 import { currentUser } from "./session";
 import { createSessionClient } from "./supabase/server";
 
@@ -25,7 +26,22 @@ export async function deleteSignedInAccount(confirmed: boolean): Promise<"confir
   return null;
 }
 
+/** Gives up every open round while the games still carry the user id, which the give-up needs. */
+async function closeOpenGames(client: SupabaseClient, userId: string): Promise<boolean> {
+  const open = await client.from("games").select("id").eq("user_id", userId).eq("status", "active");
+  if (open.error) return false;
+  for (const game of open.data ?? []) {
+    try {
+      if (await giveUp(game.id as string, userId)) return false;
+    } catch {
+      return false;
+    }
+  }
+  return true;
+}
+
 async function anonymizeOwnedRows(client: SupabaseClient, userId: string): Promise<boolean> {
+  if (!(await closeOpenGames(client, userId))) return false;
   const games = await client.from("games").update(clearedGameLink()).eq("user_id", userId);
   if (games.error) return false;
   const usage = await client.from("usage").update(clearedUsageLink()).eq("user_id", userId);
