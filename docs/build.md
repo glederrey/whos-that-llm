@@ -91,7 +91,7 @@ Import server code from `@/lib/rounds`. The `rounds-*` files behind it are an im
 | `SUPABASE_SECRET_KEY` | Server only. The secret key. Bypasses row level security |
 | `OPENROUTER_API_KEY` | Server only |
 | `OPENROUTER_MANAGEMENT_KEY` | Server only. Reads spend for `/admin/costs`. Falls back to the API key. Also a `deploy.yml` secret |
-| `AVAILABILITY_TOKEN` | Server only. Guards `/api/admin/availability` |
+| `API_TOKEN` | Server only. Guards the bot routes `/api/admin/availability` and `/api/admin/expire-games`. Replaces `AVAILABILITY_TOKEN` |
 
 Those names live in untracked env files at the repo root: `.env.development.local` (dev project, loaded by `npm run dev`), `.env.prod.local` (production, loaded by `npm run dev:prod`), and `.env.local` as the shared default. Comments in the file do not matter. The values stay in that file: do not open it to check them, and do not copy them into docs, chat, or git. The file stays untracked. Vercel gets the same names. The secret key and the OpenRouter key are sensitive. Do not prefix `SUPABASE_SECRET_KEY` with `NEXT_PUBLIC_`. Admin is `app_metadata.admin === true` on the signed-in user, not an env var.
 
