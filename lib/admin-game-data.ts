@@ -2,6 +2,7 @@ import "server-only";
 
 import { requireOwner } from "./admin-access";
 import { likePattern, orderTranscript, parseGameSearch, type TranscriptRow } from "./admin-game";
+import { originFlag, originLabel } from "./game-labels";
 import { serviceOrThrow } from "./rounds";
 
 export const gamesPerPage = 10;
@@ -21,7 +22,7 @@ export type GameDetail = {
   game: Record<string, unknown>;
   modelName: string;
   transcript: TranscriptRow[];
-  guesses: { turn: number; guessedModel: string | null; guessedOrigin: string | null; modelCorrect: boolean }[];
+  guesses: { turn: number; guessedModel: string | null; guessedOrigin: { name: string; flag: string } | null; modelCorrect: boolean }[];
   usage: { calls: number; failed: number; inputTokens: number; outputTokens: number; reasoningTokens: number; costUsd: number };
 };
 
@@ -61,19 +62,22 @@ export async function listGames(raw: string | undefined, page: number): Promise<
 export async function loadGame(id: string): Promise<GameDetail | null> {
   await requireOwner();
   const client = serviceOrThrow();
-  const [game, messages, guesses, usage] = await Promise.all([
+  const [game, messages, guesses, usage, origins] = await Promise.all([
     client.from("games").select("*").eq("id", id).maybeSingle(),
     client.from("messages").select("turn, role, content").eq("game_id", id),
     client.from("guesses").select("turn, guessed_model_id, guessed_origin, model_correct").eq("game_id", id).order("turn"),
     client.from("usage").select("input_tokens, output_tokens, reasoning_tokens, cost_usd, error_code").eq("game_id", id),
+    client.from("origins").select("id, name, flag"),
   ]);
-  if (game.error || messages.error || guesses.error || usage.error) throw new Error("Could not read games.");
+  if (game.error || messages.error || guesses.error || usage.error || origins.error) throw new Error("Could not read games.");
   if (!game.data) return null;
   const guessRows = guesses.data ?? [];
   const names = await modelNames([
     game.data.model_id as string,
     ...guessRows.flatMap((row) => (row.guessed_model_id ? [row.guessed_model_id as string] : [])),
   ]);
+  const originById = new Map((origins.data ?? []).map((row) => [row.id as string, { name: row.name as string, flag: row.flag as string }]));
+  const originOf = (origin: string) => originById.get(origin) ?? { name: originLabel(origin), flag: originFlag(origin) };
   const nameOf = (modelId: string) => names.get(modelId) ?? modelId;
   const usageRows = usage.data ?? [];
   const sum = (key: string) => usageRows.reduce((total, row) => total + Number((row as Record<string, unknown>)[key] ?? 0), 0);
@@ -86,7 +90,7 @@ export async function loadGame(id: string): Promise<GameDetail | null> {
     guesses: guessRows.map((row) => ({
       turn: Number(row.turn),
       guessedModel: row.guessed_model_id ? nameOf(row.guessed_model_id as string) : null,
-      guessedOrigin: (row.guessed_origin as string | null) ?? null,
+      guessedOrigin: row.guessed_origin ? originOf(row.guessed_origin as string) : null,
       modelCorrect: Boolean(row.model_correct),
     })),
     usage: {

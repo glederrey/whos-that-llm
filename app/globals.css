@@ -322,7 +322,6 @@ a.button, a.button-quiet { display: inline-block; text-decoration: none; }
 .game-facts dd { margin: 4px 0 0; overflow-wrap: anywhere; }
 .game-turn { display: grid; gap: 6px; }
 .turn-label { color: var(--mute); font-size: 12px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.04em; }
-.game-explain { margin: 0; padding-left: 20px; display: grid; gap: 6px; }
 .flag { width: 24px; height: 16px; border-radius: 2px; flex: none; }
 
 /* Forms */

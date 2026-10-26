@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { Figures } from "@/components/admin-panels";
 import { MessageBubble } from "@/components/message-bubble";
+import { Twemoji } from "@/components/twemoji";
 import { SectionNav } from "@/components/section-nav";
 import { requireOwner } from "@/lib/admin-access";
 import { parseGameSearch, scoreLines, utcStamp } from "@/lib/admin-game";
@@ -21,7 +22,6 @@ export default async function GamePage({ params }: { params: Promise<{ id: strin
   const status = String(game.status);
   const hints = Array.isArray(game.hints) ? (game.hints as string[]) : [];
   const lines = scoreLines(game.score_breakdown);
-  const explanation = Array.isArray(game.score_explanation) ? (game.score_explanation as string[]) : [];
   const tokens = usage.inputTokens + usage.outputTokens + usage.reasoningTokens;
   const details: [string, string][] = [
     ["Mode", `${game.game_mode}${game.pool_key ? ` (${game.pool_key})` : ""}`],
@@ -101,7 +101,16 @@ export default async function GamePage({ params }: { params: Promise<{ id: strin
                 <tr key={guess.turn}>
                   <td>{guess.turn}</td>
                   <td>{guess.guessedModel ?? "–"}</td>
-                  <td>{guess.guessedOrigin ?? "–"}</td>
+                  <td>
+                    {guess.guessedOrigin ? (
+                      <span className="row">
+                        <Twemoji emoji={guess.guessedOrigin.flag} />
+                        {guess.guessedOrigin.name}
+                      </span>
+                    ) : (
+                      "–"
+                    )}
+                  </td>
                   <td>
                     <span className={`pill status-${guess.modelCorrect ? "solved" : "miss"}`}>{guess.modelCorrect ? "Right" : "Wrong"}</span>
                   </td>
@@ -112,7 +121,7 @@ export default async function GamePage({ params }: { params: Promise<{ id: strin
         </div>
       )}
 
-      {lines.length > 0 || explanation.length > 0 ? (
+      {lines.length > 0 ? (
         <>
           <h2>Score</h2>
           {lines.length > 0 ? (
@@ -136,13 +145,6 @@ export default async function GamePage({ params }: { params: Promise<{ id: strin
                 </tbody>
               </table>
             </div>
-          ) : null}
-          {explanation.length > 0 ? (
-            <ul className="muted game-explain">
-              {explanation.map((line) => (
-                <li key={line}>{line}</li>
-              ))}
-            </ul>
           ) : null}
         </>
       ) : null}
