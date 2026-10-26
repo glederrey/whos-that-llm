@@ -385,6 +385,6 @@ Any URL that does not exist, and any `/admin` URL for a visitor who is not the o
 
 `/admin/modes` shows each game category, including one with zero games: games, open, finished, solved, solve rate, and give-ups. The Category mode is one row, not one per category.
 
-The admin pages are `/admin`, `/admin/costs`, `/admin/modes`, `/admin/models`, `/admin/categories`, `/admin/companies`, `/admin/origins`, `/admin/providers`, and `/admin/chat`. Each is specified in [Admin](admin.md): the roster, categories, companies, origins, providers, and the owner chat. Scoring settings are not on these pages.
+The admin pages are `/admin`, `/admin/costs`, `/admin/modes`, `/admin/games` (and `/admin/games/[id]`), `/admin/models`, `/admin/categories`, `/admin/companies`, `/admin/origins`, `/admin/providers`, and `/admin/chat`. Each is specified in [Admin](admin.md): the roster, categories, companies, origins, providers, the game inspector, and the owner chat. Scoring settings are not on these pages.
 
 There is no pause switch, confusion page or transcript page.
