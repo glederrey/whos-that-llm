@@ -6,10 +6,10 @@ function dayMonth(date: string): string {
 }
 
 /**
- * Games per UTC day, stacked: solved, failed, given up. A game in none of the three (a round still open,
- * which only the admin chart counts) is the rest of the bar.
+ * Games per UTC day, stacked: solved, failed, given up, and open (a round still being played, which only the
+ * admin chart counts). The legend lists Open only when `showOpen` is set.
  */
-export function DayBars({ days, label, note }: { days: DayCount[]; label: string; note: string }) {
+export function DayBars({ days, label, note, showOpen = false }: { days: DayCount[]; label: string; note: string; showOpen?: boolean }) {
   const peak = Math.max(1, ...days.map((day) => day.games));
   const share = (part: number, whole: number) => (whole ? `${(part / whole) * 100}%` : 0);
   return (
@@ -19,7 +19,7 @@ export function DayBars({ days, label, note }: { days: DayCount[]; label: string
           <div
             key={day.date}
             className="daybar"
-            title={`${dayMonth(day.date)}: ${day.games} games, ${day.solved} solved, ${day.missed} failed, ${day.givenUp} given up`}
+            title={`${dayMonth(day.date)}: ${day.games} games, ${day.solved} solved, ${day.missed} failed, ${day.givenUp} given up${showOpen ? `, ${day.open} open` : ""}`}
           >
             <span className="daybar-count">{day.games}</span>
             <span className="daybar-track">
@@ -27,6 +27,7 @@ export function DayBars({ days, label, note }: { days: DayCount[]; label: string
                 <i className="daybar-solved" style={{ height: share(day.solved, day.games) }} />
                 <i className="daybar-failed" style={{ height: share(day.missed, day.games) }} />
                 <i className="daybar-gave-up" style={{ height: share(day.givenUp, day.games) }} />
+                <i className="daybar-open" style={{ height: share(day.open, day.games) }} />
               </span>
             </span>
             <span className="daybar-date">{dayMonth(day.date)}</span>
@@ -47,6 +48,12 @@ export function DayBars({ days, label, note }: { days: DayCount[]; label: string
             <i className="daybar-gave-up" />
             Given up
           </li>
+          {showOpen ? (
+            <li>
+              <i className="daybar-open" />
+              Open
+            </li>
+          ) : null}
         </ul>
         <p className="muted">{note}</p>
       </div>

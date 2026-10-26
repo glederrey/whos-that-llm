@@ -47,7 +47,8 @@ export default async function AdminHomePage() {
       <DayBars
         days={insights.days}
         label="Games started per UTC day, last 14 days, in every mode"
-        note="Games started per UTC day, last 14 days, in every mode. The light part is still open."
+        note="Games started per UTC day, last 14 days, in every mode. The teal part is still open."
+        showOpen
       />
 
       <h2>Players per day</h2>
