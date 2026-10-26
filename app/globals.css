@@ -2297,4 +2297,9 @@ html[data-theme="dark"] .emoji-picker { color-scheme: dark; }
 @media (max-width: 560px) {
   .model-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
   .model-card { padding: 12px; gap: 6px; }
+  .model-name { font-size: clamp(13px, 4vw, 16px); }
+  .model-facts { gap: 4px 8px; font-size: clamp(11px, 3.4vw, 14px); }
+  .model-fact { gap: 4px; }
+  .model-link { font-size: clamp(10px, 3.3vw, 14px); gap: 3px; white-space: nowrap; }
+  .model-link svg { width: 1.1em; height: 1.1em; }
 }
