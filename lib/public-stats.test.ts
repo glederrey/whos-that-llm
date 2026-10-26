@@ -481,3 +481,16 @@ test("the public stats page does not read prices, billing, or account rows", () 
   assert.equal(page.includes("requireOwner"), false);
   assert.doesNotMatch(loader, /\.(?:eq|neq|not|filter|is|in|gt|gte|lt|lte)\(/);
 });
+
+test("the public day bars count a given-up round and leave an open one out", () => {
+  const stats = computePublicStats(
+    [game("1", "opus", "given_up", 0), game("2", "opus", "solved", 3), game("3", "opus", "active", 1)],
+    [],
+    [],
+    [],
+    {},
+    now,
+  );
+  const today = stats.days.find((day) => day.date === "2026-10-10");
+  assert.deepEqual(today, { date: "2026-10-10", games: 2, solved: 1, missed: 0, givenUp: 1, open: 0 });
+});

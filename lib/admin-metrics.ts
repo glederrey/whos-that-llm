@@ -48,7 +48,7 @@ export type ReasoningRow = {
   share: number | null;
 };
 
-export type DayCount = { date: string; games: number; solved: number; missed: number; givenUp: number };
+export type DayCount = { date: string; games: number; solved: number; missed: number; givenUp: number; open: number };
 
 export type GameMetrics = {
   games: number;
@@ -273,7 +273,7 @@ export function compareDifficulty(a: ModelDifficulty, b: ModelDifficulty): numbe
 }
 
 export function dayRows(games: { status: string; startedAt: string }[], days: string[]): DayCount[] {
-  const rows = new Map(days.map((date) => [date, { date, games: 0, solved: 0, missed: 0, givenUp: 0 }]));
+  const rows = new Map(days.map((date) => [date, { date, games: 0, solved: 0, missed: 0, givenUp: 0, open: 0 }]));
   for (const game of games) {
     const row = rows.get(utcDate(game.startedAt));
     if (!row) continue;
@@ -281,6 +281,7 @@ export function dayRows(games: { status: string; startedAt: string }[], days: st
     if (game.status === SOLVED) row.solved += 1;
     else if (game.status === MISSED) row.missed += 1;
     else if (game.status === GAVE_UP) row.givenUp += 1;
+    else if (game.status === OPEN) row.open += 1;
   }
   return days.map((date) => rows.get(date)!);
 }

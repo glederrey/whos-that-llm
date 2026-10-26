@@ -18,7 +18,7 @@ A subnav sits on every admin page: **Stats, Costs, Modes, Categories, Companies,
 
 Six counts, centered in their cards: models in the roster, active models, players, games today (UTC), total games, and total cost (every usage row, including calls outside a round). Players are accounts that have started a game. Games today counts games with `finished_at` today, like the home page. The page does not load OpenRouter. It does not repeat the public Statistics page (solve rates, hardest models); it shows what only the owner needs:
 
-- **Games over time**: every game started per UTC day in any mode, stacked solved, failed and given up. A round still open is the light rest of the bar.
+- **Games over time**: every game started per UTC day in any mode, stacked solved, failed, given up and open. A round still open is the teal part of the bar; the public Statistics chart leaves open rounds out.
 - **Players per day**: new accounts (`profiles.created_at`), accounts that started a game, and games started.
 - **Rounds per player**: accounts by finished games (1, 2-5, 6-20, 21+) and how many played on two UTC days or more.
 - **Open and abandoned rounds**: rounds still open by mode and age (under a day, 1 to 7 days, over 7 days).
