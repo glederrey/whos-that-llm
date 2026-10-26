@@ -1,12 +1,15 @@
 import { notFound } from "next/navigation";
+import { Figures } from "@/components/admin-panels";
 import { MessageBubble } from "@/components/message-bubble";
 import { SectionNav } from "@/components/section-nav";
 import { requireOwner } from "@/lib/admin-access";
-import { parseGameSearch } from "@/lib/admin-game";
+import { parseGameSearch, scoreLines, utcStamp } from "@/lib/admin-game";
 import { loadGame } from "@/lib/admin-game-data";
 import { usd } from "@/lib/admin-metrics";
 
 export const dynamic = "force-dynamic";
+
+const statusLabel: Record<string, string> = { active: "Open", solved: "Solved", miss: "Failed", given_up: "Given up" };
 
 export default async function GamePage({ params }: { params: Promise<{ id: string }> }) {
   await requireOwner();
@@ -15,52 +18,67 @@ export default async function GamePage({ params }: { params: Promise<{ id: strin
   const detail = await loadGame(search.id);
   if (!detail) notFound();
   const { game, usage } = detail;
+  const status = String(game.status);
   const hints = Array.isArray(game.hints) ? (game.hints as string[]) : [];
-  const breakdown = game.score_breakdown ? JSON.stringify(game.score_breakdown, null, 2) : null;
+  const lines = scoreLines(game.score_breakdown);
   const explanation = Array.isArray(game.score_explanation) ? (game.score_explanation as string[]) : [];
-  const facts: [string, string][] = [
-    ["Game id", String(game.id)],
-    ["Player", String(game.username ?? "Deleted account")],
+  const tokens = usage.inputTokens + usage.outputTokens + usage.reasoningTokens;
+  const details: [string, string][] = [
     ["Mode", `${game.game_mode}${game.pool_key ? ` (${game.pool_key})` : ""}`],
-    ["Hidden model", detail.modelName],
-    ["Status", String(game.status)],
-    ["Started", String(game.started_at)],
-    ["Finished", game.finished_at ? String(game.finished_at) : "still open"],
-    ["Messages", String(game.message_count)],
-    ["Score", game.score === null || game.score === undefined ? "–" : String(game.score)],
-    ["Hints bought", hints.length > 0 ? hints.join(", ") : "none"],
-    ["No hints", game.no_hint ? "yes" : "no"],
-    ["Ledger", `${usage.calls} calls, ${usage.failed} failed, ${usage.inputTokens + usage.outputTokens + usage.reasoningTokens} tokens, ${usd(usage.costUsd)}`],
+    ["Started", utcStamp(String(game.started_at))],
+    ["Finished", game.finished_at ? utcStamp(String(game.finished_at)) : "Still open"],
+    ["Hints bought", hints.length > 0 ? hints.join(", ") : "None"],
+    ["No hints", game.no_hint ? "Yes" : "No"],
+    ["Ledger", `${usage.calls} calls, ${usage.failed} failed, ${tokens.toLocaleString("en-US")} tokens, ${usd(usage.costUsd)}`],
   ];
 
   return (
     <div className="stack">
       <SectionNav />
       <p>
-        <a href="/admin/games">Back to games</a>
+        <a href="/admin/games">← Back to games</a>
       </p>
-      <h1>Game</h1>
-      <div className="card roster-card">
-        <table className="roster compact">
-          <tbody>
-            {facts.map(([label, value]) => (
-              <tr key={label}>
-                <th scope="row">{label}</th>
-                <td>{value}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      <header className="game-head">
+        <h1>{detail.modelName}</h1>
+        <span className={`pill status-${status}`}>{statusLabel[status] ?? status}</span>
+      </header>
+      <p className="muted game-sub">
+        Played by {String(game.username ?? "a deleted account")} · <code>{String(game.id)}</code>
+      </p>
+
+      <Figures
+        items={[
+          { label: "Score", value: game.score === null || game.score === undefined ? "–" : Number(game.score).toLocaleString("en-US") },
+          { label: "Messages", value: String(game.message_count) },
+          { label: "Guesses", value: String(detail.guesses.length) },
+        ]}
+      />
+
+      <div className="card">
+        <dl className="game-facts">
+          {details.map(([label, value]) => (
+            <div key={label}>
+              <dt>{label}</dt>
+              <dd>{value}</dd>
+            </div>
+          ))}
+        </dl>
       </div>
 
       <h2>Conversation</h2>
       {detail.transcript.length === 0 ? (
         <p className="muted">No message was stored for this round.</p>
       ) : (
-        <div className="transcript">
-          {detail.transcript.map((message) => (
-            <MessageBubble key={`${message.turn}-${message.role}`} role={message.role === "user" ? "user" : "assistant"} content={message.content} />
-          ))}
+        <div className="card transcript">
+          {detail.transcript.map((message, index) => {
+            const first = index === 0 || detail.transcript[index - 1].turn !== message.turn;
+            return (
+              <div key={`${message.turn}-${message.role}`} className="game-turn">
+                {first ? <span className="turn-label">Message {message.turn}</span> : null}
+                <MessageBubble role={message.role === "user" ? "user" : "assistant"} content={message.content} />
+              </div>
+            );
+          })}
         </div>
       )}
 
@@ -75,7 +93,7 @@ export default async function GamePage({ params }: { params: Promise<{ id: strin
                 <th>Turn</th>
                 <th>Guessed model</th>
                 <th>Origin</th>
-                <th>Right</th>
+                <th>Result</th>
               </tr>
             </thead>
             <tbody>
@@ -84,7 +102,9 @@ export default async function GamePage({ params }: { params: Promise<{ id: strin
                   <td>{guess.turn}</td>
                   <td>{guess.guessedModel ?? "–"}</td>
                   <td>{guess.guessedOrigin ?? "–"}</td>
-                  <td>{guess.modelCorrect ? "yes" : "no"}</td>
+                  <td>
+                    <span className={`pill status-${guess.modelCorrect ? "solved" : "miss"}`}>{guess.modelCorrect ? "Right" : "Wrong"}</span>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -92,15 +112,38 @@ export default async function GamePage({ params }: { params: Promise<{ id: strin
         </div>
       )}
 
-      {breakdown || explanation.length > 0 ? (
+      {lines.length > 0 || explanation.length > 0 ? (
         <>
           <h2>Score</h2>
-          {explanation.map((line) => (
-            <p key={line} className="muted">
-              {line}
-            </p>
-          ))}
-          {breakdown ? <pre className="card">{breakdown}</pre> : null}
+          {lines.length > 0 ? (
+            <div className="card roster-card">
+              <table className="roster compact">
+                <thead>
+                  <tr>
+                    <th>Step</th>
+                    <th>Points</th>
+                    <th>Multiplier</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {lines.map((line) => (
+                    <tr key={line.label}>
+                      <td>{line.label}</td>
+                      <td>{line.points === null ? "–" : line.points.toLocaleString("en-US")}</td>
+                      <td>{line.multiplier ?? "–"}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : null}
+          {explanation.length > 0 ? (
+            <ul className="muted game-explain">
+              {explanation.map((line) => (
+                <li key={line}>{line}</li>
+              ))}
+            </ul>
+          ) : null}
         </>
       ) : null}
     </div>

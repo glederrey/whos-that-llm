@@ -5,6 +5,8 @@ import { gamesPerPage, listGames } from "@/lib/admin-game-data";
 
 export const dynamic = "force-dynamic";
 
+const statusLabel: Record<string, string> = { active: "Open", solved: "Solved", miss: "Failed", given_up: "Given up" };
+
 export default async function GamesPage({ searchParams }: { searchParams: Promise<{ q?: string; page?: string }> }) {
   await requireOwner();
   const { q, page: rawPage } = await searchParams;
@@ -68,7 +70,9 @@ export default async function GamesPage({ searchParams }: { searchParams: Promis
                   <td>{row.username ?? "Deleted account"}</td>
                   <td>{row.gameMode}</td>
                   <td>{row.modelName}</td>
-                  <td>{row.status}</td>
+                  <td>
+                    <span className={`pill status-${row.status}`}>{statusLabel[row.status] ?? row.status}</span>
+                  </td>
                   <td>{row.messageCount}</td>
                   <td>{row.score ?? "–"}</td>
                   <td>

@@ -27,3 +27,23 @@ export function pageNumber(raw: string | undefined): number {
   const page = Number(raw);
   return Number.isInteger(page) && page >= 1 && page <= 100_000 ? page : 1;
 }
+
+/** "2026-10-24T16:39:46.359601+00:00" as "2026-10-24 16:39:46 UTC". */
+export function utcStamp(value: string): string {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return `${date.toISOString().slice(0, 19).replace("T", " ")} UTC`;
+}
+
+export type ScoreLine = { label: string; points: number | null; multiplier: string | null };
+
+/** The stored breakdown, keeping only well-formed lines. */
+export function scoreLines(raw: unknown): ScoreLine[] {
+  if (!Array.isArray(raw)) return [];
+  return raw.flatMap((item) => {
+    if (!item || typeof item !== "object") return [];
+    const { label, points, multiplier } = item as Record<string, unknown>;
+    if (typeof label !== "string") return [];
+    return [{ label, points: typeof points === "number" ? points : null, multiplier: typeof multiplier === "string" ? multiplier : null }];
+  });
+}
