@@ -1,6 +1,6 @@
 # Admin
 
-Nine pages, all behind one owner check: `/admin`, `/admin/costs`, `/admin/modes`, `/admin/categories`, `/admin/companies`, `/admin/origins`, `/admin/models`, `/admin/providers`, and `/admin/chat`. There is no other admin surface.
+Eleven pages, all behind one owner check: `/admin`, `/admin/costs`, `/admin/modes`, `/admin/games`, `/admin/games/[id]`, `/admin/categories`, `/admin/companies`, `/admin/origins`, `/admin/models`, `/admin/providers`, and `/admin/chat`. There is no other admin surface.
 
 The server reads the signed-in Supabase user and allows admin only when `app_metadata.admin === true`. Players cannot write `app_metadata`. A profile edit cannot grant access. There is no role column and no client flag. A missing flag matches nobody.
 
@@ -12,7 +12,7 @@ Google and email/password both work when that session has the flag. A second per
 
 Roster changes are server actions. Each one repeats the check, then writes with the server key. anon and authenticated cannot insert, update, or delete `models`, `companies`, `categories`, or `model_categories`. The counts on `/admin` are not a public function.
 
-A subnav sits on every admin page: **Stats, Costs, Modes, Categories, Companies, Origins, Models, Providers, Chat.** (**Stats** is `/admin`.) It is part of the admin layout, so it never appears on the public site.
+A subnav sits on every admin page: **Stats, Costs, Modes, Games, Categories, Companies, Origins, Models, Providers, Chat.** (**Stats** is `/admin`.) It is part of the admin layout, so it never appears on the public site.
 
 ## Stats (`/admin`)
 
@@ -119,6 +119,10 @@ curl -X POST -H "Authorization: Bearer $AVAILABILITY_TOKEN" "https://<site>/api/
 ## Providers (`/admin/providers`)
 
 Two tables, **Blacklisted** and **Trusted**, both sortable, 10 rows per page. The only action is **Deblacklist**, which sets a blacklisted provider back to trusted. There is no way to blacklist a provider by hand on this page.
+
+## Games (`/admin/games`)
+
+Read-only. Lists the latest games, 10 per page with Previous and Next centered under the table, with start time, player, mode, hidden model, status, messages and score. A search box takes a game id (exact) or part of a username. **Inspect** opens `/admin/games/[id]`: the facts of the round (player, mode, hidden model, status, times, hints bought, ledger totals), the whole conversation turn by turn, the guesses (model, and origin with its flag), and the score breakdown as a table. It is for checking a strange score or whether a player broke the guardrails. Everything is read on the server with the server key after the owner check. An id that is not a game, or not a uuid, is `404`.
 
 ## Chat (`/admin/chat`)
 

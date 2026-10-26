@@ -308,6 +308,21 @@ a.button, a.button-quiet { display: inline-block; text-decoration: none; }
   background: var(--soft);
 }
 .tag { color: var(--mute); }
+
+/* Admin game inspector */
+.game-head { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.game-head h1 { margin: 0; }
+.game-sub { margin: 0; }
+.game-sub code { font-size: 13px; word-break: break-all; }
+.pill.status-solved { color: #fff; background: var(--bar-solved); border-color: var(--bar-solved); }
+.pill.status-miss { color: #fff; background: var(--bar-failed); border-color: var(--bar-failed); }
+.pill.status-given_up { color: #fff; background: var(--bar-gave-up); border-color: var(--bar-gave-up); }
+.pill.status-active { color: #062e2e; background: var(--teal); border-color: var(--teal); }
+.game-facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px 24px; margin: 0; }
+.game-facts dt { color: var(--mute); font-size: 12px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.04em; }
+.game-facts dd { margin: 4px 0 0; overflow-wrap: anywhere; }
+.game-turn { display: grid; gap: 6px; }
+.turn-label { color: var(--mute); font-size: 12px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.04em; }
 .flag { width: 24px; height: 16px; border-radius: 2px; flex: none; }
 
 /* Forms */
