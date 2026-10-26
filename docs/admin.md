@@ -122,7 +122,7 @@ curl -X POST -H "Authorization: Bearer $API_TOKEN" "https://<site>/api/admin/ava
 
 It is a dry run unless the query is exactly `?apply=true`. Auth, token generation and rotation are the same as for the Availability API above (`API_TOKEN`, `404` with no body on a missing or wrong token).
 
-It answers `{ applied, found, closed, failed }`. `found` is the number of stale rounds taken in this call, `closed` how many were given up (always `0` on a dry run), `failed` how many could not be closed. A database read that fails answers `500` `{ "error": "database" }`.
+It answers `{ applied, cutoff, open, oldestOpenStartedAt, found, closed, failed }`. `cutoff` is the instant before which a round counts as stale (now minus 7 days). `open` is every round still `active`, stale or not. `oldestOpenStartedAt` is when the oldest of them started, or `null` with none. `found` is only the stale rounds taken in this call (at most 100), so it is `0` while every open round is younger than 7 days. `closed` is how many were given up (always `0` on a dry run), `failed` how many could not be closed. A database read that fails answers `500` `{ "error": "database" }`.
 
 ```sh
 curl -X POST -H "Authorization: Bearer $API_TOKEN" "https://<site>/api/admin/expire-games?apply=true"
