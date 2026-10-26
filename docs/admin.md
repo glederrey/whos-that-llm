@@ -122,7 +122,7 @@ Two tables, **Blacklisted** and **Trusted**, both sortable, 10 rows per page. Th
 
 ## Games (`/admin/games`)
 
-Read-only. Lists the 50 latest games with start time, player, mode, hidden model, status, messages and score. A search box takes a game id (exact) or part of a username. **Inspect** opens `/admin/games/[id]`: the facts of the round (player, mode, hidden model, status, times, hints bought, ledger totals), the whole conversation turn by turn, the guesses, and the score breakdown with its explanation. It is for checking a strange score or whether a player broke the guardrails. Everything is read on the server with the server key after the owner check. An id that is not a game, or not a uuid, is `404`.
+Read-only. Lists the latest games, 10 per page with Previous and Next centered under the table, with start time, player, mode, hidden model, status, messages and score. A search box takes a game id (exact) or part of a username. **Inspect** opens `/admin/games/[id]`: the facts of the round (player, mode, hidden model, status, times, hints bought, ledger totals), the whole conversation turn by turn, the guesses (model and origin), and the score breakdown with its explanation. It is for checking a strange score or whether a player broke the guardrails. Everything is read on the server with the server key after the owner check. An id that is not a game, or not a uuid, is `404`.
 
 ## Chat (`/admin/chat`)
 

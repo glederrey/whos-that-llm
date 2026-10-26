@@ -4,7 +4,7 @@ import { requireOwner } from "./admin-access";
 import { likePattern, orderTranscript, parseGameSearch, type TranscriptRow } from "./admin-game";
 import { serviceOrThrow } from "./rounds";
 
-const listLimit = 50;
+export const gamesPerPage = 10;
 
 export type GameListRow = {
   id: string;
@@ -21,7 +21,7 @@ export type GameDetail = {
   game: Record<string, unknown>;
   modelName: string;
   transcript: TranscriptRow[];
-  guesses: { turn: number; guessedModel: string | null; guessedRegion: string | null; modelCorrect: boolean }[];
+  guesses: { turn: number; guessedModel: string | null; guessedOrigin: string | null; modelCorrect: boolean }[];
   usage: { calls: number; failed: number; inputTokens: number; outputTokens: number; reasoningTokens: number; costUsd: number };
 };
 
@@ -31,20 +31,21 @@ async function modelNames(ids: string[]): Promise<Map<string, string>> {
   return new Map((data ?? []).map((row) => [row.id as string, row.name as string]));
 }
 
-export async function listGames(raw: string | undefined): Promise<GameListRow[]> {
+export async function listGames(raw: string | undefined, page: number): Promise<{ rows: GameListRow[]; total: number }> {
   await requireOwner();
   const search = parseGameSearch(raw);
   let query = serviceOrThrow()
     .from("games")
-    .select("id, username, game_mode, model_id, status, message_count, score, started_at")
+    .select("id, username, game_mode, model_id, status, message_count, score, started_at", { count: "exact" })
     .order("started_at", { ascending: false })
-    .limit(listLimit);
+    .order("id")
+    .range((page - 1) * gamesPerPage, page * gamesPerPage - 1);
   if (search.kind === "id") query = query.eq("id", search.id);
   if (search.kind === "username") query = query.ilike("username", likePattern(search.text));
-  const { data, error } = await query;
+  const { data, error, count } = await query;
   if (error) throw new Error("Could not read games.");
   const names = await modelNames((data ?? []).map((row) => row.model_id as string));
-  return (data ?? []).map((row) => ({
+  const rows = (data ?? []).map((row) => ({
     id: row.id as string,
     username: (row.username as string | null) ?? null,
     gameMode: row.game_mode as string,
@@ -54,6 +55,7 @@ export async function listGames(raw: string | undefined): Promise<GameListRow[]>
     score: row.score === null || row.score === undefined ? null : Number(row.score),
     startedAt: row.started_at as string,
   }));
+  return { rows, total: count ?? rows.length };
 }
 
 export async function loadGame(id: string): Promise<GameDetail | null> {
@@ -62,7 +64,7 @@ export async function loadGame(id: string): Promise<GameDetail | null> {
   const [game, messages, guesses, usage] = await Promise.all([
     client.from("games").select("*").eq("id", id).maybeSingle(),
     client.from("messages").select("turn, role, content").eq("game_id", id),
-    client.from("guesses").select("turn, guessed_model_id, guessed_region, model_correct").eq("game_id", id).order("turn"),
+    client.from("guesses").select("turn, guessed_model_id, guessed_origin, model_correct").eq("game_id", id).order("turn"),
     client.from("usage").select("input_tokens, output_tokens, reasoning_tokens, cost_usd, error_code").eq("game_id", id),
   ]);
   if (game.error || messages.error || guesses.error || usage.error) throw new Error("Could not read games.");
@@ -84,7 +86,7 @@ export async function loadGame(id: string): Promise<GameDetail | null> {
     guesses: guessRows.map((row) => ({
       turn: Number(row.turn),
       guessedModel: row.guessed_model_id ? nameOf(row.guessed_model_id as string) : null,
-      guessedRegion: (row.guessed_region as string | null) ?? null,
+      guessedOrigin: (row.guessed_origin as string | null) ?? null,
       modelCorrect: Boolean(row.model_correct),
     })),
     usage: {

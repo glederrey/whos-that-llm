@@ -21,3 +21,9 @@ export type TranscriptRow = { turn: number; role: string; content: string };
 export function orderTranscript<T extends { turn: number; role: string }>(rows: T[]): T[] {
   return [...rows].sort((a, b) => a.turn - b.turn || (a.role === b.role ? 0 : a.role === "user" ? -1 : 1));
 }
+
+/** The `page` query value as a page number from 1. Anything else is page 1. */
+export function pageNumber(raw: string | undefined): number {
+  const page = Number(raw);
+  return Number.isInteger(page) && page >= 1 && page <= 100_000 ? page : 1;
+}

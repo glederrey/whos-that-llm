@@ -1,13 +1,27 @@
 import { SectionNav } from "@/components/section-nav";
 import { requireOwner } from "@/lib/admin-access";
-import { listGames } from "@/lib/admin-game-data";
+import { pageNumber } from "@/lib/admin-game";
+import { gamesPerPage, listGames } from "@/lib/admin-game-data";
 
 export const dynamic = "force-dynamic";
 
-export default async function GamesPage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
+export default async function GamesPage({ searchParams }: { searchParams: Promise<{ q?: string; page?: string }> }) {
   await requireOwner();
-  const { q } = await searchParams;
-  const rows = await listGames(q);
+  const { q, page: rawPage } = await searchParams;
+  const requested = pageNumber(rawPage);
+  const pageCount = (total: number) => Math.max(1, Math.ceil(total / gamesPerPage));
+  let { rows, total } = await listGames(q, requested);
+  // A page past the end (a stale link) shows the last one.
+  const last = pageCount(total);
+  if (requested > last) ({ rows, total } = await listGames(q, last));
+  const page = Math.min(requested, last);
+  const href = (target: number) => {
+    const params = new URLSearchParams();
+    if (q?.trim()) params.set("q", q.trim());
+    if (target > 1) params.set("page", String(target));
+    const query = params.toString();
+    return `/admin/games${query ? `?${query}` : ""}`;
+  };
 
   return (
     <div className="stack">
@@ -15,14 +29,16 @@ export default async function GamesPage({ searchParams }: { searchParams: Promis
       <h1>Games</h1>
       <p className="muted">
         Open a round to read its whole conversation. Search by game id, or by part of a username. Without a search, the
-        50 latest games.
+        latest games, 10 per page.
       </p>
       <form method="get" className="chat-search">
         <label className="chat-query">
           <span>Search</span>
           <input type="search" name="q" defaultValue={q ?? ""} maxLength={100} placeholder="Game id or username" />
         </label>
-        <button type="submit">Search</button>
+        <button type="submit" className="button">
+          Search
+        </button>
       </form>
       <div className="card roster-card">
         <table className="roster compact">
@@ -63,6 +79,27 @@ export default async function GamesPage({ searchParams }: { searchParams: Promis
             )}
           </tbody>
         </table>
+      </div>
+      <div className="row pager">
+        <div className="row">
+          {page > 1 ? (
+            <a className="button-quiet" href={href(page - 1)}>
+              Previous
+            </a>
+          ) : (
+            <span className="button-quiet is-disabled">Previous</span>
+          )}
+          <span className="muted">
+            Page {page} of {last}
+          </span>
+          {page < last ? (
+            <a className="button-quiet" href={href(page + 1)}>
+              Next
+            </a>
+          ) : (
+            <span className="button-quiet is-disabled">Next</span>
+          )}
+        </div>
       </div>
     </div>
   );

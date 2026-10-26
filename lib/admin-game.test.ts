@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { likePattern, orderTranscript, parseGameSearch } from "./admin-game";
+import { likePattern, orderTranscript, pageNumber, parseGameSearch } from "./admin-game";
 
 test("a game id is an exact search, other text is a username", () => {
   assert.deepEqual(parseGameSearch(undefined), { kind: "all" });
@@ -27,4 +27,9 @@ test("the transcript reads turn by turn, player first", () => {
     orderTranscript(rows).map((row) => `${row.turn}${row.role[0]}`),
     ["1u", "1a", "2u", "2a"],
   );
+});
+
+test("a bad page number is page 1", () => {
+  assert.equal(pageNumber("3"), 3);
+  for (const raw of [undefined, "", "0", "-2", "1.5", "abc", "999999999"]) assert.equal(pageNumber(raw), 1);
 });

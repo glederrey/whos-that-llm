@@ -74,7 +74,7 @@ export default async function GamePage({ params }: { params: Promise<{ id: strin
               <tr>
                 <th>Turn</th>
                 <th>Guessed model</th>
-                <th>Region</th>
+                <th>Origin</th>
                 <th>Right</th>
               </tr>
             </thead>
@@ -83,7 +83,7 @@ export default async function GamePage({ params }: { params: Promise<{ id: strin
                 <tr key={guess.turn}>
                   <td>{guess.turn}</td>
                   <td>{guess.guessedModel ?? "–"}</td>
-                  <td>{guess.guessedRegion ?? "–"}</td>
+                  <td>{guess.guessedOrigin ?? "–"}</td>
                   <td>{guess.modelCorrect ? "yes" : "no"}</td>
                 </tr>
               ))}
