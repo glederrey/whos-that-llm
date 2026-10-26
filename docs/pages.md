@@ -71,7 +71,7 @@ A tip does not raise the hourly cap, change a score, or put a name on the leader
 
 Purpose: present the game. Public. Playing requires a session, and that happens on `/play`. The leaderboard does not.
 
-The header keeps the name and a logo the same height as that text, plus **Scoring** (links to `/scoring`), **Leaderboard**, **Statistics** (links to `/statistics`), **Models** (links to `/models`), **Why this game?** (links to `/why`), and the account menu.
+The header keeps the name and a logo the same height as that text, plus **Scoring** (links to `/scoring`), **Leaderboard**, **Statistics** (links to `/statistics`), **Models** (links to `/models`, with a small robot-head icon like the logo), **Why this game?** (links to `/why`), and the account menu.
 
 Two columns. On a narrow screen they stack.
 
@@ -322,9 +322,9 @@ The landing top 5 uses this same bar and the same rows, stopped at 5. Columns: r
 
 Public. No session. Linked from the header. **Back** returns home. The title is **Models**, then a line that says every model that can be hiding in a round links to OpenRouter.
 
-A search box (rounded, full width) filters as the player types, on the model name, the company, the origin, the size, or the year, and a count sits next to it (`138 models`, or `3 of 138 models` while filtered). With no match the page says **No model matches that search.**
+A search box (the same style as the other inputs, full width) filters as the player types, on the model name, the company, the origin, the size, or the year, and a count sits next to it (`138 models`, or `3 of 138 models` while filtered). With no match the page says **No model matches that search.**
 
-The models are grouped by company, companies A to Z, each with its logo and its number of models. Inside a company the newest model comes first. Each model is a card with its name, then its origin (flag and name), its release year and its size, then **View on OpenRouter**, which opens `https://openrouter.ai/<openrouter id>` in a new tab (`rel="noopener noreferrer"`). The grid is as many columns of at least 220px as fit, and one column under 560px.
+The models are grouped by company, companies A to Z, each with its logo and its number of models. Inside a company the newest model comes first. Each model is a card with its name, then its origin (flag and name), its release year and its size, then **View on OpenRouter**, which opens `https://openrouter.ai/<openrouter id>` in a new tab (`rel="noopener noreferrer"`). The grid is as many columns of at least 220px as fit, and two columns under 560px.
 
 Only models that are turned on appear, so a model that is off or no longer listed on OpenRouter is not shown. Difficulty, provider settings and prices are not shown. The page is read on the server with the server key and is part of the sitemap.
 

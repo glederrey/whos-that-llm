@@ -109,7 +109,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                     strokeWidth="1.8"
                     strokeLinecap="round"
                     strokeLinejoin="round"
-                    d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z"
+                    d="M7 4h10a3 3 0 0 1 3 3v10a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3zM9 12v-1.5M15 12v-1.5M9 16h6"
                   />
                 </svg>
                 <span className="nav-label">Models</span>
