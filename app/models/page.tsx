@@ -1,0 +1,28 @@
+import type { Metadata } from "next";
+import { ModelGallery } from "@/components/model-gallery";
+import { publicModels } from "@/lib/model-list";
+import { serviceOrThrow } from "@/lib/rounds";
+import { loadCatalog } from "@/lib/rounds-queries";
+
+export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  description: "Every language model you can meet in Who's that LLM?, with its company, origin, release year, and size, and a link to OpenRouter.",
+};
+
+export default async function ModelsPage() {
+  const models = publicModels(await loadCatalog(serviceOrThrow()));
+  return (
+    <div className="stack models-page">
+      <a className="back" href="/">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M15 6 9 12l6 6" />
+        </svg>
+        Back
+      </a>
+      <h1>Models</h1>
+      <p className="lede">Every model that can be hiding in a round. Each one links to OpenRouter, where you can read more about it.</p>
+      <ModelGallery models={models} />
+    </div>
+  );
+}

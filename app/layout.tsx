@@ -101,6 +101,19 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                 </svg>
                 <span className="nav-label">Statistics</span>
               </a>
+              <a href="/models" aria-label="Models">
+                <svg className="nav-icon" viewBox="0 0 24 24" aria-hidden="true">
+                  <path
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.8"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M7 4h10a3 3 0 0 1 3 3v10a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3zM9 12v-1.5M15 12v-1.5M9 16h6"
+                  />
+                </svg>
+                <span className="nav-label">Models</span>
+              </a>
               <a href="/why" aria-label="Why this game?">
                 <svg className="nav-icon" viewBox="0 0 24 24" aria-hidden="true">
                   <circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" strokeWidth="1.8" />
