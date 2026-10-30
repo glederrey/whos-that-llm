@@ -61,7 +61,7 @@ export async function loadAdminStats(): Promise<AdminStats> {
   const client = serviceOrThrow();
   const start = utcDayStart();
   const [roster, active, games, gamesToday, players] = await Promise.all([
-    headCount(client.from("models").select("id", { count: "exact", head: true })),
+    headCount(client.from("models").select("id", { count: "exact", head: true }).eq("available", true)),
     headCount(client.from("models").select("id", { count: "exact", head: true }).eq("enabled", true)),
     headCount(client.from("games").select("id", { count: "exact", head: true })),
     headCount(client.from("games").select("id", { count: "exact", head: true }).gte("finished_at", start)),

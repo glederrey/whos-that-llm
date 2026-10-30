@@ -4,6 +4,7 @@ import { useState } from "react";
 import { saveModel, setModelEnabled } from "@/app/admin/actions";
 import { CompanyLogo } from "@/components/company-logo";
 import { ModelFields } from "@/components/model-fields";
+import { SaveButton } from "@/components/save-button";
 import { RosterReturnFields } from "@/components/roster-return-fields";
 import { AddModelForm } from "@/components/add-model-form";
 import type { CompanyOption } from "@/lib/admin-company";
@@ -335,9 +336,7 @@ function ModelRow({
               </>
             ) : null}
             <div className="row">
-              <button className="button" type="submit">
-                Save
-              </button>
+              <SaveButton />
               <button className="button-quiet" type="button" popoverTarget={panel} popoverTargetAction="hide">
                 Cancel
               </button>
