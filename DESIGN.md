@@ -88,7 +88,7 @@ Corners stay slight. `base` is for cards, menus and the composer; `sm` is for bu
 
 ## Do's and Don'ts
 
-- Don't use gradient fills, glass, blur or a glow behind the logo.
+- Don't use gradient fills, glass, blur or a glow behind the logo. A gradient is allowed only as a functional fade: scroll shadows on tables and the fade under the sticky message bar.
 - Don't add a fourth brand hue or a gradient on the logo mark.
 - Don't put `miss` on the logo or on large fills; full teal against full red buzzes.
 - Don't add decorative loops, a bouncing logo or an animated background. Motion stays small: a reply arriving word by word, waiting dots, a trait chip unveiling, a short shake on a wrong guess. Pages settle in with a 6px rise and fade (0.22s), the account menu opens from its button (0.14s), and tabs and chips give a little on press. All of it stops under reduced motion.

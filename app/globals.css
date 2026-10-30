@@ -301,6 +301,12 @@ a.button, a.button-quiet { display: inline-block; text-decoration: none; }
 .button-lg { padding: 13px 26px; font-size: 17px; }
 .menu .theme-toggle { display: flex; align-items: center; justify-content: space-between; gap: 12px; cursor: pointer; }
 .theme-toggle svg { width: 18px; height: 18px; flex: none; color: var(--mute); }
+.round-actions { display: flex; align-items: center; gap: 4px; }
+.round-actions .round-guess { display: none; }
+@media (max-width: 899px) {
+  .round-actions .round-guess { display: inline-flex; align-items: center; padding: 8px 12px; min-height: 40px; }
+  .guess-sticky > * { scroll-margin-top: 80px; }
+}
 .give-up { color: var(--miss-press); padding: 6px 10px; }
 .button-quiet.give-up { background: transparent; color: var(--miss-press); border-color: transparent; padding: 6px 10px; }
 @media (hover: hover) and (pointer: fine) { .button-quiet.give-up:hover { background: var(--miss-wash); color: var(--miss-press); border-color: transparent; } }
@@ -2074,7 +2080,7 @@ html[data-theme="dark"] .history-score[data-best="true"] { color: var(--teal); }
   .round-pool { display: block; }
   .round-pool-sep { display: none; }
   .round-pool .pill { margin-left: 8px; }
-  .give-up { grid-column: 2; grid-row: 1; }
+  .round-actions { grid-column: 2; grid-row: 1; }
   .progress { grid-column: 1 / -1; grid-row: 2; width: 100%; }
   .composer .meta .button { padding: 10px 22px; }
   .trait { flex-wrap: wrap; gap: 8px 12px; }

@@ -47,8 +47,8 @@ export default async function HomePage({
     <div className="stack landing">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }} />
       <section className="hero">
-        <img className="hero-logo for-light" src="/brand/logo-tail-right-light.png" alt="" />
-        <img className="hero-logo for-dark" src="/brand/logo-tail-right-dark.png" alt="" />
+        <img className="hero-logo for-light" width={4096} height={4096} src="/brand/logo-tail-right-light.png" alt="" />
+        <img className="hero-logo for-dark" width={4096} height={4096} src="/brand/logo-tail-right-dark.png" alt="" />
         <div className="stack">
           <h1>
             <span className="title-full">Guess the hidden AI model</span>

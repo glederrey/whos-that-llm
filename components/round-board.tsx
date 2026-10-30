@@ -104,9 +104,18 @@ export function RoundBoard({ initial }: { initial: PublicGame }) {
                 ))}
               </span>
             </div>
-            <button type="button" className="button-quiet give-up" onClick={() => dialogRef.current?.showModal()} disabled={busy}>
-              Give up
-            </button>
+            <div className="round-actions">
+              <button
+                type="button"
+                className="button-quiet round-guess"
+                onClick={() => roundRef.current?.querySelector(".guess-sticky > *")?.scrollIntoView({ block: "start" })}
+              >
+                Guess
+              </button>
+              <button type="button" className="button-quiet give-up" onClick={() => dialogRef.current?.showModal()} disabled={busy}>
+                Give up
+              </button>
+            </div>
           </div>
         </header>
         <div className="transcript">
