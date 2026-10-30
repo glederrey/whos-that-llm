@@ -62,6 +62,7 @@ export function ChatComposer({
         rows={1}
         value={draft}
         placeholder="Ask something"
+        aria-label="Message"
         maxLength={limit}
         disabled={disabled}
         onChange={(event) => onDraft(event.target.value)}

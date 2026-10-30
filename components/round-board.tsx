@@ -104,9 +104,18 @@ export function RoundBoard({ initial }: { initial: PublicGame }) {
                 ))}
               </span>
             </div>
-            <button type="button" className="button-quiet give-up" onClick={() => dialogRef.current?.showModal()} disabled={busy}>
-              Give up
-            </button>
+            <div className="round-actions">
+              <button
+                type="button"
+                className="button-quiet round-guess"
+                onClick={() => roundRef.current?.querySelector(".guess-sticky > *")?.scrollIntoView({ block: "start" })}
+              >
+                Guess
+              </button>
+              <button type="button" className="button-quiet give-up" onClick={() => dialogRef.current?.showModal()} disabled={busy}>
+                Give up
+              </button>
+            </div>
           </div>
         </header>
         <div className="transcript">
@@ -210,6 +219,7 @@ export function RoundBoard({ initial }: { initial: PublicGame }) {
                   <input
                     value={search}
                     placeholder="Search models"
+                    aria-label="Search models"
                     onChange={(event) => setSearch(event.target.value)}
                     onFocus={() => {
                       if (blurTimer.current) window.clearTimeout(blurTimer.current);

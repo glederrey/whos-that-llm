@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-
-type Theme = "light" | "dark";
+import { applyThemeColor, type Theme } from "@/lib/theme-color";
 
 function preferred(): Theme {
   if (typeof window === "undefined") return "light";
@@ -23,6 +22,7 @@ export function ThemeToggle() {
   function apply(next: Theme) {
     document.documentElement.dataset.theme = next;
     window.localStorage.setItem("theme", next);
+    applyThemeColor(next);
     setTheme(next);
   }
 

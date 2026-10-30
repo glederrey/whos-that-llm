@@ -21,7 +21,7 @@ function formatStat(stats: ProfileStats, key: keyof ProfileStats) {
     return value === null ? "—" : `${Math.round((value as number) * 100)}%`;
   }
   if (value === null) return "—";
-  const digits = key === "average" || key === "averageMessages" ? 1 : 0;
+  const digits = key === "averageMessages" ? 1 : 0;
   return (value as number).toLocaleString("en-US", { minimumFractionDigits: digits, maximumFractionDigits: digits });
 }
 

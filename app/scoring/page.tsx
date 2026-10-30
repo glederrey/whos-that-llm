@@ -33,13 +33,7 @@ export default function ScoringPage() {
   const { hintCosts } = config;
   const capAt = config.tokenScale / config.tokenCap;
   return (
-    <div className="stack">
-      <a className="back" href="/">
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-          <path fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M15 6 9 12l6 6" />
-        </svg>
-        Back
-      </a>
+    <div className="stack scoring-page">
       <h1>How scoring works</h1>
       <p className="lede">
         A round starts from a base. Penalties come off it. That subtotal is multiplied by the token factor, then by the no-hint multiplier when
@@ -74,9 +68,11 @@ export default function ScoringPage() {
             </span>
           </li>
           <li>
-            <strong>4. No-hint mode</strong>
+            <strong>4. Hints and no-hint mode</strong>
             <span>
-              Play without hints and the roster never shrinks and no hint buttons are offered. A round played that way is multiplied by{" "}
+              Company, origin, year, and size can each be revealed once, after the first reply. A revealed trait is known from then on,
+              and the guess list drops models that do not match it. A trait the round already showed you has no hint. Play without hints
+              and the roster never shrinks and no hint buttons are offered. A round played that way is multiplied by{" "}
               {config.noHintMultiplier}×. Buying a hint means you are in the other mode, so the multiplier stays at 1×.
             </span>
           </li>
@@ -96,22 +92,17 @@ export default function ScoringPage() {
           </li>
         </ol>
       </div>
-      <h2>Hints</h2>
-      <p>
-        Company, origin, year, and size can each be revealed once, after the first reply. A revealed trait is known from then on, and
-        the guess list drops models that do not match it. A trait the round already showed you has no hint.
-      </p>
       <h2>One round</h2>
       <p>
         The replies counted as {n(exampleTokens)} tokens. You bought the size hint and named one wrong model before the
         right one. You were not in no-hint mode, because you bought a hint. The round was medium, so the difficulty multiplier is{" "}
         {config.difficultyMultipliers.medium}×.
       </p>
-      <pre className="formula">{`base      = ${n(config.modelBase)}                         (named the model)
-penalties = ${n(hintCosts.size)} + ${n(config.wrongGuessCost)} = ${n(hintCosts.size + config.wrongGuessCost)}               (size hint, one wrong guess)
+      <pre className="formula">{`base      = ${n(config.modelBase)}                  (named the model)
+penalties = ${n(hintCosts.size)} + ${n(config.wrongGuessCost)} = ${n(hintCosts.size + config.wrongGuessCost)}        (size hint, 1 wrong)
 subtotal  = ${n(exampleSubtotal)}
 factor    = min(${config.tokenCap}, ${n(config.tokenScale)} / ${n(exampleTokens)}) ≈ ${formatFactor(exampleFactor)}
-difficulty = ×${config.difficultyMultipliers.medium}                        (medium)
+difficulty = ×${config.difficultyMultipliers.medium}                 (medium)
 score     = round(${n(exampleSubtotal)} × ${formatFactor(exampleFactor)} × ${config.difficultyMultipliers.medium})
           = ${n(example.score)}`}</pre>
       <p className="muted">Your own result page lists the lines for that round.</p>

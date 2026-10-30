@@ -1,7 +1,8 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import { Analytics } from "@vercel/analytics/next";
 import { AccountMenu } from "@/components/account-menu";
+import { navItems } from "@/components/nav-items";
 import { SiteFooter } from "@/components/site-footer";
 import { ThemeInit } from "@/components/theme-init";
 import { sessionIsOwner } from "@/lib/admin-access";
@@ -28,6 +29,15 @@ const fontBold = localFont({
   display: "swap",
   variable: "--font-bold",
 });
+
+// The status bar takes the page background, so it follows the OS color scheme like the canvas does.
+export const viewport: Viewport = {
+  viewportFit: "cover",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#e0e0e1" },
+    { media: "(prefers-color-scheme: dark)", color: "#141414" },
+  ],
+};
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteOrigin),
@@ -58,76 +68,17 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <div className="shell">
           <header className="header">
             <a className="brand" href="/">
-              <img className="for-light" src="/brand/logo-tail-right-light.png" alt="" />
-              <img className="for-dark" src="/brand/logo-tail-right-dark.png" alt="" />
+              <img className="for-light" width={56} height={56} src="/brand/logo-tail-right-light.png" alt="" />
+              <img className="for-dark" width={56} height={56} src="/brand/logo-tail-right-dark.png" alt="" />
               <SiteName />
             </a>
             <nav className="header-nav">
-              <a href="/scoring" aria-label="Scoring">
-                <svg className="nav-icon" viewBox="0 0 24 24" aria-hidden="true">
-                  <path
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="1.8"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3V4zM5 17a3 3 0 0 1 3-3h11M9 8h6"
-                  />
-                </svg>
-                <span className="nav-label">Scoring</span>
-              </a>
-              <a href="/leaderboard" aria-label="Leaderboard">
-                <svg className="nav-icon" viewBox="0 0 24 24" aria-hidden="true">
-                  <path
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="1.8"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4zM7 6H4.5A2.5 2.5 0 0 0 7 9M17 6h2.5A2.5 2.5 0 0 1 17 9"
-                  />
-                </svg>
-                <span className="nav-label">Leaderboard</span>
-              </a>
-              <a href="/statistics" aria-label="Statistics">
-                <svg className="nav-icon" viewBox="0 0 24 24" aria-hidden="true">
-                  <path
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="1.8"
-                    strokeLinecap="round"
-                    d="M5 19V10M12 19V5M19 19v-7"
-                  />
-                </svg>
-                <span className="nav-label">Statistics</span>
-              </a>
-              <a href="/models" aria-label="Models">
-                <svg className="nav-icon" viewBox="0 0 24 24" aria-hidden="true">
-                  <path
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="1.8"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M7 4h10a3 3 0 0 1 3 3v10a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3zM9 12v-1.5M15 12v-1.5M9 16h6"
-                  />
-                </svg>
-                <span className="nav-label">Models</span>
-              </a>
-              <a href="/why" aria-label="Why this game?">
-                <svg className="nav-icon" viewBox="0 0 24 24" aria-hidden="true">
-                  <circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" strokeWidth="1.8" />
-                  <path
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="1.8"
-                    strokeLinecap="round"
-                    d="M9.5 9.2a2.5 2.5 0 1 1 3.1 2.4c-.7.4-1.1.9-1.1 1.7V14"
-                  />
-                  <circle cx="12" cy="16.6" r="0.8" fill="currentColor" stroke="none" />
-                </svg>
-                <span className="nav-label">Why this game?</span>
-              </a>
+              {navItems.map((item) => (
+                <a key={item.href} href={item.href} aria-label={item.label}>
+                  {item.icon}
+                  <span className="nav-label">{item.label}</span>
+                </a>
+              ))}
               <AccountMenu userId={user?.id ?? null} username={username} avatarUrl={avatarUrl}>
                 {owner ? (
                   <a href="/admin" role="menuitem">
