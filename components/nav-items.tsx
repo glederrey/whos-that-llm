@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 
 export type NavItem = { href: string; label: string; icon: ReactNode };
 
-/** The five public links. The header shows them inline; under 560px the menu button lists them, after a Home link. */
+/** The five public links. The header shows them inline; under 560px the Menu button next to the avatar lists them, after a Home link. */
 export const navItems: NavItem[] = [
   {
     href: "/scoring",

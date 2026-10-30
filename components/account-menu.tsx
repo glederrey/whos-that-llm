@@ -20,15 +20,15 @@ export function AccountMenu({
 }) {
   const router = useRouter();
   const pathname = usePathname();
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState<"nav" | "account" | null>(null);
   const rootRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     function onPointer(event: MouseEvent) {
-      if (!rootRef.current?.contains(event.target as Node)) setOpen(false);
+      if (!rootRef.current?.contains(event.target as Node)) setOpen(null);
     }
     function onKey(event: KeyboardEvent) {
-      if (event.key === "Escape") setOpen(false);
+      if (event.key === "Escape") setOpen(null);
     }
     document.addEventListener("mousedown", onPointer);
     document.addEventListener("keydown", onKey);
@@ -40,7 +40,7 @@ export function AccountMenu({
 
   async function signOutAccount() {
     await signOut();
-    setOpen(false);
+    setOpen(null);
     router.push("/");
     router.refresh();
   }
@@ -49,25 +49,27 @@ export function AccountMenu({
     <div className="account" ref={rootRef}>
       <button
         type="button"
-        className="account-button"
-        aria-expanded={open}
-        aria-label="Menu"
-        onClick={() => setOpen((value) => !value)}
+        className="account-button account-avatar"
+        aria-expanded={open === "account"}
+        aria-label="Account"
+        onClick={() => setOpen((value) => (value === "account" ? null : "account"))}
       >
-        <span className="account-face">{userId ? <Avatar seed={userId} src={avatarUrl} /> : <GuestIcon />}</span>
-        <svg className="account-burger" viewBox="0 0 24 24" aria-hidden="true">
+        {userId ? <Avatar seed={userId} src={avatarUrl} /> : <GuestIcon />}
+      </button>
+      <button
+        type="button"
+        className="account-button account-burger"
+        aria-expanded={open === "nav"}
+        aria-label="Menu"
+        onClick={() => setOpen((value) => (value === "nav" ? null : "nav"))}
+      >
+        <svg viewBox="0 0 24 24" aria-hidden="true">
           <path fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" d="M5 7h14M5 12h14M5 17h14" />
         </svg>
       </button>
-      {open ? (
+      {open === "nav" ? (
         <div className="menu" role="menu">
-          <a
-            href="/"
-            role="menuitem"
-            className="menu-phone-only"
-            aria-current={pathname === "/" ? "page" : undefined}
-            onClick={() => setOpen(false)}
-          >
+          <a href="/" role="menuitem" aria-current={pathname === "/" ? "page" : undefined} onClick={() => setOpen(null)}>
             <svg className="nav-icon" viewBox="0 0 24 24" aria-hidden="true">
               <path
                 fill="none"
@@ -85,15 +87,17 @@ export function AccountMenu({
               key={item.href}
               href={item.href}
               role="menuitem"
-              className="menu-phone-only"
               aria-current={pathname === item.href ? "page" : undefined}
-              onClick={() => setOpen(false)}
+              onClick={() => setOpen(null)}
             >
               {item.icon}
               {item.label}
             </a>
           ))}
-          <div className="menu-rule menu-phone-only" />
+        </div>
+      ) : null}
+      {open === "account" ? (
+        <div className="menu" role="menu">
           {username ? (
             <p className="menu-name">
               {userId ? <Avatar seed={userId} src={avatarUrl} size={28} /> : null}
