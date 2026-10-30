@@ -23,6 +23,8 @@ colors:
 typography:
   sans:
     fontFamily: Roboto
+  mono:
+    fontFamily: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace
 rounded:
   base: 14px
   sm: 10px
@@ -76,7 +78,7 @@ The theme is switched with the `data-theme` attribute on `html`. The first visit
 
 ## Typography
 
-One typeface: Roboto, Latin subset, vendored with the site. Headings inherit it. Do not load a font from Google Fonts.
+One typeface: Roboto, Latin subset, vendored with the site. Headings inherit it. Do not load a font from Google Fonts. The one exception is the system monospace stack, used only for code: the worked example on the scoring page and code in rendered markdown. It is never used for interface text and nothing is downloaded for it.
 
 ## Layout
 
