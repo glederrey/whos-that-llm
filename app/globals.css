@@ -1110,6 +1110,7 @@ html[data-theme="dark"] .company-menu summary { color: var(--text); }
 }
 html[data-theme="dark"] .bubble.user { border-color: #0b4545; }
 .bubble.assistant { white-space: normal; justify-self: start; }
+.bubble em { padding-right: 0.08em; }
 .empty-message { color: var(--mute); }
 .reply-actions { display: flex; gap: 8px; flex-wrap: wrap; }
 .token-lines {
