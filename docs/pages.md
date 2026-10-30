@@ -71,7 +71,7 @@ A tip does not raise the hourly cap, change a score, or put a name on the leader
 
 Purpose: present the game. Public. Playing requires a session, and that happens on `/play`. The leaderboard does not.
 
-The header keeps the name and a logo the same height as that text, plus **Scoring** (links to `/scoring`), **Leaderboard**, **Statistics** (links to `/statistics`), **Models** (links to `/models`, with a small robot-head icon like the logo), **Why this game?** (links to `/why`), and the account menu. Under 560px the five links fold into one menu button (see below).
+The header keeps the name and a logo the same height as that text, plus **Scoring** (links to `/scoring`), **Leaderboard**, **Statistics** (links to `/statistics`), **Models** (links to `/models`, with a small robot-head icon like the logo), **Why this game?** (links to `/why`), and the account menu. Under 560px the five links move into the account menu (see below).
 
 Two columns. On a narrow screen they stack.
 
@@ -328,7 +328,7 @@ The models are grouped by company, companies A to Z, each with its logo and its 
 
 Only models that are turned on appear, so a model that is off or no longer listed on OpenRouter is not shown. Difficulty, provider settings and prices are not shown. The page is read on the server with the server key and is part of the sitemap.
 
-**Header on narrow screens.** The header has five links and the account menu. From 560px to 990px the links show only their icon (each keeps its `aria-label`), so the bar stays on one row. Under 560px the header shows the logo, the name and two buttons: a **Menu** button (three lines) that opens a list of the five links with their icons and labels, and the account button. The list closes on a link click, on Escape and on a click outside, and the current page is bold. The name is never hidden.
+**Header on narrow screens.** The header has five links and the account menu. From 560px to 990px the links show only their icon (each keeps its `aria-label`), so the bar stays on one row. Under 560px the header shows the logo, the name (18px) and one **Menu** button (three lines, in place of the avatar). It opens one list: the five links with their icons and labels, a rule, then the account part (name with avatar, theme switch, Admin, Profile, Sign out, or Sign in for a guest). The list closes on a link click, on Escape and on a click outside, and the current page is bold. The name is never hidden.
 
 ## Why this game? (`/why`)
 

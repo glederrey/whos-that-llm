@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { signOut } from "@/app/auth/actions";
 import { Avatar } from "./avatar";
+import { navItems } from "./nav-items";
 import { ThemeToggle } from "./theme-toggle";
 
 export function AccountMenu({
@@ -18,6 +19,7 @@ export function AccountMenu({
   children?: ReactNode;
 }) {
   const router = useRouter();
+  const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
 
@@ -25,8 +27,15 @@ export function AccountMenu({
     function onPointer(event: MouseEvent) {
       if (!rootRef.current?.contains(event.target as Node)) setOpen(false);
     }
+    function onKey(event: KeyboardEvent) {
+      if (event.key === "Escape") setOpen(false);
+    }
     document.addEventListener("mousedown", onPointer);
-    return () => document.removeEventListener("mousedown", onPointer);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onPointer);
+      document.removeEventListener("keydown", onKey);
+    };
   }, []);
 
   async function signOutAccount() {
@@ -42,13 +51,30 @@ export function AccountMenu({
         type="button"
         className="account-button"
         aria-expanded={open}
-        aria-label={username ? username : "Account"}
+        aria-label="Menu"
         onClick={() => setOpen((value) => !value)}
       >
-        {userId ? <Avatar seed={userId} src={avatarUrl} /> : <GuestIcon />}
+        <span className="account-face">{userId ? <Avatar seed={userId} src={avatarUrl} /> : <GuestIcon />}</span>
+        <svg className="account-burger" viewBox="0 0 24 24" aria-hidden="true">
+          <path fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" d="M5 7h14M5 12h14M5 17h14" />
+        </svg>
       </button>
       {open ? (
         <div className="menu" role="menu">
+          {navItems.map((item) => (
+            <a
+              key={item.href}
+              href={item.href}
+              role="menuitem"
+              className="menu-phone-only"
+              aria-current={pathname === item.href ? "page" : undefined}
+              onClick={() => setOpen(false)}
+            >
+              {item.icon}
+              {item.label}
+            </a>
+          ))}
+          <div className="menu-rule menu-phone-only" />
           {username ? (
             <p className="menu-name">
               {userId ? <Avatar seed={userId} src={avatarUrl} size={28} /> : null}

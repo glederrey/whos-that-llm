@@ -3,7 +3,6 @@ import localFont from "next/font/local";
 import { Analytics } from "@vercel/analytics/next";
 import { AccountMenu } from "@/components/account-menu";
 import { navItems } from "@/components/nav-items";
-import { NavMenu } from "@/components/nav-menu";
 import { SiteFooter } from "@/components/site-footer";
 import { ThemeInit } from "@/components/theme-init";
 import { sessionIsOwner } from "@/lib/admin-access";
@@ -33,6 +32,7 @@ const fontBold = localFont({
 
 // The status bar takes the page background, so it follows the OS color scheme like the canvas does.
 export const viewport: Viewport = {
+  viewportFit: "cover",
   themeColor: [
     { media: "(prefers-color-scheme: light)", color: "#e0e0e1" },
     { media: "(prefers-color-scheme: dark)", color: "#141414" },
@@ -79,7 +79,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                   <span className="nav-label">{item.label}</span>
                 </a>
               ))}
-              <NavMenu />
               <AccountMenu userId={user?.id ?? null} username={username} avatarUrl={avatarUrl}>
                 {owner ? (
                   <a href="/admin" role="menuitem">
