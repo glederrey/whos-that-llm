@@ -1908,10 +1908,10 @@ html[data-theme="dark"] .history-score[data-best="true"] { color: var(--teal); }
 .summary-list dd { margin: 0; }
 
 @media (max-width: 720px) {
-  .landing { gap: 28px; }
+  .landing { gap: 28px; grid-template-columns: minmax(0, 1fr); }
   .hero { grid-template-columns: 1fr; }
   .hero-logo { width: min(180px, 56%); }
-  .hero h1 { font-size: 42px; }
+  .hero h1 { font-size: min(42px, 10.4vw); }
   .hero .title-full { display: none; }
   .hero .title-phone { display: inline; }
   .stats, .steps { grid-template-columns: 1fr; }
@@ -1988,6 +1988,8 @@ html[data-theme="dark"] .history-score[data-best="true"] { color: var(--teal); }
 @media (max-width: 560px) {
   .hero-logo { display: none; }
   .hero { padding-top: 0; }
+  .board-controls .segmented { width: 100%; }
+  .board-controls .segmented a, .board-controls .segmented span[aria-disabled="true"] { flex: 1 1 auto; text-align: center; padding: 7px 4px; font-size: 13px; }
   .profile-form {
     grid-template-columns: auto minmax(0, 1fr) auto;
     align-items: end;
