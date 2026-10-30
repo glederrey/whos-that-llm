@@ -91,7 +91,7 @@ Also:
 - The assistant reply is capped at **2,000 output tokens**. The server clamps this. Nothing in the database can raise it.
 - An empty or whitespace-only user message is rejected and does not spend a turn.
 - An empty or whitespace-only successful model reply still spends the message.
-- One open round per game mode and difficulty. Another difficulty can start. The unfinished row says **Game isn't finished yet. Continue?**
+- One open round per game mode and difficulty. Another difficulty can start. The unfinished row says **Unfinished. Continue?**
 - Daily is once per account per difficulty per UTC day, and each of those rounds counts toward the hourly cap.
 
 The hourly check and the insert run in one transaction. Two tabs cannot both take the last slot. A started round counts, including a give-up before the first message.

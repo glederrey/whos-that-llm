@@ -9,7 +9,7 @@ export type OpenGame = {
 };
 
 /** Replaces the model count on a difficulty that still has an open round. */
-export const unfinishedLine = "Game isn't finished yet. Continue?";
+export const unfinishedLine = "Unfinished. Continue?";
 
 export function openGameOn(games: readonly OpenGame[], mode: string, difficulty: Difficulty): OpenGame | null {
   return games.find((game) => game.mode === mode && game.difficulty === difficulty) ?? null;

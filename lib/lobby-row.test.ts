@@ -17,7 +17,7 @@ test("the unfinished difficulty asks to continue and the others keep their count
   assert.equal(difficultyAside(73, true), unfinishedLine);
   assert.equal(difficultyAside(11, false), "11 models");
   assert.equal(difficultyAside(1, false), "1 model");
-  assert.equal(unfinishedLine, "Game isn't finished yet. Continue?");
+  assert.equal(unfinishedLine, "Unfinished. Continue?");
 });
 
 test("a different difficulty can start, and the open one cannot start a second round", () => {
