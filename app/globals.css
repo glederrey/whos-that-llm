@@ -47,10 +47,12 @@ html[data-theme="dark"] {
 }
 
 * { box-sizing: border-box; }
-html { scrollbar-gutter: stable; -webkit-text-size-adjust: 100%; }
+html { scrollbar-gutter: stable; -webkit-text-size-adjust: 100%; -webkit-tap-highlight-color: transparent; }
+a, button, label, select, summary { touch-action: manipulation; }
 html, body { margin: 0; padding: 0; }
 body {
   min-height: 100vh;
+  min-height: 100dvh;
   background: var(--canvas);
   color: var(--text);
   font-family: var(--font), "Segoe UI", sans-serif;
@@ -294,6 +296,7 @@ p { margin: 0; }
   justify-self: start;
   transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.1s ease;
 }
+.button:active, .button-quiet:active { transform: scale(0.97); }
 .button:hover, .icon-button:hover { background: var(--teal-press); color: white; }
 .button:active { transform: translateY(1px); }
 .button:disabled, .icon-button:disabled { opacity: 0.45; cursor: not-allowed; }

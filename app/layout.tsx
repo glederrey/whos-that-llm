@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import { Analytics } from "@vercel/analytics/next";
 import { AccountMenu } from "@/components/account-menu";
@@ -30,6 +30,14 @@ const fontBold = localFont({
   display: "swap",
   variable: "--font-bold",
 });
+
+// The status bar takes the page background, so it follows the OS color scheme like the canvas does.
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#e0e0e1" },
+    { media: "(prefers-color-scheme: dark)", color: "#141414" },
+  ],
+};
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteOrigin),
