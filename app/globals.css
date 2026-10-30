@@ -2139,6 +2139,14 @@ html[data-theme="dark"] .history-score[data-best="true"] { color: var(--teal); }
   .board .num, .board th.num { padding-left: 6px; padding-right: 8px; }
 }
 
+/* Small motion: the page settles in, the menu opens from its button, chips give on press. */
+@keyframes page-in { from { opacity: 0; transform: translateY(6px); } }
+@keyframes menu-in { from { opacity: 0; transform: translateY(-4px) scale(0.97); } }
+.page { animation: page-in 0.22s ease-out; }
+.menu { transform-origin: top right; animation: menu-in 0.14s ease-out; }
+.segmented a, .model-jump a { transition: transform 0.1s ease-out, background 0.15s ease, color 0.15s ease; }
+.segmented a:active, .model-jump a:active { transform: scale(0.97); }
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
 }
