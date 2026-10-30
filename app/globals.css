@@ -527,6 +527,9 @@ html[data-theme="dark"] .must-contain li[data-met="true"] { color: #4cce7a; font
 }
 @media (hover: hover) and (pointer: fine) { .segmented button:hover, .segmented a:hover { color: var(--text); } }
 .segmented [aria-pressed="true"], .segmented [aria-selected="true"] { background: var(--teal); color: #062e2e; }
+@media (max-width: 560px) {
+  .segmented button, .segmented a { min-height: 44px; display: inline-flex; align-items: center; justify-content: center; }
+}
 .stat-modes {
   display: grid;
   width: 100%;
@@ -1688,6 +1691,10 @@ html[data-theme="dark"] .history-score[data-best="true"] { color: var(--teal); }
 }
 .roster { width: 100%; min-width: 1120px; border-collapse: collapse; }
 .roster.compact { min-width: 640px; }
+@media (max-width: 560px) {
+  .roster.compact.stats { min-width: 0; }
+  .roster.compact.stats th, .roster.compact.stats td { padding: 10px 8px; }
+}
 .roster.providers { width: 100%; min-width: 0; }
 .providers-page .roster-card { overflow-x: visible; }
 .shell:has(.providers-page) .header,

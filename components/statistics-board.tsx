@@ -191,7 +191,7 @@ function OriginPickTable({ rows, label }: { rows: OriginPickRow[]; label: (id: s
   const columns = rows.map((row) => row.origin);
   return (
     <div className="card roster-card">
-      <table className="roster compact">
+      <table className="roster compact stats">
         <thead>
           <tr>
             <th rowSpan={2}>Real origin</th>
@@ -294,7 +294,7 @@ function CustomStats({ custom, total, nameFor }: { custom: CustomReport; total: 
       <h2>Most picked models</h2>
       <p className="muted">Models that were in the most Custom pools. Share is the part of the {total.toLocaleString("en-US")} rounds that held the model.</p>
       <div className="card roster-card">
-        <table className="roster compact">
+        <table className="roster compact stats">
           <thead>
             <tr>
               <th>Model</th>
@@ -362,7 +362,7 @@ function Figures({ items }: { items: Figure[] }) {
 function ModelTable({ rows, nameFor }: { rows: ModelOutcome[]; nameFor: (id: string) => string }) {
   return (
     <div className="card roster-card">
-      <table className="roster compact">
+      <table className="roster compact stats">
         <thead>
           <tr>
             <th>Hidden model</th>
@@ -399,7 +399,7 @@ function ModelTable({ rows, nameFor }: { rows: ModelOutcome[]; nameFor: (id: str
 function ConfusionTable({ rows, nameFor }: { rows: ConfusionPair[]; nameFor: (id: string) => string }) {
   return (
     <div className="card roster-card">
-      <table className="roster compact">
+      <table className="roster compact stats">
         <thead>
           <tr>
             <th>Hidden model</th>
@@ -433,7 +433,7 @@ function CategoryTable({ rows, column }: { rows: CategoryStat[]; column: string 
   const scored = rows.some((row) => row.avgScore !== null);
   return (
     <div className="card roster-card">
-      <table className="roster compact">
+      <table className="roster compact stats">
         <thead>
           <tr>
             <th>{column}</th>
@@ -467,7 +467,7 @@ function TraitTable({ kind, rows }: { kind: TraitKind; rows: TraitRow[] }) {
   const scored = rows.some((row) => row.avgScore !== null);
   return (
     <div className="card roster-card">
-      <table className="roster compact">
+      <table className="roster compact stats">
         <thead>
           <tr>
             <th>{traitHeading[kind]}</th>

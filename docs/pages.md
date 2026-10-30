@@ -54,7 +54,7 @@ The source files are Gael's, in `logo/light/` and `logo/dark/`, named `whos_that
 
 The same site, in the browser. There is no separate app.
 
-A narrow screen stacks the round: header, transcript, input, then feedback and hints. A wide screen puts feedback and hints on the right. Buttons and list rows are large enough to tap. The message field stays visible when the keyboard is open. The guess search is a normal text field, not a hover menu. Leaderboard and admin tables scroll sideways rather than squeezing the words off the screen.
+A narrow screen stacks the round: header, transcript, input, then feedback and hints. A wide screen puts feedback and hints on the right. Buttons, tabs and list rows are at least 44px tall to tap. The statistics tables with up to four columns fit the width on a phone; wider ones scroll sideways. The message field stays visible when the keyboard is open. The guess search is a normal text field, not a hover menu. Leaderboard and admin tables scroll sideways rather than squeezing the words off the screen.
 
 Admin is usable on a phone and comfortable on a computer. Playing a round is the flow that has to feel good in one hand.
 
