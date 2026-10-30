@@ -61,6 +61,25 @@ export function AccountMenu({
       </button>
       {open ? (
         <div className="menu" role="menu">
+          <a
+            href="/"
+            role="menuitem"
+            className="menu-phone-only"
+            aria-current={pathname === "/" ? "page" : undefined}
+            onClick={() => setOpen(false)}
+          >
+            <svg className="nav-icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M4 11.5 12 4l8 7.5M6 10v10h4v-6h4v6h4V10"
+              />
+            </svg>
+            Home
+          </a>
           {navItems.map((item) => (
             <a
               key={item.href}
