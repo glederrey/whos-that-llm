@@ -280,6 +280,20 @@ p { margin: 0; }
 .button:hover, .icon-button:hover { background: var(--teal-press); color: white; }
 .button:active { transform: translateY(1px); }
 .button:disabled, .icon-button:disabled { opacity: 0.45; cursor: not-allowed; }
+.button[aria-busy="true"]:disabled { cursor: progress; }
+.spinner {
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  margin-right: 8px;
+  vertical-align: -2px;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .spinner { animation-duration: 2s; } }
 .button-quiet, .icon-button {
   background: var(--card);
   color: var(--text);
