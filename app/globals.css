@@ -242,8 +242,7 @@ p { margin: 0; text-wrap: pretty; }
    paragraph than from the paragraph above. These margins land at 24px above
    a heading and 8px below it. */
 .stack > p { max-width: 60ch; }
-.scoring-page { max-width: 760px; }
-.scoring-page > p { max-width: none; }
+.scoring-page { max-width: 70ch; }
 .why h2 { margin-top: 8px; margin-bottom: -8px; }
 .landing { gap: 36px; }
 .landing .hero { padding-bottom: 0; }
@@ -613,6 +612,7 @@ html[data-theme="dark"] .text-link { color: var(--teal); }
 .disclose-panel { display: grid; gap: 8px; padding: 10px 2px 0; color: var(--mute); font-size: 14px; }
 
 /* Lobby */
+.stack > .hour-status { max-width: none; }
 .hour-status {
   display: flex;
   flex-wrap: wrap;
