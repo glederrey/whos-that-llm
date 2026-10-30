@@ -98,11 +98,11 @@ export default function ScoringPage() {
         right one. You were not in no-hint mode, because you bought a hint. The round was medium, so the difficulty multiplier is{" "}
         {config.difficultyMultipliers.medium}×.
       </p>
-      <pre className="formula">{`base      = ${n(config.modelBase)}                         (named the model)
-penalties = ${n(hintCosts.size)} + ${n(config.wrongGuessCost)} = ${n(hintCosts.size + config.wrongGuessCost)}               (size hint, one wrong guess)
+      <pre className="formula">{`base      = ${n(config.modelBase)}                  (named the model)
+penalties = ${n(hintCosts.size)} + ${n(config.wrongGuessCost)} = ${n(hintCosts.size + config.wrongGuessCost)}        (size hint, 1 wrong)
 subtotal  = ${n(exampleSubtotal)}
 factor    = min(${config.tokenCap}, ${n(config.tokenScale)} / ${n(exampleTokens)}) ≈ ${formatFactor(exampleFactor)}
-difficulty = ×${config.difficultyMultipliers.medium}                        (medium)
+difficulty = ×${config.difficultyMultipliers.medium}                 (medium)
 score     = round(${n(exampleSubtotal)} × ${formatFactor(exampleFactor)} × ${config.difficultyMultipliers.medium})
           = ${n(example.score)}`}</pre>
       <p className="muted">Your own result page lists the lines for that round.</p>

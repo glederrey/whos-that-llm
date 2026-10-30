@@ -1429,7 +1429,7 @@ html[data-theme="dark"] .score { color: var(--teal); }
 html[data-theme="dark"] .quote { color: var(--teal); }
 .quote p { margin: 0; }
 .formula {
-  white-space: pre-wrap;
+  white-space: pre;
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   font-size: 14px;
   line-height: 1.7;
