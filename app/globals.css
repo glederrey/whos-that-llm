@@ -2323,7 +2323,27 @@ html[data-theme="dark"] .emoji-picker { color-scheme: dark; }
 .model-toolbar { display: flex; align-items: center; gap: 12px 16px; flex-wrap: wrap; }
 .model-search { flex: 1 1 280px; min-width: 0; }
 .model-count { margin: 0; font-size: 14px; }
-.model-group { display: grid; gap: 12px; }
+.model-group { display: grid; gap: 12px; scroll-margin-top: 16px; }
+/* One scrolling row of company chips, so a phone can jump past the long list. */
+.model-jump { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: thin; }
+.model-jump a {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex: none;
+  padding: 8px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--card);
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+  white-space: nowrap;
+}
+html[data-theme="dark"] .model-jump a { color: var(--text); }
+.model-jump img { width: 18px; height: 18px; object-fit: contain; }
+@media (hover: hover) and (pointer: fine) { .model-jump a:hover { border-color: var(--teal); } }
 .model-company { display: flex; align-items: center; gap: 10px; margin: 0; }
 .model-logo { width: 28px; height: 28px; flex: none; display: inline-flex; align-items: center; justify-content: center; }
 .model-logo img { width: 28px; height: 28px; object-fit: contain; }

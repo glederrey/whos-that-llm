@@ -324,6 +324,8 @@ Public. No session. Linked from the header. **Back** returns home. The title is 
 
 A search box (the same style as the other inputs, full width) filters as the player types, on the model name, the company, the origin, the size, or the year, and a count sits next to it (`138 models`, or `3 of 138 models` while filtered). With no match the page says **No model matches that search.**
 
+Under the search sits one row of company chips (logo and name, scrolling sideways when they do not fit). Each chip jumps to that company's group. The row is hidden when only one company is shown.
+
 The models are grouped by company, companies A to Z, each with its logo and its number of models. Inside a company the newest model comes first. Each model is a card with its name, then its origin (flag and name), its release year and its size, then **View on OpenRouter**, which opens `https://openrouter.ai/<openrouter id>` in a new tab (`rel="noopener noreferrer"`). The grid is as many columns of at least 220px as fit, and two columns under 560px.
 
 Only models that are turned on appear, so a model that is off or no longer listed on OpenRouter is not shown. Difficulty, provider settings and prices are not shown. The page is read on the server with the server key and is part of the sitemap.
