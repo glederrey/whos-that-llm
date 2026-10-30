@@ -157,11 +157,12 @@ button { cursor: pointer; }
 .account-button .avatar { width: 100%; height: 100%; }
 img.avatar { object-fit: cover; object-position: center; border-radius: 999px; }
 .guest-icon { width: 22px; height: 22px; }
-/* Under 560px the five links move into a second button, a burger beside the avatar; both are rounded squares there. */
+/* Under 560px the five links move into a burger button placed before the avatar; both are rounded squares there. */
 .account { gap: 8px; }
 .account-burger { display: none; }
 .account-burger svg { width: 24px; height: 24px; }
-.menu a[aria-current="page"] { font-weight: 700; }
+.menu a[aria-current="page"] { font-weight: 700; color: var(--teal-press); }
+html[data-theme="dark"] .menu a[aria-current="page"] { color: var(--teal); }
 .menu {
   position: absolute;
   right: 0;

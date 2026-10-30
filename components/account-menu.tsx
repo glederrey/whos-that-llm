@@ -49,15 +49,6 @@ export function AccountMenu({
     <div className="account" ref={rootRef}>
       <button
         type="button"
-        className="account-button account-avatar"
-        aria-expanded={open === "account"}
-        aria-label="Account"
-        onClick={() => setOpen((value) => (value === "account" ? null : "account"))}
-      >
-        {userId ? <Avatar seed={userId} src={avatarUrl} /> : <GuestIcon />}
-      </button>
-      <button
-        type="button"
         className="account-button account-burger"
         aria-expanded={open === "nav"}
         aria-label="Menu"
@@ -66,6 +57,15 @@ export function AccountMenu({
         <svg viewBox="0 0 24 24" aria-hidden="true">
           <path fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" d="M5 7h14M5 12h14M5 17h14" />
         </svg>
+      </button>
+      <button
+        type="button"
+        className="account-button account-avatar"
+        aria-expanded={open === "account"}
+        aria-label="Account"
+        onClick={() => setOpen((value) => (value === "account" ? null : "account"))}
+      >
+        {userId ? <Avatar seed={userId} src={avatarUrl} /> : <GuestIcon />}
       </button>
       {open === "nav" ? (
         <div className="menu" role="menu">
