@@ -136,7 +136,7 @@ html[data-theme="dark"] .header-nav > a:hover { background: var(--card); color: 
   color: var(--text);
   cursor: pointer;
 }
-.nav-menu-button:hover { border-color: var(--teal); }
+@media (hover: hover) and (pointer: fine) { .nav-menu-button:hover { border-color: var(--teal); } }
 .nav-menu .menu a { display: flex; align-items: center; gap: 10px; }
 .nav-menu .menu a[aria-current="page"] { font-weight: 700; }
 /* Five links with their labels need about 990px. Under that, only the icons, so the bar stays on one row. */
@@ -1345,7 +1345,7 @@ html[data-theme="dark"] .hit { color: var(--teal); }
 .delete-action { display: flex; justify-content: center; }
 /* Red stays a line and a word here, not a fill; the filled red button is the confirm inside the dialog. */
 .delete-action .button-off { background: transparent; color: var(--miss-press); }
-.delete-action .button-off:hover { background: var(--miss-wash); color: var(--miss-press); border-color: var(--miss-press); }
+@media (hover: hover) and (pointer: fine) { .delete-action .button-off:hover { background: var(--miss-wash); color: var(--miss-press); border-color: var(--miss-press); } }
 .dialog form { display: grid; gap: 14px; }
 .dialog form h2, .dialog form p { margin: 0; }
 .dialog form label { display: grid; gap: 6px; font-size: 14px; font-weight: 500; }
