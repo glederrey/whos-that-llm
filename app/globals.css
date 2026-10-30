@@ -1392,7 +1392,7 @@ html[data-theme="dark"] .status[data-state="given-up"] { background: #383838; bo
 }
 .score-card .breakdown { margin-top: 28px; }
 .score-card .score.origin-pick { font-size: 40px; letter-spacing: 0; }
-.origin-actual { display: grid; gap: 2px; margin: 10px 0 0; font-size: 22px; }
+.origin-actual { display: grid; gap: 2px; margin: 18px 0 0; font-size: 22px; }
 .origin-actual .score-label { margin: 0; }
 .score {
   font-size: 56px;
