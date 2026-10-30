@@ -577,7 +577,7 @@ test("the header counts the message about to be written", () => {
   assert.match(board, /className="round-pool muted"/);
   assert.match(css, /\.round-pool \{ display: block; \}/);
   assert.match(css, /\.round-pool-sep \{ display: none; \}/);
-  assert.match(css, /\.give-up \{ grid-column: 2; grid-row: 1; \}/);
+  assert.match(css, /\.round-actions \{ grid-column: 2; grid-row: 1; \}/);
   assert.match(css, /\.progress \{ grid-column: 1 \/ -1; grid-row: 2; width: 100%; \}/);
   assert.match(board, /Guess for message \{guessFor\}/);
   assert.match(board, /You already guessed for this message\./);
