@@ -255,7 +255,7 @@ h2 { font-size: 20px; line-height: 1.25; letter-spacing: -0.01em; margin: 0 0 8p
 .stack > h2 { margin: 16px 0 -6px; }
 .card.stack > h2:first-child { margin-top: 0; }
 h3 { font-size: 18px; line-height: 1.3; margin: 8px 0 0; }
-p { margin: 0; }
+p { margin: 0; text-wrap: pretty; }
 .goal { font-size: 34px; margin: 4px 0 0; }
 .lede, .limits, .muted { color: var(--mute); }
 .lede { font-size: 17px; }
