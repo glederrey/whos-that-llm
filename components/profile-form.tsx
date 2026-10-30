@@ -116,12 +116,12 @@ export function ProfileForm({
         </div>
         <label className="profile-name">
           Username
-          <input value={name} onChange={(event) => setName(event.target.value)} autoComplete="nickname" />
+          <input name="username" value={name} maxLength={20} onChange={(event) => setName(event.target.value)} autoComplete="nickname" />
         </label>
         {canChangePassword ? (
           <button
             type="button"
-            className="button-danger profile-password"
+            className="button-quiet profile-password"
             aria-expanded={passwordOpen}
             aria-controls="change-password-card"
             onClick={() => setPasswordOpen((open) => !open)}

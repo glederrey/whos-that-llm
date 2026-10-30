@@ -21,7 +21,7 @@ export function DayBars({ days, label, note, showOpen = false }: { days: DayCoun
             className="daybar"
             title={`${dayMonth(day.date)}: ${day.games} games, ${day.solved} solved, ${day.missed} failed, ${day.givenUp} given up${showOpen ? `, ${day.open} open` : ""}`}
           >
-            <span className="daybar-count">{day.games}</span>
+            <span className="daybar-count">{day.games || "\u00a0"}</span>
             <span className="daybar-track">
               <span className="daybar-all" style={{ height: `${(day.games / peak) * 100}%` }}>
                 <i className="daybar-solved" style={{ height: share(day.solved, day.games) }} />

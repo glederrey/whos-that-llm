@@ -64,6 +64,8 @@ export function WelcomeForm({ next }: { next: string }) {
       <label>
         Username
         <input
+          name="username"
+          maxLength={20}
           value={username}
           placeholder="Human"
           onChange={(event) => setUsername(event.target.value)}

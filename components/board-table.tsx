@@ -53,7 +53,7 @@ export function BoardTable({
                 <td className="name">
                   <span className="player">
                     <Avatar seed={row.seed || row.name} src={row.avatarUrl} size={28} />
-                    <span className="player-name">{row.name}</span>
+                    <span className="player-name" title={row.name}>{row.name}</span>
                     {row.mine ? <span className="you-tag">You</span> : null}
                   </span>
                 </td>
