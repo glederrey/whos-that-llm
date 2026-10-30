@@ -120,6 +120,23 @@ button { cursor: pointer; }
 .nav-icon { width: 18px; height: 18px; }
 .header-nav > a:hover { background: var(--card); color: var(--text); }
 html[data-theme="dark"] .header-nav > a:hover { background: var(--card); color: var(--text); }
+/* Under 560px the five links fold into one menu button (.nav-menu), which reuses the .menu popover. */
+.nav-menu { display: none; position: relative; }
+.nav-menu-button {
+  width: 40px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--line);
+  background: var(--paper);
+  color: var(--text);
+  cursor: pointer;
+}
+.nav-menu-button:hover { background: var(--card); }
+.nav-menu .menu a { display: flex; align-items: center; gap: 10px; }
+.nav-menu .menu a[aria-current="page"] { font-weight: 700; }
 /* Five links with their labels need about 990px. Under that, only the icons, so the bar stays on one row. */
 @media (max-width: 990px) {
   .header-nav > a { width: 36px; height: 36px; padding: 0; justify-content: center; }
@@ -2005,8 +2022,8 @@ html[data-theme="dark"] .history-score[data-best="true"] { color: var(--teal); }
   .brand { font-size: 14px; gap: 8px; flex: 1 1 auto; min-width: 0; }
   .brand span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .header-nav { gap: 0; flex: none; flex-wrap: nowrap; justify-content: flex-end; }
-  .header-nav > a { width: 36px; height: 36px; padding: 0; justify-content: center; }
-  .header-nav > a .nav-label { display: none; }
+  .header-nav > a { display: none; }
+  .nav-menu { display: block; }
   .header-nav .account { margin-left: 4px; }
   .menu { min-width: min(260px, calc(100vw - 24px)); }
   .menu a, .menu-item { padding: 12px 10px; }
@@ -2031,8 +2048,11 @@ html[data-theme="dark"] .history-score[data-best="true"] { color: var(--teal); }
   .hero .button-lg { flex: 1 1 0; width: auto; min-width: 0; text-align: center; }
   .hour-status { flex-direction: column; align-items: flex-start; gap: 4px; }
   .hour-status .hour-note { margin-left: 0; text-align: left; }
-  .difficulty-choice:has(.difficulty-resume) { flex-wrap: wrap; align-items: flex-start; }
+  .difficulty-choice:has(.difficulty-resume), .category-toggle:has(.difficulty-resume) { flex-wrap: wrap; align-items: flex-start; }
+  .category-toggle:has(.difficulty-resume) > span:first-child { order: 1; flex: 1 1 0; }
+  .category-toggle:has(.difficulty-resume) > svg { order: 2; margin-top: 2px; }
   .difficulty-resume { flex: 1 1 100%; max-width: none; margin-left: 0; text-align: left; }
+  .category-toggle > .difficulty-resume { order: 3; margin-top: 2px; }
   .round-bar { padding: 10px 12px; }
   .footer-inner {
     flex-direction: column;
@@ -2124,10 +2144,6 @@ html[data-theme="dark"] .history-score[data-best="true"] { color: var(--teal); }
   .model-lockup { align-items: flex-start; }
   .dialog { width: calc(100vw - 32px); }
 }
-@media (max-width: 420px) {
-  .brand span { display: none; }
-}
-
 @media (max-width: 480px) {
   .board th, .board td { padding: 10px 8px; }
   .board .rank { width: 44px; }

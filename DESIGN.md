@@ -63,7 +63,7 @@ One typeface: Roboto, Latin subset, vendored with the site. Headings inherit it.
 
 ## Layout
 
-Content width is `min(980px, 100% - 32px)` for the header, the page and the footer, and `100% - 24px` on phones. On a narrow screen the round stacks: header, transcript, input, then feedback and hints. On a wide screen feedback and hints sit in a right column. Under 990px the header nav shows icons only so the bar stays on one row. Tables scroll sideways on a phone instead of squeezing their words.
+Content width is `min(980px, 100% - 32px)` for the header, the page and the footer, and `100% - 24px` on phones. On a narrow screen the round stacks: header, transcript, input, then feedback and hints. On a wide screen feedback and hints sit in a right column. From 560px to 990px the header nav shows icons only so the bar stays on one row; under 560px the five links fold into one labelled menu button next to the account button, so the site name always shows. Tables scroll sideways on a phone instead of squeezing their words.
 
 ## Elevation & Depth
 
