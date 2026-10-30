@@ -210,6 +210,7 @@ export function RoundBoard({ initial }: { initial: PublicGame }) {
                   <input
                     value={search}
                     placeholder="Search models"
+                    aria-label="Search models"
                     onChange={(event) => setSearch(event.target.value)}
                     onFocus={() => {
                       if (blurTimer.current) window.clearTimeout(blurTimer.current);

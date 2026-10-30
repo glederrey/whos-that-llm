@@ -163,11 +163,13 @@ img.avatar { object-fit: cover; object-position: center; border-radius: 999px; }
   top: calc(100% + 8px);
   z-index: 20;
   min-width: 232px;
+  max-width: min(320px, calc(100vw - 24px));
   background: var(--card);
   border: 1px solid var(--line);
   border-radius: var(--radius);
   padding: 8px;
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 2px;
   box-shadow: var(--lift);
 }
@@ -178,7 +180,8 @@ img.avatar { object-fit: cover; object-position: center; border-radius: 999px; }
   align-items: center;
   gap: 10px;
 }
-.menu-name .avatar { width: 28px; height: 28px; }
+.menu-name .avatar { width: 28px; height: 28px; flex: none; }
+.menu-name span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .menu-rule { height: 1px; background: var(--line); margin: 4px 8px; }
 .menu a, .menu-item {
   display: block;
@@ -238,6 +241,7 @@ p { margin: 0; text-wrap: pretty; }
    bottom margin was added on top of that, so the title sat farther from its
    paragraph than from the paragraph above. These margins land at 24px above
    a heading and 8px below it. */
+.stack > p { max-width: 60ch; }
 .why h2 { margin-top: 8px; margin-bottom: -8px; }
 .landing { gap: 36px; }
 .landing .hero { padding-bottom: 0; }

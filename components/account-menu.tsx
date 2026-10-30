@@ -78,7 +78,7 @@ export function AccountMenu({
           {username ? (
             <p className="menu-name">
               {userId ? <Avatar seed={userId} src={avatarUrl} size={28} /> : null}
-              <span>{username}</span>
+              <span title={username}>{username}</span>
             </p>
           ) : null}
           {userId ? null : (
