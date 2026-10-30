@@ -25,19 +25,9 @@ export function ModelGallery({ models }: { models: PublicModel[] }) {
           {shown.length === models.length ? `${models.length} models` : `${shown.length} of ${models.length} models`}
         </p>
       </div>
-      {groups.length > 1 ? (
-        <nav className="model-jump" aria-label="Jump to a company">
-          {groups.map((group) => (
-            <a key={group.companyId} href={`#company-${group.companyId}`}>
-              <CompanyLogo src={group.logoUrl} />
-              {group.companyName}
-            </a>
-          ))}
-        </nav>
-      ) : null}
       {groups.length === 0 ? <p className="muted">No model matches that search.</p> : null}
       {groups.map((group) => (
-        <section key={group.companyId} id={`company-${group.companyId}`} className="model-group">
+        <section key={group.companyId} className="model-group">
           <h2 className="model-company">
             <span className="model-logo">
               <CompanyLogo src={group.logoUrl} />

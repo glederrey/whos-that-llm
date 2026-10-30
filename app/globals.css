@@ -155,7 +155,7 @@ img.avatar { object-fit: cover; object-position: center; border-radius: 999px; }
 .guest-icon { width: 22px; height: 22px; }
 /* Under 560px the five links move into the account menu, and its button becomes a menu button. */
 .account-face { display: contents; }
-.account-burger, .menu-phone-only { display: none; }
+.account-burger, .menu .menu-phone-only { display: none; }
 .menu a[aria-current="page"] { font-weight: 700; }
 .menu {
   position: absolute;
@@ -242,6 +242,8 @@ p { margin: 0; text-wrap: pretty; }
    paragraph than from the paragraph above. These margins land at 24px above
    a heading and 8px below it. */
 .stack > p { max-width: 60ch; }
+.scoring-page { max-width: 760px; }
+.scoring-page > p { max-width: none; }
 .why h2 { margin-top: 8px; margin-bottom: -8px; }
 .landing { gap: 36px; }
 .landing .hero { padding-bottom: 0; }
@@ -1042,7 +1044,7 @@ html[data-theme="dark"] .company-menu summary { color: var(--text); }
   .feedback { order: 2; }
   .guess-history { order: 3; }
 }
-@media (min-width: 900px), (max-width: 560px) {
+@media (max-width: 560px) {
   .thread > header::after {
     content: "";
     position: absolute;
@@ -1703,8 +1705,8 @@ html[data-theme="dark"] .history-score[data-best="true"] { color: var(--teal); }
 .roster { width: 100%; min-width: 1120px; border-collapse: collapse; }
 .roster.compact { min-width: 640px; }
 @media (max-width: 560px) {
-  .roster.compact.stats { min-width: 0; }
-  .roster.compact.stats th, .roster.compact.stats td { padding: 10px 8px; }
+  .roster.compact.roster-stats { min-width: 0; }
+  .roster.compact.roster-stats th, .roster.compact.roster-stats td { padding: 10px 8px; }
 }
 .roster.providers { width: 100%; min-width: 0; }
 .providers-page .roster-card { overflow-x: visible; }
@@ -2162,8 +2164,8 @@ html[data-theme="dark"] .history-score[data-best="true"] { color: var(--teal); }
 @keyframes menu-in { from { opacity: 0; transform: translateY(-4px) scale(0.97); } }
 .page { animation: page-in 0.22s ease-out; }
 .menu { transform-origin: top right; animation: menu-in 0.14s ease-out; }
-.segmented a, .model-jump a { transition: transform 0.1s ease-out, background 0.15s ease, color 0.15s ease; }
-.segmented a:active, .model-jump a:active { transform: scale(0.97); }
+.segmented a { transition: transform 0.1s ease-out, background 0.15s ease, color 0.15s ease; }
+.segmented a:active { transform: scale(0.97); }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
@@ -2328,28 +2330,8 @@ html[data-theme="dark"] .emoji-picker { color-scheme: dark; }
 .model-toolbar { display: flex; align-items: center; gap: 12px 16px; flex-wrap: wrap; }
 .model-search { flex: 1 1 280px; min-width: 0; }
 .model-count { margin: 0; font-size: 14px; }
-.model-group { display: grid; gap: 12px; scroll-margin-top: 16px; }
-/* One scrolling row of company chips, so a phone can jump past the long list. */
-.model-jump { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: thin; }
-.model-jump a {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  flex: none;
-  padding: 8px 12px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-sm);
-  background: var(--card);
-  color: var(--text);
-  font-size: 14px;
-  font-weight: 500;
-  text-decoration: none;
-  white-space: nowrap;
-}
-html[data-theme="dark"] .model-jump a { color: var(--text); }
-.model-jump img { width: 18px; height: 18px; object-fit: contain; }
-@media (hover: hover) and (pointer: fine) { .model-jump a:hover { border-color: var(--teal); } }
-.model-company { display: flex; align-items: center; gap: 10px; margin: 0; }
+.model-group { display: grid; gap: 12px; }
+.model-company { display: flex; align-items: center; gap: 10px; margin: 0; position: sticky; top: 0; z-index: 3; padding: 10px 0; background: var(--canvas); }
 .model-logo { width: 28px; height: 28px; flex: none; display: inline-flex; align-items: center; justify-content: center; }
 .model-logo img { width: 28px; height: 28px; object-fit: contain; }
 .model-company-count { font-size: 14px; font-weight: 400; }

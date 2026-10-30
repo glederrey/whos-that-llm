@@ -71,7 +71,7 @@ A tip does not raise the hourly cap, change a score, or put a name on the leader
 
 Purpose: present the game. Public. Playing requires a session, and that happens on `/play`. The leaderboard does not.
 
-The header keeps the name and a logo the same height as that text, plus **Scoring** (links to `/scoring`), **Leaderboard**, **Statistics** (links to `/statistics`), **Models** (links to `/models`, with a small robot-head icon like the logo), **Why this game?** (links to `/why`), and the account menu. Under 560px the five links move into the account menu (see below).
+The header keeps the name and a logo the same height as that text, plus **Scoring** (links to `/scoring`), **Leaderboard**, **Statistics** (links to `/statistics`), **Models** (links to `/models`, with a small robot-head icon like the logo), **Why this game?** (links to `/why`), and the account menu. Under 560px the five links, and a **Home** link, move into the account menu (see below).
 
 Two columns. On a narrow screen they stack.
 
@@ -322,13 +322,13 @@ Public. No session. Linked from the header. The title is **Models**, then a line
 
 A search box (the same style as the other inputs, full width) filters as the player types, on the model name, the company, the origin, the size, or the year, and a count sits next to it (`138 models`, or `3 of 138 models` while filtered). With no match the page says **No model matches that search.**
 
-Under the search sits one row of company chips (logo and name, scrolling sideways when they do not fit). Each chip jumps to that company's group. The row is hidden when only one company is shown.
+Each company name stays at the top of the screen while its models scroll past.
 
 The models are grouped by company, companies A to Z, each with its logo and its number of models. Inside a company the newest model comes first. Each model is a card with its name, then its origin (flag and name), its release year and its size, then **View on OpenRouter**, which opens `https://openrouter.ai/<openrouter id>` in a new tab (`rel="noopener noreferrer"`). The grid is as many columns of at least 220px as fit, and two columns under 560px.
 
 Only models that are turned on appear, so a model that is off or no longer listed on OpenRouter is not shown. Difficulty, provider settings and prices are not shown. The page is read on the server with the server key and is part of the sitemap.
 
-**Header on narrow screens.** The header has five links and the account menu. From 560px to 990px the links show only their icon (each keeps its `aria-label`), so the bar stays on one row. Under 560px the header shows the logo, the name (18px) and one **Menu** button (three lines, in place of the avatar). It opens one list: the five links with their icons and labels, a rule, then the account part (name with avatar, theme switch, Admin, Profile, Sign out, or Sign in for a guest). The list closes on a link click, on Escape and on a click outside, and the current page is bold. The name is never hidden.
+**Header on narrow screens.** The header has five links and the account menu. From 560px to 990px the links show only their icon (each keeps its `aria-label`), so the bar stays on one row. Under 560px the header shows the logo, the name (18px) and one **Menu** button (three lines, in place of the avatar). It opens one list: **Home**, the five links with their icons and labels, a rule, then the account part (name with avatar, theme switch, Admin, Profile, Sign out, or Sign in for a guest). The list closes on a link click, on Escape and on a click outside, and the current page is bold. The name is never hidden.
 
 ## Why this game? (`/why`)
 
