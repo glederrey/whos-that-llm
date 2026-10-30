@@ -2028,7 +2028,7 @@ html[data-theme="dark"] .history-score[data-best="true"] { color: var(--teal); }
   .auth-screen { margin-top: auto; margin-bottom: auto; }
   .page:has(.auth-screen) + .footer { margin-top: 0; }
   .header { padding-top: 14px; column-gap: 8px; row-gap: 0; min-height: 64px; flex-wrap: nowrap; align-items: center; }
-  .brand { font-size: 18px; gap: 8px; flex: 1 1 auto; min-width: 0; }
+  .brand { font-size: clamp(16px, 5.6vw, 20px); gap: 10px; flex: 1 1 auto; min-width: 0; }
   .brand span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .header-nav { gap: 0; flex: none; flex-wrap: nowrap; justify-content: flex-end; }
   .header-nav > a { display: none; }
