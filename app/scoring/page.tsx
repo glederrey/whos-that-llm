@@ -34,12 +34,6 @@ export default function ScoringPage() {
   const capAt = config.tokenScale / config.tokenCap;
   return (
     <div className="stack">
-      <a className="back" href="/">
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-          <path fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M15 6 9 12l6 6" />
-        </svg>
-        Back
-      </a>
       <h1>How scoring works</h1>
       <p className="lede">
         A round starts from a base. Penalties come off it. That subtotal is multiplied by the token factor, then by the no-hint multiplier when

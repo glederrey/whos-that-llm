@@ -14,12 +14,6 @@ export default async function ModelsPage() {
   const models = publicModels(await loadCatalog(serviceOrThrow()));
   return (
     <div className="stack models-page">
-      <a className="back" href="/">
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-          <path fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M15 6 9 12l6 6" />
-        </svg>
-        Back
-      </a>
       <h1>Models</h1>
       <p className="lede">Every model that can be hiding in a round. Each one links to OpenRouter, where you can read more about it.</p>
       <ModelGallery models={models} />

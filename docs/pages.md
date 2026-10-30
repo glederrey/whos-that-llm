@@ -288,8 +288,6 @@ The link preview is that same picture. It is drawn when a share preview requests
 
 ## Leaderboard (`/leaderboard`)
 
-**Back** returns home. It is a text button with a chevron, larger than a footnote link.
-
 One bar. Game modes sit on the left, in play-page order: Daily, All models, Company, Category. Origin and Custom are not on it, because they have no leaderboard. Daily, All models, Company, and Category are open. A mode that is closed stays visible, grayed out, and cannot be selected. A closed mode in the URL falls back to All models.
 
 The middle is one slot, and it follows the selected mode. Daily and All models use the difficulty tabs: **Any difficulty**, **Easy**, **Medium**, **Hard**, and **Impossible**. Category uses a dropdown of every category that is turned on (All categories first, each with its icon), and that dropdown shows only when Category is selected. Company uses a dropdown of every company, and that dropdown shows only when Company is selected. With Daily or All models selected, the bar is the mode tabs, the difficulty tabs, and This week or All time. No category or company dropdown is visible.
@@ -320,7 +318,7 @@ The landing top 5 uses this same bar and the same rows, stopped at 5. Columns: r
 
 ## Models (`/models`)
 
-Public. No session. Linked from the header. **Back** returns home. The title is **Models**, then a line that says every model that can be hiding in a round links to OpenRouter.
+Public. No session. Linked from the header. The title is **Models**, then a line that says every model that can be hiding in a round links to OpenRouter.
 
 A search box (the same style as the other inputs, full width) filters as the player types, on the model name, the company, the origin, the size, or the year, and a count sits next to it (`138 models`, or `3 of 138 models` while filtered). With no match the page says **No model matches that search.**
 

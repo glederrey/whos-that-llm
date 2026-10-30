@@ -64,10 +64,8 @@ a { color: var(--teal-press); text-underline-offset: 3px; }
 html[data-theme="dark"] a { color: var(--teal); }
 @media (hover: hover) and (pointer: fine) { html[data-theme="dark"] a:hover { color: #7ee8ef; } }
 html[data-theme="dark"] a.brand,
-html[data-theme="dark"] a.back,
 html[data-theme="dark"] .menu a,
 html[data-theme="dark"] .header-nav a { color: var(--text); }
-@media (hover: hover) and (pointer: fine) { html[data-theme="dark"] a.back:hover { color: var(--paper); } }
 html[data-theme="dark"] a.button { color: #062e2e; }
 @media (hover: hover) and (pointer: fine) { html[data-theme="dark"] a.button:hover { color: white; } }
 html[data-theme="dark"] a.button-quiet { color: var(--text); }
@@ -196,25 +194,6 @@ img.avatar { object-fit: cover; object-position: center; border-radius: 999px; }
 @media (hover: hover) and (pointer: fine) { .menu a:hover, .menu-item:hover { background: var(--teal-wash); color: var(--text); } }
 html[data-theme="light"] .for-dark { display: none; }
 html[data-theme="dark"] .for-light { display: none; }
-
-.back {
-  color: var(--mute);
-  text-decoration: none;
-  font-size: 15px;
-  font-weight: 500;
-  width: fit-content;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 6px 12px 6px 6px;
-  margin-left: -6px;
-  border-radius: 8px;
-  transition: background 0.15s ease, color 0.15s ease;
-}
-.back svg { width: 20px; height: 20px; }
-@media (hover: hover) and (pointer: fine) { .back:hover { background: var(--card); color: var(--text); } }
-html[data-theme="dark"] a.back { color: var(--mute); }
-@media (hover: hover) and (pointer: fine) { html[data-theme="dark"] a.back:hover { color: var(--text); } }
 
 .footer {
   width: 100%;
