@@ -122,7 +122,9 @@ export default async function HomePage({
         </div>
         <BoardControls base="/" modes={modes} categories={options.categories} companies={options.companies} {...view} />
         {top.length === 0 ? (
-          <div className="card empty">No finished games on this board yet.</div>
+          <div className="card empty">
+            No finished games on this board yet. <a href="/play">Be the first: start a round.</a>
+          </div>
         ) : (
           <BoardTable
             rows={top}
