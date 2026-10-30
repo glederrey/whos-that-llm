@@ -18,6 +18,8 @@ colors:
   miss-wash: "#FDECEC"
   line: "#D4D4D8"
   line-strong: "#B4B4BA"
+  control-line: "#86868E"
+  bubble: "#FBF9F4"
 typography:
   sans:
     fontFamily: Roboto
@@ -67,6 +69,8 @@ The theme is switched with the `data-theme` attribute on `html`. The first visit
 | miss-wash | #FDECEC | #3A1212 |
 | line | #D4D4D8 | #2E2E2E |
 | line-strong | #B4B4BA | #4A4A4A |
+| control-line | #86868E | #76767E |
+| bubble | #FBF9F4 | #1E1E1E (the card) |
 
 `ink`, `paper`, `teal`, `miss` and `miss-press` do not change between themes.
 
@@ -80,7 +84,7 @@ Content width is `min(980px, 100% - 32px)` for the header, the page and the foot
 
 ## Elevation & Depth
 
-Cards and message bubbles use a faint shadow in the light theme and none in the dark theme. Menus and dialogs use a larger lift shadow in both themes.
+`control-line` is the border of inputs and the message box: at least 3:1 against the card, so a field is visible without its fill. `bubble` is a warm off-white for the hidden model's replies in the light theme only; it is not a new brand hue. Cards and message bubbles use a faint shadow in the light theme and none in the dark theme. Menus and dialogs use a larger lift shadow in both themes.
 
 ## Shapes
 

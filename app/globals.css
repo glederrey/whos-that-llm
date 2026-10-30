@@ -21,6 +21,8 @@
   --bar-open: var(--teal);
   --line: #d4d4d8;
   --line-strong: #b4b4ba;
+  --control-line: #86868e;
+  --bubble: #fbf9f4;
   --shadow: 0 1px 2px rgba(20, 20, 20, 0.05), 0 1px 0 rgba(20, 20, 20, 0.03);
   --lift: 0 12px 32px rgba(20, 20, 20, 0.12);
   --radius: 14px;
@@ -42,6 +44,8 @@ html[data-theme="dark"] {
   --bar-gave-up: #6b6b73;
   --line: #2e2e2e;
   --line-strong: #4a4a4a;
+  --control-line: #76767e;
+  --bubble: var(--card);
   --shadow: none;
   --lift: 0 12px 32px rgba(0, 0, 0, 0.5);
 }
@@ -352,7 +356,7 @@ a.button, a.button-quiet { display: inline-block; text-decoration: none; }
 label { display: grid; gap: 6px; font-size: 14px; font-weight: 500; }
 input, textarea, select {
   width: 100%;
-  border: 1px solid var(--line-strong);
+  border: 1px solid var(--control-line);
   background: var(--card);
   border-radius: var(--radius-sm);
   padding: 10px 12px;
@@ -1111,7 +1115,7 @@ html[data-theme="dark"] .company-menu summary { color: var(--text); }
   box-shadow: none;
 }
 html[data-theme="dark"] .bubble.user { border-color: #0b4545; }
-.bubble.assistant { white-space: normal; justify-self: start; }
+.bubble.assistant { white-space: normal; justify-self: start; background: var(--bubble); }
 .bubble em { padding-right: 0.08em; }
 .empty-message { color: var(--mute); }
 .reply-actions { display: flex; gap: 8px; flex-wrap: wrap; }
@@ -1199,7 +1203,7 @@ html[data-theme="dark"] .bubble.user { border-color: #0b4545; }
 }
 .composer {
   background: var(--card);
-  border: 1px solid var(--line-strong);
+  border: 1px solid var(--control-line);
   border-radius: var(--radius);
   padding: 6px 10px 10px 14px;
   box-shadow: var(--shadow);
