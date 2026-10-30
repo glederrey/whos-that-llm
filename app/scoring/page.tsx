@@ -68,7 +68,7 @@ export default function ScoringPage() {
             </span>
           </li>
           <li>
-            <strong>4. No-hint mode</strong>
+            <strong>4. Hints and no-hint mode</strong>
             <span>
               Company, origin, year, and size can each be revealed once, after the first reply. A revealed trait is known from then on,
               and the guess list drops models that do not match it. A trait the round already showed you has no hint. Play without hints
