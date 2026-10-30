@@ -33,7 +33,7 @@ export default function ScoringPage() {
   const { hintCosts } = config;
   const capAt = config.tokenScale / config.tokenCap;
   return (
-    <div className="stack">
+    <div className="stack scoring-page">
       <h1>How scoring works</h1>
       <p className="lede">
         A round starts from a base. Penalties come off it. That subtotal is multiplied by the token factor, then by the no-hint multiplier when
@@ -70,7 +70,9 @@ export default function ScoringPage() {
           <li>
             <strong>4. No-hint mode</strong>
             <span>
-              Play without hints and the roster never shrinks and no hint buttons are offered. A round played that way is multiplied by{" "}
+              Company, origin, year, and size can each be revealed once, after the first reply. A revealed trait is known from then on,
+              and the guess list drops models that do not match it. A trait the round already showed you has no hint. Play without hints
+              and the roster never shrinks and no hint buttons are offered. A round played that way is multiplied by{" "}
               {config.noHintMultiplier}×. Buying a hint means you are in the other mode, so the multiplier stays at 1×.
             </span>
           </li>
@@ -90,11 +92,6 @@ export default function ScoringPage() {
           </li>
         </ol>
       </div>
-      <h2>Hints</h2>
-      <p>
-        Company, origin, year, and size can each be revealed once, after the first reply. A revealed trait is known from then on, and
-        the guess list drops models that do not match it. A trait the round already showed you has no hint.
-      </p>
       <h2>One round</h2>
       <p>
         The replies counted as {n(exampleTokens)} tokens. You bought the size hint and named one wrong model before the
