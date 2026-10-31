@@ -14,6 +14,7 @@
   --mute: #52525b;
   --miss: #ff4436;
   --miss-press: #c41b15;
+  --miss-text: #c41b15;
   --miss-wash: #fdecec;
   --bar-solved: #1c7c43;
   --bar-failed: #c41b15;
@@ -44,6 +45,7 @@ html[data-theme="dark"] {
   --text: #ebebeb;
   --mute: #a1a1aa;
   --miss-wash: #3a1212;
+  --miss-text: #ff6b5e;
   --line: #2e2e2e;
   --line-strong: #4a4a4a;
   --control-line: #76767e;
@@ -316,11 +318,11 @@ a.button, a.button-quiet { display: inline-block; text-decoration: none; }
   .round-actions .round-guess { display: inline-flex; align-items: center; padding: 8px 12px; min-height: 40px; }
   .guess-sticky > * { scroll-margin-top: 80px; }
 }
-.give-up { color: var(--miss-press); padding: 6px 10px; }
-.button-quiet.give-up { background: transparent; color: var(--miss-press); border-color: transparent; padding: 6px 10px; }
-@media (hover: hover) and (pointer: fine) { .button-quiet.give-up:hover { background: var(--miss-wash); color: var(--miss-press); border-color: transparent; } }
-.button-danger { background: transparent; color: var(--miss-press); border-color: var(--miss-press); }
-@media (hover: hover) and (pointer: fine) { .button-danger:hover { background: var(--miss-wash); color: var(--miss-press); } }
+.give-up { color: var(--miss-text); padding: 6px 10px; }
+.button-quiet.give-up { background: transparent; color: var(--miss-text); border-color: transparent; padding: 6px 10px; }
+@media (hover: hover) and (pointer: fine) { .button-quiet.give-up:hover { background: var(--miss-wash); color: var(--miss-text); border-color: transparent; } }
+.button-danger { background: transparent; color: var(--miss-text); border-color: var(--miss-text); }
+@media (hover: hover) and (pointer: fine) { .button-danger:hover { background: var(--miss-wash); color: var(--miss-text); } }
 .button-on { background: var(--on); color: white; border-color: var(--on); }
 @media (hover: hover) and (pointer: fine) { .button-on:hover { background: var(--on-press); border-color: var(--on-press); color: white; } }
 .button-off { background: var(--miss-press); color: white; border-color: var(--miss-press); }
@@ -370,7 +372,7 @@ input:focus, textarea:focus, select:focus { outline: none; border-color: var(--t
 input::placeholder, textarea::placeholder { color: var(--mute); opacity: 1; }
 html[data-theme="dark"] input:focus, html[data-theme="dark"] textarea:focus, html[data-theme="dark"] select:focus { box-shadow: 0 0 0 3px rgba(0, 187, 201, 0.25); }
 textarea { min-height: 76px; resize: vertical; }
-.error { color: var(--miss-press); margin: 8px 0 0; font-size: 14px; }
+.error { color: var(--miss-text); margin: 8px 0 0; font-size: 14px; }
 .check { display: flex; gap: 10px; align-items: flex-start; font-weight: 400; }
 .check input { width: auto; margin-top: 4px; accent-color: var(--teal-press); }
 
@@ -1234,7 +1236,7 @@ html[data-theme="dark"] .trait.hit .trait-value { color: var(--teal); }
 }
 .hit { color: var(--teal-press); }
 html[data-theme="dark"] .hit { color: var(--teal); }
-.miss { color: var(--miss-press); }
+.miss { color: var(--miss-text); }
 .known { color: var(--mute); }
 
 .guess-box h2 { margin: 0; }
@@ -1293,7 +1295,7 @@ html[data-theme="dark"] .hit { color: var(--teal); }
 .past-model > span:first-of-type { min-width: 0; }
 .past-model img { width: calc(28px * var(--fit)); height: calc(28px * var(--fit)); border-radius: 6px; }
 .past-message { margin-left: auto; flex: none; color: var(--mute); font-size: calc(13px * var(--fit)); font-weight: 500; white-space: nowrap; }
-.wrong-line { margin: calc(6px * var(--fit)) 0 0; color: var(--miss-press); font-weight: 500; font-size: calc(14px * var(--fit)); }
+.wrong-line { margin: calc(6px * var(--fit)) 0 0; color: var(--miss-text); font-weight: 500; font-size: calc(14px * var(--fit)); }
 .past-guess.arrive { animation: guess-in 0.5s ease; }
 @keyframes guess-in {
   0% { opacity: 0; transform: translateX(10px); }
@@ -1316,8 +1318,8 @@ html[data-theme="dark"] .hit { color: var(--teal); }
 .dialog .button-danger { margin-left: auto; }
 .delete-action { display: flex; justify-content: center; }
 /* Red stays a line and a word here, not a fill; the filled red button is the confirm inside the dialog. */
-.delete-action .button-off { background: transparent; color: var(--miss-press); }
-@media (hover: hover) and (pointer: fine) { .delete-action .button-off:hover { background: var(--miss-wash); color: var(--miss-press); border-color: var(--miss-press); } }
+.delete-action .button-off { background: transparent; color: var(--miss-text); }
+@media (hover: hover) and (pointer: fine) { .delete-action .button-off:hover { background: var(--miss-wash); color: var(--miss-text); border-color: var(--miss-text); } }
 .dialog form { display: grid; gap: 14px; }
 .dialog form h2, .dialog form p { margin: 0; }
 .dialog form label { display: grid; gap: 6px; font-size: 14px; font-weight: 500; }
@@ -1607,7 +1609,7 @@ html[data-theme="dark"] .history-facts .board-chip.no-hints {
 }
 .history-status { justify-self: center; text-align: center; white-space: nowrap; }
 .history-status[data-state="solved"] { color: #1c7c43; font-weight: 600; }
-.history-status[data-state="miss"] { color: var(--miss-press); font-weight: 600; }
+.history-status[data-state="miss"] { color: var(--miss-text); font-weight: 600; }
 .history-status[data-state="given_up"] { color: var(--mute); font-weight: 600; }
 .history-score { justify-self: end; text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .history-score[data-best="true"] { justify-self: end; color: #007f88; font-weight: 800; }
@@ -2194,7 +2196,7 @@ html[data-theme="dark"] .history-score[data-best="true"] { color: var(--teal); }
   visibility: visible;
 } }
 .share-note { width: 100%; color: var(--mute); font-size: 14px; margin: 0; }
-.share-note.is-error { color: var(--miss-press); }
+.share-note.is-error { color: var(--miss-text); }
 .button-quiet.share-copy,
 .button-quiet.share-download { transition-duration: 0.05s; }
 .share-copy.is-copied,

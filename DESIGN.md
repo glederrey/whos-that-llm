@@ -77,7 +77,7 @@ The theme is switched with the `data-theme` attribute on `html`. The first visit
 | control-line | #86868E | #76767E |
 | bubble | #FBF9F4 | #1E1E1E (the card) |
 
-`ink`, `paper`, `teal`, `miss` and `miss-press` do not change between themes.
+`ink`, `paper`, `teal`, `miss` and `miss-press` do not change between themes. Red text uses `miss-text`, which is `miss-press` in light and a lighter `#FF6B5E` in dark (5.6:1 on the dark card); `miss-press` stays the fill behind white text.
 
 ## Typography
 
