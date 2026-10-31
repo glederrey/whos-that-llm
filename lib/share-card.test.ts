@@ -521,7 +521,7 @@ test("share comes before download, and the networks live in one menu", () => {
   assert.match(css, /\.score-card \.score-link \{ display: none; \}/);
   assert.match(css, /@media \(max-width: 720px\) \{[\s\S]*?\.share-download-extra \{ display: none; \}/);
   assert.doesNotMatch(css, /\.share-download\.is-short/);
-  assert.match(css, /\.share-note\.is-error \{ color: var\(--miss-press\); \}/);
+  assert.match(css, /\.share-note\.is-error \{ color: var\(--miss-text\); \}/);
   assert.doesNotMatch(css, /\.share-actions \.share-copy \{ display: none; \}/);
   assert.equal(html.includes(">Message<"), false);
   assert.equal(html.includes("share-phone"), false);
