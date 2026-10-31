@@ -150,7 +150,7 @@ test("the card uses the tokens the score counted", () => {
 test("difficulty words use the leaderboard colors", () => {
   assert.deepEqual(difficultyColor, {
     easy: "#1c7c43",
-    medium: "#d4a017",
+    medium: "#e8801a",
     hard: "#c41b15",
     impossible: "#a78bfa",
   });

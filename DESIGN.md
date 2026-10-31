@@ -47,14 +47,14 @@ A match and a miss must stay distinguishable without relying on color alone.
 
 ### Difficulty scale
 
-Easy, Medium, Hard and Impossible each have a hue that is a semantic scale, not brand color: green, amber, red and violet. The hue paints the 4px edge of a difficulty row, a selected tab and the leaderboard chip. Text in that hue uses a separate `--diff-text` token, darker in the light theme and lighter in the dark theme, so it reaches 4.5:1 on `canvas`, `card` and `soft`.
+Easy, Medium, Hard and Impossible each have a hue that is a semantic scale, not brand color: green, orange, red and violet. The hue paints the 4px edge of a difficulty row, a selected tab and the leaderboard chip. Text in that hue uses a separate `--diff-text` token, darker in the light theme and lighter in the dark theme, so it reaches 4.5:1 on `canvas`, `card` and `soft`.
 
 | Difficulty | Fill (`--diff`) | Text, light | Text, dark |
 |---|---|---|---|
 | Easy | #1C7C43 | #16703B | #3FB36B |
-| Medium | #D4A017 | #7D5C00 | #D4A017 |
-| Hard | #C41B15 | #C41B15 | #FF6B62 |
-| Impossible | #A78BFA | #6240C9 | #A78BFA |
+| Medium | #E8801A | #964700 | #F59A3C |
+| Hard | #C41B15 | #B01711 | #FF6B62 |
+| Impossible | #A78BFA | #4E2FB0 | #A78BFA |
 
 Never use the fill as text on a light surface, and never put the difficulty hues on a large area.
 

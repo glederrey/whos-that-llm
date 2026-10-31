@@ -19,7 +19,7 @@ import { siteName, siteOrigin } from "./site";
 /** Leaderboard difficulty colors. The card uses these on the difficulty word. */
 export const difficultyColor: Record<Difficulty, string> = {
   easy: "#1c7c43",
-  medium: "#d4a017",
+  medium: "#e8801a",
   hard: "#c41b15",
   impossible: "#a78bfa",
 };
