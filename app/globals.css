@@ -134,7 +134,7 @@ button { cursor: pointer; }
 .nav-icon { width: 18px; height: 18px; }
 @media (hover: hover) and (pointer: fine) { .header-nav > a:hover { background: var(--card); color: var(--text); } }
 @media (hover: hover) and (pointer: fine) { html[data-theme="dark"] .header-nav > a:hover { background: var(--card); color: var(--text); } }
-/* Five links with their labels need about 990px. Under that, only the icons, so the bar stays on one row. */
+/* Six links with their labels fit down to 990px. Under that, only the icons, so the bar stays on one row. */
 @media (max-width: 990px) {
   .header-nav > a { width: 36px; height: 36px; padding: 0; justify-content: center; }
   .header-nav > a .nav-label { display: none; }
@@ -160,7 +160,7 @@ button { cursor: pointer; }
 .account-button .avatar { width: 100%; height: 100%; }
 img.avatar { object-fit: cover; object-position: center; border-radius: 999px; }
 .guest-icon { width: 22px; height: 22px; }
-/* Under 560px the five links move into a burger button placed before the avatar; both are rounded squares there. */
+/* Under 560px the six links move into a burger button placed before the avatar; both are rounded squares there. */
 .account { gap: 8px; }
 .account-burger { display: none; }
 .account-burger svg { width: 24px; height: 24px; }
