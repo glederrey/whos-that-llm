@@ -252,8 +252,7 @@ p { margin: 0; text-wrap: pretty; }
    bottom margin was added on top of that, so the title sat farther from its
    paragraph than from the paragraph above. These margins land at 24px above
    a heading and 8px below it. */
-.stack > p { max-width: 60ch; }
-.stack.why > p, .stack.scoring-page > p { max-width: none; }
+.stack > p { max-width: none; }
 .why h2 { margin-top: 8px; margin-bottom: -8px; }
 .landing { gap: 36px; }
 .landing .hero { padding-bottom: 0; }
