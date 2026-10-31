@@ -134,8 +134,8 @@ export default async function Hero4({ searchParams }: { searchParams: Promise<Bo
         {rounds.length > 0 ? (
           <div className="h4-demo">
             <span className="h4-logo" aria-hidden="true">
-              <img className="for-light" src="/brand/logo-tail-right-light.png" alt="" />
-              <img className="for-dark" src="/brand/logo-tail-right-dark.png" alt="" />
+              <img className="for-light" src="/brand/logo-tail-side-light.png" alt="" />
+              <img className="for-dark" src="/brand/logo-tail-side-dark.png" alt="" />
             </span>
             <SearchDemo rounds={rounds} />
           </div>
