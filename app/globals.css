@@ -692,7 +692,7 @@ html[data-theme="dark"] .difficulty-resume { color: var(--teal); }
 }
 .segmented a.difficulty-easy, .segmented a.difficulty-medium, .segmented a.difficulty-hard, .segmented a.difficulty-impossible { font-weight: 600; }
 .segmented a.difficulty-easy { color: var(--diff-text); }
-.segmented a.difficulty-medium { color: var(--diff-text); }
+.segmented a.difficulty-medium { color: #f5c518; }
 .segmented a.difficulty-hard { color: var(--diff-text); }
 .segmented a.difficulty-impossible { color: var(--diff-text); }
 html[data-theme="dark"] .segmented a.difficulty-easy { color: var(--diff-text); }
