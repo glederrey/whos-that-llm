@@ -2389,21 +2389,26 @@ html[data-theme="dark"] .h2-podium li { background: rgba(0, 0, 0, 0.1); }
 .demo-search .demo-chat .bubble.user { align-self: flex-end; }
 .demo-search .demo-chat .bubble.assistant { align-self: flex-start; }
 .demo-prev { display: contents; }
+.demo-rest { visibility: hidden; }
+.h4-title { display: flex; align-items: center; gap: 16px; }
+.h4-logo img { width: 68px; height: 68px; display: block; }
+@media (max-width: 1100px) { .h4-logo { display: none; } }
 .demo-search .demo-head { justify-content: flex-start; color: var(--text); font-size: 14px; }
 .demo-search .bubble { padding: 8px 12px; }
 .demo-guess { min-height: 290px; align-content: start; grid-auto-rows: min-content; border-top: 1px solid var(--line-strong); padding-top: 14px; }
 .demo-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 4px; }
 .demo-cols h3 { margin: 0 0 6px; font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--mute); }
-.demo-hint { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 0; padding: 7px 0; border-top: 1px solid var(--line); font-size: 14px; }
+.demo-hint { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 0; height: 36px; box-sizing: border-box; padding: 0; border-top: 1px solid var(--line); font-size: 14px; }
 .demo-hint > span { color: var(--mute); }
 .demo-hint b { display: inline-flex; align-items: center; gap: 6px; color: var(--teal-press); animation: demo-in 0.25s ease-out; }
 html[data-theme="dark"] .demo-hint b { color: var(--teal); }
-.demo-hint i { font-style: normal; font-size: 12px; color: var(--mute); padding: 2px 8px; border: 1px solid var(--line-strong); border-radius: 999px; }
+.demo-hint i { font-style: normal; font-size: 12px; line-height: 18px; color: var(--mute); padding: 1px 8px; border: 1px solid var(--line-strong); border-radius: 999px; }
 .demo-hint[data-flash="true"] i { color: var(--text); border-color: var(--teal); background: var(--teal-wash); animation: demo-flash 0.35s ease-in-out 2; }
 .demo-hint:first-of-type { border-top: 0; }
 .demo-search .guess-search .candidates { z-index: 2; }
-.demo-results { display: grid; gap: 8px; align-content: start; }
-.demo-results .demo-picked { padding: 6px 10px; font-size: 13px; }
+.demo-results { display: grid; gap: 4px; align-content: start; }
+.demo-results .demo-picked { height: 32px; box-sizing: border-box; padding: 0 10px; font-size: 14px; gap: 8px; }
+.demo-results .demo-picked span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
 .demo-results .demo-picked img { width: 24px; height: 24px; }
 .demo-picked[data-right="false"] { border-color: var(--miss-text); background: color-mix(in srgb, var(--miss-text) 10%, transparent); }
 .h4-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin: 0; width: 100%; }

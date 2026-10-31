@@ -107,9 +107,15 @@ export default async function Hero4({ searchParams }: { searchParams: Promise<Bo
     <div className="stack landing h4">
       <section className="h4-hero">
         <div className="h1-text">
-          <h1>
-            Guess the hidden <span className="h1-mark">AI</span>.
-          </h1>
+          <div className="h4-title">
+            <span className="h4-logo" aria-hidden="true">
+              <img className="for-light" src="/brand/logo-tail-right-light.png" alt="" />
+              <img className="for-dark" src="/brand/logo-tail-right-dark.png" alt="" />
+            </span>
+            <h1>
+              Guess the hidden <span className="h1-mark">AI</span>.
+            </h1>
+          </div>
           <p className="hero-copy">Chat with a mystery model, then name it from the list. The fewer tokens you use and the fewer hints you buy, the more you score.</p>
           <HeroCta signedIn={Boolean(user && username)} label="Sign up" signedInLabel="Try a round" />
           <dl className="h4-stats">

@@ -161,7 +161,12 @@ export function SearchDemo({ rounds }: { rounds: SearchDemoRound[] }) {
             <div className="bubble assistant">{prev.a}</div>
           </div>
         ))}
-        {asking.length > 0 ? <div className="bubble user">{asking}</div> : null}
+        {asking.length > 0 ? (
+          <div className="bubble user">
+            {asking}
+            <span className="demo-rest">{shown.q.slice(asking.length)}</span>
+          </div>
+        ) : null}
         {phase === "typing" && !reduced ? (
           <div className="bubble assistant">
             <span className="typing">
@@ -171,7 +176,12 @@ export function SearchDemo({ rounds }: { rounds: SearchDemoRound[] }) {
             </span>
           </div>
         ) : null}
-        {showReply ? <div className="bubble assistant">{text}</div> : null}
+        {showReply ? (
+          <div className="bubble assistant">
+            {text}
+            <span className="demo-rest">{shown.a.slice(text.length)}</span>
+          </div>
+        ) : null}
       </div>
       <div className="demo-guess" aria-hidden="true">
         <div className="guess-search">
@@ -217,11 +227,7 @@ export function SearchDemo({ rounds }: { rounds: SearchDemoRound[] }) {
             {results.map(({ turn: row, pick: model, key }) => (
               <div key={key} className="picked demo-picked" data-right={row.right}>
                 <img src={model.logoUrl} alt="" width={24} height={24} />
-                <span>
-                  {model.companyName}
-                  <br />
-                  {model.name}
-                </span>
+                <span>{model.name}</span>
               </div>
             ))}
           </div>
