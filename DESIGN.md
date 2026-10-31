@@ -97,7 +97,7 @@ Corners stay slight. `base` is for cards, menus and the composer; `sm` is for bu
 
 ## Buttons
 
-Radius `sm`, flat fills, no gradient. Primary is teal with `ink` text (hover: `teal-press`, white text). Quiet is `card` with a `control-line` border (3.6:1 on the card in light, 3.7:1 in dark) and `text` label. Give up is quiet with `miss-press` text and no border. On/off are `on` (green) and `miss-press` fills with white text; hover darkens to `on-press` and `off-press`. Every button presses the same way: `scale(0.97)` for 0.1s. Hover is gated behind `(hover: hover)`. Targets are 44px on phones.
+Radius `sm`, flat fills, no gradient. Primary is teal with a near-black text (`#062e2e`, a dark teal, not `ink`) (hover: `teal-press`, white text). Quiet is `card` with a `control-line` border (3.6:1 on the card in light, 3.7:1 in dark) and `text` label. Give up is quiet with `miss-press` text and no border. On/off are `on` (green) and `miss-press` fills with white text; hover darkens to `on-press` and `off-press`. Every button presses the same way: `scale(0.97)` for 0.1s. Hover is gated behind `(hover: hover)`. Targets are 44px on phones.
 
 ## Do's and Don'ts
 
