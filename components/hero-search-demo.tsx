@@ -178,16 +178,21 @@ export function SearchDemo({ rounds }: { rounds: SearchDemoRound[] }) {
                   {now ? <span className="demo-rest">{row.q.slice(question.length)}</span> : null}
                 </div>
               ) : null}
-              {dots ? (
+              {!now || showReply || dots ? (
                 <div className="bubble assistant">
-                  <span className="typing">
-                    <i />
-                    <i />
-                    <i />
-                  </span>
+                  {dots ? (
+                    <span className="typing">
+                      <i />
+                      <i />
+                      <i />
+                    </span>
+                  ) : now ? (
+                    text || "\u200b"
+                  ) : (
+                    row.a
+                  )}
                 </div>
               ) : null}
-              {!now || showReply ? <div className="bubble assistant">{now ? text || "\u200b" : row.a}</div> : null}
             </Fragment>
           );
         })}

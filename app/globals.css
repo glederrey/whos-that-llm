@@ -2325,7 +2325,9 @@ html[data-theme="dark"] .h1-mark { color: var(--teal); }
 .demo-chat { display: grid; gap: 10px; min-height: 190px; align-content: start; }
 .demo-chat .bubble { max-width: 92%; animation: demo-in 0.25s ease-out; }
 .demo-chat .bubble.user { justify-self: end; }
-.demo-chat .typing { display: flex; height: 1.5em; min-height: 0; }
+.demo-chat .typing { display: flex; height: 1.5em; min-height: 0; gap: 4px; }
+.demo-chat .typing i { width: 5px; height: 5px; animation-name: demo-typing; }
+@keyframes demo-typing { 0%, 80%, 100% { opacity: 0.25; } 40% { opacity: 1; } }
 .demo-guess { display: grid; gap: 8px; }
 .demo-guess[data-on="true"] { opacity: 1; }
 .demo-prompt { font-size: 13px; font-weight: 500; color: var(--mute); }
