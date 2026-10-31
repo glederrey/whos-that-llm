@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import { Twemoji } from "./twemoji";
 
 function useReducedMotion() {
@@ -47,6 +47,8 @@ export function SearchDemo({ rounds }: { rounds: SearchDemoRound[] }) {
   const [typed, setTyped] = useState(0);
   const [asked, setAsked] = useState(0);
   const [hintOn, setHintOn] = useState(false);
+  const [overflow, setOverflow] = useState(false);
+  const chatRef = useRef<HTMLDivElement>(null);
   const current = rounds[round];
   const last = current.turns.length - 1;
   const t = reduced ? last : turn;
@@ -130,6 +132,15 @@ export function SearchDemo({ rounds }: { rounds: SearchDemoRound[] }) {
   const query = reduced || picked ? "" : shown.query.slice(0, typed);
   const listing = !picked && typed >= 2;
 
+  // Content stays top-aligned and scrolls up (with the fade) once it no longer fits.
+  useEffect(() => {
+    const el = chatRef.current;
+    if (!el) return;
+    setOverflow(el.scrollHeight > el.clientHeight + 1);
+    if (turn === 0 && phase === "ask" && asked === 0) el.scrollTo({ top: 0, behavior: "auto" });
+    else el.scrollTo({ top: el.scrollHeight, behavior: reduced ? "auto" : "smooth" });
+  }, [round, turn, phase, asked, chars, reduced]);
+
   // Hints revealed so far: earlier turns always, this turn once the guess starts.
   const hintsOut = reduced || (phase === "hint" && hintOn) || phase === "search" || phase === "pick" || phase === "reveal";
   const revealed = new Map<SearchDemoHintKey, { value: string; flag?: string }>();
@@ -154,34 +165,32 @@ export function SearchDemo({ rounds }: { rounds: SearchDemoRound[] }) {
       <div className="demo-head" aria-hidden="true">
         <strong>Message {t + 1} of 10</strong>
       </div>
-      <div className="demo-chat" data-scrolled={t > 0} aria-hidden="true">
-        {current.turns.slice(0, t).map((prev) => (
-          <div className="demo-prev" key={prev.q}>
-            <div className="bubble user">{prev.q}</div>
-            <div className="bubble assistant">{prev.a}</div>
-          </div>
-        ))}
-        {asking.length > 0 ? (
-          <div className="bubble user">
-            {asking}
-            <span className="demo-rest">{shown.q.slice(asking.length)}</span>
-          </div>
-        ) : null}
-        {phase === "typing" && !reduced ? (
-          <div className="bubble assistant">
-            <span className="typing">
-              <i />
-              <i />
-              <i />
-            </span>
-          </div>
-        ) : null}
-        {showReply ? (
-          <div className="bubble assistant">
-            {text}
-            <span className="demo-rest">{shown.a.slice(text.length)}</span>
-          </div>
-        ) : null}
+      <div className="demo-chat" ref={chatRef} data-scrolled={overflow} aria-hidden="true">
+        {current.turns.slice(0, t + 1).map((row, index) => {
+          const now = index === t;
+          const question = now ? asking : row.q;
+          const dots = now && phase === "typing" && !reduced;
+          return (
+            <Fragment key={`${round}-${index}`}>
+              {question.length > 0 ? (
+                <div className="bubble user">
+                  {question}
+                  {now ? <span className="demo-rest">{row.q.slice(question.length)}</span> : null}
+                </div>
+              ) : null}
+              {dots ? (
+                <div className="bubble assistant">
+                  <span className="typing">
+                    <i />
+                    <i />
+                    <i />
+                  </span>
+                </div>
+              ) : null}
+              {!now || showReply ? <div className="bubble assistant">{now ? text : row.a}</div> : null}
+            </Fragment>
+          );
+        })}
       </div>
       <div className="demo-guess" aria-hidden="true">
         <div className="guess-search">
