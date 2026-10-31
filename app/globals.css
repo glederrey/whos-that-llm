@@ -702,11 +702,11 @@ html[data-theme="dark"] .segmented a.difficulty-impossible { color: var(--diff-t
 .segmented a.difficulty-easy[aria-pressed="true"] { background: #1c7c43; color: #fff; }
 .segmented a.difficulty-medium[aria-pressed="true"] { background: #f5c518; color: #141414; }
 .segmented a.difficulty-hard[aria-pressed="true"] { background: #c41b15; color: #fff; }
-.segmented a.difficulty-impossible[aria-pressed="true"] { background: #a78bfa; color: #141414; }
+.segmented a.difficulty-impossible[aria-pressed="true"] { background: #7c5ce6; color: #fff; }
 html[data-theme="dark"] .segmented a.difficulty-easy[aria-pressed="true"],
 html[data-theme="dark"] .segmented a.difficulty-hard[aria-pressed="true"] { color: #fff; }
 html[data-theme="dark"] .segmented a.difficulty-medium[aria-pressed="true"] { background: #f5c518; color: #141414; }
-html[data-theme="dark"] .segmented a.difficulty-impossible[aria-pressed="true"] { background: #a78bfa; color: #141414; }
+html[data-theme="dark"] .segmented a.difficulty-impossible[aria-pressed="true"] { background: #7c5ce6; color: #fff; }
 .category-check {
   margin: 12px 0 0;
   align-items: center;
@@ -760,7 +760,7 @@ html[data-theme="dark"] .segmented a.difficulty-impossible[aria-pressed="true"] 
 .board-chip.difficulty-easy { background: #1c7c43; color: #fff; }
 .board-chip.difficulty-medium { background: #f5c518; color: #141414; }
 .board-chip.difficulty-hard { background: #c41b15; color: #fff; }
-.board-chip.difficulty-impossible { background: #a78bfa; color: #141414; }
+.board-chip.difficulty-impossible { background: #7c5ce6; color: #fff; }
 .board-chip.no-hints { background: var(--chip-3); color: var(--text); border: 1px solid var(--line); }
 .board-chip.company-chip {
   gap: 6px;
