@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Twemoji } from "./twemoji";
 
 function useReducedMotion() {
   const [reduced, setReduced] = useState(false);
@@ -13,6 +14,13 @@ function useReducedMotion() {
 }
 
 export type SearchDemoModel = { id: string; name: string; companyName: string; logoUrl: string };
+export type SearchDemoHintKey = "company" | "origin" | "year" | "size";
+const hintRows: { key: SearchDemoHintKey; label: string }[] = [
+  { key: "company", label: "Company" },
+  { key: "origin", label: "Origin" },
+  { key: "year", label: "Year" },
+  { key: "size", label: "Size" },
+];
 /** One message and the guess made after it. A round with a wrong first guess has two turns. */
 export type SearchDemoTurn = {
   q: string;
@@ -21,8 +29,12 @@ export type SearchDemoTurn = {
   candidates: SearchDemoModel[];
   pickId: string;
   right: boolean;
+  /** A hint revealed before this guess. */
+  hint?: { key: SearchDemoHintKey; value: string; flag?: string };
 };
-export type SearchDemoRound = { turns: SearchDemoTurn[] };
+export type SearchDemoFacts = Record<SearchDemoHintKey, { value: string; flag?: string }>;
+/** `facts` describe the hidden model: all of them show once it is found. */
+export type SearchDemoRound = { turns: SearchDemoTurn[]; facts: SearchDemoFacts };
 
 /** A looping example round that ends in the real guess picker: the query types itself, real models and logos
  *  list below it, one is picked, then it is revealed. Decoration only. */
@@ -30,9 +42,11 @@ export function SearchDemo({ rounds }: { rounds: SearchDemoRound[] }) {
   const reduced = useReducedMotion();
   const [round, setRound] = useState(0);
   const [turn, setTurn] = useState(0);
-  const [phase, setPhase] = useState<"ask" | "typing" | "reply" | "search" | "pick" | "reveal">("ask");
+  const [phase, setPhase] = useState<"ask" | "typing" | "reply" | "hint" | "search" | "pick" | "reveal">("ask");
   const [chars, setChars] = useState(0);
   const [typed, setTyped] = useState(0);
+  const [asked, setAsked] = useState(0);
+  const [hintOn, setHintOn] = useState(false);
   const current = rounds[round];
   const last = current.turns.length - 1;
   const t = reduced ? last : turn;
@@ -46,7 +60,18 @@ export function SearchDemo({ rounds }: { rounds: SearchDemoRound[] }) {
     if (phase === "ask") {
       setChars(0);
       setTyped(0);
-      timer = setTimeout(() => setPhase("typing"), 700);
+      setAsked(0);
+      setHintOn(false);
+      tick = setInterval(() => {
+        setAsked((value) => {
+          if (value + 2 >= shown.q.length) {
+            clearInterval(tick);
+            timer = setTimeout(() => setPhase("typing"), 600);
+            return shown.q.length;
+          }
+          return value + 2;
+        });
+      }, 30);
     } else if (phase === "typing") {
       timer = setTimeout(() => setPhase("reply"), 900);
     } else if (phase === "reply") {
@@ -54,12 +79,20 @@ export function SearchDemo({ rounds }: { rounds: SearchDemoRound[] }) {
         setChars((value) => {
           if (value + 2 >= shown.a.length) {
             clearInterval(tick);
-            timer = setTimeout(() => setPhase("search"), 500);
+            timer = setTimeout(() => setPhase(shown.hint ? "hint" : "search"), 500);
             return shown.a.length;
           }
           return value + 2;
         });
       }, 26);
+    } else if (phase === "hint") {
+      // The hint flashes, shows its value, then waits so the guess list does not cover it.
+      const reveal = setTimeout(() => setHintOn(true), 700);
+      const next = setTimeout(() => setPhase("search"), 2000);
+      return () => {
+        clearTimeout(reveal);
+        clearTimeout(next);
+      };
     } else if (phase === "search") {
       tick = setInterval(() => {
         setTyped((value) => {
@@ -88,13 +121,23 @@ export function SearchDemo({ rounds }: { rounds: SearchDemoRound[] }) {
       clearTimeout(timer);
       clearInterval(tick);
     };
-  }, [phase, reduced, turn, last, shown.right, shown.a.length, shown.query.length, rounds.length]);
+  }, [phase, reduced, turn, last, shown.right, shown.a.length, shown.hint, shown.q.length, shown.query.length, rounds.length]);
 
+  const asking = reduced || phase !== "ask" ? shown.q : shown.q.slice(0, asked);
   const showReply = reduced || phase === "reply" || phase === "search" || phase === "pick" || phase === "reveal";
   const text = reduced || phase !== "reply" ? shown.a : shown.a.slice(0, chars);
   const picked = reduced || phase === "reveal";
   const query = reduced || picked ? "" : shown.query.slice(0, typed);
   const listing = !picked && typed >= 2;
+
+  // Hints revealed so far: earlier turns always, this turn once the guess starts.
+  const hintsOut = reduced || (phase === "hint" && hintOn) || phase === "search" || phase === "pick" || phase === "reveal";
+  const revealed = new Map<SearchDemoHintKey, { value: string; flag?: string }>();
+  current.turns.forEach((row, index) => {
+    if (row.hint && (index < t || (index === t && hintsOut))) revealed.set(row.hint.key, row.hint);
+  });
+
+  if (picked && shown.right) for (const { key } of hintRows) revealed.set(key, current.facts[key]);
 
   // Guesses made so far, newest first: a wrong one stays and the next guess pushes it down.
   const results = current.turns
@@ -118,7 +161,7 @@ export function SearchDemo({ rounds }: { rounds: SearchDemoRound[] }) {
             <div className="bubble assistant">{prev.a}</div>
           </div>
         ))}
-        <div className="bubble user">{shown.q}</div>
+        {asking.length > 0 ? <div className="bubble user">{asking}</div> : null}
         {phase === "typing" && !reduced ? (
           <div className="bubble assistant">
             <span className="typing">
@@ -149,18 +192,39 @@ export function SearchDemo({ rounds }: { rounds: SearchDemoRound[] }) {
             ))}
           </div>
         </div>
-        <div className="demo-results">
-          {results.map(({ turn: row, pick: model, key }) => (
-            <div key={key} className="picked demo-picked" data-right={row.right}>
-              <img src={model.logoUrl} alt="" width={28} height={28} />
-              <span>
-                {model.companyName}
-                <br />
-                {model.name}
-              </span>
-              <b className="demo-it">{row.right ? "Correct!" : "Wrong"}</b>
-            </div>
-          ))}
+        <div className="demo-cols">
+          <div className="demo-hints">
+            <h3>Hints</h3>
+            {hintRows.map(({ key, label }) => {
+              const hint = revealed.get(key);
+              return (
+                <p className="demo-hint" key={key} data-on={Boolean(hint)} data-flash={phase === "hint" && !hintOn && shown.hint?.key === key}>
+                  <span>{label}</span>
+                  {hint ? (
+                    <b>
+                      {hint.flag ? <Twemoji emoji={hint.flag} /> : null}
+                      {hint.value}
+                    </b>
+                  ) : (
+                    <i>Reveal</i>
+                  )}
+                </p>
+              );
+            })}
+          </div>
+          <div className="demo-results">
+            <h3>Guesses</h3>
+            {results.map(({ turn: row, pick: model, key }) => (
+              <div key={key} className="picked demo-picked" data-right={row.right}>
+                <img src={model.logoUrl} alt="" width={24} height={24} />
+                <span>
+                  {model.companyName}
+                  <br />
+                  {model.name}
+                </span>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </div>

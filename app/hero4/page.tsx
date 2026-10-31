@@ -15,14 +15,21 @@ import { currentProfile } from "@/lib/session";
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Hero preview", robots: { index: false, follow: false } };
 
-type Step = { company: string; right: boolean; q: string; a: string };
+type HintKey = "company" | "origin" | "year" | "size";
+type Step = { company: string; right: boolean; q: string; a: string; hint?: HintKey };
+/** Example rounds: at most three guesses, hints optional. The last step of a round is the right one and its model is the answer. */
 const script: Step[][] = [
   [{ company: "Anthropic", right: true, q: "What should I name a cat that loves lasagna?", a: "Lasagnor. It sounds dignified, and it tells the whole house what he is being fed." }],
   [
     { company: "OpenAI", right: false, q: "Explain recursion in one sentence.", a: "Recursion is a function solving a problem by calling itself on a smaller piece of it." },
-    { company: "Alibaba", right: true, q: "Now a haiku about Mondays.", a: "Alarm cuts the dark / the inbox grew overnight / coffee, then courage." },
+    { company: "Alibaba", right: true, q: "Now a haiku about Mondays.", a: "Alarm cuts the dark / the inbox grew overnight / coffee, then courage.", hint: "origin" },
   ],
-  [{ company: "Google", right: true, q: "Tell me a joke about databases.", a: "Why did the developer leave the database? Too many relationships, and no foreign key." }],
+  [{ company: "Google", right: true, q: "Tell me a joke about databases.", a: "Why did the developer leave the database? Too many relationships, and no foreign key.", hint: "year" }],
+  [
+    { company: "Meta", right: false, q: "What is the capital of Australia?", a: "Canberra. Plenty of people guess Sydney, but the capital was built on purpose, halfway between it and Melbourne." },
+    { company: "DeepSeek", right: false, q: "Write a short apology for being late.", a: "Sorry I am late. The traffic won, but I brought coffee to make up for it.", hint: "year" },
+    { company: "Mistral", right: true, q: "Suggest a name for a bakery.", a: "Levain & Co. It sounds warm, a little French, and it says bread before anyone reads the menu.", hint: "origin" },
+  ],
 ];
 
 const steps = [
@@ -46,28 +53,43 @@ export default async function Hero4({ searchParams }: { searchParams: Promise<Bo
     company: choice.gameMode === "company" ? selectedCompany(choice.company, options.companies) : allCompanies,
     category: choice.gameMode === "class" ? selectedCategory(choice.category, options.categories) : allCompanies,
   };
-  const [snapshot, catalog, board, played] = await Promise.all([
+  const [snapshot, catalog, board] = await Promise.all([
     landingSnapshot(),
     loadCatalog(client),
     leaderboard(view.gameMode, view.period, user?.id, view.difficulty, boardPool(view)),
-    client.from("games").select("id", { count: "exact", head: true }).not("finished_at", "is", null),
   ]);
-  const games = played.count ?? 0;
   const models = publicModels(catalog);
   const groups = groupByCompany(models);
   const rounds: SearchDemoRound[] = [];
   for (const steps of script) {
     const turns: SearchDemoTurn[] = [];
+    const target = models.find((model) => model.companyName === steps[steps.length - 1].company);
     for (const step of steps) {
       const answer = models.find((model) => model.companyName === step.company);
-      if (!answer) continue;
+      if (!answer || !target) continue;
+      const hint: SearchDemoTurn["hint"] =
+        step.hint === "company" ? { key: "company", value: target.companyName }
+        : step.hint === "origin" ? { key: "origin", value: target.originName, flag: target.originFlag }
+        : step.hint === "year" ? { key: "year", value: String(target.year) }
+        : step.hint === "size" ? { key: "size", value: target.sizeName }
+        : undefined;
       const query = (answer.name.match(/^[A-Za-z]+/)?.[0] ?? answer.name).slice(0, 6).toLowerCase();
       const others = filterPublicModels(models, query).filter((model) => model.id !== answer.id);
       const list = [others[0], answer, others[1]].filter(Boolean);
       const candidates = list.map((model) => ({ id: model.id, name: model.name, companyName: model.companyName, logoUrl: model.logoUrl }));
-      turns.push({ q: step.q, a: step.a, query, candidates, pickId: step.right ? answer.id : (others[0] ?? answer).id, right: step.right });
+      turns.push({ q: step.q, a: step.a, query, candidates, pickId: answer.id, right: step.right, hint });
     }
-    if (turns.length === steps.length) rounds.push({ turns });
+    if (target && turns.length === steps.length) {
+      rounds.push({
+        turns,
+        facts: {
+          company: { value: target.companyName },
+          origin: { value: target.originName, flag: target.originFlag },
+          year: { value: String(target.year) },
+          size: { value: target.sizeName },
+        },
+      });
+    }
   }
   const topRows = "rows" in board ? board.rows.slice(0, 5) : [];
   const strip = (copy: number) => (
@@ -100,8 +122,8 @@ export default async function Hero4({ searchParams }: { searchParams: Promise<Bo
               <dd>{snapshot.models.toLocaleString("en-US")}</dd>
             </div>
             <div className="card">
-              <dt>{games === 1 ? "Game played" : "Games played"}</dt>
-              <dd>{games.toLocaleString("en-US")}</dd>
+              <dt>Games today</dt>
+              <dd>{snapshot.gamesToday.toLocaleString("en-US")}</dd>
             </div>
           </dl>
         </div>
