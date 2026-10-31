@@ -136,12 +136,6 @@ button { cursor: pointer; }
 .nav-icon { width: 18px; height: 18px; }
 @media (hover: hover) and (pointer: fine) { .header-nav > a:hover { background: var(--card); color: var(--text); } }
 @media (hover: hover) and (pointer: fine) { html[data-theme="dark"] .header-nav > a:hover { background: var(--card); color: var(--text); } }
-/* Six links with their labels fit down to 990px. Under that, only the icons, so the bar stays on one row. */
-@media (max-width: 990px) {
-  .header-nav > a { width: 36px; height: 36px; padding: 0; justify-content: center; }
-  .header-nav > a .nav-label { display: none; }
-}
-
 .account { position: relative; display: flex; align-items: center; }
 .account-button {
   width: 40px;
@@ -206,6 +200,21 @@ html[data-theme="dark"] .menu a[aria-current="page"] { color: var(--teal); }
   text-decoration: none;
 }
 @media (hover: hover) and (pointer: fine) { .menu a:hover, .menu-item:hover { background: var(--teal-wash); color: var(--text); } }
+/* Six links with their labels fit down to 990px. Under that they move into the burger menu, as on a phone. */
+@media (max-width: 990px) {
+  .header { flex-wrap: nowrap; column-gap: 8px; }
+  .brand { flex: 1 1 auto; min-width: 0; }
+  .brand span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .header-nav { gap: 0; flex: none; flex-wrap: nowrap; }
+  .header-nav > a { display: none; }
+  .account-button { border-radius: var(--radius-sm); background: var(--card); color: var(--text); }
+  .account-burger { display: inline-flex; }
+  .account-button img.avatar { border-radius: 0; }
+  .account-avatar { background: #ebebeb; color: #141414; }
+  .account-button svg.avatar circle { display: none; }
+  .menu a { display: flex; align-items: center; gap: 10px; }
+  .menu a, .menu-item { padding: 12px 10px; }
+}
 html[data-theme="light"] .for-dark { display: none; }
 html[data-theme="dark"] .for-light { display: none; }
 
@@ -1987,7 +1996,7 @@ html[data-theme="dark"] .history-score[data-best="true"] { color: var(--teal); }
   .account-burger { display: inline-flex; }
   .account-button img.avatar { border-radius: 0; }
   /* The generated avatar paints its own grey disc; on a phone the square button carries that grey instead. */
-  .account-avatar { background: #ebebeb; }
+  .account-avatar { background: #ebebeb; color: #141414; }
   .account-button svg.avatar circle { display: none; }
   .menu a { display: flex; align-items: center; gap: 10px; }
   .menu { min-width: min(260px, calc(100vw - 24px)); }
@@ -2397,9 +2406,9 @@ html[data-theme="dark"] .h2-podium li { background: rgba(0, 0, 0, 0.1); }
 .demo-rest { visibility: hidden; }
 .h4-demo { position: relative; min-width: 0; }
 .h4-demo .demo-search { position: relative; z-index: 1; }
-.h4-logo { position: absolute; z-index: 2; top: -34px; left: -128px; pointer-events: none; filter: drop-shadow(0 6px 14px rgb(0 0 0 / 0.18)); }
-.h4-logo img { width: 150px; height: 150px; display: block; }
-@media (max-width: 720px) { .h4-logo { display: none; } }
+.h4-logo { position: absolute; z-index: 2; top: -38px; left: -162px; pointer-events: none; filter: drop-shadow(0 6px 14px rgb(0 0 0 / 0.18)); }
+.h4-logo img { width: 180px; height: 180px; display: block; }
+@media (max-width: 1040px) { .h4-logo { display: none; } }
 .demo-search .demo-head { justify-content: flex-start; color: var(--text); font-size: 14px; }
 .demo-search .bubble { padding: 8px 12px; }
 .demo-guess { flex: none; min-height: 0; align-content: start; grid-auto-rows: min-content; border-top: 1px solid var(--line-strong); padding-top: 14px; }
