@@ -87,7 +87,7 @@ export function AccountMenu({
               key={item.href}
               href={item.href}
               role="menuitem"
-              aria-current={pathname === item.href ? "page" : undefined}
+              aria-current={pathname === item.href || pathname.startsWith(`${item.href}/`) ? "page" : undefined}
               onClick={() => setOpen(null)}
             >
               {item.icon}

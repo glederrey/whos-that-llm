@@ -19,7 +19,10 @@ colors:
   line: "#D4D4D8"
   line-strong: "#B4B4BA"
   control-line: "#86868E"
-  bubble: "#FBF9F4"
+  bubble: "#F6F6F7"
+  on: "#1C7C43"
+  on-press: "#166537"
+  off-press: "#9E1510"
 typography:
   sans:
     fontFamily: Roboto
@@ -44,14 +47,14 @@ A match and a miss must stay distinguishable without relying on color alone.
 
 ### Difficulty scale
 
-Easy, Medium, Hard and Impossible each have a hue that is a semantic scale, not brand color: green, amber, red and violet. The hue paints the 4px edge of a difficulty row, a selected tab and the leaderboard chip. Text in that hue uses a separate `--diff-text` token, darker in the light theme and lighter in the dark theme, so it reaches 4.5:1 on `canvas`, `card` and `soft`.
+Easy, Medium, Hard and Impossible each have a hue that is a semantic scale, not brand color: green, yellow, red and violet. The hue paints the 4px edge of a difficulty row, a selected tab and the leaderboard chip. Text in that hue uses a separate `--diff-text` token, darker in the light theme and lighter in the dark theme, so it reaches 4.5:1 on `canvas`, `card` and `soft`.
 
 | Difficulty | Fill (`--diff`) | Text, light | Text, dark |
 |---|---|---|---|
-| Easy | #1C7C43 | #16703B | #3FB36B |
-| Medium | #D4A017 | #7D5C00 | #D4A017 |
-| Hard | #C41B15 | #C41B15 | #FF6B62 |
-| Impossible | #A78BFA | #6240C9 | #A78BFA |
+| Easy | #1C7C43 | #0E5A2C | #3FB36B |
+| Medium | #F5C518 | #DBA800 | #F5C518 |
+| Hard | #C41B15 | #B01711 | #FF6B62 |
+| Impossible | #A78BFA | #4E2FB0 | #A78BFA |
 
 Never use the fill as text on a light surface, and never put the difficulty hues on a large area.
 
@@ -72,9 +75,9 @@ The theme is switched with the `data-theme` attribute on `html`. The first visit
 | line | #D4D4D8 | #2E2E2E |
 | line-strong | #B4B4BA | #4A4A4A |
 | control-line | #86868E | #76767E |
-| bubble | #FBF9F4 | #1E1E1E (the card) |
+| bubble | #F6F6F7 | #1E1E1E (the card) |
 
-`ink`, `paper`, `teal`, `miss` and `miss-press` do not change between themes.
+`ink`, `paper`, `teal`, `miss` and `miss-press` do not change between themes. Red text uses `miss-text`, which is `miss-press` in light and a lighter `#FF6B5E` in dark (5.6:1 on the dark card); `miss-press` stays the fill behind white text.
 
 ## Typography
 
@@ -82,15 +85,19 @@ One typeface: Roboto, Latin subset, vendored with the site. Headings inherit it.
 
 ## Layout
 
-Content width is `min(980px, 100% - 32px)` for the header, the page and the footer, and `100% - 24px` on phones. On a narrow screen the round stacks: header, transcript, input, then feedback and hints. On a wide screen feedback and hints sit in a right column. From 560px to 990px the header nav shows icons only so the bar stays on one row; under 560px the five links and the account part share one menu button, so the site name always shows. The page runs under the notch (`viewport-fit=cover`) and the shell pads itself back out with `env(safe-area-inset-*)`. The browser bar color follows the system scheme until the player picks a theme by hand. Tables scroll sideways on a phone instead of squeezing their words.
+Content width is `min(980px, 100% - 32px)` for the header, the page and the footer, and `100% - 24px` on phones. On a narrow screen the round stacks: header, transcript, input, then feedback and hints. On a wide screen feedback and hints sit in a right column. From 560px to 990px the header nav shows icons only so the bar stays on one row; under 560px the six links (Play first) and the account part share one menu button, so the site name always shows. The page runs under the notch (`viewport-fit=cover`) and the shell pads itself back out with `env(safe-area-inset-*)`. The browser bar color follows the system scheme until the player picks a theme by hand. Tables scroll sideways on a phone instead of squeezing their words.
 
 ## Elevation & Depth
 
-`control-line` is the border of inputs and the message box: at least 3:1 against the card, so a field is visible without its fill. `bubble` is a warm off-white for the hidden model's replies in the light theme only; it is not a new brand hue. Cards and message bubbles use a faint shadow in the light theme and none in the dark theme. Menus and dialogs use a larger lift shadow in both themes.
+`control-line` is the border of inputs and the message box: at least 3:1 against the card, so a field is visible without its fill. `bubble` is a light neutral for the hidden model's replies in the light theme only; it is not a new brand hue. Cards and message bubbles use a faint shadow in the light theme and none in the dark theme. Menus and dialogs use a larger lift shadow in both themes.
 
 ## Shapes
 
 Corners stay slight. `base` is for cards, menus and the composer; `sm` is for buttons and inputs. Pills are fully rounded.
+
+## Buttons
+
+Radius `sm`, flat fills, no gradient. Primary is teal with a near-black text (`#062e2e`, a dark teal, not `ink`) (hover: `teal-press`, white text). Quiet is `card` with a `control-line` border (3.6:1 on the card in light, 3.7:1 in dark) and `text` label. Give up is quiet with `miss-press` text and no border. On/off are `on` (green) and `miss-press` fills with white text; hover darkens to `on-press` and `off-press`. Every button presses the same way: `scale(0.97)` for 0.1s. Hover is gated behind `(hover: hover)`. Targets are 44px on phones.
 
 ## Do's and Don'ts
 
@@ -98,5 +105,5 @@ Corners stay slight. `base` is for cards, menus and the composer; `sm` is for bu
 - Don't add a fourth brand hue or a gradient on the logo mark.
 - Don't put `miss` on the logo or on large fills; full teal against full red buzzes.
 - Don't add decorative loops, a bouncing logo or an animated background. Motion stays small: a reply arriving word by word, waiting dots, a trait chip unveiling, a short shake on a wrong guess. Pages settle in with a 6px rise and fade (0.22s), the account menu opens from its button (0.14s), and tabs give a little on press. All of it stops under reduced motion.
-- Don't build the landing page as a feature grid, quotes or a logo wall.
+- Don't build the landing page as a feature grid, quotes or a logo wall. The home hero asks one question (**Which AI is it?**) over the big logo and a typing reply, with one primary button. It has no card of steps and no leaderboard table.
 - Don't edit, flip or redraw the logo files, and never use the `_dot` favicon files. Use `tail_right` when the title is to the right of the mark and `tail_left` when it is to the left; leave the mark out where no text sits beside it.
