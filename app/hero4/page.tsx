@@ -112,15 +112,9 @@ export default async function Hero4({ searchParams }: { searchParams: Promise<Bo
     <div className="stack landing h4">
       <section className="h4-hero">
         <div className="h1-text">
-          <div className="h4-title">
-            <span className="h4-logo" aria-hidden="true">
-              <img className="for-light" src="/brand/logo-tail-right-light.png" alt="" />
-              <img className="for-dark" src="/brand/logo-tail-right-dark.png" alt="" />
-            </span>
-            <h1>
-              Guess the hidden <span className="h1-mark">AI</span>.
-            </h1>
-          </div>
+          <h1>
+            Guess the hidden <span className="h1-mark">AI</span>.
+          </h1>
           <p className="hero-copy">
             Think you can tell AI models apart, like a wine? In this guessing game, a hidden LLM answers you. It could be ChatGPT, Claude, Gemini, or any of the{" "}
             {snapshot.models.toLocaleString("en-US")} models in play. Ten messages, one guess. Take on the daily round or pick a game mode to climb the leaderboard.
@@ -137,7 +131,15 @@ export default async function Hero4({ searchParams }: { searchParams: Promise<Bo
             </div>
           </dl>
         </div>
-        {rounds.length > 0 ? <SearchDemo rounds={rounds} /> : null}
+        {rounds.length > 0 ? (
+          <div className="h4-demo">
+            <span className="h4-logo" aria-hidden="true">
+              <img className="for-light" src="/brand/logo-tail-right-light.png" alt="" />
+              <img className="for-dark" src="/brand/logo-tail-right-dark.png" alt="" />
+            </span>
+            <SearchDemo rounds={rounds} />
+          </div>
+        ) : null}
       </section>
       <div className="h4-strip" aria-label="Companies and how many of their models can hide">
         <div className="h3-track h4-track">
