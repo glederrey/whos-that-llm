@@ -187,7 +187,7 @@ export function SearchDemo({ rounds }: { rounds: SearchDemoRound[] }) {
                   </span>
                 </div>
               ) : null}
-              {!now || showReply ? <div className="bubble assistant">{now ? text : row.a}</div> : null}
+              {!now || showReply ? <div className="bubble assistant">{now ? text || "\u200b" : row.a}</div> : null}
             </Fragment>
           );
         })}
