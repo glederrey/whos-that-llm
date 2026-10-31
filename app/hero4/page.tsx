@@ -64,9 +64,19 @@ export default async function Hero4({ searchParams }: { searchParams: Promise<Bo
   for (const steps of script) {
     const turns: SearchDemoTurn[] = [];
     const target = models.find((model) => model.companyName === steps[steps.length - 1].company);
+    const shownHints: HintKey[] = [];
     for (const step of steps) {
-      const answer = models.find((model) => model.companyName === step.company);
-      if (!answer || !target) continue;
+      if (!target) continue;
+      if (step.hint) shownHints.push(step.hint);
+      // A guess has to agree with every hint shown so far, as a real player's would.
+      const fits = (model: (typeof models)[number]) =>
+        (!shownHints.includes("company") || model.companyName === target.companyName) &&
+        (!shownHints.includes("origin") || model.originName === target.originName) &&
+        (!shownHints.includes("year") || model.year === target.year) &&
+        (!shownHints.includes("size") || model.sizeName === target.sizeName);
+      const sameCompany = models.filter((model) => model.companyName === step.company);
+      const answer = step.right ? target : (sameCompany.find(fits) ?? sameCompany[0]);
+      if (!answer) continue;
       const hint: SearchDemoTurn["hint"] =
         step.hint === "company" ? { key: "company", value: target.companyName }
         : step.hint === "origin" ? { key: "origin", value: target.originName, flag: target.originFlag }
@@ -74,7 +84,8 @@ export default async function Hero4({ searchParams }: { searchParams: Promise<Bo
         : step.hint === "size" ? { key: "size", value: target.sizeName }
         : undefined;
       const query = (answer.name.match(/^[A-Za-z]+/)?.[0] ?? answer.name).slice(0, 6).toLowerCase();
-      const others = filterPublicModels(models, query).filter((model) => model.id !== answer.id);
+      const found = filterPublicModels(models, query).filter((model) => model.id !== answer.id);
+      const others = [...found.filter(fits), ...found.filter((model) => !fits(model))];
       const list = [others[0], answer, others[1]].filter(Boolean);
       const candidates = list.map((model) => ({ id: model.id, name: model.name, companyName: model.companyName, logoUrl: model.logoUrl }));
       turns.push({ q: step.q, a: step.a, query, candidates, pickId: answer.id, right: step.right, hint });
