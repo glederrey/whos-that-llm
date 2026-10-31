@@ -2375,18 +2375,32 @@ html[data-theme="dark"] .h2-podium li { background: rgba(0, 0, 0, 0.1); }
 
 /* Hero preview 4: hero1's example round ending in the real guess picker, plus the company strip with model counts. */
 .h4 { gap: 28px; }
-.h4-hero { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 440px); gap: 24px 48px; align-items: center; padding: 8px 0 0; }
-.h4 .h1-text { gap: 16px; }
-.h4 .hero-copy { max-width: 34ch; }
+.h4-hero { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 24px 40px; align-items: stretch; padding: 8px 0 0; }
+.h4 .h1-text { gap: 16px; align-content: space-between; }
+.h4 .hero-copy { max-width: 40ch; }
 .demo-search { min-height: 0; gap: 12px; padding: 14px 16px; }
-.demo-search .demo-chat { min-height: 132px; }
+.demo-search .demo-chat { height: 170px; display: flex; flex-direction: column; justify-content: flex-end; overflow: hidden; mask-image: linear-gradient(180deg, transparent, #000 18%); -webkit-mask-image: linear-gradient(180deg, transparent, #000 18%); }
+.demo-prev { display: grid; gap: 10px; }
+.demo-prev .bubble.user { justify-self: end; }
 .demo-search .bubble { padding: 8px 12px; }
-.demo-guess { min-height: 202px; align-content: start; }
-.demo-score { margin: 0; font-size: 14px; }
+.demo-guess { min-height: 224px; align-content: start; }
+.demo-wrong { margin: 0; color: var(--miss-text); font-weight: 500; font-size: 14px; }
+.demo-picked[data-right="false"] { border-color: var(--miss-text); background: transparent; }
+.demo-picked[data-right="false"] .demo-it { color: var(--miss-text); }
+.h4-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin: 0; width: 100%; }
+.h4-stats .card { padding: 14px 16px; display: flex; flex-direction: column-reverse; gap: 2px; margin: 0; }
+.h4-stats dt { color: var(--mute); font-size: 14px; }
+.h4-stats dd { margin: 0; font-size: 32px; font-weight: 700; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.h4-steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.h4-steps .card { padding: 18px 20px; display: grid; gap: 6px; align-content: start; }
+.h4-steps h2 { margin: 0; font-size: 20px; }
+.h4-steps p { margin: 0; color: var(--mute); }
+.h4-step-n { display: inline-grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: var(--teal-wash); color: var(--teal-press); font-weight: 700; font-size: 14px; }
+html[data-theme="dark"] .h4-step-n { color: var(--teal); }
 .demo-input { display: flex; align-items: center; min-height: 42px; padding: 8px 12px; border: 1px solid var(--teal); border-radius: var(--radius-sm); background: var(--card); box-shadow: 0 0 0 3px var(--teal-wash); }
 .demo-ph { color: var(--mute); }
 .demo-caret { width: 1px; height: 18px; margin-left: 1px; background: var(--text); animation: demo-blink 1s steps(1) infinite; }
-.demo-list { display: grid; gap: 2px; opacity: 0; transition: opacity 0.2s ease; }
+.demo-list { gap: 2px; opacity: 0; transition: opacity 0.2s ease; }
 .demo-list[data-on="true"] { opacity: 1; }
 .demo-cand { pointer-events: none; padding: 6px 8px; border: 1px solid transparent; border-radius: 8px; }
 .demo-cand[data-hot="true"] { border-color: var(--teal); background: var(--teal-wash); }
@@ -2396,12 +2410,15 @@ html[data-theme="dark"] .h2-podium li { background: rgba(0, 0, 0, 0.1); }
 html[data-theme="dark"] .demo-it { color: var(--teal); }
 .h4-strip { overflow: hidden; mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent); -webkit-mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent); }
 .h4-track { animation-duration: 60s; }
-.h3-chip b { font-weight: 600; font-size: 13px; color: var(--mute); padding-left: 8px; border-left: 1px solid var(--line-strong); }
+.h3-chip b { word-spacing: 0.15em; font-weight: 600; font-size: 13px; color: var(--mute); padding-left: 8px; border-left: 1px solid var(--line-strong); }
 @keyframes demo-blink { 50% { opacity: 0; } }
 @media (max-width: 720px) {
   .h4 { gap: 20px; }
   .h4-hero { grid-template-columns: 1fr; gap: 20px; }
   .h4 .h1-text { justify-items: stretch; }
+  .h4-stats dd { font-size: 24px; }
+  .h4-stats .card { padding: 10px 12px; }
+  .h4-steps { grid-template-columns: 1fr; }
   .h4 .hero-copy { max-width: none; }
   .h4 h1 { font-size: min(44px, 11.4vw); }
   .h4 .row { flex-wrap: nowrap; }
