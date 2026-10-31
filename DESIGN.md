@@ -19,7 +19,7 @@ colors:
   line: "#D4D4D8"
   line-strong: "#B4B4BA"
   control-line: "#86868E"
-  bubble: "#FBF9F4"
+  bubble: "#F6F6F7"
   on: "#1C7C43"
   on-press: "#166537"
   off-press: "#9E1510"
@@ -75,7 +75,7 @@ The theme is switched with the `data-theme` attribute on `html`. The first visit
 | line | #D4D4D8 | #2E2E2E |
 | line-strong | #B4B4BA | #4A4A4A |
 | control-line | #86868E | #76767E |
-| bubble | #FBF9F4 | #1E1E1E (the card) |
+| bubble | #F6F6F7 | #1E1E1E (the card) |
 
 `ink`, `paper`, `teal`, `miss` and `miss-press` do not change between themes. Red text uses `miss-text`, which is `miss-press` in light and a lighter `#FF6B5E` in dark (5.6:1 on the dark card); `miss-press` stays the fill behind white text.
 
@@ -89,7 +89,7 @@ Content width is `min(980px, 100% - 32px)` for the header, the page and the foot
 
 ## Elevation & Depth
 
-`control-line` is the border of inputs and the message box: at least 3:1 against the card, so a field is visible without its fill. `bubble` is a warm off-white for the hidden model's replies in the light theme only; it is not a new brand hue. Cards and message bubbles use a faint shadow in the light theme and none in the dark theme. Menus and dialogs use a larger lift shadow in both themes.
+`control-line` is the border of inputs and the message box: at least 3:1 against the card, so a field is visible without its fill. `bubble` is a light neutral for the hidden model's replies in the light theme only; it is not a new brand hue. Cards and message bubbles use a faint shadow in the light theme and none in the dark theme. Menus and dialogs use a larger lift shadow in both themes.
 
 ## Shapes
 
