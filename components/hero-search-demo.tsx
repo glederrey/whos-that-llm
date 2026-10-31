@@ -124,7 +124,7 @@ export function SearchDemo({ rounds }: { rounds: SearchDemoRound[] }) {
   }, [phase, reduced, turn, last, shown.right, shown.a.length, shown.hint, shown.q.length, shown.query.length, rounds.length]);
 
   const asking = reduced || phase !== "ask" ? shown.q : shown.q.slice(0, asked);
-  const showReply = reduced || phase === "reply" || phase === "search" || phase === "pick" || phase === "reveal";
+  const showReply = reduced || phase === "reply" || phase === "hint" || phase === "search" || phase === "pick" || phase === "reveal";
   const text = reduced || phase !== "reply" ? shown.a : shown.a.slice(0, chars);
   const picked = reduced || phase === "reveal";
   const query = reduced || picked ? "" : shown.query.slice(0, typed);
