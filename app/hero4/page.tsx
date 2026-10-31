@@ -89,19 +89,19 @@ export default async function Hero4({ searchParams }: { searchParams: Promise<Bo
             Guess the hidden <span className="h1-mark">AI</span>.
           </h1>
           <p className="hero-copy">Chat with a mystery model, then name it from the list. The fewer tokens you use and the fewer hints you buy, the more you score.</p>
-          <HeroCta signedIn={Boolean(user && username)} label="Try a round" />
+          <HeroCta signedIn={Boolean(user && username)} label="Sign up" signedInLabel="Try a round" />
           <dl className="h4-stats">
             <div className="card">
+              <dt>Companies</dt>
               <dd>{snapshot.companies.toLocaleString("en-US")}</dd>
-              <dt>companies</dt>
             </div>
             <div className="card">
+              <dt>Models in play</dt>
               <dd>{snapshot.models.toLocaleString("en-US")}</dd>
-              <dt>models</dt>
             </div>
             <div className="card">
+              <dt>{games === 1 ? "Game played" : "Games played"}</dt>
               <dd>{games.toLocaleString("en-US")}</dd>
-              <dt>{games === 1 ? "game played" : "games played"}</dt>
             </div>
           </dl>
         </div>
@@ -110,8 +110,10 @@ export default async function Hero4({ searchParams }: { searchParams: Promise<Bo
       <ol className="h4-steps">
         {steps.map((step, index) => (
           <li className="card" key={step.title}>
-            <span className="h4-step-n">{index + 1}</span>
-            <h2>{step.title}</h2>
+            <div className="h4-step-head">
+              <span className="h4-step-n">{index + 1}</span>
+              <h2>{step.title}</h2>
+            </div>
             <p>{step.body}</p>
           </li>
         ))}

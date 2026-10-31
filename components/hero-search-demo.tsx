@@ -92,10 +92,19 @@ export function SearchDemo({ rounds }: { rounds: SearchDemoRound[] }) {
 
   const showReply = reduced || phase === "reply" || phase === "search" || phase === "pick" || phase === "reveal";
   const text = reduced || phase !== "reply" ? shown.a : shown.a.slice(0, chars);
-  const showGuess = reduced || phase === "search" || phase === "pick" || phase === "reveal";
   const picked = reduced || phase === "reveal";
-  const query = reduced ? "" : shown.query.slice(0, typed);
-  const listing = !picked && showGuess && typed >= 2;
+  const query = reduced || picked ? "" : shown.query.slice(0, typed);
+  const listing = !picked && typed >= 2;
+
+  // Guesses made so far, newest first: a wrong one stays and the next guess pushes it down.
+  const results = current.turns
+    .slice(0, picked ? t + 1 : t)
+    .map((row, index) => ({
+      turn: row,
+      key: `${round}-${index}`,
+      pick: row.candidates.find((model) => model.id === row.pickId) ?? row.candidates[0],
+    }))
+    .reverse();
 
   return (
     <div className="card demo demo-search" role="img" aria-label="An example round">
@@ -121,40 +130,38 @@ export function SearchDemo({ rounds }: { rounds: SearchDemoRound[] }) {
         ) : null}
         {showReply ? <div className="bubble assistant">{text}</div> : null}
       </div>
-      <div className="demo-guess" data-on={showGuess} aria-hidden="true">
-        {picked ? (
-          <>
-            <div className="picked demo-picked" data-right={shown.right}>
-              <img src={pick.logoUrl} alt="" width={28} height={28} />
-              <span>
-                {pick.companyName}
-                <br />
-                {pick.name}
-              </span>
-              <b className="demo-it">{shown.right ? "Correct!" : "Wrong"}</b>
-            </div>
-            {shown.right ? null : <p className="demo-wrong">−100 points. Send another message, or guess again.</p>}
-          </>
-        ) : (
-          <div className="guess-search">
-            <div className="demo-input">
-              {query ? <span>{query}</span> : <span className="demo-ph">Search models</span>}
-              {phase === "search" || phase === "pick" ? <i className="demo-caret" /> : null}
-            </div>
-            <div className="candidates demo-list" data-on={listing}>
-              {shown.candidates.map((model) => (
-                <div key={model.id} className="candidate demo-cand" data-hot={phase === "pick" && model.id === shown.pickId}>
-                  <img src={model.logoUrl} alt="" width={28} height={28} />
-                  <span>
-                    {model.companyName}
-                    <br />
-                    {model.name}
-                  </span>
-                </div>
-              ))}
-            </div>
+      <div className="demo-guess" aria-hidden="true">
+        <div className="guess-search">
+          <div className="demo-input">
+            {query ? <span>{query}</span> : <span className="demo-ph">Search models</span>}
+            {phase === "search" || phase === "pick" ? <i className="demo-caret" /> : null}
           </div>
-        )}
+          <div className="candidates demo-list" data-on={listing}>
+            {shown.candidates.map((model) => (
+              <div key={model.id} className="candidate demo-cand" data-hot={phase === "pick" && model.id === shown.pickId}>
+                <img src={model.logoUrl} alt="" width={28} height={28} />
+                <span>
+                  {model.companyName}
+                  <br />
+                  {model.name}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="demo-results">
+          {results.map(({ turn: row, pick: model, key }) => (
+            <div key={key} className="picked demo-picked" data-right={row.right}>
+              <img src={model.logoUrl} alt="" width={28} height={28} />
+              <span>
+                {model.companyName}
+                <br />
+                {model.name}
+              </span>
+              <b className="demo-it">{row.right ? "Correct!" : "Wrong"}</b>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );

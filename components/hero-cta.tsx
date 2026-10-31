@@ -1,9 +1,9 @@
-export function HeroCta({ signedIn, label = "Play now" }: { signedIn: boolean; label?: string }) {
+export function HeroCta({ signedIn, label = "Play now", signedInLabel = "Start playing" }: { signedIn: boolean; label?: string; signedInLabel?: string }) {
   return (
     <div className="row">
       {signedIn ? (
         <a className="button button-lg" href="/play">
-          Start playing
+          {signedInLabel}
         </a>
       ) : (
         <>
