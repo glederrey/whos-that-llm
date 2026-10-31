@@ -23,6 +23,9 @@
   --line-strong: #b4b4ba;
   --control-line: #86868e;
   --bubble: #fbf9f4;
+  --on: #1c7c43;
+  --on-press: #166537;
+  --off-press: #9e1510;
   --shadow: 0 1px 2px rgba(20, 20, 20, 0.05), 0 1px 0 rgba(20, 20, 20, 0.03);
   --lift: 0 12px 32px rgba(20, 20, 20, 0.12);
   --radius: 14px;
@@ -280,9 +283,8 @@ p { margin: 0; text-wrap: pretty; }
   justify-self: start;
   transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.1s ease;
 }
-.button:active, .button-quiet:active { transform: scale(0.97); }
+.button:active, .button-quiet:active, .button-danger:active, .button-on:active, .button-off:active, .icon-button:active { transform: scale(0.97); }
 @media (hover: hover) and (pointer: fine) { .button:hover, .icon-button:hover { background: var(--teal-press); color: white; } }
-.button:active { transform: translateY(1px); }
 .button:disabled, .icon-button:disabled { opacity: 0.45; cursor: not-allowed; }
 .button[aria-busy="true"]:disabled { cursor: progress; }
 .spinner {
@@ -301,7 +303,7 @@ p { margin: 0; text-wrap: pretty; }
 .button-quiet, .icon-button {
   background: var(--card);
   color: var(--text);
-  border-color: var(--line-strong);
+  border-color: var(--control-line);
 }
 @media (hover: hover) and (pointer: fine) { .button-quiet:hover { background: var(--teal-wash); border-color: var(--teal); } }
 a.button, a.button-quiet { display: inline-block; text-decoration: none; }
@@ -319,10 +321,10 @@ a.button, a.button-quiet { display: inline-block; text-decoration: none; }
 @media (hover: hover) and (pointer: fine) { .button-quiet.give-up:hover { background: var(--miss-wash); color: var(--miss-press); border-color: transparent; } }
 .button-danger { background: transparent; color: var(--miss-press); border-color: var(--miss-press); }
 @media (hover: hover) and (pointer: fine) { .button-danger:hover { background: var(--miss-wash); color: var(--miss-press); } }
-.button-on { background: #1c7c43; color: white; border-color: #1c7c43; }
-@media (hover: hover) and (pointer: fine) { .button-on:hover { background: #166537; color: white; } }
+.button-on { background: var(--on); color: white; border-color: var(--on); }
+@media (hover: hover) and (pointer: fine) { .button-on:hover { background: var(--on-press); border-color: var(--on-press); color: white; } }
 .button-off { background: var(--miss-press); color: white; border-color: var(--miss-press); }
-@media (hover: hover) and (pointer: fine) { .button-off:hover { background: #9e1510; border-color: #9e1510; color: white; } }
+@media (hover: hover) and (pointer: fine) { .button-off:hover { background: var(--off-press); border-color: var(--off-press); color: white; } }
 .button-quiet.is-disabled { opacity: 0.45; pointer-events: none; }
 .reveal { padding: 4px 10px; font-size: 13px; }
 

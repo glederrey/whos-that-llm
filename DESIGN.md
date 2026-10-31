@@ -20,6 +20,9 @@ colors:
   line-strong: "#B4B4BA"
   control-line: "#86868E"
   bubble: "#FBF9F4"
+  on: "#1C7C43"
+  on-press: "#166537"
+  off-press: "#9E1510"
 typography:
   sans:
     fontFamily: Roboto
@@ -91,6 +94,10 @@ Content width is `min(980px, 100% - 32px)` for the header, the page and the foot
 ## Shapes
 
 Corners stay slight. `base` is for cards, menus and the composer; `sm` is for buttons and inputs. Pills are fully rounded.
+
+## Buttons
+
+Radius `sm`, flat fills, no gradient. Primary is teal with `ink` text (hover: `teal-press`, white text). Quiet is `card` with a `control-line` border (3.6:1 on the card in light, 3.7:1 in dark) and `text` label. Give up is quiet with `miss-press` text and no border. On/off are `on` (green) and `miss-press` fills with white text; hover darkens to `on-press` and `off-press`. Every button presses the same way: `scale(0.97)` for 0.1s. Hover is gated behind `(hover: hover)`. Targets are 44px on phones.
 
 ## Do's and Don'ts
 
