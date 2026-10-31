@@ -52,7 +52,7 @@ Easy, Medium, Hard and Impossible each have a hue that is a semantic scale, not 
 | Difficulty | Fill (`--diff`) | Text, light | Text, dark |
 |---|---|---|---|
 | Easy | #1C7C43 | #0E5A2C | #3FB36B |
-| Medium | #F5C518 | #F5C518 | #F5C518 |
+| Medium | #F5C518 | #DBA800 | #F5C518 |
 | Hard | #C41B15 | #B01711 | #FF6B62 |
 | Impossible | #A78BFA | #4E2FB0 | #A78BFA |
 
