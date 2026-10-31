@@ -32,12 +32,6 @@ const script: Step[][] = [
   ],
 ];
 
-const steps = [
-  { title: "Ask", body: "Chat with a hidden model for up to ten messages. Ask anything and read the replies for clues." },
-  { title: "Guess", body: "Search the list and name the model. A wrong guess costs 100 points, and you can guess again." },
-  { title: "Score", body: "Fewer tokens multiply your score by up to 20, and playing without hints doubles it." },
-];
-
 /** Idea 4: hero1's example round ending in the real guess picker, hero3's company strip with model counts. */
 type BoardParams = { gameMode?: string; period?: string; difficulty?: string; company?: string; category?: string };
 
@@ -134,10 +128,6 @@ export default async function Hero4({ searchParams }: { searchParams: Promise<Bo
           <HeroCta signedIn={Boolean(user && username)} label="Sign up" signedInLabel="Try a round" />
           <dl className="h4-stats">
             <div className="card">
-              <dt>Companies</dt>
-              <dd>{snapshot.companies.toLocaleString("en-US")}</dd>
-            </div>
-            <div className="card">
               <dt>Models in play</dt>
               <dd>{snapshot.models.toLocaleString("en-US")}</dd>
             </div>
@@ -149,17 +139,6 @@ export default async function Hero4({ searchParams }: { searchParams: Promise<Bo
         </div>
         {rounds.length > 0 ? <SearchDemo rounds={rounds} /> : null}
       </section>
-      <ol className="h4-steps">
-        {steps.map((step, index) => (
-          <li className="card" key={step.title}>
-            <div className="h4-step-head">
-              <span className="h4-step-n">{index + 1}</span>
-              <h2>{step.title}</h2>
-            </div>
-            <p>{step.body}</p>
-          </li>
-        ))}
-      </ol>
       <div className="h4-strip" aria-label="Companies and how many of their models can hide">
         <div className="h3-track h4-track">
           {strip(0)}
