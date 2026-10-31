@@ -678,6 +678,7 @@ html[data-theme="dark"] .difficulty-impossible { --diff-text: #a78bfa; }
 }
 html[data-theme="dark"] .difficulty-resume { color: var(--teal); }
 .difficulty-choice strong { color: var(--diff-text); }
+.difficulty-choice.difficulty-medium strong { color: #f5c518; }
 .difficulty-choice:disabled, .difficulty-choice.is-done { opacity: 0.45; cursor: not-allowed; }
 .difficulty-choice.is-soon { cursor: default; }
 .company-choice { align-items: center; border-left-color: var(--line-strong); }
