@@ -47,17 +47,14 @@ export default async function HomePage({
     <div className="stack landing">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }} />
       <section className="hero">
-        <img className="hero-logo for-light" width={4096} height={4096} src="/brand/logo-tail-right-light.png" alt="" />
-        <img className="hero-logo for-dark" width={4096} height={4096} src="/brand/logo-tail-right-dark.png" alt="" />
         <div className="stack">
           <h1>
             <span className="title-full">Guess the hidden AI model</span>
             <span className="title-phone">Guess the AI model</span>
           </h1>
           <p className="hero-copy">
-            Think you can tell AI models apart, like a wine? In this guessing game, a hidden LLM answers you. It could be
-            ChatGPT, Claude, Gemini, or any of the {snapshot.models.toLocaleString("en-US")} models in play. Ten messages, one
-            guess. Take on the daily round or pick a game mode to climb the leaderboard.
+            Think you can tell AI models apart, like a wine? A hidden LLM answers you. It could be ChatGPT, Claude, Gemini,
+            or any of the {snapshot.models.toLocaleString("en-US")} models in play. Ten messages, one guess.
           </p>
           <div className="row">
             {signedIn ? (
@@ -76,26 +73,33 @@ export default async function HomePage({
             )}
           </div>
         </div>
-      </section>
-      <section className="how-round">
-        <h2 className="how-round-title">How a round works</h2>
-        <ol className="steps">
-          <li>
-            <span className="step-no">1</span>
-            <strong>Ask anything</strong>
-            <span className="step-text">Ten messages with a model you cannot see.</span>
-          </li>
-          <li>
-            <span className="step-no">2</span>
-            <strong>Guess when you want</strong>
-            <span className="step-text">Name it, or stay in the chat.</span>
-          </li>
-          <li>
-            <span className="step-no">3</span>
-            <strong>Score high</strong>
-            <span className="step-text">Few tokens and few hints score the most.</span>
-          </li>
-        </ol>
+        <figure className="card hero-chat" aria-label="An example round">
+          <div className="hero-chat-head">
+            <span>Message 1 of 10</span>
+            <span className="progress" aria-hidden="true">
+              {Array.from({ length: 10 }, (_, index) => (
+                <i key={index} className={index === 0 ? "now" : undefined} />
+              ))}
+            </span>
+          </div>
+          <div className="transcript">
+            <div className="bubble user">Explain recursion in one sentence.</div>
+            <div className="bubble assistant">
+              Recursion is when a function solves a problem by calling itself on a smaller piece of it, until a simple case
+              stops the chain.
+            </div>
+          </div>
+          <div className="hero-chat-guess">
+            <span className="hero-chat-prompt">Who is it?</span>
+            <ul className="hero-chat-picks">
+              <li>ChatGPT</li>
+              <li>Claude</li>
+              <li>Gemini</li>
+              <li>Llama</li>
+            </ul>
+          </div>
+          <figcaption>Name it when you want, or stay in the chat. Few tokens and few hints score the most.</figcaption>
+        </figure>
       </section>
       <dl className="stats">
         <div>

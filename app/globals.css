@@ -118,7 +118,7 @@ button { cursor: pointer; }
 @media (hover: hover) and (pointer: fine) { .brand:hover { color: var(--text); } }
 /* The PNG has ~14% transparent padding on every side. Scale it up and pull the margins in so the visible mark is 40px, the same as the avatar. */
 .brand img { height: 56px; width: 56px; margin: -8px; flex: none; }
-.header-nav { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 8px; }
+.header-nav { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 2px; }
 .header-nav > a {
   color: var(--text);
   text-decoration: none;
@@ -126,8 +126,8 @@ button { cursor: pointer; }
   font-size: 15px;
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 12px;
+  gap: 7px;
+  padding: 8px 10px;
   border-radius: var(--radius-sm);
   transition: background 0.15s ease;
 }
@@ -377,16 +377,24 @@ textarea { min-height: 76px; resize: vertical; }
 /* Landing */
 .hero {
   display: grid;
-  grid-template-columns: minmax(160px, 240px) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 420px);
   gap: 28px 56px;
   align-items: center;
   padding: 32px 0 12px;
 }
-.hero-logo { width: 100%; height: auto; }
 .hero h1 { font-size: 56px; margin: 0; }
 .hero .title-phone { display: none; }
 .hero .stack { gap: 18px; }
 .hero-copy { font-size: 18px; color: var(--mute); }
+.hero-chat { margin: 0; display: grid; gap: 14px; padding: 16px 18px 14px; }
+.hero-chat-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; color: var(--mute); font-size: 13px; font-weight: 500; }
+.hero-chat-head .progress { width: 120px; flex: none; }
+.hero-chat .bubble { max-width: 92%; }
+.hero-chat-guess { display: grid; gap: 8px; }
+.hero-chat-prompt { font-size: 13px; font-weight: 500; color: var(--mute); }
+.hero-chat-picks { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.hero-chat-picks li { border: 1px solid var(--control-line); border-radius: var(--radius-sm); padding: 6px 12px; font-size: 14px; font-weight: 500; background: var(--card); }
+.hero-chat figcaption { color: var(--mute); font-size: 13px; line-height: 1.4; border-top: 1px solid var(--line); padding-top: 10px; }
 @media (min-width: 721px) {
   .hero .button-lg {
     padding: 16px 48px;
@@ -411,40 +419,7 @@ textarea { min-height: 76px; resize: vertical; }
 }
 .stats dt { color: var(--mute); font-size: 12px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.06em; }
 .stats dd { margin: 6px 0 0; font-size: 34px; line-height: 1.1; font-weight: 700; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
-.steps {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 16px;
-}
-.steps li {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  column-gap: 10px;
-  row-gap: 6px;
-  align-items: center;
-}
-.steps .step-text { grid-column: 1 / -1; }
-.steps .step-no {
-  width: 28px;
-  height: 28px;
-  border-radius: 999px;
-  background: var(--teal);
-  color: #062e2e;
-  font-weight: 700;
-  font-size: 14px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-.steps strong { font-size: 16px; }
-.steps .step-text { color: var(--mute); font-size: 14px; }
 
-
-/* Phone shows this title inside one card. A wide screen keeps the three columns and leaves the title out. */
-.how-round-title { display: none; }
 .section-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-top: 8px; }
 .section-head h2 { margin: 0; }
 .section-head a { font-size: 14px; font-weight: 500; }
@@ -1922,42 +1897,10 @@ html[data-theme="dark"] .history-score[data-best="true"] { color: var(--teal); }
 @media (max-width: 720px) {
   .landing { gap: 28px; grid-template-columns: minmax(0, 1fr); }
   .hero { grid-template-columns: 1fr; }
-  .hero-logo { width: min(180px, 56%); }
   .hero h1 { font-size: min(42px, 10.4vw); }
   .hero .title-full { display: none; }
   .hero .title-phone { display: inline; }
-  .stats, .steps { grid-template-columns: 1fr; }
-  .how-round {
-    background: var(--card);
-    border: 1px solid var(--line);
-    border-radius: var(--radius);
-    box-shadow: var(--shadow);
-    padding: 14px 16px 10px;
-  }
-  .how-round-title {
-    display: block;
-    margin: 0 0 6px;
-    font-size: 16px;
-    line-height: 1.3;
-  }
-  .how-round .steps { gap: 10px; }
-  .how-round .steps li {
-    display: grid;
-    grid-template-columns: auto minmax(0, 1fr);
-    column-gap: 10px;
-    row-gap: 0;
-    align-items: center;
-    padding: 1px 0;
-  }
-  .how-round .steps .step-no {
-    grid-row: 1 / span 2;
-    width: 22px;
-    height: 22px;
-    margin: 0;
-    font-size: 12px;
-  }
-  .how-round .steps strong { font-size: 15px; line-height: 1.25; }
-  .how-round .steps .step-text { grid-column: 2; font-size: 14px; line-height: 1.3; }
+  .stats { grid-template-columns: 1fr; }
   .landing .stats {
     grid-template-columns: 1fr 1fr;
     gap: 8px;
@@ -1998,7 +1941,6 @@ html[data-theme="dark"] .history-score[data-best="true"] { color: var(--teal); }
 }
 
 @media (max-width: 560px) {
-  .hero-logo { display: none; }
   .hero { padding-top: 0; }
   .board-controls .segmented { width: 100%; }
   .board-controls .segmented a, .board-controls .segmented span[aria-disabled="true"] { flex: 1 1 auto; text-align: center; padding: 7px 4px; font-size: 13px; }
