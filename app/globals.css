@@ -377,29 +377,28 @@ textarea { min-height: 76px; resize: vertical; }
 .check input { width: auto; margin-top: 4px; accent-color: var(--teal-press); }
 
 /* Landing */
+/* Art on the left (the logo, a player line, a reply that is still typing), the question and the buttons on the right. */
 .hero {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 420px);
-  gap: 28px 56px;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+  gap: 28px 48px;
   align-items: center;
-  padding: 32px 0 12px;
+  padding: 28px 0 8px;
 }
-.hero h1 { font-size: 56px; margin: 0; text-wrap: balance; }
-.hero .title-phone { display: none; }
-.hero .stack { gap: 18px; }
-.hero-copy { font-size: 18px; color: var(--mute); }
-.hero-chat { margin: 0; display: grid; gap: 14px; padding: 16px 18px 14px; }
-.hero-chat-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; color: var(--mute); font-size: 13px; font-weight: 500; }
-.hero-chat-head .progress { width: 120px; flex: none; }
-.hero-chat .bubble { max-width: 92%; }
-.hero-chat-guess { display: grid; gap: 8px; }
-.hero-chat-prompt { font-size: 13px; font-weight: 500; color: var(--mute); }
-.hero-chat-picks { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
-.hero-chat-picks li { border: 1px solid var(--control-line); border-radius: var(--radius-sm); padding: 6px 12px; font-size: 14px; font-weight: 500; background: var(--card); }
-.hero-chat figcaption { color: var(--mute); font-size: 13px; line-height: 1.4; border-top: 1px solid var(--line); padding-top: 10px; }
+.hero-art { display: grid; justify-items: center; gap: 4px; }
+.hero-art img { width: 100%; max-width: 280px; height: auto; margin: -36px 0 -28px; }
+.hero-talk { display: grid; gap: 10px; width: min(100%, 300px); }
+.hero-talk .bubble { max-width: 85%; }
+.hero-talk .bubble.user { justify-self: end; }
+.hero-talk .bubble.assistant { justify-self: start; }
+.hero-talk .typing i { animation: none; opacity: 0.55; }
+.hero-text { display: grid; gap: 18px; justify-items: start; }
+.hero h1 { font-size: 64px; line-height: 1.05; margin: 0; text-wrap: balance; }
+.hero-copy { font-size: 19px; color: var(--mute); margin: 0; max-width: 34ch; }
+.stack > .hero-more { text-align: center; margin: 0; max-width: none; }
 @media (min-width: 721px) {
   .hero .button-lg {
-    padding: 16px 48px;
+    padding: 16px 40px;
     font-size: 18px;
     font-weight: 600;
     line-height: 22px;
@@ -1898,10 +1897,12 @@ html[data-theme="dark"] .history-score[data-best="true"] { color: var(--teal); }
 
 @media (max-width: 720px) {
   .landing { gap: 28px; grid-template-columns: minmax(0, 1fr); }
-  .hero { grid-template-columns: 1fr; }
-  .hero h1 { font-size: min(42px, 10.4vw); }
-  .hero .title-full { display: none; }
-  .hero .title-phone { display: inline; }
+  .hero { grid-template-columns: 1fr; gap: 20px; }
+  .hero h1 { font-size: min(48px, 12.4vw); }
+  .hero-text { justify-items: stretch; }
+  .hero-copy { font-size: 17px; max-width: none; }
+  .hero-art img { max-width: 150px; margin: -18px 0 -14px; }
+  .hero-talk { width: 100%; }
   .stats { grid-template-columns: 1fr; }
   .landing .stats {
     grid-template-columns: 1fr 1fr;

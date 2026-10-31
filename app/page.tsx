@@ -1,11 +1,6 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { BoardControls } from "@/components/board-controls";
-import { BoardTable } from "@/components/board-table";
-import { allCompanies } from "@/lib/company";
-import { anyDifficulty } from "@/lib/difficulty";
-import { boardChoice, boardHref, boardModes, boardPool, isPoolBoard, selectedCategory, selectedCompany } from "@/lib/board-query";
-import { landingSnapshot, leaderboard, listBoardOptions, listGameModes } from "@/lib/rounds";
+import { landingSnapshot } from "@/lib/rounds";
 import { currentProfile } from "@/lib/session";
 import { organizationJsonLd } from "@/lib/site";
 
@@ -16,45 +11,37 @@ export const metadata: Metadata = {
     "A guessing game for AI fans. Chat with a hidden LLM for ten messages and guess which model it is. Daily rounds, several game modes, and a public leaderboard.",
 };
 
-export default async function HomePage({
-  searchParams,
-}: {
-  searchParams: Promise<{ error?: string; gameMode?: string; period?: string; difficulty?: string; company?: string; category?: string }>;
-}) {
+export default async function HomePage({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
   const params = await searchParams;
   if (params.error === "access_denied") redirect("/login?error=cancelled");
   const { user, username } = await currentProfile();
   if (user && !username) redirect("/welcome");
   const signedIn = Boolean(user && username);
-  const [snapshot, gameModes, options] = await Promise.all([landingSnapshot(), listGameModes(), listBoardOptions()]);
-  const modes = boardModes(gameModes);
-  const choice = boardChoice(params, modes);
-  const view = {
-    ...choice,
-    company: choice.gameMode === "company" ? selectedCompany(choice.company, options.companies) : allCompanies,
-    category: choice.gameMode === "class" ? selectedCategory(choice.category, options.categories) : allCompanies,
-  };
-  const board = await leaderboard(
-    view.gameMode,
-    view.period,
-    user?.id,
-    view.difficulty,
-    boardPool(view),
-  );
-  const top = "rows" in board ? board.rows.slice(0, 5) : [];
+  const snapshot = await landingSnapshot();
 
   return (
     <div className="stack landing">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }} />
       <section className="hero">
-        <div className="stack">
-          <h1>
-            <span className="title-full">Guess the hidden AI model</span>
-            <span className="title-phone">Guess the AI model</span>
-          </h1>
+        <div className="hero-art" aria-hidden="true">
+          <img className="for-light" src="/brand/logo-tail-right-light.png" alt="" />
+          <img className="for-dark" src="/brand/logo-tail-right-dark.png" alt="" />
+          <div className="hero-talk">
+            <div className="bubble user">Who are you, really?</div>
+            <div className="bubble assistant">
+              <span className="typing">
+                <i />
+                <i />
+                <i />
+              </span>
+            </div>
+          </div>
+        </div>
+        <div className="hero-text">
+          <h1>Which AI is it?</h1>
           <p className="hero-copy">
-            Think you can tell AI models apart, like a wine? A hidden LLM answers you. It could be ChatGPT, Claude, Gemini,
-            or any of the {snapshot.models.toLocaleString("en-US")} models in play. Ten messages, one guess.
+            Chat with a hidden model for ten messages, then name it: ChatGPT, Claude, Gemini, or one of{" "}
+            {Math.max(snapshot.models - 3, 0).toLocaleString("en-US")} others. The fewer messages and hints you use, the more you score.
           </p>
           <div className="row">
             {signedIn ? (
@@ -64,7 +51,7 @@ export default async function HomePage({
             ) : (
               <>
                 <a className="button button-lg" href="/login?tab=create&next=/play">
-                  Sign up
+                  Play now
                 </a>
                 <a className="button-quiet button-lg" href="/login?next=/play">
                   Sign in
@@ -73,33 +60,6 @@ export default async function HomePage({
             )}
           </div>
         </div>
-        <figure className="card hero-chat" aria-label="An example round">
-          <div className="hero-chat-head">
-            <span>Message 1 of 10</span>
-            <span className="progress" aria-hidden="true">
-              {Array.from({ length: 10 }, (_, index) => (
-                <i key={index} className={index === 0 ? "now" : undefined} />
-              ))}
-            </span>
-          </div>
-          <div className="transcript">
-            <div className="bubble user">Explain recursion in one sentence.</div>
-            <div className="bubble assistant">
-              Recursion is when a function solves a problem by calling itself on a smaller piece of it, until a simple case
-              stops the chain.
-            </div>
-          </div>
-          <div className="hero-chat-guess">
-            <span className="hero-chat-prompt">Who is it?</span>
-            <ul className="hero-chat-picks">
-              <li>ChatGPT</li>
-              <li>Claude</li>
-              <li>Gemini</li>
-              <li>Llama</li>
-            </ul>
-          </div>
-          <figcaption>Name it when you want, or stay in the chat. Few tokens and few hints score the most.</figcaption>
-        </figure>
       </section>
       <dl className="stats">
         <div>
@@ -119,24 +79,9 @@ export default async function HomePage({
           <dd>{snapshot.players.toLocaleString("en-US")}</dd>
         </div>
       </dl>
-      <section className="stack">
-        <div className="section-head">
-          <h2>Top 5</h2>
-          <a href={boardHref("/leaderboard", view)}>Full leaderboard</a>
-        </div>
-        <BoardControls base="/" modes={modes} categories={options.categories} companies={options.companies} {...view} />
-        {top.length === 0 ? (
-          <div className="card empty">
-            No finished games on this board yet. <a href="/play">Be the first: start a round.</a>
-          </div>
-        ) : (
-          <BoardTable
-            rows={top}
-            showDifficulty={!isPoolBoard(view.gameMode) && view.difficulty === anyDifficulty}
-            showCompany={isPoolBoard(view.gameMode)}
-          />
-        )}
-      </section>
+      <p className="hero-more">
+        <a href="/leaderboard">See who is winning on the leaderboard</a>
+      </p>
     </div>
   );
 }
