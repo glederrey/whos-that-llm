@@ -13,9 +13,16 @@ function useReducedMotion() {
 }
 
 export type SearchDemoModel = { id: string; name: string; companyName: string; logoUrl: string };
-export type SearchDemoTurn = { q: string; a: string };
-/** `turns` is one message, or two when the first guess is wrong (`wrongId`) and the player asks again. */
-export type SearchDemoRound = { turns: SearchDemoTurn[]; query: string; candidates: SearchDemoModel[]; answerId: string; wrongId?: string };
+/** One message and the guess made after it. A round with a wrong first guess has two turns. */
+export type SearchDemoTurn = {
+  q: string;
+  a: string;
+  query: string;
+  candidates: SearchDemoModel[];
+  pickId: string;
+  right: boolean;
+};
+export type SearchDemoRound = { turns: SearchDemoTurn[] };
 
 /** A looping example round that ends in the real guess picker: the query types itself, real models and logos
  *  list below it, one is picked, then it is revealed. Decoration only. */
@@ -29,10 +36,8 @@ export function SearchDemo({ rounds }: { rounds: SearchDemoRound[] }) {
   const current = rounds[round];
   const last = current.turns.length - 1;
   const t = reduced ? last : turn;
-  const pickId = t < last && current.wrongId ? current.wrongId : current.answerId;
-  const pick = current.candidates.find((model) => model.id === pickId) ?? current.candidates[0];
-  const right = pickId === current.answerId;
   const shown = current.turns[t];
+  const pick = shown.candidates.find((model) => model.id === shown.pickId) ?? shown.candidates[0];
 
   useEffect(() => {
     if (reduced) return;
@@ -58,10 +63,10 @@ export function SearchDemo({ rounds }: { rounds: SearchDemoRound[] }) {
     } else if (phase === "search") {
       tick = setInterval(() => {
         setTyped((value) => {
-          if (value + 1 >= current.query.length) {
+          if (value + 1 >= shown.query.length) {
             clearInterval(tick);
             timer = setTimeout(() => setPhase("pick"), 900);
-            return current.query.length;
+            return shown.query.length;
           }
           return value + 1;
         });
@@ -77,28 +82,27 @@ export function SearchDemo({ rounds }: { rounds: SearchDemoRound[] }) {
           setRound((value) => (value + 1) % rounds.length);
         }
         setPhase("ask");
-      }, right ? 3000 : 2600);
+      }, shown.right ? 3000 : 2400);
     }
     return () => {
       clearTimeout(timer);
       clearInterval(tick);
     };
-  }, [phase, reduced, turn, last, right, shown.a.length, current.query.length, rounds.length]);
+  }, [phase, reduced, turn, last, shown.right, shown.a.length, shown.query.length, rounds.length]);
 
   const showReply = reduced || phase === "reply" || phase === "search" || phase === "pick" || phase === "reveal";
   const text = reduced || phase !== "reply" ? shown.a : shown.a.slice(0, chars);
   const showGuess = reduced || phase === "search" || phase === "pick" || phase === "reveal";
   const picked = reduced || phase === "reveal";
-  const query = reduced ? "" : current.query.slice(0, typed);
+  const query = reduced ? "" : shown.query.slice(0, typed);
   const listing = !picked && showGuess && typed >= 2;
 
   return (
     <div className="card demo demo-search" role="img" aria-label="An example round">
       <div className="demo-head" aria-hidden="true">
-        <span>Example round</span>
-        <span>Message {t + 1} of 10</span>
+        <strong>Message {t + 1} of 10</strong>
       </div>
-      <div className="demo-chat" aria-hidden="true">
+      <div className="demo-chat" data-scrolled={t > 0} aria-hidden="true">
         {current.turns.slice(0, t).map((prev) => (
           <div className="demo-prev" key={prev.q}>
             <div className="bubble user">{prev.q}</div>
@@ -120,16 +124,16 @@ export function SearchDemo({ rounds }: { rounds: SearchDemoRound[] }) {
       <div className="demo-guess" data-on={showGuess} aria-hidden="true">
         {picked ? (
           <>
-            <div className="picked demo-picked" data-right={right}>
+            <div className="picked demo-picked" data-right={shown.right}>
               <img src={pick.logoUrl} alt="" width={28} height={28} />
               <span>
                 {pick.companyName}
                 <br />
                 {pick.name}
               </span>
-              <b className="demo-it">{right ? `It was ${pick.name.split(" ")[0]}!` : "Not this one"}</b>
+              <b className="demo-it">{shown.right ? "Correct!" : "Wrong"}</b>
             </div>
-            {right ? null : <p className="demo-wrong">Wrong guess: −100 points. You can guess again.</p>}
+            {shown.right ? null : <p className="demo-wrong">−100 points. Send another message, or guess again.</p>}
           </>
         ) : (
           <div className="guess-search">
@@ -138,8 +142,8 @@ export function SearchDemo({ rounds }: { rounds: SearchDemoRound[] }) {
               {phase === "search" || phase === "pick" ? <i className="demo-caret" /> : null}
             </div>
             <div className="candidates demo-list" data-on={listing}>
-              {current.candidates.map((model) => (
-                <div key={model.id} className="candidate demo-cand" data-hot={phase === "pick" && model.id === pickId}>
+              {shown.candidates.map((model) => (
+                <div key={model.id} className="candidate demo-cand" data-hot={phase === "pick" && model.id === shown.pickId}>
                   <img src={model.logoUrl} alt="" width={28} height={28} />
                   <span>
                     {model.companyName}

@@ -76,7 +76,10 @@ export function boardMiddle(gameMode: string, modes: BoardMode[]): BoardMiddle |
   return null;
 }
 
-export function boardHref(base: "/" | "/leaderboard", choice: BoardChoice, page = 1): string {
+/** "/hero4" is the home page preview; drop it when the preview becomes "/". */
+export type BoardBase = "/" | "/leaderboard" | "/hero4";
+
+export function boardHref(base: BoardBase, choice: BoardChoice, page = 1): string {
   const params = new URLSearchParams({
     gameMode: choice.gameMode,
     difficulty: choice.difficulty,
@@ -86,7 +89,7 @@ export function boardHref(base: "/" | "/leaderboard", choice: BoardChoice, page 
   if (choice.category && choice.category !== allCompanies) params.set("category", choice.category);
   if (page > 1) params.set("page", String(page));
   const query = params.toString();
-  return base === "/" ? `/?${query}` : `/leaderboard?${query}`;
+  return base === "/" ? `/?${query}` : `${base}?${query}`;
 }
 
 /** A company id that is on the list. Anything else, including a closed mode, is All companies. */
