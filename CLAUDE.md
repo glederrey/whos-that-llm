@@ -26,5 +26,5 @@ Game numbers (points, token scale, hint price, no-hint multiplier) live in `lib/
 - Visual reference: `DESIGN.md` (tokens, layout, do's and don'ts) and `PRODUCT.md` (users, principles). Change them in the same pass as the code.
 - For any UI change, use the web skills: `impeccable` (critique, polish, detector), `frontend-design`, `emil-design-eng`, `mobile-native`, `break-ui`, `web-design-guidelines`, and `webapp-testing` (Playwright) for screenshots. Check phone (390px) and desktop (1280px), light and dark.
 - The dev server normally runs on `localhost:3000` (`npm run dev`, dev Supabase project). Check it before starting another.
-- Admin pages (`/admin/*`) are used on a computer only; they do not need to work on a phone. To sign in, read `ADMIN_EMAIL` and `ADMIN_PASSWORD` from `.env.development.local` inside a script. Never print their values.
+- Admin pages (`/admin/*`) are used on a computer only; they do not need to work on a phone. To sign in, read the admin login from `.env.development.local` (the admin email and password variables) inside a script. Never print the values, and never write the variable name for the email in a tracked file: `lib/admin-surface.test.ts` fails on it.
 - Screenshots and scratch files go outside the repo, never in a commit.
