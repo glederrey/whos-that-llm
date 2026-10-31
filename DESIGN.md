@@ -8,7 +8,7 @@ colors:
   teal: "#00BBC9"
   teal-press: "#006C74"
   teal-wash: "#E6F8F8"
-  canvas: "#E0E0E1"
+  canvas: "#E6E1D8"
   card: "#FFFFFF"
   soft: "#F3F3F4"
   text: "#141414"
@@ -66,7 +66,7 @@ The theme is switched with the `data-theme` attribute on `html`. The first visit
 |---|---|---|
 | teal-press | #006C74 | #008F99 |
 | teal-wash | #E6F8F8 | #062E2E |
-| canvas | #E0E0E1 | #141414 |
+| canvas | #E6E1D8 | #141414 |
 | card | #FFFFFF | #1E1E1E |
 | soft | #F3F3F4 | #262626 |
 | text | #141414 | #EBEBEB |

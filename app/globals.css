@@ -5,7 +5,7 @@
   --teal: #00bbc9;
   --teal-press: #006c74;
   --teal-wash: #e6f8f8;
-  --canvas: #e0e0e1;
+  --canvas: #e6e1d8;
   --card: #ffffff;
   --soft: #f3f3f4;
   --chip-2: #e0e0e3;
@@ -381,7 +381,7 @@ textarea { min-height: 76px; resize: vertical; }
   align-items: center;
   padding: 32px 0 12px;
 }
-.hero h1 { font-size: 56px; margin: 0; }
+.hero h1 { font-size: 56px; margin: 0; text-wrap: balance; }
 .hero .title-phone { display: none; }
 .hero .stack { gap: 18px; }
 .hero-copy { font-size: 18px; color: var(--mute); }
