@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { isLobePath, lobeIdOf, lobeIdOfAny, lobePath, lobeSvgForTheme, lobeThemeUrl, lobeUrl } from "./lobe-logo";
-import { logoPathForPlay, logoPublicUrl } from "./logos";
+import { chooseLogoPath, logoPathForPlay, logoPublicUrl } from "./logos";
 
 test("lobe paths round trip and reject bad ids", () => {
   assert.equal(lobeIdOf(lobePath("qwen-color")), "qwen-color");
@@ -57,4 +57,11 @@ test("the share card finds the icon in a stored path or a page address", () => {
   assert.equal(lobeIdOfAny("/lobe/qwen-color.svg?theme=dark"), "qwen-color");
   assert.equal(lobeIdOfAny("/lobe/../x.svg"), null);
   assert.equal(lobeIdOfAny("https://x.co/a.png"), null);
+});
+
+test("a LobeHub logo wins over a model override and an old upload", () => {
+  assert.equal(chooseLogoPath("logos/anthropic.png", "lobe:claude-color"), "lobe:claude-color");
+  assert.equal(chooseLogoPath("logos/a.png", "/lobe/x.svg"), "/lobe/x.svg");
+  assert.equal(chooseLogoPath(null, "", "logos/b.png", "logos/c.png"), "logos/b.png");
+  assert.equal(chooseLogoPath(null, undefined), "");
 });

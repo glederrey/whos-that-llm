@@ -1,3 +1,4 @@
+import { chooseLogoPath } from "./logos";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { currentRules } from "./config";
 import { loadCategoryEntries } from "./category-data";
@@ -63,7 +64,7 @@ export async function withCurrentLogos(client: SupabaseClient, traits: Traits): 
   for (const row of data ?? []) {
     const record = row as { id: string; company_id: string; logo_path: string | null; companies: { logo_path: string } | { logo_path: string }[] | null };
     const frozen = models[record.id];
-    const path = record.logo_path || first(record.companies)?.logo_path;
+    const path = chooseLogoPath(record.logo_path, first(record.companies)?.logo_path);
     if (frozen && path) models[record.id] = { ...frozen, logoPath: presentLogo(path, record.company_id) };
   }
   return { ...traits, models };

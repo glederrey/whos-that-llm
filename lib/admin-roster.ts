@@ -37,7 +37,7 @@ import { randomBytes } from "node:crypto";
 import { squareLogo } from "./logo-square";
 import { lobeIdOf, isLobePath } from "./lobe-logo";
 import { listLobeIds } from "./lobe-logo-files";
-import { categoryImagePath, companyUploadPath, logoBucketPath, readLogo } from "./logos";
+import { categoryImagePath, chooseLogoPath, companyUploadPath, logoBucketPath, readLogo } from "./logos";
 import { parseCompanyFields, type CompanyNotice } from "./admin-company";
 import { loadCategoryEntries } from "./category-data";
 import { publicImageCacheControl } from "./profile";
@@ -107,7 +107,7 @@ export async function loadRoster(): Promise<{ rows: RosterRow[]; companies: Comp
       available: row.available !== false,
       reasoning: Boolean(row.reasoning),
       reasoningOff: Boolean(row.reasoning) && reasoningOff(row.provider_settings),
-      logoUrl: presentLogo((row.logo_path as string | null) || company?.logo_path || "", companyId),
+      logoUrl: presentLogo(chooseLogoPath(row.logo_path as string | null, company?.logo_path), companyId),
       categoryIds,
       categoryNames: categoryIds.map((id) => categoryName.get(id) ?? id).join(", "),
     };
@@ -420,7 +420,7 @@ export async function loadCategoryList(): Promise<{
         id: row.id as string,
         name: row.name as string,
         companyName: company?.name ?? companyId,
-        logoUrl: presentLogo((row.logo_path as string | null) || company?.logo_path || "", companyId),
+        logoUrl: presentLogo(chooseLogoPath(row.logo_path as string | null, company?.logo_path), companyId),
         enabled: Boolean(row.enabled),
         // A model that was never enabled may have no release date. Zero hides the year.
         year: released ? released.getUTCFullYear() : 0,

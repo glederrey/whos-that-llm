@@ -20,6 +20,12 @@ export function logoPathForPlay(path: string, companyId: string): string {
   return companyLogoPath(companyId);
 }
 
+/** Which stored path to show. A LobeHub logo wins wherever it is set, then the first path that is not empty. */
+export function chooseLogoPath(...candidates: Array<string | null | undefined>): string {
+  const paths = candidates.filter((path): path is string => typeof path === "string" && path.trim().length > 0);
+  return paths.find((path) => lobeIdOf(path) || path.startsWith("/lobe/")) ?? paths[0] ?? "";
+}
+
 export function logoPublicUrl(baseUrl: string, path: string): string {
   const lobe = lobeIdOf(path);
   if (lobe) return lobeUrl(lobe);
