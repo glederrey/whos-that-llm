@@ -2407,10 +2407,10 @@ html[data-theme="dark"] .h2-podium li { background: rgba(0, 0, 0, 0.1); }
 .h4-demo { position: relative; min-width: 0; }
 .h4-demo .demo-search { position: relative; z-index: 1; }
 .h4-ai { position: relative; display: inline-block; }
-.h4-logo { position: absolute; z-index: 2; bottom: calc(100% + 4px - var(--logo) * 0.17); left: calc(20px - var(--logo) * 0.18); pointer-events: none; filter: drop-shadow(0 6px 14px rgb(0 0 0 / 0.18)); }
+.h4-logo { position: absolute; z-index: 2; bottom: calc(100% + 4px - var(--logo) * 0.17); left: calc(40px - var(--logo) * 0.18); pointer-events: none; filter: drop-shadow(0 6px 14px rgb(0 0 0 / 0.18)); }
 .h4-logo img { width: var(--logo); height: var(--logo); display: block; }
 @media (max-width: 900px) {
-  .h4-hero { --logo: 96px; }
+  .h4-hero { --logo: 84px; }
 }
 @media (max-width: 800px) {
   .h4-hero { grid-template-columns: 1fr; gap: 20px; }
