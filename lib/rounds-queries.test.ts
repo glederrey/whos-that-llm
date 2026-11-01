@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { rulesForGameMode } from "./config";
-import { leaderboardWith, readPublicStats, rpc, saveUsername, scoreFrom } from "./rounds-queries";
+import { leaderboardWith, rpc, saveUsername, scoreFrom } from "./rounds-queries";
 import type { GameRow } from "./rounds-shape";
 
 type Reply = { data?: unknown; error?: { message: string } | null; count?: number | null };
@@ -148,30 +148,4 @@ test("leaderboard legacy path without a viewer marks nobody, and a failing legac
   assert.ok("rows" in out);
   assert.deepEqual(out.rows.map((r) => r.mine), [false]);
   await assert.rejects(leaderboardWith(legacyOnly({ error: { message: "legacy down" } }), "all", "week"), /legacy down/);
-});
-
-test("readPublicStats uses the rpc counts and fills in companies when it omits them", async () => {
-  const withAll = fakeClient({}, { public_stats: { data: { models: 3, gamesToday: 2, players: 7, companies: 4 } } });
-  assert.deepEqual(await readPublicStats(withAll.client), { models: 3, gamesToday: 2, players: 7, playersToday: 0, companies: 4 });
-  const noCompanies = fakeClient(
-    { models: { data: [{ company_id: "a" }, { company_id: "a" }, { company_id: "b" }, { company_id: "" }] } },
-    { public_stats: { data: { models: 3 } } },
-  );
-  assert.deepEqual(await readPublicStats(noCompanies.client), { models: 3, gamesToday: 0, players: 0, playersToday: 0, companies: 2 });
-});
-
-test("readPublicStats counts by hand when the rpc is missing", async () => {
-  const { client } = fakeClient(
-    {
-      models: { data: [{ company_id: "a" }, { company_id: "b" }], count: 5 },
-      games: { data: [{ user_id: "u1" }, { user_id: "u1" }, { user_id: "u2" }], count: 8 },
-    },
-    { public_stats: { error: { message: "no rpc" } } },
-  );
-  assert.deepEqual(await readPublicStats(client), { models: 5, gamesToday: 8, players: 2, playersToday: 2, companies: 2 });
-});
-
-test("readPublicStats throws when the manual count fails", async () => {
-  const { client } = fakeClient({ models: { error: { message: "models down" } } }, { public_stats: { error: { message: "x" } } });
-  await assert.rejects(readPublicStats(client), /models down/);
 });

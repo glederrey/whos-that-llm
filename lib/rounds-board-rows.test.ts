@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { boardSeed } from "./board-seed";
 import { boardSince } from "./board-query";
-import { bestOwnGame, boardFilters, boardRows, markLegacyRows, parseStats, toBoardRow, utcDayWindow } from "./rounds-board-rows";
+import { bestOwnGame, boardFilters, boardRows, markLegacyRows, toBoardRow } from "./rounds-board-rows";
 
 const base = { rank: 1, name: "ann", score: 900 };
 
@@ -84,23 +84,4 @@ test("markLegacyRows marks only the row with the viewer's best name and score", 
   const data = [base, { ...base, rank: 2, score: 800 }, { ...base, rank: 3, name: "bob", score: 900 }];
   assert.deepEqual(markLegacyRows(data, { username: "ann", score: 900 }).map((r) => r.mine), [true, false, false]);
   assert.deepEqual(markLegacyRows(data, null).map((r) => r.mine), [false, false, false]);
-});
-
-test("parseStats defaults missing counts to 0 and keeps companies and playersToday null unless numeric", () => {
-  assert.deepEqual(parseStats({ models: 5, gamesToday: "2", players: 9, playersToday: 3, companies: 4 }), {
-    models: 5,
-    gamesToday: 2,
-    players: 9,
-    playersToday: 3,
-    companies: 4,
-  });
-  assert.deepEqual(parseStats({}), { models: 0, gamesToday: 0, players: 0, playersToday: null, companies: null });
-  assert.equal(parseStats({ companies: "4" as unknown as number }).companies, null);
-});
-
-test("utcDayWindow spans the UTC day of the given time", () => {
-  assert.deepEqual(utcDayWindow(new Date("2026-03-05T23:59:59Z")), {
-    start: "2026-03-05T00:00:00.000Z",
-    end: "2026-03-06T00:00:00.000Z",
-  });
 });

@@ -3,6 +3,6 @@ export { serviceOrThrow } from "./rounds-db";
 export { difficultyCounts, first, presentLogo, type ApiFailure } from "./rounds-shape";
 export { listBoardOptions, listGameModes, lobbyState, startAllModels, startCategory, startCompany, startCustom, startDaily, startOrigin } from "./rounds-start";
 export { abortReply, buyHint, claimCall, giveUp, hiddenCall, readPublicGame, saveReply, submitGuess, submitOriginGuess } from "./rounds-play";
-export { landingSnapshot, leaderboard } from "./rounds-board";
+export { leaderboard } from "./rounds-board";
 export type { BoardRow } from "./rounds-board-rows";
 export { setUsername } from "./rounds-user";
