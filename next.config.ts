@@ -42,7 +42,12 @@ const nextConfig: NextConfig = {
   experimental: { serverActions: { bodySizeLimit: "2mb" } },
   // app/emoji/[code]/route.ts reads a Twemoji file by a computed name, which
   // file tracing cannot see, so ship the whole set (17 MB) with that route.
-  outputFileTracingIncludes: { "/emoji/[code]": ["./node_modules/@twemoji/svg/*.svg"] },
+  outputFileTracingIncludes: {
+    "/emoji/[code]": ["./node_modules/@twemoji/svg/*.svg"],
+    // app/lobe/[file]/route.ts and the share card read a company logo by a computed name.
+    "/lobe/[file]": ["./node_modules/@lobehub/icons-static-svg/icons/*.svg"],
+    "/r/[gameId]/card.png": ["./node_modules/@lobehub/icons-static-svg/icons/*.svg"],
+  },
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },

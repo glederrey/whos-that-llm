@@ -35,6 +35,8 @@ import { reasoningOff } from "./provider-check";
 import { planReasoningUpdates, type CatalogModel } from "./roster-sync";
 import { randomBytes } from "node:crypto";
 import { squareLogo } from "./logo-square";
+import { lobeIdOf, isLobePath } from "./lobe-logo";
+import { listLobeIds } from "./lobe-logo-files";
 import { categoryImagePath, companyUploadPath, logoBucketPath, readLogo } from "./logos";
 import { parseCompanyFields, type CompanyNotice } from "./admin-company";
 import { loadCategoryEntries } from "./category-data";
@@ -508,7 +510,7 @@ export async function updateCompany(raw: CompanyInput): Promise<CompanyNotice | 
     return "save";
   }
   // The replaced file goes, unless another company still shows it.
-  if (logo && old && logoBucketPath(old) !== logoBucketPath(logo.path)) {
+  if (logo && old && !isLobePath(old) && logoBucketPath(old) !== logoBucketPath(logo.path)) {
     const shared = await client.from("companies").select("id", { count: "exact", head: true }).eq("logo_path", old);
     if (!shared.error && (shared.count ?? 0) === 0) await client.storage.from("logos").remove([logoBucketPath(old)]);
   }
@@ -540,6 +542,10 @@ async function resolveCompanyLogo(
   }
   const chosen = (raw.logoPath ?? "").trim();
   if (!chosen) return null;
+  if (isLobePath(chosen)) {
+    const id = lobeIdOf(chosen);
+    return id && (await listLobeIds()).includes(id) ? { path: chosen, uploaded: false } : "logo";
+  }
   const { data, error } = await client.from("companies").select("id").eq("logo_path", chosen).limit(1);
   if (error) return "save";
   return data && data.length > 0 ? { path: chosen, uploaded: false } : "logo";

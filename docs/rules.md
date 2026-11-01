@@ -235,7 +235,7 @@ The call is the same in every category: 10 messages, 500 characters, 2,000 outpu
 |---|---|---|---|---|
 | `daily` | Same roster as All models at the chosen difficulty. One hidden model per difficulty per UTC day, the same for every player. One round per account per difficulty per UTC day | Yes | Yes | Built |
 | `all` | Enabled models at or below the chosen difficulty | Yes | Yes | Built |
-| `company` | One company, at least 2 enabled models | Year and size only | Yes | Built |
+| `company` | One company, at least 2 enabled models (a company with fewer is not listed; its single model still plays in the other modes) | Year and size only | Yes | Built |
 | `origin` | Enabled models whose origin is turned on, at least 2 origins | No | No | Built |
 | `custom` | The models the player picks, at least 2 | Yes | No | Built |
 | `class` | Models in one category (`model_categories`), at least 2 enabled | Yes | Yes, filterable to one category | Built |

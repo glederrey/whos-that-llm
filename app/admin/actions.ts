@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { lobePath } from "@/lib/lobe-logo";
 import { parseSize } from "@/lib/admin-model";
 import { requireOwner } from "@/lib/admin-access";
 import { parseDifficulty } from "@/lib/difficulty";
@@ -130,7 +131,7 @@ function companyFields(formData: FormData) {
     name: text(formData, "name"),
     origin: text(formData, "origin"),
     logo: formData.get("logo") instanceof File ? (formData.get("logo") as File) : null,
-    logoPath: text(formData, "logoPath"),
+    logoPath: text(formData, "lobeLogo") ? lobePath(text(formData, "lobeLogo")) : text(formData, "logoPath"),
   };
 }
 

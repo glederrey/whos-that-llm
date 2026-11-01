@@ -2354,3 +2354,6 @@ html[data-theme="dark"] .demo-hint b { color: var(--teal); }
 }
 @media (prefers-reduced-motion: reduce) { .demo-caret { animation: none; } .home-track { animation: none; } }
 .roster .button-small { padding: 4px 10px; min-height: 0; font-size: 13px; line-height: 1.2; }
+/* Mono LobeHub logos draw in currentColor, which is black as a picture. */
+html[data-theme="dark"] img[src^="/lobe/"]:not([src*="-color.svg"]) { filter: invert(1); }
+.lobe-pick { display: flex; align-items: center; gap: 8px; }
