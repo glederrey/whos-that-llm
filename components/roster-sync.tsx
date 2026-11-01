@@ -11,6 +11,7 @@ import {
   type NewModelsResult,
 } from "@/lib/roster-sync";
 import { difficulties, difficultyLabel } from "@/lib/difficulty";
+import { CompanyModelsSearch } from "@/components/company-models-search";
 
 const sizes = [
   ["nano", "Nano"],
@@ -20,13 +21,13 @@ const sizes = [
   ["xxl", "XXL"],
 ] as const;
 
-type ModelPick = { size: string; difficulty: string };
+export type ModelPick = { size: string; difficulty: string };
 
 type Card =
   | { status: "availability"; result: AvailabilityResult }
   | { status: "search"; result: NewModelsResult; hidden: string[]; notice: AddModelsResult | null; picks: Record<string, ModelPick> };
 
-export function RosterSync() {
+export function RosterSync({ companies }: { companies: { id: string; name: string }[] }) {
   const cardRef = useRef<HTMLDivElement>(null);
   const [busy, setBusy] = useState<"availability" | "search" | "add" | null>(null);
   const [card, setCard] = useState<Card | null>(null);
@@ -98,6 +99,7 @@ export function RosterSync() {
         <button className="button" type="button" onClick={search} disabled={busy !== null}>
           {busy === "search" ? "Searching…" : "Search for new models"}
         </button>
+        <CompanyModelsSearch companies={companies} />
       </div>
       <div
         ref={cardRef}
@@ -248,7 +250,7 @@ function SearchCard({
   );
 }
 
-function ModelCard({
+export function ModelCard({
   model,
   pick,
   onDismiss,
@@ -311,7 +313,7 @@ function ModelCard({
   );
 }
 
-function addedSentence(count: number): string {
+export function addedSentence(count: number): string {
   return count === 1 ? "Added 1 model." : `Added ${count} models.`;
 }
 

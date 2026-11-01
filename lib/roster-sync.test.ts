@@ -3,6 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import test from "node:test";
 import type { RosterRow } from "./roster-row";
+import type { CompanyChoice } from "./openrouter-draft";
 import {
   formatSyncPrice,
   mergeCatalogPages,
@@ -10,7 +11,9 @@ import {
   openRouterModelHref,
   parseCatalogPage,
   parseOpenRouterCatalog,
+  planCompanyModels,
   planNewModels,
+  planOpenRouterCompanies,
   planReasoningUpdates,
   planAvailability,
   sameRosterModel,
@@ -403,7 +406,7 @@ test("the model page loads live prices and keeps availability apart", () => {
   const catalog = fs.readFileSync(path.join(root, "lib/openrouter-catalog.ts"), "utf8");
   const css = fs.readFileSync(path.join(root, "app/globals.css"), "utf8");
 
-  assert.match(page, /<RosterSync \/>/);
+  assert.match(page, /<RosterSync companies=/);
   assert.match(page, /loadRoster\(\)/);
   assert.match(page, /loadOpenRouterCatalog\(\)/);
   assert.match(page, /withListPrices\(roster\.rows, catalog\.ok \? catalog\.models : null\)/);
@@ -527,3 +530,61 @@ function between(source: string, start: string, end: string): string {
   assert.ok(from !== -1 && to !== -1, `${start} .. ${end}`);
   return source.slice(from, to);
 }
+
+const choices: CompanyChoice[] = [
+  { id: "deepseek", name: "DeepSeek", origin: "china" as CompanyChoice["origin"] },
+  { id: "moonshot", name: "Moonshot", origin: "china" as CompanyChoice["origin"] },
+];
+
+function catalogModel(id: string, extra: Partial<CatalogModel> = {}): CatalogModel {
+  return {
+    id,
+    name: extra.name ?? id,
+    description: null,
+    created: extra.created === undefined ? 1000 : extra.created,
+    inputUsdPerMtok: 1,
+    outputUsdPerMtok: 2,
+    outputModalities: extra.outputModalities ?? ["text"],
+    modality: "text->text",
+    reasoning: false,
+  };
+}
+
+test("planOpenRouterCompanies counts text models per org and marks roster companies", () => {
+  const rows = planOpenRouterCompanies(
+    [
+      catalogModel("deepseek/a", { name: "DeepSeek: A" }),
+      catalogModel("deepseek/b", { name: "DeepSeek: B" }),
+      catalogModel("deepseek/pic", { outputModalities: ["image"] }),
+      catalogModel("moonshotai/kimi", { name: "Moonshot AI: Kimi" }),
+      catalogModel("newlab/x", { name: "New Lab: X" }),
+      catalogModel("newlab/x", { name: "New Lab: X" }),
+    ],
+    choices,
+  );
+  assert.deepEqual(
+    rows.map((row) => [row.org, row.name, row.models, row.company?.id ?? null]),
+    [
+      ["deepseek", "DeepSeek", 2, "deepseek"],
+      ["moonshotai", "Moonshot AI", 1, "moonshot"],
+      ["newlab", "New Lab", 1, null],
+    ],
+  );
+});
+
+test("planCompanyModels splits a company's text models into new and on the roster, whatever their age", () => {
+  const plan = planCompanyModels(
+    [{ id: "a", name: "A", openrouterId: "deepseek/a", enabled: true, available: true }],
+    [
+      catalogModel("deepseek/a", { name: "DeepSeek: A" }),
+      catalogModel("deepseek/old", { name: "DeepSeek: Old", created: 1 }),
+      catalogModel("deepseek/newer", { name: "DeepSeek: Newer", created: 5000 }),
+      catalogModel("deepseek/pic", { outputModalities: ["image"] }),
+      catalogModel("moonshotai/kimi", { name: "Moonshot AI: Kimi" }),
+    ],
+    "deepseek",
+    choices,
+  );
+  assert.deepEqual(plan.add.map((card) => card.id), ["deepseek/newer", "deepseek/old"]);
+  assert.deepEqual(plan.onRoster, [{ id: "deepseek/a", name: "DeepSeek: A" }]);
+});

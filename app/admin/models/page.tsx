@@ -71,7 +71,7 @@ export default async function ModelsPage({
           {notice}
         </p>
       ) : null}
-      <RosterSync />
+      <RosterSync companies={companies.map((company) => ({ id: company.id, name: company.name }))} />
       <RosterBrowser
         key={rosterStamp(rows)}
         rows={rows}

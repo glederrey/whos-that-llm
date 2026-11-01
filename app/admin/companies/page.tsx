@@ -1,5 +1,6 @@
 import { addCompany, saveCompany, toggleCompany } from "@/app/admin/actions";
 import { CompanyLogo } from "@/components/company-logo";
+import { OpenRouterCompanies } from "@/components/openrouter-companies";
 import { SectionNav } from "@/components/section-nav";
 import { Twemoji } from "@/components/twemoji";
 import { companyNotice, maxCompanyName } from "@/lib/admin-company";
@@ -37,6 +38,7 @@ export default async function CompaniesPage({ searchParams }: { searchParams: Pr
           {notice}
         </p>
       ) : null}
+      <OpenRouterCompanies />
       <details className="card roster-add">
         <summary>Add a company</summary>
         <form action={addCompany} className="stack">

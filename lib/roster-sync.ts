@@ -1,6 +1,6 @@
 import { modelIdFromOpenRouter, validOpenRouterId } from "./admin-model";
 import { dollarsPerMillion } from "./list-price";
-import { releasedOnFromCreated } from "./openrouter-draft";
+import { companyForModel, companyForOrg, releasedOnFromCreated, type CompanyChoice } from "./openrouter-draft";
 import type { RosterRow } from "./roster-row";
 import { lowReasoningSettings, reasoningSettingsNeeded } from "./provider-check";
 
@@ -255,8 +255,16 @@ export function planNewModels(roster: SyncModel[], catalog: CatalogModel[], nowS
     if (model.created === null || model.created < cutoff) return false;
     return ![...identityKeys(model.id)].some((key) => known.has(key));
   });
-  matches.sort((a, b) => (b.created ?? 0) - (a.created ?? 0) || a.id.localeCompare(b.id));
-  return matches.map((model) => ({
+  matches.sort(byNewest);
+  return matches.map(cardOf);
+}
+
+function byNewest(a: CatalogModel, b: CatalogModel): number {
+  return (b.created ?? 0) - (a.created ?? 0) || a.id.localeCompare(b.id);
+}
+
+function cardOf(model: CatalogModel): NewModelCard {
+  return {
     id: model.id,
     name: model.name.trim() || model.id,
     description: model.description,
@@ -264,7 +272,79 @@ export function planNewModels(roster: SyncModel[], catalog: CatalogModel[], nowS
     inputUsdPerMtok: model.inputUsdPerMtok,
     outputUsdPerMtok: model.outputUsdPerMtok,
     reasoning: model.reasoning,
-  }));
+  };
+}
+
+export type OpenRouterCompany = {
+  /** The first part of the OpenRouter id, like `moonshotai`. */
+  org: string;
+  /** The lab named in the model names (`Moonshot AI: Kimi K3`), or the org when no name carries one. */
+  name: string;
+  models: number;
+  /** The roster company this org maps to, or null when the roster has none. */
+  company: { id: string; name: string } | null;
+};
+
+/** Every OpenRouter org with at least one text model, biggest first, each marked with the roster company it maps to. */
+export function planOpenRouterCompanies(catalog: CatalogModel[], companies: CompanyChoice[]): OpenRouterCompany[] {
+  const byOrg = new Map<string, CatalogModel[]>();
+  const seen = new Set<string>();
+  for (const model of catalog) {
+    if (seen.has(model.id) || !isTextGenerationModel(model) || openRouterModelHref(model.id) === null) continue;
+    seen.add(model.id);
+    const org = model.id.slice(0, model.id.indexOf("/"));
+    byOrg.set(org, [...(byOrg.get(org) ?? []), model]);
+  }
+  const rows = [...byOrg.entries()].map(([org, models]): OpenRouterCompany => {
+    const labs = new Map<string, number>();
+    for (const model of models) {
+      const colon = model.name.indexOf(":");
+      const lab = colon > 0 ? model.name.slice(0, colon).trim() : "";
+      if (lab) labs.set(lab, (labs.get(lab) ?? 0) + 1);
+    }
+    const lab = [...labs.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))[0]?.[0];
+    let company = companyForOrg(org, companies);
+    for (const model of models) {
+      if (company) break;
+      company = companyForModel(model.id, model.name, companies);
+    }
+    return { org, name: lab ?? org, models: models.length, company: company ? { id: company.id, name: company.name } : null };
+  });
+  return rows.sort((a, b) => b.models - a.models || a.org.localeCompare(b.org));
+}
+
+export type CompanyModelsPlan = {
+  /** Text models of the company that are not on the roster yet, newest first. */
+  add: NewModelCard[];
+  /** Text models of the company that are already on the roster. */
+  onRoster: { id: string; name: string }[];
+};
+
+export type CompanyModelsResult = ({ ok: true; companyName: string } & CompanyModelsPlan) | { ok: false; error: string };
+
+/** All text models OpenRouter lists for a roster company, whatever their age, split into new and already on the roster. */
+export function planCompanyModels(
+  roster: SyncModel[],
+  catalog: CatalogModel[],
+  companyId: string,
+  companies: CompanyChoice[],
+): CompanyModelsPlan {
+  const known = new Set(roster.flatMap((model) => [...identityKeys(model.openrouterId, model.id)]));
+  const byId = new Map<string, CatalogModel>();
+  for (const model of catalog) byId.set(model.id, model);
+  const mine = [...byId.values()]
+    .filter(
+      (model) =>
+        isTextGenerationModel(model) &&
+        openRouterModelHref(model.id) !== null &&
+        companyForModel(model.id, model.name, companies)?.id === companyId,
+    )
+    .sort(byNewest);
+  const isKnown = (model: CatalogModel) => [...identityKeys(model.id)].some((key) => known.has(key));
+  return {
+    add: mine.filter((model) => !isKnown(model)).map(cardOf),
+    onRoster: mine.filter(isKnown).map((model) => ({ id: model.id, name: model.name.trim() || model.id })),
+  };
 }
 
 /** A single OpenRouter handle, with the slash left intact. */

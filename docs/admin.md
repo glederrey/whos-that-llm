@@ -47,6 +47,7 @@ Two sections, **Active** (on) and **Inactive** (off), laid out like the models p
 
 - **Add** a company: a name (1–60 characters, at least 2 letters or digits), an origin (required, picked from the origins list as radio buttons that show the flag as a Twemoji picture), and a logo (required: pick one a company already has, or upload an SVG, PNG, or WebP of at most 1 MB, with the same SVG checks as category icons; an upload wins over a pick). The id is a slug of the name and never changes. A name or id already taken says so. The image is stored in the `logos` bucket under `companies/` and `logo_path` is `logos/companies/{id}-{token}.{ext}`.
 - **Edit** the name, the origin, and the logo. The current logo is preselected, so leaving it alone keeps it. Picking another existing logo or uploading a new one replaces it, and the replaced file is deleted from the bucket unless another company still shows it. An upload is stored as `companies/{id}-{token}.{ext}`: the company id is the name, and the token keeps the one-year image cache from showing the old picture. Changing the origin here is the one place a company moves to another origin.
+- **Search OpenRouter companies.** A button above the lists reads the OpenRouter catalog and opens a card with every OpenRouter org (the first part of a model id, like `moonshotai`) that has at least one text model, biggest first. Each row shows the lab name taken from the model names, the org, the number of text models, and the roster company it maps to, or **Not on the roster**. A filter box narrows it by name or org. It is read-only: add a missing company with **Add a company**.
 - **Turn off or on.** Off, the company has no card in the Company game and a new Company round for it is refused. Its models stay in every other mode, a round already started on it stays playable (the lobby keeps its resume card), and the leaderboards and statistics do not change.
 
 ## Models (`/admin/models`)
@@ -66,6 +67,8 @@ Columns: logo and name, company, origin, year, size, difficulty, input price, ou
 **Check availability.** A button that reads the OpenRouter catalog and always applies the result (see the Availability API below).
 
 **Search for new models.** Lists text models created on OpenRouter in the last 30 days that are not on the roster. Each card asks for a size and a difficulty. **Add models** inserts the picked ones (200 at most) as off.
+
+**Search all models from a company.** Pick a roster company and press Search. The card lists every text model OpenRouter has for it, whatever its age: the ones already on the roster come first and are marked as already in the roster, then the others as cards with a size and a difficulty. **Add models** inserts them as off under the company you picked (200 at most). A model belongs to the company by the same rule as Look up: the lab in the OpenRouter name, then the org in the id.
 
 Play one round and read the **Reasoning by hidden model** table on `/admin/costs` (replies, average, highest, share of output, and the current setting, highest average first; failed requests and models with no reasoning tokens are left out) before leaving a thinking model enabled.
 

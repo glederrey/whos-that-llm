@@ -313,6 +313,8 @@ export async function insertDiscoveredModels(
     size: string;
     difficulty: string;
     reasoning: boolean;
+    /** Set when the owner picked the company. Otherwise it is guessed from the name and the id. */
+    companyId?: string;
   }[],
   companies: CompanyChoice[],
 ): Promise<number | null> {
@@ -324,7 +326,9 @@ export async function insertDiscoveredModels(
   for (const model of models) {
     const openrouterId = model.id.trim();
     const id = modelIdFromOpenRouter(openrouterId);
-    const company = companyForModel(openrouterId, model.name, companies);
+    const company = model.companyId
+      ? (companies.find((item) => item.id === model.companyId) ?? null)
+      : companyForModel(openrouterId, model.name, companies);
     const name = model.name.trim().slice(0, 80);
     const size = parseSize(model.size);
     const difficulty = parseDifficulty(model.difficulty);
