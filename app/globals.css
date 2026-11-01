@@ -1608,6 +1608,13 @@ html[data-theme="dark"] .history-score[data-best="true"] { color: var(--teal); }
   background: transparent;
 }
 .history-detail p { margin: 0; }
+.history-resume { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.history-resume .summary-list { flex: 1 1 auto; min-width: 0; }
+.history-continue { flex: none; font-size: 18px; font-weight: 700; padding: 18px 36px; }
+@media (max-width: 559px) {
+  .history-resume { flex-direction: column; align-items: stretch; }
+  .history-continue { display: block; box-sizing: border-box; width: 100%; text-align: center; }
+}
 .history-model { display: flex; align-items: center; gap: 12px; font-weight: 600; }
 .history-model img { width: 56px; height: 56px; border-radius: 12px; flex: none; }
 .section-nav { display: flex; gap: 8px; flex-wrap: wrap; }

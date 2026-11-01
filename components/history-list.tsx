@@ -107,45 +107,47 @@ export function HistoryDetail({ item, panel }: { item: HistoryItem; panel?: stri
           </span>
         </div>
       ) : null}
-      <dl className="summary-list">
-        <dt>Date</dt>
-        <dd>{item.when}</dd>
-        <RoundFacts
-          mode={item.mode}
-          difficulty={
-            item.place ? (item.place.value ?? "—") : item.hasDifficulty ? difficultyText(item.difficulty) : null
-          }
-          label={item.place?.label ?? "Difficulty"}
-        />
-        {item.noHint ? (
-          <>
-            <dt>Hints</dt>
-            <dd>No hints</dd>
-          </>
+      <div className="history-resume">
+        <dl className="summary-list">
+          <dt>Date</dt>
+          <dd>{item.when}</dd>
+          <RoundFacts
+            mode={item.mode}
+            difficulty={
+              item.place ? (item.place.value ?? "—") : item.hasDifficulty ? difficultyText(item.difficulty) : null
+            }
+            label={item.place?.label ?? "Difficulty"}
+          />
+          {item.noHint ? (
+            <>
+              <dt>Hints</dt>
+              <dd>No hints</dd>
+            </>
+          ) : null}
+          <dt>Model</dt>
+          <dd>{item.modelName ?? "Hidden until the round ends."}</dd>
+          <dt>Status</dt>
+          <dd>{item.status}</dd>
+          <dt>Score</dt>
+          <dd>
+            {item.score}
+            {item.best ? " (best score)" : ""}
+          </dd>
+          <dt>Tokens</dt>
+          <dd>{item.tokens}</dd>
+          <dt>Messages used</dt>
+          <dd>{item.messages}</dd>
+          <dt>Company</dt>
+          <dd>{item.companyFound ? "Found" : "Not found"}</dd>
+          <dt>Origin</dt>
+          <dd>{item.originFound ? "Found" : "Not found"}</dd>
+        </dl>
+        {item.state === "active" ? (
+          <a className="button history-continue" href={`/play/${item.id}`}>
+            Continue
+          </a>
         ) : null}
-        <dt>Model</dt>
-        <dd>{item.modelName ?? "Hidden until the round ends."}</dd>
-        <dt>Status</dt>
-        <dd>{item.status}</dd>
-        <dt>Score</dt>
-        <dd>
-          {item.score}
-          {item.best ? " (best score)" : ""}
-        </dd>
-        <dt>Tokens</dt>
-        <dd>{item.tokens}</dd>
-        <dt>Messages used</dt>
-        <dd>{item.messages}</dd>
-        <dt>Company</dt>
-        <dd>{item.companyFound ? "Found" : "Not found"}</dd>
-        <dt>Origin</dt>
-        <dd>{item.originFound ? "Found" : "Not found"}</dd>
-      </dl>
-      {item.state === "active" ? (
-        <p>
-          <a href={`/play/${item.id}`}>Continue</a>
-        </p>
-      ) : null}
+      </div>
     </div>
   );
 }
