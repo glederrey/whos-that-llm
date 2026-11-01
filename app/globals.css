@@ -2404,14 +2404,12 @@ html[data-theme="dark"] .h2-podium li { background: rgba(0, 0, 0, 0.1); }
 @media (max-width: 720px) { .demo-search { height: 540px; } }
 .demo-prev { display: contents; }
 .demo-rest { visibility: hidden; }
-.h4-demo { position: relative; min-width: 0; }
+.h4-demo { --logo: clamp(140px, 15.5vw, 200px); position: relative; min-width: 0; }
 .h4-demo .demo-search { position: relative; z-index: 1; }
-.h4-logo { position: absolute; z-index: 2; top: -38px; left: -162px; pointer-events: none; filter: drop-shadow(0 6px 14px rgb(0 0 0 / 0.18)); }
-.h4-logo img { width: 180px; height: 180px; display: block; }
-@media (max-width: 800px) {
-  .h4-hero { grid-template-columns: 1fr; gap: 20px; }
-  .h4-logo { display: none; }
-}
+.h4-logo { position: absolute; z-index: 2; top: calc(var(--logo) * -0.14); left: calc(var(--logo) * -0.9); pointer-events: none; filter: drop-shadow(0 6px 14px rgb(0 0 0 / 0.18)); }
+.h4-logo img { width: var(--logo); height: var(--logo); display: block; }
+@media (max-width: 900px) { .h4-logo { display: none; } }
+@media (max-width: 800px) { .h4-hero { grid-template-columns: 1fr; gap: 20px; } }
 .demo-search .demo-head { justify-content: flex-start; color: var(--text); font-size: 14px; }
 .demo-search .bubble { padding: 8px 12px; }
 .demo-guess { flex: none; min-height: 0; align-content: start; grid-auto-rows: min-content; border-top: 1px solid var(--line-strong); padding-top: 14px; }
