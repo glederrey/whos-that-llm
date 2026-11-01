@@ -78,7 +78,7 @@ export function OpenRouterCompanies() {
                       <td>{row.models.toLocaleString("en-US")}</td>
                       <td>{row.company ? row.company.name : (
                           <Link
-                            className="button"
+                            className="button button-small"
                             href={`/admin/companies?add=${encodeURIComponent(row.name)}`}
                             onClick={() => cardRef.current?.hidePopover()}
                           >

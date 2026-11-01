@@ -2353,3 +2353,4 @@ html[data-theme="dark"] .demo-hint b { color: var(--teal); }
   .home h1 { font-size: min(44px, 8.4vw); }
 }
 @media (prefers-reduced-motion: reduce) { .demo-caret { animation: none; } .home-track { animation: none; } }
+.roster .button-small { padding: 4px 10px; min-height: 0; font-size: 13px; line-height: 1.2; }
