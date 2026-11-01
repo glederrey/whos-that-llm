@@ -1,8 +1,9 @@
+import { chooseLogoPath } from "./logos";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { currentRules } from "./config";
 import { loadCategoryEntries } from "./category-data";
 import { difficultyNumber, type BoardDifficulty, type Difficulty } from "./difficulty";
-import { playableHints, type GuessFlags } from "./game";
+import { playableHints, type GuessFlags, type Traits } from "./game";
 import {
   bestOwnGame,
   boardFilters,
@@ -16,6 +17,8 @@ import {
   catalogColumns,
   fail,
   mapCatalog,
+  first,
+  presentLogo,
   presentTraits,
   type ApiFailure,
   type CatalogModel,
@@ -48,11 +51,30 @@ export async function loadModel(client: SupabaseClient, id: string): Promise<Cat
   return mapCatalog(data ? [data] : [])[0] ?? null;
 }
 
+/**
+ * A round freezes each model's logo when it starts, so a logo changed in the admin later would
+ * not show in rounds already played. Read the current logos again and put them on the traits.
+ */
+export async function withCurrentLogos(client: SupabaseClient, traits: Traits): Promise<Traits> {
+  const ids = Object.keys(traits.models);
+  if (ids.length === 0) return traits;
+  const { data, error } = await client.from("models").select("id, company_id, logo_path, companies(logo_path)").in("id", ids);
+  if (error) throw new Error(error.message);
+  const models = { ...traits.models };
+  for (const row of data ?? []) {
+    const record = row as { id: string; company_id: string; logo_path: string | null; companies: { logo_path: string } | { logo_path: string }[] | null };
+    const frozen = models[record.id];
+    const path = chooseLogoPath(record.logo_path, first(record.companies)?.logo_path);
+    if (frozen && path) models[record.id] = { ...frozen, logoPath: presentLogo(path, record.company_id) };
+  }
+  return { ...traits, models };
+}
+
 export async function loadGame(client: SupabaseClient, gameId: string, userId: string): Promise<GameRow | null> {
   const { data, error } = await client.from("games").select("*").eq("id", gameId).eq("user_id", userId).maybeSingle();
   if (error) throw new Error(error.message);
   const game = (data as GameRow | null) ?? null;
-  return game ? { ...game, traits: presentTraits(game.traits), rules: currentRules(game.rules), hints: playableHints(game.hints) } : null;
+  return game ? { ...game, traits: await withCurrentLogos(client, presentTraits(game.traits)), rules: currentRules(game.rules), hints: playableHints(game.hints) } : null;
 }
 
 export async function scoreFrom(client: SupabaseClient, game: GameRow, guesses: GuessFlags[], namedModel: boolean) {

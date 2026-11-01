@@ -53,7 +53,7 @@ The `messages` table is part of the baseline migration, with its comments, row l
 | `id` | text, pk | `anthropic` |
 | `name` | text | |
 | `origin` | text, fk `origins` | `us`, `cn`, `eu`, or any origin an admin added. Never free text |
-| `logo_path` | text | `logos/{company_id}.png` in the public `logos` bucket (the seeded ones), `logos/companies/{id}-{token}.{ext}` for a logo uploaded from the admin form, or an `https` URL |
+| `logo_path` | text | `logos/{company_id}.png` in the public `logos` bucket (the seeded ones), `logos/companies/{id}-{token}.{ext}` for a logo uploaded from the admin form, `lobe:<id>` for a logo shipped with the app (`/lobe/<id>.svg?theme=light|dark`), or an `https` URL |
 | `enabled` | boolean | Default true. False takes the company out of the Company game: no card in the lobby (unless the player has a round open on it) and a new round is refused. Models, other modes, leaderboards and statistics do not change. Set from `/admin/companies` |
 | `created_at` | timestamptz | default `now()` |
 

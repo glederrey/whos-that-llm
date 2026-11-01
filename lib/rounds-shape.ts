@@ -1,7 +1,7 @@
 import type { Rules } from "./config";
 import { difficulties, difficultyFromStored, inDifficultyPool, type Difficulty } from "./difficulty";
 import type { FrozenModel, GameStatus, GuessFlags, HintKey, RecordedGuess, ScoreLine, TraitKey, Traits } from "./game";
-import { logoPathForPlay, logoPublicUrl } from "./logos";
+import { chooseLogoPath, logoPathForPlay, logoPublicUrl } from "./logos";
 import { publicEnv } from "./supabase/env";
 
 export type GameRow = {
@@ -86,7 +86,7 @@ export function mapCatalog(data: readonly object[]): CatalogModel[] {
       ...(origin ? { originName: origin.name, originFlag: origin.flag, originSort: origin.sort_order } : {}),
       size: record.size,
       year: new Date(`${record.released_on}T00:00:00Z`).getUTCFullYear(),
-      logoPath: presentLogo(record.logo_path || company.logo_path, record.company_id),
+      logoPath: presentLogo(chooseLogoPath(record.logo_path, company.logo_path), record.company_id),
       openrouterId: record.openrouter_id,
       providerSettings: record.provider_settings,
       difficulty,

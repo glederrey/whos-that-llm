@@ -83,7 +83,7 @@ export async function lobbyState(userId: string) {
   const logos = new Map(
     (companyRows.data ?? []).map((row) => [row.id as string, (row.logo_path as string | null) ?? ""]),
   );
-  // A turned-off company has no card, unless the player has a round open on it: that one stays resumable.
+  // A turned-off company has no card, and neither has one with fewer than two models, unless the player has a round open on it: that one stays resumable.
   const openCompanyIds = new Set(
     (activeResult.data ?? []).flatMap((row) =>
       row.game_mode === "company" && typeof row.pool_key === "string" ? [row.pool_key] : [],
@@ -96,10 +96,13 @@ export async function lobbyState(userId: string) {
         : [],
     ),
     catalog.map((model) => ({ companyId: model.companyId, enabled: true })),
-  ).map((company) => ({
-    ...company,
-    logoUrl: presentLogo(logos.get(company.id) ?? "", company.id),
-  }));
+  )
+    // A company needs two models to be a Company game. One model still plays in the other modes.
+    .filter((company) => company.models >= 2 || openCompanyIds.has(company.id))
+    .map((company) => ({
+      ...company,
+      logoUrl: presentLogo(logos.get(company.id) ?? "", company.id),
+    }));
   return {
     paused: Boolean(settings?.paused),
     played: count ?? 0,

@@ -85,7 +85,7 @@ export const navItems: NavItem[] = [
   },
   {
     href: "/why",
-    label: "Why this game?",
+    label: "Why?",
     icon: (
       <svg className="nav-icon" viewBox="0 0 24 24" aria-hidden="true">
         <circle

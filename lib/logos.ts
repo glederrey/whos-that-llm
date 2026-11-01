@@ -1,3 +1,5 @@
+import { lobeIdOf, lobeUrl } from "./lobe-logo";
+
 const maxLogoBytes = 1024 * 1024;
 
 export const logoError = "Use an SVG, PNG, or WebP under 1 MB.";
@@ -8,6 +10,7 @@ export function companyLogoPath(companyId: string): string {
 
 /** Path the game should load from the logos bucket. */
 export function logoPathForPlay(path: string, companyId: string): string {
+  if (lobeIdOf(path) || path.startsWith("/lobe/")) return path;
   if (/^https?:\/\//i.test(path)) return path;
   const bare = path.replace(/^\/+/, "");
   if (bare === `logos/${companyId}.svg` || bare === `${companyId}.svg` || bare === `logos/${companyId}.png`) {
@@ -17,7 +20,16 @@ export function logoPathForPlay(path: string, companyId: string): string {
   return companyLogoPath(companyId);
 }
 
+/** Which stored path to show. A LobeHub logo wins wherever it is set, then the first path that is not empty. */
+export function chooseLogoPath(...candidates: Array<string | null | undefined>): string {
+  const paths = candidates.filter((path): path is string => typeof path === "string" && path.trim().length > 0);
+  return paths.find((path) => lobeIdOf(path) || path.startsWith("/lobe/")) ?? paths[0] ?? "";
+}
+
 export function logoPublicUrl(baseUrl: string, path: string): string {
+  const lobe = lobeIdOf(path);
+  if (lobe) return lobeUrl(lobe);
+  if (path.startsWith("/lobe/")) return path;
   if (/^https?:\/\//i.test(path)) return path;
   let file = path.replace(/^\/+/, "");
   if (file.startsWith("logos/")) file = file.slice("logos/".length);

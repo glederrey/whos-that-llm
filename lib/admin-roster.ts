@@ -34,7 +34,10 @@ export type { CategoryRow, RosterRow } from "./roster-row";
 import { reasoningOff } from "./provider-check";
 import { planReasoningUpdates, type CatalogModel } from "./roster-sync";
 import { randomBytes } from "node:crypto";
-import { categoryImagePath, companyUploadPath, logoBucketPath, readLogo } from "./logos";
+import { squareLogo } from "./logo-square";
+import { lobeIdOf, isLobePath } from "./lobe-logo";
+import { listLobeIds } from "./lobe-logo-files";
+import { categoryImagePath, chooseLogoPath, companyUploadPath, logoBucketPath, readLogo } from "./logos";
 import { parseCompanyFields, type CompanyNotice } from "./admin-company";
 import { loadCategoryEntries } from "./category-data";
 import { publicImageCacheControl } from "./profile";
@@ -104,7 +107,7 @@ export async function loadRoster(): Promise<{ rows: RosterRow[]; companies: Comp
       available: row.available !== false,
       reasoning: Boolean(row.reasoning),
       reasoningOff: Boolean(row.reasoning) && reasoningOff(row.provider_settings),
-      logoUrl: presentLogo((row.logo_path as string | null) || company?.logo_path || "", companyId),
+      logoUrl: presentLogo(chooseLogoPath(row.logo_path as string | null, company?.logo_path), companyId),
       categoryIds,
       categoryNames: categoryIds.map((id) => categoryName.get(id) ?? id).join(", "),
     };
@@ -313,6 +316,8 @@ export async function insertDiscoveredModels(
     size: string;
     difficulty: string;
     reasoning: boolean;
+    /** Set when the owner picked the company. Otherwise it is guessed from the name and the id. */
+    companyId?: string;
   }[],
   companies: CompanyChoice[],
 ): Promise<number | null> {
@@ -324,7 +329,9 @@ export async function insertDiscoveredModels(
   for (const model of models) {
     const openrouterId = model.id.trim();
     const id = modelIdFromOpenRouter(openrouterId);
-    const company = companyForModel(openrouterId, model.name, companies);
+    const company = model.companyId
+      ? (companies.find((item) => item.id === model.companyId) ?? null)
+      : companyForModel(openrouterId, model.name, companies);
     const name = model.name.trim().slice(0, 80);
     const size = parseSize(model.size);
     const difficulty = parseDifficulty(model.difficulty);
@@ -413,7 +420,7 @@ export async function loadCategoryList(): Promise<{
         id: row.id as string,
         name: row.name as string,
         companyName: company?.name ?? companyId,
-        logoUrl: presentLogo((row.logo_path as string | null) || company?.logo_path || "", companyId),
+        logoUrl: presentLogo(chooseLogoPath(row.logo_path as string | null, company?.logo_path), companyId),
         enabled: Boolean(row.enabled),
         // A model that was never enabled may have no release date. Zero hides the year.
         year: released ? released.getUTCFullYear() : 0,
@@ -503,7 +510,7 @@ export async function updateCompany(raw: CompanyInput): Promise<CompanyNotice | 
     return "save";
   }
   // The replaced file goes, unless another company still shows it.
-  if (logo && old && logoBucketPath(old) !== logoBucketPath(logo.path)) {
+  if (logo && old && !isLobePath(old) && logoBucketPath(old) !== logoBucketPath(logo.path)) {
     const shared = await client.from("companies").select("id", { count: "exact", head: true }).eq("logo_path", old);
     if (!shared.error && (shared.count ?? 0) === 0) await client.storage.from("logos").remove([logoBucketPath(old)]);
   }
@@ -535,6 +542,10 @@ async function resolveCompanyLogo(
   }
   const chosen = (raw.logoPath ?? "").trim();
   if (!chosen) return null;
+  if (isLobePath(chosen)) {
+    const id = lobeIdOf(chosen);
+    return id && (await listLobeIds()).includes(id) ? { path: chosen, uploaded: false } : "logo";
+  }
   const { data, error } = await client.from("companies").select("id").eq("logo_path", chosen).limit(1);
   if (error) return "save";
   return data && data.length > 0 ? { path: chosen, uploaded: false } : "logo";
@@ -544,8 +555,14 @@ async function uploadCompanyLogo(client: SupabaseClient, companyId: string, file
   const bytes = new Uint8Array(await file.arrayBuffer());
   const found = readLogo(bytes);
   if (!found) return "logo";
+  let stored: Uint8Array = bytes;
+  if (found.mime === "image/png" || found.mime === "image/webp") {
+    const squared = await squareLogo(bytes, found.mime);
+    if (!squared) return "logo";
+    stored = squared;
+  }
   const bucketPath = companyUploadPath(companyId, found.ext, randomBytes(4).toString("hex"));
-  const { error } = await client.storage.from("logos").upload(bucketPath, new Blob([bytes as BlobPart], { type: found.mime }), {
+  const { error } = await client.storage.from("logos").upload(bucketPath, new Blob([stored as BlobPart], { type: found.mime }), {
     contentType: found.mime,
     cacheControl: publicImageCacheControl,
   });

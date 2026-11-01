@@ -1,4 +1,5 @@
 import type { CompanyOption } from "@/lib/admin-company";
+import { sizeOptions } from "@/lib/admin-model";
 import { difficulties, difficultyLabel, type Difficulty } from "@/lib/difficulty";
 
 export type ModelFieldCategory = { id: string; name: string };
@@ -66,11 +67,11 @@ export function ModelFields({
         Size
         <select name="size" defaultValue={size} required>
           {size ? null : <option value="">Choose</option>}
-          <option value="nano">Nano</option>
-          <option value="small">Small</option>
-          <option value="medium">Medium</option>
-          <option value="large">Large</option>
-          <option value="xxl">XXL</option>
+          {sizeOptions.map(([value, label]) => (
+            <option key={value} value={value}>
+              {label}
+            </option>
+          ))}
         </select>
       </label>
       <label>

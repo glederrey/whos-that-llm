@@ -31,7 +31,13 @@ export function releasedOnFromCreated(created: unknown): string {
   return iso.slice(0, 10);
 }
 
-export function companyForOrg(org: string, companies: CompanyChoice[]): CompanyChoice | null {
+/** OpenRouter lists "latest" aliases under `~org`. It is the same org as `org`. */
+export function normalOrg(org: string): string {
+  return org.replace(/^~+/, "");
+}
+
+export function companyForOrg(rawOrg: string, companies: CompanyChoice[]): CompanyChoice | null {
+  const org = normalOrg(rawOrg);
   const mapped = openRouterOrgCompanyId[org];
   const id = mapped ?? (companies.some((company) => company.id === org) ? org : null);
   if (!id) return null;

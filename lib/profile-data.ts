@@ -1,3 +1,4 @@
+import { chooseLogoPath } from "./logos";
 import type { Difficulty } from "./difficulty";
 import { originChoiceFor, originChoiceOf, originLabel, sizeLabel, type FrozenModel, type GameStatus, type OriginView, type ScoreLine, type Traits } from "./game";
 import { avatarPublicUrl, profileStats, publicImageCacheControl, readImage, traitFound, type ProfileStats } from "./profile";
@@ -255,7 +256,7 @@ export async function loadHistory(userId: string, page: number, filter: HistoryF
       companyName: finished ? (frozen?.companyName ?? company?.name ?? null) : null,
       logoPath: finished
         ? presentLogo(
-            frozen?.logoPath || model?.logo_path || company?.logo_path || "",
+            chooseLogoPath(model?.logo_path, company?.logo_path, frozen?.logoPath),
             frozen?.companyId || model?.company_id || "",
           )
         : null,

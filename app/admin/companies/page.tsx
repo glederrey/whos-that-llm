@@ -1,20 +1,24 @@
 import { addCompany, saveCompany, toggleCompany } from "@/app/admin/actions";
 import { CompanyLogo } from "@/components/company-logo";
+import { LobeLogoPicker } from "@/components/lobe-logo-picker";
+import { OpenRouterCompanies } from "@/components/openrouter-companies";
 import { SectionNav } from "@/components/section-nav";
 import { Twemoji } from "@/components/twemoji";
 import { companyNotice, maxCompanyName } from "@/lib/admin-company";
 import { loadOriginOptions } from "@/lib/admin-origins";
 import type { OriginOption } from "@/lib/admin-origin";
+import { listLobeIds } from "@/lib/lobe-logo-files";
 import { loadCompanyList, type CompanyListRow } from "@/lib/admin-roster";
 import { requireOwner } from "@/lib/admin-access";
 
 export const dynamic = "force-dynamic";
 
-export default async function CompaniesPage({ searchParams }: { searchParams: Promise<{ notice?: string }> }) {
+export default async function CompaniesPage({ searchParams }: { searchParams: Promise<{ notice?: string; add?: string }> }) {
   await requireOwner();
   const params = await searchParams;
   const notice = companyNotice(params.notice);
-  const [companies, origins] = await Promise.all([loadCompanyList(), loadOriginOptions()]);
+  const addName = (params.add ?? "").slice(0, maxCompanyName);
+  const [companies, origins, lobeIds] = await Promise.all([loadCompanyList(), loadOriginOptions(), listLobeIds()]);
   const originOf = new Map(origins.map((item) => [item.id, item]));
   const logos: LogoChoice[] = [];
   for (const company of companies) {
@@ -37,11 +41,12 @@ export default async function CompaniesPage({ searchParams }: { searchParams: Pr
           {notice}
         </p>
       ) : null}
-      <details className="card roster-add">
+      <OpenRouterCompanies />
+      <details key={addName} className="card roster-add" open={addName !== ""}>
         <summary>Add a company</summary>
         <form action={addCompany} className="stack">
           <div className="roster-form">
-            <CompanyInputs origins={origins} logos={logos} />
+            <CompanyInputs name={addName} origins={origins} logos={logos} lobeIds={lobeIds} />
           </div>
           <div>
             <button className="button" type="submit">
@@ -57,6 +62,7 @@ export default async function CompaniesPage({ searchParams }: { searchParams: Pr
         origins={origins}
         originOf={originOf}
         logos={logos}
+        lobeIds={lobeIds}
       />
       <CompanySection
         title="Inactive companies"
@@ -65,6 +71,7 @@ export default async function CompaniesPage({ searchParams }: { searchParams: Pr
         origins={origins}
         originOf={originOf}
         logos={logos}
+        lobeIds={lobeIds}
       />
     </div>
   );
@@ -77,6 +84,7 @@ function CompanySection({
   origins,
   originOf,
   logos,
+  lobeIds,
 }: {
   title: string;
   empty: string;
@@ -84,6 +92,7 @@ function CompanySection({
   origins: OriginOption[];
   originOf: Map<string, OriginOption>;
   logos: LogoChoice[];
+  lobeIds: string[];
 }) {
   return (
     <section className="stack">
@@ -133,7 +142,7 @@ function CompanySection({
                           <h2>Edit {company.name}</h2>
                           <input type="hidden" name="id" value={company.id} />
                           <div className="roster-form">
-                            <CompanyInputs name={company.name} origin={company.origin} origins={origins} logos={logos} logoPath={company.logoPath} />
+                            <CompanyInputs name={company.name} origin={company.origin} origins={origins} logos={logos} logoPath={company.logoPath} lobeIds={lobeIds} />
                           </div>
                                                     <div className="row">
                             <button className="button" type="submit">
@@ -165,12 +174,14 @@ function CompanyInputs({
   origins,
   logos,
   logoPath = "",
+  lobeIds,
 }: {
   name?: string;
   origin?: string;
   origins: OriginOption[];
   logos: LogoChoice[];
   logoPath?: string;
+  lobeIds: string[];
 }) {
   return (
     <>
@@ -189,6 +200,8 @@ function CompanyInputs({
       </fieldset>
       <fieldset className="span-2 logo-picks">
         <legend>Logo</legend>
+        <LobeLogoPicker ids={lobeIds} />
+        <p className="muted">No LobeHub logo for this company? Pick one a company already has, or upload your own as a last resort.</p>
         <div className="logo-grid">
           {logos.map((logo) => (
             <label key={logo.path} title={logo.name}>
@@ -198,7 +211,7 @@ function CompanyInputs({
           ))}
         </div>
         <label>
-          Or upload a new one. It is saved under the company name, and a replaced file is deleted.
+          Upload a new one. It is saved under the company name, and a replaced file is deleted. An upload wins over a pick above.
           <input name="logo" type="file" accept="image/svg+xml,image/png,image/webp" />
         </label>
       </fieldset>

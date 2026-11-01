@@ -1,6 +1,7 @@
 "use client";
 
 import { useLayoutEffect, useRef, useState } from "react";
+import { LogoImage, themedLogoUrls } from "./logo-image";
 
 export function CompanyLogo({ src }: { src: string }) {
   const ref = useRef<HTMLImageElement>(null);
@@ -12,6 +13,7 @@ export function CompanyLogo({ src }: { src: string }) {
   }, [src]);
 
   if (!src) return null;
+  if (themedLogoUrls(src)) return <LogoImage src={src} />;
   return (
     <img
       ref={ref}

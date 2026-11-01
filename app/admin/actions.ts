@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { lobePath } from "@/lib/lobe-logo";
 import { parseSize } from "@/lib/admin-model";
 import { requireOwner } from "@/lib/admin-access";
 import { parseDifficulty } from "@/lib/difficulty";
@@ -23,10 +24,14 @@ import { checkAvailability } from "@/lib/availability-check";
 import { loadOpenRouterCatalog } from "@/lib/openrouter-catalog";
 import { clearProviderBlacklist } from "@/lib/openrouter-providers";
 import {
+  planCompanyModels,
   planNewModels,
+  planOpenRouterCompanies,
   type AddModelsResult,
   type AvailabilityResult,
+  type CompanyModelsResult,
   type NewModelsResult,
+  type OpenRouterCompany,
 } from "@/lib/roster-sync";
 import { modelsReturnPath } from "@/lib/roster-list";
 
@@ -122,11 +127,13 @@ function finishCompany(notice: string | null) {
 }
 
 function companyFields(formData: FormData) {
+  // A LobeHub logo comes first: when one is named, the upload and the other picks are ignored.
+  const lobe = text(formData, "lobeLogo").trim().toLowerCase();
   return {
     name: text(formData, "name"),
     origin: text(formData, "origin"),
-    logo: formData.get("logo") instanceof File ? (formData.get("logo") as File) : null,
-    logoPath: text(formData, "logoPath"),
+    logo: !lobe && formData.get("logo") instanceof File ? (formData.get("logo") as File) : null,
+    logoPath: lobe ? lobePath(lobe) : text(formData, "logoPath"),
   };
 }
 
@@ -244,6 +251,75 @@ export async function addNewRosterModels(picks: { id: string; size: string; diff
   if (added > 0) {
     revalidatePath("/admin");
     revalidatePath("/admin/models");
+  }
+  return { ok: true, added };
+}
+
+export type OpenRouterCompaniesResult = { ok: true; companies: OpenRouterCompany[] } | { ok: false; error: string };
+
+export async function searchOpenRouterCompanies(): Promise<OpenRouterCompaniesResult> {
+  await requireOwner();
+  const catalog = await loadOpenRouterCatalog();
+  if (!catalog.ok) return { ok: false, error: catalog.error };
+  const { companies } = await loadRoster();
+  return { ok: true, companies: planOpenRouterCompanies(catalog.models, companies) };
+}
+
+export async function searchCompanyModels(companyId: string): Promise<CompanyModelsResult> {
+  await requireOwner();
+  if (typeof companyId !== "string") return { ok: false, error: "Choose a company." };
+  const catalog = await loadOpenRouterCatalog();
+  if (!catalog.ok) return { ok: false, error: catalog.error };
+  const { rows, companies } = await loadRoster();
+  const company = companies.find((item) => item.id === companyId);
+  if (!company) return { ok: false, error: "Choose a company." };
+  return { ok: true, companyName: company.name, ...planCompanyModels(rows, catalog.models, company.id, companies) };
+}
+
+export async function addCompanyModels(companyId: string, picks: { id: string; size: string; difficulty: string }[]): Promise<AddModelsResult> {
+  await requireOwner();
+  if (typeof companyId !== "string" || !Array.isArray(picks) || picks.length > 200 || picks.some((pick) => !pick || typeof pick !== "object")) {
+    return { ok: false, error: "Could not add those models." };
+  }
+  if (picks.length === 0) return { ok: true, added: 0 };
+  if (picks.some((pick) => typeof pick.id !== "string" || typeof pick.size !== "string" || typeof pick.difficulty !== "string" || !parseSize(pick.size) || !parseDifficulty(pick.difficulty))) {
+    return { ok: false, error: "Choose a size and a difficulty for each model." };
+  }
+  const catalog = await loadOpenRouterCatalog();
+  if (!catalog.ok) return { ok: false, error: catalog.error };
+  const { rows, companies } = await loadRoster();
+  const company = companies.find((item) => item.id === companyId);
+  if (!company) return { ok: false, error: "Choose a company." };
+  const byId = new Map(planCompanyModels(rows, catalog.models, company.id, companies).add.map((model) => [model.id, model]));
+  const chosen = [];
+  const seen = new Set<string>();
+  for (const pick of picks) {
+    const id = pick.id.trim();
+    if (seen.has(id)) continue;
+    seen.add(id);
+    const model = byId.get(id);
+    const size = parseSize(pick.size);
+    const difficulty = parseDifficulty(pick.difficulty);
+    if (model && size && difficulty) chosen.push({ ...model, size, difficulty });
+  }
+  if (chosen.length === 0) return { ok: true, added: 0 };
+  const added = await insertDiscoveredModels(
+    chosen.map((model) => ({
+      id: model.id,
+      name: model.name,
+      releasedOn: model.releasedOn,
+      size: model.size,
+      difficulty: model.difficulty,
+      reasoning: model.reasoning,
+      companyId: company.id,
+    })),
+    companies,
+  );
+  if (added === null) return { ok: false, error: "Could not add those models." };
+  if (added > 0) {
+    revalidatePath("/admin");
+    revalidatePath("/admin/models");
+    revalidatePath("/admin/companies");
   }
   return { ok: true, added };
 }

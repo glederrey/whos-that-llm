@@ -56,6 +56,15 @@ export function parseOrigin(value: string): Origin | null {
   return /^[a-z][a-z0-9-]{0,30}$/.test(text) ? text : null;
 }
 
+/** Admin picker labels. The parameter ranges are a rough guide for open-weight models (total parameters); sizes stay a tier hint. */
+export const sizeOptions: [Size, string][] = [
+  ["nano", "Nano · under 10B"],
+  ["small", "Small · 10–40B"],
+  ["medium", "Medium · 40–150B"],
+  ["large", "Large · 150–500B"],
+  ["xxl", "XXL · 500B+ or top-priced"],
+];
+
 export function parseSize(value: string): Size | null {
   const text = value.trim().toLowerCase();
   if (text === "nano" || text === "small" || text === "medium" || text === "large" || text === "xxl") return text;

@@ -4,6 +4,7 @@ import { cache } from "react";
 import { isFinishedGame, type ScoreLine, type Traits } from "./game";
 import { buildShareCard, isShareGameId, type ShareCard } from "./share-card";
 import { serviceOrThrow } from "./rounds";
+import { withCurrentLogos } from "./rounds-queries";
 
 /** Columns the card needs. Messages, guesses, and usage are not in this list. */
 export const shareCardColumns =
@@ -52,8 +53,9 @@ export const readShareCard = cache(async (gameId: string): Promise<ShareCard | n
   const { data, error } = await client.from("games").select(shareCardColumns).eq("id", gameId).maybeSingle();
   if (error) throw new Error(error.message);
   if (!data || !isFinishedGame(data.status)) return null;
-  const traits = asTraits(data.traits);
-  if (!traits) return null;
+  const frozenTraits = asTraits(data.traits);
+  if (!frozenTraits) return null;
+  const traits = await withCurrentLogos(client, frozenTraits);
 
   let categoryName: string | null = null;
   if (data.game_mode === "class" && typeof data.pool_key === "string" && data.pool_key.length > 0) {
