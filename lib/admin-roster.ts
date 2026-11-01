@@ -34,6 +34,7 @@ export type { CategoryRow, RosterRow } from "./roster-row";
 import { reasoningOff } from "./provider-check";
 import { planReasoningUpdates, type CatalogModel } from "./roster-sync";
 import { randomBytes } from "node:crypto";
+import { squareLogo } from "./logo-square";
 import { categoryImagePath, companyUploadPath, logoBucketPath, readLogo } from "./logos";
 import { parseCompanyFields, type CompanyNotice } from "./admin-company";
 import { loadCategoryEntries } from "./category-data";
@@ -548,8 +549,14 @@ async function uploadCompanyLogo(client: SupabaseClient, companyId: string, file
   const bytes = new Uint8Array(await file.arrayBuffer());
   const found = readLogo(bytes);
   if (!found) return "logo";
+  let stored: Uint8Array = bytes;
+  if (found.mime === "image/png" || found.mime === "image/webp") {
+    const squared = await squareLogo(bytes, found.mime);
+    if (!squared) return "logo";
+    stored = squared;
+  }
   const bucketPath = companyUploadPath(companyId, found.ext, randomBytes(4).toString("hex"));
-  const { error } = await client.storage.from("logos").upload(bucketPath, new Blob([bytes as BlobPart], { type: found.mime }), {
+  const { error } = await client.storage.from("logos").upload(bucketPath, new Blob([stored as BlobPart], { type: found.mime }), {
     contentType: found.mime,
     cacheControl: publicImageCacheControl,
   });
