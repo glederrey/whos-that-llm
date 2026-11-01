@@ -118,19 +118,9 @@ export default async function Hero4({ searchParams }: { searchParams: Promise<Bo
           <p className="hero-copy">
             Think you can tell AI models apart, like a wine? In this guessing game, a hidden LLM answers you. It could be ChatGPT, Claude, Gemini, or any of the{" "}
             <strong className="h1-mark">{snapshot.models.toLocaleString("en-US")} models</strong> by{" "}
-            <strong className="h1-mark">{snapshot.companies.toLocaleString("en-US")} companies</strong> in play. Ten messages, one guess. Take on the daily round or pick a game mode to climb the leaderboard.
+            <strong className="h1-mark">{snapshot.companies.toLocaleString("en-US")} companies</strong> in play. Take on the daily round or pick a game mode to climb the leaderboard.
           </p>
           <HeroCta signedIn={Boolean(user && username)} label="Sign up" signedInLabel="Try a round" />
-          <dl className="h4-stats">
-            <div className="card">
-              <dt>Players today</dt>
-              <dd>{snapshot.playersToday.toLocaleString("en-US")}</dd>
-            </div>
-            <div className="card">
-              <dt>Games today</dt>
-              <dd>{snapshot.gamesToday.toLocaleString("en-US")}</dd>
-            </div>
-          </dl>
         </div>
         {rounds.length > 0 ? (
           <div className="h4-demo">
