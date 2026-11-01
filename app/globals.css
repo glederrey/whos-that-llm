@@ -2388,7 +2388,7 @@ html[data-theme="dark"] .h2-podium li { background: rgba(0, 0, 0, 0.1); }
 /* Hero preview 4: hero1's example round ending in the real guess picker, plus the company strip with model counts. */
 .h4 { gap: 28px; }
 .h4-hero { --logo: clamp(72px, 24vw - 120px, 195px); display: grid; grid-template-columns: minmax(0, 1.12fr) minmax(0, 1fr); gap: 24px 40px; align-items: stretch; padding: 8px 0 0; }
-.h4 .h1-text { gap: 20px; align-content: center; }
+.h4 .h1-text { gap: 20px; align-content: center; padding-top: calc(var(--logo) * 0.73); }
 .h4 h1 { font-size: 44px; white-space: nowrap; text-wrap: nowrap; }
 .h4-board { display: grid; gap: 12px; }
 .h4-board-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
@@ -2407,11 +2407,12 @@ html[data-theme="dark"] .h2-podium li { background: rgba(0, 0, 0, 0.1); }
 .h4-demo { position: relative; min-width: 0; }
 .h4-demo .demo-search { position: relative; z-index: 1; }
 .h4-ai { position: relative; display: inline-block; }
-.h4-logo { position: absolute; z-index: 2; bottom: calc(100% + 4px - var(--logo) * 0.17); left: calc(40px - var(--logo) * 0.18); pointer-events: none; filter: drop-shadow(0 6px 14px rgb(0 0 0 / 0.18)); }
+.h4-logo { position: absolute; z-index: 2; bottom: calc(100% + 4px - var(--logo) * 0.17); left: calc(22px - var(--logo) * 0.18); pointer-events: none; filter: drop-shadow(0 6px 14px rgb(0 0 0 / 0.18)); }
 .h4-logo img { width: var(--logo); height: var(--logo); display: block; }
 @media (max-width: 800px) {
   .h4-hero { grid-template-columns: 1fr; gap: 20px; }
   .h4-logo { display: none; }
+  .h4 .h1-text { padding-top: 0; }
 }
 .demo-search .demo-head { justify-content: flex-start; color: var(--text); font-size: 14px; }
 .demo-search .bubble { padding: 8px 12px; }
