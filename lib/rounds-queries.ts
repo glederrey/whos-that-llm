@@ -1,7 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { currentRules } from "./config";
 import { loadCategoryEntries } from "./category-data";
-import { countedPlayerId } from "./anonymize-account";
 import { difficultyNumber, type BoardDifficulty, type Difficulty } from "./difficulty";
 import { playableHints, type GuessFlags } from "./game";
 import {
@@ -9,8 +8,6 @@ import {
   boardFilters,
   boardRows,
   markLegacyRows,
-  parseStats,
-  utcDayWindow,
   type BoardEntry,
   type BoardRow,
 } from "./rounds-board-rows";
@@ -150,69 +147,6 @@ async function markLegacyMine(
     best = bestOwnGame(games);
   }
   return markLegacyRows(data, best);
-}
-
-export async function readPublicStats(client: SupabaseClient) {
-  const { data, error } = await client.rpc("public_stats");
-  if (!error && data && typeof data === "object") {
-    const stats = parseStats(data);
-    return {
-      models: stats.models,
-      gamesToday: stats.gamesToday,
-      players: stats.players,
-      companies: stats.companies ?? (await countCompanies(client)),
-    };
-  }
-  const { start, end } = utcDayWindow();
-  const [models, gamesToday, players, companies] = await Promise.all([
-    client.from("models").select("id", { count: "exact", head: true }).eq("enabled", true),
-    client
-      .from("games")
-      .select("id", { count: "exact", head: true })
-      .gte("finished_at", start)
-      .lt("finished_at", end),
-    countPlayers(client),
-    countCompanies(client),
-  ]);
-  if (models.error) throw new Error(models.error.message);
-  if (gamesToday.error) throw new Error(gamesToday.error.message);
-  return { models: models.count ?? 0, gamesToday: gamesToday.count ?? 0, players, companies };
-}
-
-async function countCompanies(client: SupabaseClient) {
-  const ids = new Set<string>();
-  for (let from = 0; from < 5000; from += 1000) {
-    const { data, error } = await client
-      .from("models")
-      .select("company_id")
-      .eq("enabled", true)
-      .range(from, from + 999);
-    if (error) throw new Error(error.message);
-    for (const row of data ?? []) {
-      if (typeof row.company_id === "string" && row.company_id) ids.add(row.company_id);
-    }
-    if (!data || data.length < 1000) break;
-  }
-  return ids.size;
-}
-
-async function countPlayers(client: SupabaseClient) {
-  const ids = new Set<string>();
-  for (let from = 0; from < 20000; from += 1000) {
-    const { data, error } = await client
-      .from("games")
-      .select("user_id")
-      .not("finished_at", "is", null)
-      .not("user_id", "is", null)
-      .range(from, from + 999);
-    if (error) throw new Error(error.message);
-    for (const row of data ?? []) {
-      const id = countedPlayerId(row.user_id);
-      if (id) ids.add(id);
-    }
-    if (!data || data.length < 1000) break;
-  }
-  return ids.size;
 }
 
 /** The username rpc on the signed-in user's own client, mapped to an http failure. */

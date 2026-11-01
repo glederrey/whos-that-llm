@@ -88,23 +88,3 @@ export function markLegacyRows(data: BoardEntry[], best: { username: string; sco
     toBoardRow(entry, Boolean(best && entry.name === best.username && Number(entry.score) === best.score)),
   );
 }
-
-/** Counts from the public_stats rpc. `companies` is null when the rpc did not send a number. */
-export function parseStats(data: object) {
-  const stats = data as { models?: number; gamesToday?: number; players?: number; companies?: number };
-  return {
-    models: Number(stats.models ?? 0),
-    gamesToday: Number(stats.gamesToday ?? 0),
-    players: Number(stats.players ?? 0),
-    companies: typeof stats.companies === "number" ? stats.companies : null,
-  };
-}
-
-/** Start and end (ISO) of the UTC day holding `now`. */
-export function utcDayWindow(now: Date = new Date()) {
-  const startDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
-  return {
-    start: startDate.toISOString(),
-    end: new Date(startDate.getTime() + 24 * 60 * 60 * 1000).toISOString(),
-  };
-}

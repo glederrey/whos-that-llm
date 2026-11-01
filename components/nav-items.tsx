@@ -2,8 +2,24 @@ import type { ReactNode } from "react";
 
 export type NavItem = { href: string; label: string; icon: ReactNode };
 
-/** The five public links. The header shows them inline; under 560px the Menu button next to the avatar lists them, after a Home link. */
+/** The six links, Play first. The header shows them inline; under 560px the Menu button next to the avatar lists them, after a Home link. */
 export const navItems: NavItem[] = [
+  {
+    href: "/play",
+    label: "Play",
+    icon: (
+      <svg className="nav-icon" viewBox="0 0 24 24" aria-hidden="true">
+        <path
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M8 5.5v13a.8.8 0 0 0 1.2.7l10-6.5a.8.8 0 0 0 0-1.4l-10-6.5A.8.8 0 0 0 8 5.5z"
+        />
+      </svg>
+    ),
+  },
   {
     href: "/scoring",
     label: "Scoring",

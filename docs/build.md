@@ -6,7 +6,7 @@ This page covers the repo layout, the env, the config numbers, the seed roster, 
 
 ```
 app/
-  page.tsx, layout.tsx          landing (with the weekly top 5), and the return target for email links
+  page.tsx, layout.tsx          home (hero, example round, company strip, top 5), and the return target for email links
   not-found.tsx, robots.ts, sitemap.ts, apple-icon.png, globals.css, fonts/
   login/, welcome/, reset-password/, profile/
   account/delete/               delete-account action
@@ -31,7 +31,7 @@ lib/
   rounds-queries.ts             reads and rpc calls that take the client as an argument
   rounds-start.ts               game modes, lobby, starting a round
   rounds-play.ts                reading a round, claim, reply, guess, hint, give up
-  rounds-board.ts, rounds-user.ts  leaderboard and landing counts, username
+  rounds-board.ts, rounds-user.ts  leaderboard, username
   board-query.ts, board-seed.ts leaderboard choice (mode, period, difficulty) and the avatar seed
   public-stats*.ts              figures for the statistics page
   openrouter*.ts                the streaming call, usage, spend, catalog, providers

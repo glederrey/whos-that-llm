@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { allCompanies } from "@/lib/company";
 import { anyDifficulty, difficulties, difficultyLabel, type BoardDifficulty } from "@/lib/difficulty";
-import { boardHref, boardMiddle, type BoardChoice, type BoardMode, type BoardPeriod } from "@/lib/board-query";
+import { boardHref, boardMiddle, type BoardBase, type BoardChoice, type BoardMode, type BoardPeriod } from "@/lib/board-query";
 import type { CategoryIconData } from "@/lib/category-icon";
 import { CategoryIcon } from "./category-icon";
 import { CompanyLogo } from "./company-logo";
@@ -17,7 +17,7 @@ export function BoardControls({
   company,
   category,
 }: {
-  base: "/" | "/leaderboard";
+  base: BoardBase;
   modes: BoardMode[];
   categories: Array<{ id: string; name: string; icon: CategoryIconData | null }>;
   companies: Array<{ id: string; name: string; logoUrl: string }>;
@@ -97,7 +97,7 @@ function CompanyMenu({
   company,
   disabled,
 }: {
-  base: "/" | "/leaderboard";
+  base: BoardBase;
   choice: BoardChoice;
   companies: Array<{ id: string; name: string; logoUrl: string }>;
   company: string;
@@ -148,7 +148,7 @@ function CategoryMenu({
   category,
   disabled,
 }: {
-  base: "/" | "/leaderboard";
+  base: BoardBase;
   choice: BoardChoice;
   categories: Array<{ id: string; name: string; icon: CategoryIconData | null }>;
   category: string;
