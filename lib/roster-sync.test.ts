@@ -587,5 +587,5 @@ test("planCompanyModels splits a company's text models into new and on the roste
     choices,
   );
   assert.deepEqual(plan.add.map((card) => card.id), ["deepseek/newer", "deepseek/old"]);
-  assert.deepEqual(plan.onRoster, [{ id: "deepseek/a", name: "DeepSeek: A" }]);
+  assert.deepEqual(plan.onRoster, [{ id: "deepseek/a", name: "A" }]);
 });

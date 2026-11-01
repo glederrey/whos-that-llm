@@ -44,6 +44,13 @@ export function companyForOrg(rawOrg: string, companies: CompanyChoice[]): Compa
   return companies.find((company) => company.id === id) ?? null;
 }
 
+/** OpenRouter names a model "Lab: Model". The display name is the part after the first colon. A name with nothing after it stays whole. */
+export function modelDisplayName(name: string): string {
+  const trimmed = name.trim();
+  const rest = trimmed.includes(":") ? trimmed.slice(trimmed.indexOf(":") + 1).trim() : trimmed;
+  return rest || trimmed;
+}
+
 function squash(value: string): string {
   return value.toLowerCase().replace(/[^a-z0-9]+/g, "");
 }
@@ -74,7 +81,7 @@ export function draftFromOpenRouter(
   const id = typeof model.id === "string" ? model.id : "";
   const company = companyForModel(id, model.name, companies);
   return {
-    name: typeof model.name === "string" ? model.name.trim() : "",
+    name: typeof model.name === "string" ? modelDisplayName(model.name) : "",
     companyId: company?.id ?? "",
     releasedOn: releasedOnFromCreated(model.created),
   };
