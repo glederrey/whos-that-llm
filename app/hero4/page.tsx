@@ -113,21 +113,25 @@ export default async function Hero4({ searchParams }: { searchParams: Promise<Bo
       <section className="h4-hero">
         <div className="h1-text">
           <h1>
-            Guess the hidden <span className="h1-mark">AI</span>.
+            Guess the hidden{" "}
+            <span className="h1-mark h4-ai">
+              AI
+              <span className="h4-logo" aria-hidden="true">
+                <img className="for-light" src="/brand/logo-tail-left-light.png" alt="" />
+                <img className="for-dark" src="/brand/logo-tail-left-dark.png" alt="" />
+              </span>
+            </span>
+            .
           </h1>
           <p className="hero-copy">
             Think you can tell AI models apart, like a wine? In this guessing game, a hidden LLM answers you. It could be ChatGPT, Claude, Gemini, or any of the{" "}
             <strong className="h1-mark">{snapshot.models.toLocaleString("en-US")} models</strong> by{" "}
-            <strong className="h1-mark">{snapshot.companies.toLocaleString("en-US")} companies</strong> in play. Take on the daily round or pick a game mode to climb the leaderboard.
+            <strong className="h1-mark">{snapshot.companies.toLocaleString("en-US")} companies</strong> in play. You get ten messages to find which one it is.
           </p>
           <HeroCta signedIn={Boolean(user && username)} label="Sign up" signedInLabel="Try a round" />
         </div>
         {rounds.length > 0 ? (
           <div className="h4-demo">
-            <span className="h4-logo" aria-hidden="true">
-              <img className="for-light" src="/brand/logo-tail-right-light.png" alt="" />
-              <img className="for-dark" src="/brand/logo-tail-right-dark.png" alt="" />
-            </span>
             <SearchDemo rounds={rounds} />
           </div>
         ) : null}
