@@ -35,12 +35,12 @@ The `messages` table is part of the baseline migration, with its comments, row l
 | `categories`, `model_categories`, `daily_models`, `openrouter_providers`, `app_settings` | no privileges | read and write |
 | `profiles` | `authenticated` can `select` its own row. `anon` has no grant. No direct `update`: the username is set and renamed through `set_username` | write |
 | `games`, `messages`, `guesses`, `usage` | no privileges | read and write |
-| `leaderboard(game_mode, since, viewer, p_difficulty, p_company)`, `public_stats()` | `execute` | execute |
+| `leaderboard(game_mode, since, viewer, p_difficulty, p_company)` | `execute` | execute |
 | `set_username(text)` | `execute` for `authenticated` only | execute |
 | `start_game`, `claim_model_call`, `apply_*`, `abort_reply` | no privileges | execute |
 | `avatars` storage bucket | public, so a picture URL loads. No list policy, so clients cannot list the objects | read and write |
 
-`leaderboard` is a security definer function, not a view of game rows. It returns rank, name, score, whether the row is the signed-in player, and that player's `avatar_path`. The page shows the public picture, or the generated mark when there is no file. The function also returns `user_id`. That id is a random uuid and not a secret (the avatar path contains it too). The API turns it into a short hash for the avatar mark and never returns another player's id. `anon` can call it, so the landing page can show the top 5 before login.
+`leaderboard` is a security definer function, not a view of game rows. It returns rank, name, score, whether the row is the signed-in player, and that player's `avatar_path`. The page shows the public picture, or the generated mark when there is no file. The function also returns `user_id`. That id is a random uuid and not a secret (the avatar path contains it too). The API turns it into a short hash for the avatar mark and never returns another player's id. `anon` can call it, so the home page can show the top 5 before login.
 
 `profiles` is created by a trigger on `auth.users`. The user does not insert their own profile row.
 

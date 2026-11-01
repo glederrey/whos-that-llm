@@ -56,6 +56,8 @@ Easy, Medium, Hard and Impossible each have a hue that is a semantic scale, not 
 | Hard | #C41B15 | #B01711 | #FF6B62 |
 | Impossible | #A78BFA | #4E2FB0 | #A78BFA |
 
+The Impossible tab and the leaderboard chip are the exception: they are filled `#7C5CE6` with white text, in both themes.
+
 Never use the fill as text on a light surface, and never put the difficulty hues on a large area.
 
 ## Themes
@@ -104,6 +106,6 @@ Radius `sm`, flat fills, no gradient. Primary is teal with a near-black text (`#
 - Don't use gradient fills, glass, blur or a glow behind the logo. A gradient is allowed only as a functional fade: scroll shadows on tables and the fade under the sticky message bar on a phone.
 - Don't add a fourth brand hue or a gradient on the logo mark.
 - Don't put `miss` on the logo or on large fills; full teal against full red buzzes.
-- Don't add decorative loops, a bouncing logo or an animated background. Motion stays small: a reply arriving word by word, waiting dots, a trait chip unveiling, a short shake on a wrong guess. Pages settle in with a 6px rise and fade (0.22s), the account menu opens from its button (0.14s), and tabs give a little on press. All of it stops under reduced motion.
-- Don't build the landing page as a feature grid, quotes or a logo wall. The home hero asks one question (**Which AI is it?**) over the big logo and a typing reply, with one primary button. It has no card of steps and no leaderboard table.
+- Don't add decorative loops, a bouncing logo or an animated background. The home page has two exceptions, and both stop under reduced motion: the example round and the slow company strip. Motion stays small: a reply arriving word by word, waiting dots, a trait chip unveiling, a short shake on a wrong guess. Pages settle in with a 6px rise and fade (0.22s), the account menu opens from its button (0.14s), and tabs give a little on press. All of it stops under reduced motion.
+- Don't build the landing page as a feature grid, quotes or a logo wall. The home hero is the title (**Guess the hidden AI.**) with the logo tail pointing at the word AI, one paragraph, one primary button and an example round. The only list below it is the company strip and the Top 5. It has no card of steps.
 - Don't edit, flip or redraw the logo files, and never use the `_dot` favicon files. Use `tail_right` when the title is to the right of the mark and `tail_left` when it is to the left; leave the mark out where no text sits beside it.

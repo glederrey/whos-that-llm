@@ -77,7 +77,7 @@ An HTTP 402 from OpenRouter sets `app_settings.paused` and pauses the game for e
 
 ## Limits the player can see
 
-These three are on the landing page, the lobby, and the round.
+The landing page states the ten messages in its intro. The lobby and the round show all three.
 
 | Limit | Value | On screen |
 |---|---|---|
