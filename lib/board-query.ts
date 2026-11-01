@@ -37,8 +37,8 @@ export function boardChoice(
 ): BoardChoice {
   const open = modes.filter((mode) => mode.open).map((mode) => mode.id);
   const requested = params.gameMode && open.includes(params.gameMode) ? params.gameMode : null;
-  const gameMode = requested ?? (open.includes("all") ? "all" : (open[0] ?? "all"));
-  const period: BoardPeriod = params.period === "all" || params.period === "month" ? params.period : "week";
+  const gameMode = requested ?? (open.includes("daily") ? "daily" : open.includes("all") ? "all" : (open[0] ?? "all"));
+  const period: BoardPeriod = params.period === "week" || params.period === "month" ? params.period : "all";
   return {
     gameMode,
     period,
