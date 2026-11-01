@@ -42,7 +42,7 @@ export async function GET(request: Request, context: { params: Promise<{ gameId:
   const download = url.searchParams.has("download");
   const [loaded, modelLogo, guessedFlag, actualFlag] = await Promise.all([
     loadAssets(),
-    readModelLogo(card.modelLogoPath),
+    readModelLogo(card.modelLogoPath, theme),
     card.origin?.guessed ? readFlagImage(card.origin.guessed.flag) : null,
     card.origin ? readFlagImage(card.origin.actual.flag) : null,
   ]);

@@ -20,7 +20,6 @@ type Tone = {
   score: string;
   frame: string;
   quietWash: string;
-  chip: string;
   noHint: string;
   noHintBorder: string;
 };
@@ -33,7 +32,6 @@ const light: Tone = {
   score: "#007F88",
   frame: "#00BBC9",
   quietWash: "#F3F3F4",
-  chip: "#FFFFFF",
   noHint: "#C8C8CE",
   noHintBorder: "#B4B4BA",
 };
@@ -46,7 +44,6 @@ const dark: Tone = {
   score: "#00BBC9",
   frame: "#00BBC9",
   quietWash: "#383838",
-  chip: "#FFFFFF",
   noHint: "#4A4A4A",
   noHintBorder: "#6A6A6A",
 };
@@ -118,11 +115,9 @@ export function shareCardImage(
                       flexShrink: 0,
                       alignItems: "center",
                       justifyContent: "center",
-                      background: tone.chip,
-                      borderRadius: 22,
                       marginRight: 18,
                     },
-                    createElement("img", { src: modelLogoSrc, width: 72, height: 72 }),
+                    createElement("img", { src: modelLogoSrc, width: 88, height: 88 }),
                   )
                 : null,
               box(
