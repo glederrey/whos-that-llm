@@ -1,5 +1,5 @@
 import sharp from "sharp";
-import { lobeIdOf, lobeSvgForTheme } from "./lobe-logo";
+import { lobeIdOfAny, lobeSvgForTheme } from "./lobe-logo";
 import { readLobeSvg } from "./lobe-logo-files";
 import { logoPublicUrl, readLogo } from "./logos";
 import { publicEnv } from "./supabase/env";
@@ -9,7 +9,7 @@ const maxLogoBytes = 1024 * 1024;
 /** The company mark for the card, as a PNG data URL. A missing file leaves the name on its own. */
 export async function readModelLogo(path: string | null, theme: "light" | "dark" = "light"): Promise<string | null> {
   if (!path) return null;
-  const lobe = lobeIdOf(path);
+  const lobe = lobeIdOfAny(path);
   if (lobe) return readLobeCardLogo(lobe, theme);
   const url = /^https?:\/\//i.test(path) ? path : publicLogo(path);
   if (!url || !ownStorage(url)) return null;

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { isLobePath, lobeIdOf, lobePath, lobeSvgForTheme, lobeThemeUrl, lobeUrl } from "./lobe-logo";
+import { isLobePath, lobeIdOf, lobeIdOfAny, lobePath, lobeSvgForTheme, lobeThemeUrl, lobeUrl } from "./lobe-logo";
 import { logoPathForPlay, logoPublicUrl } from "./logos";
 
 test("lobe paths round trip and reject bad ids", () => {
@@ -49,4 +49,12 @@ test("lobe logos skip the bucket", () => {
 test("a logo that is already a /lobe/ url stays as it is", () => {
   assert.equal(logoPathForPlay("/lobe/openai.svg", "c1"), "/lobe/openai.svg");
   assert.equal(logoPublicUrl("https://x.supabase.co", "/lobe/openai.svg"), "/lobe/openai.svg");
+});
+
+test("the share card finds the icon in a stored path or a page address", () => {
+  assert.equal(lobeIdOfAny("lobe:openai"), "openai");
+  assert.equal(lobeIdOfAny("/lobe/qwen-color.svg"), "qwen-color");
+  assert.equal(lobeIdOfAny("/lobe/qwen-color.svg?theme=dark"), "qwen-color");
+  assert.equal(lobeIdOfAny("/lobe/../x.svg"), null);
+  assert.equal(lobeIdOfAny("https://x.co/a.png"), null);
 });

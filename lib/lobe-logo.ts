@@ -14,6 +14,12 @@ export function lobeIdOf(path: string): string | null {
   return lobeId.test(id) ? id : null;
 }
 
+/** The icon id of a stored `lobe:` path or of the `/lobe/<id>.svg` address a page was given. */
+export function lobeIdOfAny(path: string): string | null {
+  const url = /^\/lobe\/([a-z0-9]+(?:-[a-z0-9]+)*)\.svg(?:\?.*)?$/.exec(path);
+  return url ? url[1] : lobeIdOf(path);
+}
+
 export function lobePath(id: string): string {
   return `${lobePrefix}${id}`;
 }
