@@ -86,9 +86,15 @@ test("markLegacyRows marks only the row with the viewer's best name and score", 
   assert.deepEqual(markLegacyRows(data, null).map((r) => r.mine), [false, false, false]);
 });
 
-test("parseStats defaults missing counts to 0 and keeps companies null unless numeric", () => {
-  assert.deepEqual(parseStats({ models: 5, gamesToday: "2", players: 9, companies: 4 }), { models: 5, gamesToday: 2, players: 9, companies: 4 });
-  assert.deepEqual(parseStats({}), { models: 0, gamesToday: 0, players: 0, companies: null });
+test("parseStats defaults missing counts to 0 and keeps companies and playersToday null unless numeric", () => {
+  assert.deepEqual(parseStats({ models: 5, gamesToday: "2", players: 9, playersToday: 3, companies: 4 }), {
+    models: 5,
+    gamesToday: 2,
+    players: 9,
+    playersToday: 3,
+    companies: 4,
+  });
+  assert.deepEqual(parseStats({}), { models: 0, gamesToday: 0, players: 0, playersToday: null, companies: null });
   assert.equal(parseStats({ companies: "4" as unknown as number }).companies, null);
 });
 

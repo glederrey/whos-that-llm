@@ -160,7 +160,7 @@ export async function readPublicStats(client: SupabaseClient) {
       models: stats.models,
       gamesToday: stats.gamesToday,
       players: stats.players,
-      playersToday: await countPlayersToday(client),
+      playersToday: stats.playersToday ?? (await countPlayersToday(client)),
       companies: stats.companies ?? (await countCompanies(client)),
     };
   }
@@ -217,7 +217,7 @@ async function countPlayers(client: SupabaseClient) {
   return ids.size;
 }
 
-/** Distinct accounts with a round finished during the current UTC day, like games today. */
+/** Same count as the rpc's playersToday, for a database that has not got the new rpc yet. */
 async function countPlayersToday(client: SupabaseClient) {
   const { start, end } = utcDayWindow();
   const ids = new Set<string>();

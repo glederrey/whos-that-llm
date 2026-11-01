@@ -89,13 +89,14 @@ export function markLegacyRows(data: BoardEntry[], best: { username: string; sco
   );
 }
 
-/** Counts from the public_stats rpc. `companies` is null when the rpc did not send a number. */
+/** Counts from the public_stats rpc. `companies` and `playersToday` are null when the rpc did not send a number (an older database). */
 export function parseStats(data: object) {
-  const stats = data as { models?: number; gamesToday?: number; players?: number; companies?: number };
+  const stats = data as { models?: number; gamesToday?: number; players?: number; playersToday?: number; companies?: number };
   return {
     models: Number(stats.models ?? 0),
     gamesToday: Number(stats.gamesToday ?? 0),
     players: Number(stats.players ?? 0),
+    playersToday: typeof stats.playersToday === "number" ? stats.playersToday : null,
     companies: typeof stats.companies === "number" ? stats.companies : null,
   };
 }

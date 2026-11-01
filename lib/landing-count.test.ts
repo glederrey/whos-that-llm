@@ -91,3 +91,11 @@ test("companies on the homepage are labs with a model in play", () => {
   const css = fs.readFileSync(path.join(root, "app/globals.css"), "utf8");
   assert.doesNotMatch(css, /\.landing \.stat-companies \{ display: none; \}/);
 });
+
+test("players today counts distinct accounts with a round finished in the UTC day", () => {
+  const sql = fs.readFileSync(path.join(root, "supabase/migrations/20261101090000_public_stats_players_today.sql"), "utf8");
+  assert.match(sql, /'playersToday',\s*\(\s*select count\(distinct user_id\)::int\s*from public\.games/);
+  assert.match(sql, /finished_at >= \(date_trunc\('day', now\(\) at time zone 'utc'\) at time zone 'utc'\)/);
+  assert.match(sql, /and user_id is not null/);
+  assert.match(sql, /set search_path = public, pg_temp/);
+});
