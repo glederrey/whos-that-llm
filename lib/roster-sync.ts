@@ -1,6 +1,6 @@
 import { modelIdFromOpenRouter, validOpenRouterId } from "./admin-model";
 import { dollarsPerMillion } from "./list-price";
-import { companyForModel, companyForOrg, releasedOnFromCreated, type CompanyChoice } from "./openrouter-draft";
+import { companyForModel, companyForOrg, normalOrg, releasedOnFromCreated, type CompanyChoice } from "./openrouter-draft";
 import type { RosterRow } from "./roster-row";
 import { lowReasoningSettings, reasoningSettingsNeeded } from "./provider-check";
 
@@ -292,7 +292,7 @@ export function planOpenRouterCompanies(catalog: CatalogModel[], companies: Comp
   for (const model of catalog) {
     if (seen.has(model.id) || !isTextGenerationModel(model) || openRouterModelHref(model.id) === null) continue;
     seen.add(model.id);
-    const org = model.id.slice(0, model.id.indexOf("/"));
+    const org = normalOrg(model.id.slice(0, model.id.indexOf("/")));
     byOrg.set(org, [...(byOrg.get(org) ?? []), model]);
   }
   const rows = [...byOrg.entries()].map(([org, models]): OpenRouterCompany => {

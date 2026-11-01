@@ -555,6 +555,7 @@ test("planOpenRouterCompanies counts text models per org and marks roster compan
     [
       catalogModel("deepseek/a", { name: "DeepSeek: A" }),
       catalogModel("deepseek/b", { name: "DeepSeek: B" }),
+      catalogModel("~deepseek/latest", { name: "DeepSeek: Latest" }),
       catalogModel("deepseek/pic", { outputModalities: ["image"] }),
       catalogModel("moonshotai/kimi", { name: "Moonshot AI: Kimi" }),
       catalogModel("newlab/x", { name: "New Lab: X" }),
@@ -565,7 +566,7 @@ test("planOpenRouterCompanies counts text models per org and marks roster compan
   assert.deepEqual(
     rows.map((row) => [row.org, row.name, row.models, row.company?.id ?? null]),
     [
-      ["deepseek", "DeepSeek", 2, "deepseek"],
+      ["deepseek", "DeepSeek", 3, "deepseek"],
       ["moonshotai", "Moonshot AI", 1, "moonshot"],
       ["newlab", "New Lab", 1, null],
     ],
