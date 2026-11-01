@@ -1,4 +1,4 @@
-export function HeroCta({ signedIn, label = "Play now", signedInLabel = "Start playing" }: { signedIn: boolean; label?: string; signedInLabel?: string }) {
+export function HomeCta({ signedIn, label = "Sign up", signedInLabel = "Try a round" }: { signedIn: boolean; label?: string; signedInLabel?: string }) {
   return (
     <div className="row">
       {signedIn ? (

@@ -13,32 +13,32 @@ function useReducedMotion() {
   return reduced;
 }
 
-export type SearchDemoModel = { id: string; name: string; companyName: string; logoUrl: string };
-export type SearchDemoHintKey = "company" | "origin" | "year" | "size";
-const hintRows: { key: SearchDemoHintKey; label: string }[] = [
+export type HomeDemoModel = { id: string; name: string; companyName: string; logoUrl: string };
+export type HomeDemoHintKey = "company" | "origin" | "year" | "size";
+const hintRows: { key: HomeDemoHintKey; label: string }[] = [
   { key: "company", label: "Company" },
   { key: "origin", label: "Origin" },
   { key: "year", label: "Year" },
   { key: "size", label: "Size" },
 ];
 /** One message and the guess made after it. A round with a wrong first guess has two turns. */
-export type SearchDemoTurn = {
+export type HomeDemoTurn = {
   q: string;
   a: string;
   query: string;
-  candidates: SearchDemoModel[];
+  candidates: HomeDemoModel[];
   pickId: string;
   right: boolean;
   /** A hint revealed before this guess. */
-  hint?: { key: SearchDemoHintKey; value: string; flag?: string };
+  hint?: { key: HomeDemoHintKey; value: string; flag?: string };
 };
-export type SearchDemoFacts = Record<SearchDemoHintKey, { value: string; flag?: string }>;
+export type HomeDemoFacts = Record<HomeDemoHintKey, { value: string; flag?: string }>;
 /** `facts` describe the hidden model: all of them show once it is found. */
-export type SearchDemoRound = { turns: SearchDemoTurn[]; facts: SearchDemoFacts };
+export type HomeDemoRound = { turns: HomeDemoTurn[]; facts: HomeDemoFacts };
 
 /** A looping example round that ends in the real guess picker: the query types itself, real models and logos
  *  list below it, one is picked, then it is revealed. Decoration only. */
-export function SearchDemo({ rounds }: { rounds: SearchDemoRound[] }) {
+export function HomeDemo({ rounds }: { rounds: HomeDemoRound[] }) {
   const reduced = useReducedMotion();
   const [round, setRound] = useState(0);
   const [turn, setTurn] = useState(0);
@@ -143,7 +143,7 @@ export function SearchDemo({ rounds }: { rounds: SearchDemoRound[] }) {
 
   // Hints revealed so far: earlier turns always, this turn once the guess starts.
   const hintsOut = reduced || (phase === "hint" && hintOn) || phase === "search" || phase === "pick" || phase === "reveal";
-  const revealed = new Map<SearchDemoHintKey, { value: string; flag?: string }>();
+  const revealed = new Map<HomeDemoHintKey, { value: string; flag?: string }>();
   current.turns.forEach((row, index) => {
     if (row.hint && (index < t || (index === t && hintsOut))) revealed.set(row.hint.key, row.hint);
   });

@@ -76,8 +76,7 @@ export function boardMiddle(gameMode: string, modes: BoardMode[]): BoardMiddle |
   return null;
 }
 
-/** "/hero4" is the home page preview; drop it when the preview becomes "/". */
-export type BoardBase = "/" | "/leaderboard" | "/hero4";
+export type BoardBase = "/" | "/leaderboard";
 
 export function boardHref(base: BoardBase, choice: BoardChoice, page = 1): string {
   const params = new URLSearchParams({
