@@ -71,7 +71,7 @@ A tip does not raise the hourly cap, change a score, or put a name on the leader
 
 Purpose: present the game. Public. Playing requires a session, and that happens on `/play`. The leaderboard does not.
 
-The header keeps the name and a logo the same height as that text, plus **Play** (links to `/play`; a guest lands on the login page first), **Scoring** (links to `/scoring`), **Leaderboard**, **Statistics** (links to `/statistics`), **Models** (links to `/models`, with a small robot-head icon like the logo), **Why this game?** (links to `/why`), and the account menu. Under 560px the six links, and a **Home** link, move into a separate **Menu** button beside the avatar (see below).
+The header keeps the name and a logo the same height as that text, plus **Play** (links to `/play`; a guest lands on the login page first), **Scoring** (links to `/scoring`), **Leaderboard**, **Statistics** (links to `/statistics`), **Models** (links to `/models`, with a small robot-head icon like the logo), **Why?** (links to `/why`), and the account menu. Under 560px the six links, and a **Home** link, move into a separate **Menu** button beside the avatar (see below).
 
 Four blocks, top to bottom: the hero, a strip of companies, the Top 5, and nothing else. There are no counts of games or players.
 
@@ -330,6 +330,8 @@ Only models that are turned on appear, so a model that is off or no longer liste
 **Header on narrow screens.** The header has six links (Play first) and the account menu. From 560px to 990px the links show only their icon (each keeps its `aria-label`), so the bar stays on one row. Under 560px the header shows the logo, the name (20px as on desktop, shrinking with the screen width down to 16px), then two buttons of the same size and shape, rounded squares: a **Menu** button (three lines), then the avatar (a person icon for a guest). The avatar opens the account list: name with avatar, theme switch, Admin, Profile, Sign out, or Sign in for a guest. **Menu** opens the site list: **Home** and the six links with their icons and labels. Only one list is open at a time. A list closes on a link click, on Escape and on a click outside, and the current page is bold and teal (`teal-press` on light, `teal` on dark). The name is never hidden.
 
 ## Why this game? (`/why`)
+
+The header link reads **Why?**; the page title stays "Why this game?".
 
 Public. No session. Linked from the header.
 
