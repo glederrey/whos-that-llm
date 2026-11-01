@@ -11,10 +11,11 @@ import { requireOwner } from "@/lib/admin-access";
 
 export const dynamic = "force-dynamic";
 
-export default async function CompaniesPage({ searchParams }: { searchParams: Promise<{ notice?: string }> }) {
+export default async function CompaniesPage({ searchParams }: { searchParams: Promise<{ notice?: string; add?: string }> }) {
   await requireOwner();
   const params = await searchParams;
   const notice = companyNotice(params.notice);
+  const addName = (params.add ?? "").slice(0, maxCompanyName);
   const [companies, origins] = await Promise.all([loadCompanyList(), loadOriginOptions()]);
   const originOf = new Map(origins.map((item) => [item.id, item]));
   const logos: LogoChoice[] = [];
@@ -39,11 +40,11 @@ export default async function CompaniesPage({ searchParams }: { searchParams: Pr
         </p>
       ) : null}
       <OpenRouterCompanies />
-      <details className="card roster-add">
+      <details key={addName} className="card roster-add" open={addName !== ""}>
         <summary>Add a company</summary>
         <form action={addCompany} className="stack">
           <div className="roster-form">
-            <CompanyInputs origins={origins} logos={logos} />
+            <CompanyInputs name={addName} origins={origins} logos={logos} />
           </div>
           <div>
             <button className="button" type="submit">

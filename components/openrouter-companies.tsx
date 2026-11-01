@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { searchOpenRouterCompanies, type OpenRouterCompaniesResult } from "@/app/admin/actions";
 
@@ -75,7 +76,15 @@ export function OpenRouterCompanies() {
                       <td>{row.name}</td>
                       <td>{row.org}</td>
                       <td>{row.models.toLocaleString("en-US")}</td>
-                      <td>{row.company ? row.company.name : <strong>Not on the roster</strong>}</td>
+                      <td>{row.company ? row.company.name : (
+                          <Link
+                            className="button"
+                            href={`/admin/companies?add=${encodeURIComponent(row.name)}`}
+                            onClick={() => cardRef.current?.hidePopover()}
+                          >
+                            Add to the roster
+                          </Link>
+                        )}</td>
                     </tr>
                   ))}
                 </tbody>
