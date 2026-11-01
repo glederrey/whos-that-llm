@@ -7,10 +7,10 @@ import { publicEnv } from "./supabase/env";
 const maxLogoBytes = 1024 * 1024;
 
 /** The company mark for the card, as a PNG data URL. A missing file leaves the name on its own. */
-export async function readModelLogo(path: string | null, theme: "light" | "dark" = "light"): Promise<string | null> {
+export async function readModelLogo(path: string | null): Promise<string | null> {
   if (!path) return null;
   const lobe = lobeIdOfAny(path);
-  if (lobe) return readLobeCardLogo(lobe, theme);
+  if (lobe) return readLobeCardLogo(lobe);
   const url = /^https?:\/\//i.test(path) ? path : publicLogo(path);
   if (!url || !ownStorage(url)) return null;
   try {
@@ -43,11 +43,11 @@ function publicLogo(path: string): string | null {
   return logoPublicUrl(base, path);
 }
 
-/** A shipped logo as a PNG data URL. Mono icons take the card's text colour. */
-async function readLobeCardLogo(id: string, theme: "light" | "dark"): Promise<string | null> {
+/** A shipped logo as a PNG data URL. The logo chip is white in both card themes, so mono icons always take the light-theme (dark) colour. */
+async function readLobeCardLogo(id: string): Promise<string | null> {
   const svg = await readLobeSvg(id);
   if (!svg) return null;
-  const colored = lobeSvgForTheme(svg, theme);
+  const colored = lobeSvgForTheme(svg, "light");
   try {
     const png = await sharp(Buffer.from(colored), { density: 384 }).resize(256, 256, { fit: "contain", background: { r: 0, g: 0, b: 0, alpha: 0 } }).png().toBuffer();
     return `data:image/png;base64,${png.toString("base64")}`;
