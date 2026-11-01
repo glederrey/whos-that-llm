@@ -45,3 +45,8 @@ test("lobe logos skip the bucket", () => {
   assert.equal(logoPathForPlay("lobe:openai", "c1"), "lobe:openai");
   assert.equal(logoPublicUrl("https://x.supabase.co", "lobe:openai"), "/lobe/openai.svg");
 });
+
+test("a logo that is already a /lobe/ url stays as it is", () => {
+  assert.equal(logoPathForPlay("/lobe/openai.svg", "c1"), "/lobe/openai.svg");
+  assert.equal(logoPublicUrl("https://x.supabase.co", "/lobe/openai.svg"), "/lobe/openai.svg");
+});

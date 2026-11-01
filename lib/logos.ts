@@ -10,7 +10,7 @@ export function companyLogoPath(companyId: string): string {
 
 /** Path the game should load from the logos bucket. */
 export function logoPathForPlay(path: string, companyId: string): string {
-  if (lobeIdOf(path)) return path;
+  if (lobeIdOf(path) || path.startsWith("/lobe/")) return path;
   if (/^https?:\/\//i.test(path)) return path;
   const bare = path.replace(/^\/+/, "");
   if (bare === `logos/${companyId}.svg` || bare === `${companyId}.svg` || bare === `logos/${companyId}.png`) {
@@ -23,6 +23,7 @@ export function logoPathForPlay(path: string, companyId: string): string {
 export function logoPublicUrl(baseUrl: string, path: string): string {
   const lobe = lobeIdOf(path);
   if (lobe) return lobeUrl(lobe);
+  if (path.startsWith("/lobe/")) return path;
   if (/^https?:\/\//i.test(path)) return path;
   let file = path.replace(/^\/+/, "");
   if (file.startsWith("logos/")) file = file.slice("logos/".length);

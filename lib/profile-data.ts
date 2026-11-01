@@ -255,7 +255,7 @@ export async function loadHistory(userId: string, page: number, filter: HistoryF
       companyName: finished ? (frozen?.companyName ?? company?.name ?? null) : null,
       logoPath: finished
         ? presentLogo(
-            frozen?.logoPath || model?.logo_path || company?.logo_path || "",
+            model?.logo_path || company?.logo_path || frozen?.logoPath || "",
             frozen?.companyId || model?.company_id || "",
           )
         : null,
