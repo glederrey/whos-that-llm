@@ -258,13 +258,13 @@ Origins on companies:
 - **Europe** (`eu`): Mistral, plus any other lab we actually have a key for
 - **China** (`cn`): DeepSeek, Qwen, Kimi, GLM, MiniMax, and the other Chinese labs on OpenRouter
 
-Size, also manual, and only as a hint:
+Size, also manual, and only as a hint. The admin pickers show a rough parameter range next to each size (total parameters, for open-weight models; closed models have no published count, so use the tier):
 
-- **nano:** the smallest tier
-- **small:** the cheap fast tier
-- **medium:** the workhorse
-- **large:** the flagship tier
-- **xxl:** the most expensive tier
+- **nano:** the smallest tier, under 10B
+- **small:** the cheap fast tier, 10–40B
+- **medium:** the workhorse, 40–150B
+- **large:** the flagship tier, 150–500B
+- **xxl:** the most expensive tier, 500B+ or the lab's top-priced model
 
 The first Daily start of a UTC day, at a difficulty, draws one model from the roster All models can already draw at that level (difficulty less than or equal to the chosen level) and stores that id on `daily_models`. Easy cannot store an Impossible model. Medium, Hard, and Impossible each store their own id. Later starts that day use the stored id, so two players get the same hidden model. A model turned off after the draw is still included in a later round's list, so it can still be named. Do not publish the id ahead of time. One account gets one Daily round per difficulty that UTC day. Easy and Medium are both allowed. A second Easy is not. Starting spends that difficulty, including a give-up before the first message. Coming back while that difficulty is open resumes it. A finished difficulty is done until tomorrow, which draws again at each level. A difficulty they have not started stays open.
 

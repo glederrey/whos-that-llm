@@ -10,16 +10,9 @@ import {
   type NewModelCard,
   type NewModelsResult,
 } from "@/lib/roster-sync";
+import { sizeOptions } from "@/lib/admin-model";
 import { difficulties, difficultyLabel } from "@/lib/difficulty";
 import { CompanyModelsSearch } from "@/components/company-models-search";
-
-const sizes = [
-  ["nano", "Nano"],
-  ["small", "Small"],
-  ["medium", "Medium"],
-  ["large", "Large"],
-  ["xxl", "XXL"],
-] as const;
 
 export type ModelPick = { size: string; difficulty: string };
 
@@ -285,7 +278,7 @@ export function ModelCard({
             Size
             <select aria-label={`Size for ${model.name}`} value={pick.size} onChange={(event) => onPick(model.id, "size", event.target.value)}>
               <option value="">Choose</option>
-              {sizes.map(([value, label]) => (
+              {sizeOptions.map(([value, label]) => (
                 <option key={value} value={value}>
                   {label}
                 </option>
