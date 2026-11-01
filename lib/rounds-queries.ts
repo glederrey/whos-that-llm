@@ -160,11 +160,12 @@ export async function readPublicStats(client: SupabaseClient) {
       models: stats.models,
       gamesToday: stats.gamesToday,
       players: stats.players,
+      playersToday: await countPlayersToday(client),
       companies: stats.companies ?? (await countCompanies(client)),
     };
   }
   const { start, end } = utcDayWindow();
-  const [models, gamesToday, players, companies] = await Promise.all([
+  const [models, gamesToday, players, playersToday, companies] = await Promise.all([
     client.from("models").select("id", { count: "exact", head: true }).eq("enabled", true),
     client
       .from("games")
@@ -172,11 +173,12 @@ export async function readPublicStats(client: SupabaseClient) {
       .gte("finished_at", start)
       .lt("finished_at", end),
     countPlayers(client),
+    countPlayersToday(client),
     countCompanies(client),
   ]);
   if (models.error) throw new Error(models.error.message);
   if (gamesToday.error) throw new Error(gamesToday.error.message);
-  return { models: models.count ?? 0, gamesToday: gamesToday.count ?? 0, players, companies };
+  return { models: models.count ?? 0, gamesToday: gamesToday.count ?? 0, players, playersToday, companies };
 }
 
 async function countCompanies(client: SupabaseClient) {
@@ -203,6 +205,28 @@ async function countPlayers(client: SupabaseClient) {
       .from("games")
       .select("user_id")
       .not("finished_at", "is", null)
+      .not("user_id", "is", null)
+      .range(from, from + 999);
+    if (error) throw new Error(error.message);
+    for (const row of data ?? []) {
+      const id = countedPlayerId(row.user_id);
+      if (id) ids.add(id);
+    }
+    if (!data || data.length < 1000) break;
+  }
+  return ids.size;
+}
+
+/** Distinct accounts with a round finished during the current UTC day, like games today. */
+async function countPlayersToday(client: SupabaseClient) {
+  const { start, end } = utcDayWindow();
+  const ids = new Set<string>();
+  for (let from = 0; from < 20000; from += 1000) {
+    const { data, error } = await client
+      .from("games")
+      .select("user_id")
+      .gte("finished_at", start)
+      .lt("finished_at", end)
       .not("user_id", "is", null)
       .range(from, from + 999);
     if (error) throw new Error(error.message);

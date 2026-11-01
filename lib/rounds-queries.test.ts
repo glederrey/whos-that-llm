@@ -152,12 +152,12 @@ test("leaderboard legacy path without a viewer marks nobody, and a failing legac
 
 test("readPublicStats uses the rpc counts and fills in companies when it omits them", async () => {
   const withAll = fakeClient({}, { public_stats: { data: { models: 3, gamesToday: 2, players: 7, companies: 4 } } });
-  assert.deepEqual(await readPublicStats(withAll.client), { models: 3, gamesToday: 2, players: 7, companies: 4 });
+  assert.deepEqual(await readPublicStats(withAll.client), { models: 3, gamesToday: 2, players: 7, playersToday: 0, companies: 4 });
   const noCompanies = fakeClient(
     { models: { data: [{ company_id: "a" }, { company_id: "a" }, { company_id: "b" }, { company_id: "" }] } },
     { public_stats: { data: { models: 3 } } },
   );
-  assert.deepEqual(await readPublicStats(noCompanies.client), { models: 3, gamesToday: 0, players: 0, companies: 2 });
+  assert.deepEqual(await readPublicStats(noCompanies.client), { models: 3, gamesToday: 0, players: 0, playersToday: 0, companies: 2 });
 });
 
 test("readPublicStats counts by hand when the rpc is missing", async () => {
@@ -168,7 +168,7 @@ test("readPublicStats counts by hand when the rpc is missing", async () => {
     },
     { public_stats: { error: { message: "no rpc" } } },
   );
-  assert.deepEqual(await readPublicStats(client), { models: 5, gamesToday: 8, players: 2, companies: 2 });
+  assert.deepEqual(await readPublicStats(client), { models: 5, gamesToday: 8, players: 2, playersToday: 2, companies: 2 });
 });
 
 test("readPublicStats throws when the manual count fails", async () => {
