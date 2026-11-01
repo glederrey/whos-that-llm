@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { LogoImage } from "@/components/logo-image";
 import { BoardControls } from "@/components/board-controls";
 import { BoardTable } from "@/components/board-table";
 import { HomeCta } from "@/components/home-cta";
@@ -50,7 +51,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
     <div className="home-set" key={copy}>
       {groups.map((group) => (
         <span className="home-chip" key={`${copy}-${group.companyId}`}>
-          {group.logoUrl ? <img src={group.logoUrl} alt="" width={22} height={22} /> : null}
+          {group.logoUrl ? <LogoImage src={group.logoUrl} width={22} height={22} /> : null}
           {group.companyName}
           <b>{group.models.length === 1 ? "1 model" : `${group.models.length} models`}</b>
         </span>

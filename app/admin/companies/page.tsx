@@ -200,6 +200,8 @@ function CompanyInputs({
       </fieldset>
       <fieldset className="span-2 logo-picks">
         <legend>Logo</legend>
+        <LobeLogoPicker ids={lobeIds} />
+        <p className="muted">No LobeHub logo for this company? Pick one a company already has, or upload your own as a last resort.</p>
         <div className="logo-grid">
           {logos.map((logo) => (
             <label key={logo.path} title={logo.name}>
@@ -209,10 +211,9 @@ function CompanyInputs({
           ))}
         </div>
         <label>
-          Or upload a new one. It is saved under the company name, and a replaced file is deleted.
+          Upload a new one. It is saved under the company name, and a replaced file is deleted. An upload wins over a pick above.
           <input name="logo" type="file" accept="image/svg+xml,image/png,image/webp" />
         </label>
-        <LobeLogoPicker ids={lobeIds} />
       </fieldset>
     </>
   );

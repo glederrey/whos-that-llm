@@ -127,11 +127,13 @@ function finishCompany(notice: string | null) {
 }
 
 function companyFields(formData: FormData) {
+  // A LobeHub logo comes first: when one is named, the upload and the other picks are ignored.
+  const lobe = text(formData, "lobeLogo").trim().toLowerCase();
   return {
     name: text(formData, "name"),
     origin: text(formData, "origin"),
-    logo: formData.get("logo") instanceof File ? (formData.get("logo") as File) : null,
-    logoPath: text(formData, "lobeLogo") ? lobePath(text(formData, "lobeLogo")) : text(formData, "logoPath"),
+    logo: !lobe && formData.get("logo") instanceof File ? (formData.get("logo") as File) : null,
+    logoPath: lobe ? lobePath(lobe) : text(formData, "logoPath"),
   };
 }
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { Fragment, useEffect, useRef, useState } from "react";
+import { LogoImage } from "./logo-image";
 import { Twemoji } from "./twemoji";
 
 function useReducedMotion() {
@@ -206,7 +207,7 @@ export function HomeDemo({ rounds }: { rounds: HomeDemoRound[] }) {
           <div className="candidates demo-list" data-on={listing}>
             {shown.candidates.map((model) => (
               <div key={model.id} className="candidate demo-cand" data-hot={phase === "pick" && model.id === shown.pickId}>
-                <img src={model.logoUrl} alt="" width={28} height={28} />
+                <LogoImage src={model.logoUrl} width={28} height={28} />
                 <span>
                   {model.companyName}
                   <br />
@@ -240,7 +241,7 @@ export function HomeDemo({ rounds }: { rounds: HomeDemoRound[] }) {
             <h3>Guesses</h3>
             {results.map(({ turn: row, pick: model, key }) => (
               <div key={key} className="picked demo-picked" data-right={row.right}>
-                <img src={model.logoUrl} alt="" width={24} height={24} />
+                <LogoImage src={model.logoUrl} width={24} height={24} />
                 <span>{model.name}</span>
               </div>
             ))}

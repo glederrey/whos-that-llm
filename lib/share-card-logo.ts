@@ -1,5 +1,5 @@
 import sharp from "sharp";
-import { isMonoLobe, lobeIdOf } from "./lobe-logo";
+import { lobeIdOf, lobeSvgForTheme } from "./lobe-logo";
 import { readLobeSvg } from "./lobe-logo-files";
 import { logoPublicUrl, readLogo } from "./logos";
 import { publicEnv } from "./supabase/env";
@@ -47,7 +47,7 @@ function publicLogo(path: string): string | null {
 async function readLobeCardLogo(id: string, theme: "light" | "dark"): Promise<string | null> {
   const svg = await readLobeSvg(id);
   if (!svg) return null;
-  const colored = isMonoLobe(id) ? svg.replaceAll("currentColor", theme === "dark" ? "#f5f5f5" : "#111111") : svg;
+  const colored = lobeSvgForTheme(svg, theme);
   try {
     const png = await sharp(Buffer.from(colored), { density: 384 }).resize(256, 256, { fit: "contain", background: { r: 0, g: 0, b: 0, alpha: 0 } }).png().toBuffer();
     return `data:image/png;base64,${png.toString("base64")}`;
