@@ -1,6 +1,6 @@
 import { modelIdFromOpenRouter, validOpenRouterId } from "./admin-model";
 import { dollarsPerMillion } from "./list-price";
-import { companyForModel, companyForOrg, normalOrg, releasedOnFromCreated, type CompanyChoice } from "./openrouter-draft";
+import { companyForModel, companyForOrg, modelDisplayName, normalOrg, releasedOnFromCreated, type CompanyChoice } from "./openrouter-draft";
 import type { RosterRow } from "./roster-row";
 import { lowReasoningSettings, reasoningSettingsNeeded } from "./provider-check";
 
@@ -266,7 +266,7 @@ function byNewest(a: CatalogModel, b: CatalogModel): number {
 function cardOf(model: CatalogModel): NewModelCard {
   return {
     id: model.id,
-    name: model.name.trim() || model.id,
+    name: modelDisplayName(model.name) || model.id,
     description: model.description,
     releasedOn: releasedOnFromCreated(model.created) || null,
     inputUsdPerMtok: model.inputUsdPerMtok,
@@ -343,7 +343,7 @@ export function planCompanyModels(
   const isKnown = (model: CatalogModel) => [...identityKeys(model.id)].some((key) => known.has(key));
   return {
     add: mine.filter((model) => !isKnown(model)).map(cardOf),
-    onRoster: mine.filter(isKnown).map((model) => ({ id: model.id, name: model.name.trim() || model.id })),
+    onRoster: mine.filter(isKnown).map((model) => ({ id: model.id, name: modelDisplayName(model.name) || model.id })),
   };
 }
 

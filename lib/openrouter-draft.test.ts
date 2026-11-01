@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { companyForModel, companyForOrg, draftFromOpenRouter, releasedOnFromCreated, type CompanyChoice } from "./openrouter-draft";
+import { companyForModel, companyForOrg, draftFromOpenRouter, modelDisplayName, releasedOnFromCreated, type CompanyChoice } from "./openrouter-draft";
 
 const companies: CompanyChoice[] = [
   { id: "anthropic", name: "Anthropic", origin: "us" },
@@ -27,10 +27,18 @@ test("a draft fills name, a known company, and the date", () => {
     companies,
   );
   assert.deepEqual(draft, {
-    name: "Anthropic: Claude Opus 4.1",
+    name: "Claude Opus 4.1",
     companyId: "anthropic",
     releasedOn: "2025-08-05",
   });
+});
+
+test("the lab prefix is dropped from the display name", () => {
+  assert.equal(modelDisplayName("NVIDIA: Nemotron 3 Super"), "Nemotron 3 Super");
+  assert.equal(modelDisplayName("  Moonshot AI:Kimi K3 "), "Kimi K3");
+  assert.equal(modelDisplayName("Lab: Model: Extra"), "Model: Extra");
+  assert.equal(modelDisplayName("Hermes"), "Hermes");
+  assert.equal(modelDisplayName("Lab:"), "Lab:");
 });
 
 test("company is filled only when the org is one of ours", () => {
