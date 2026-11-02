@@ -8,7 +8,7 @@ import { ThemeInit } from "@/components/theme-init";
 import { sessionIsOwner } from "@/lib/admin-access";
 import { currentProfile } from "@/lib/session";
 import { SiteName, SiteTitle } from "@/components/site-title";
-import { crawlableFavicons, siteOrigin } from "@/lib/site";
+import { crawlableFavicons, homeDescription, siteOrigin, socialMetadata } from "@/lib/site";
 import "./globals.css";
 
 // Latin Roboto, vendored so the standalone release build never resolves Google Fonts.
@@ -41,8 +41,7 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteOrigin),
-  description:
-    "A guessing game for AI fans. Chat with a hidden LLM for ten messages and guess which model it is. Daily rounds, several game modes, and a public leaderboard.",
+  ...socialMetadata(homeDescription),
   icons: {
     icon: [
       ...crawlableFavicons,

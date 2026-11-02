@@ -1,3 +1,5 @@
+import type { Metadata } from "next";
+
 export const siteOrigin = "https://www.whos-that-llm.com";
 
 /** Keyboard apostrophe. Search cards read the title source as text. */
@@ -23,6 +25,27 @@ export function siteSocialTitleHtml(name = siteName): string {
     `<meta property="og:site_name" content="${attr}">`,
     `<meta name="twitter:title" content="${attr}">`,
   ].join("");
+}
+
+/** 1200x630 card: logo, name, and the pitch. */
+export const socialImage = { url: "/brand/og-card.png", width: 1200, height: 630 };
+
+/** The hero paragraph without the live model and company counts: the page description and the social card text. */
+export const homeDescription =
+  "Think you can tell AI models apart, like a wine? In this guessing game, a hidden LLM answers you. It could be ChatGPT, Claude, Gemini, or any of the models in play. You get ten messages to find which one it is, in one of several game modes.";
+
+/**
+ * Description for search, Open Graph, and Twitter cards. Next does not copy `description` into og:description,
+ * and a page's own `openGraph` replaces the layout's, so each page states it here.
+ * `path` is the page's own path and becomes og:url. The image is stated here too, because a page's `openGraph` drops the file-convention image. The titles stay raw HTML in `SiteTitle`.
+ */
+export function socialMetadata(description: string, path = "/"): Metadata {
+  const images = [{ url: socialImage.url, width: socialImage.width, height: socialImage.height, alt: siteName }];
+  return {
+    description,
+    openGraph: { type: "website", url: `${siteOrigin}${path}`, description, images },
+    twitter: { card: "summary_large_image", description, images },
+  };
 }
 
 /** Pages a searcher should find. Admin, API, auth, and per-game URLs stay out. */

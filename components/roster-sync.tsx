@@ -20,7 +20,7 @@ type Card =
   | { status: "availability"; result: AvailabilityResult }
   | { status: "search"; result: NewModelsResult; hidden: string[]; notice: AddModelsResult | null; picks: Record<string, ModelPick> };
 
-export function RosterSync({ companies }: { companies: { id: string; name: string }[] }) {
+export function RosterSync({ companies }: { companies: { id: string; name: string; logoUrl: string }[] }) {
   const cardRef = useRef<HTMLDivElement>(null);
   const [busy, setBusy] = useState<"availability" | "search" | "add" | null>(null);
   const [card, setCard] = useState<Card | null>(null);
@@ -220,6 +220,7 @@ function SearchCard({
                 className="button"
                 type="button"
                 disabled={adding || visible.length === 0 || !ready}
+                aria-busy={adding}
                 onClick={() => {
                   if (visible.length === 0 || !ready) return;
                   onAdd(
@@ -230,7 +231,14 @@ function SearchCard({
                   );
                 }}
               >
-                {adding ? "Adding…" : "Add models"}
+                {adding ? (
+                  <>
+                    <span className="spinner" aria-hidden="true" />
+                    Adding…
+                  </>
+                ) : (
+                  "Add models"
+                )}
               </button>
               <button className="button-quiet" type="button" popoverTarget="roster-sync-card" popoverTargetAction="hide">
                 Close

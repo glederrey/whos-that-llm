@@ -4,13 +4,11 @@ import { HomeBoard } from "@/components/home-board";
 import { config } from "@/lib/config";
 import { listGameModes, lobbyState } from "@/lib/rounds";
 import { currentProfile } from "@/lib/session";
+import { socialMetadata } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = {
-  description:
-    "Start a round. Daily, All models, Company, Category, Origin, and Custom are open. You have ten messages with a hidden model. Most modes ask you to name it; in Origin you get one guess at where it comes from.",
-};
+export const metadata: Metadata = socialMetadata("Start a round. Daily, All models, Company, Category, Origin, and Custom are open. You have ten messages with a hidden model. Most modes ask you to name it; in Origin you get one guess at where it comes from.", "/play");
 
 export default async function PlayPage() {
   const { user, username } = await currentProfile();

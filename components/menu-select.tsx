@@ -1,11 +1,34 @@
 "use client";
 
 import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
+import { CompanyLogo } from "./company-logo";
 
-export type MenuOption = { value: string; label: string };
+/** `logoUrl` puts a small logo before the label, in the list and on the button. */
+export type MenuOption = { value: string; label: string; logoUrl?: string };
+
+function OptionLabel({ option }: { option: MenuOption | undefined }) {
+  if (!option?.logoUrl) return <>{option?.label}</>;
+  return (
+    <span className="menu-option">
+      <CompanyLogo src={option.logoUrl} />
+      <span>{option.label}</span>
+    </span>
+  );
+}
 
 /** A dropdown that looks like the date picker. A native `<select>` list cannot be styled, so this draws its own. */
-export function MenuSelect({ value, options, onChange }: { value: string; options: MenuOption[]; onChange: (value: string) => void }) {
+export function MenuSelect({
+  value,
+  options,
+  onChange,
+  inline = false,
+}: {
+  value: string;
+  options: MenuOption[];
+  onChange: (value: string) => void;
+  /** Opens the list in the flow, pushing content down, for a picker inside a scrolling card that would clip a floating list. */
+  inline?: boolean;
+}) {
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(0);
   const root = useRef<HTMLDivElement>(null);
@@ -59,13 +82,13 @@ export function MenuSelect({ value, options, onChange }: { value: string; option
         onClick={() => (open ? setOpen(false) : show())}
         onKeyDown={onKeyDown}
       >
-        <span>{options[selected]?.label}</span>
+        <span><OptionLabel option={options[selected]} /></span>
         <svg viewBox="0 0 24 24" aria-hidden="true" data-open={open ? "true" : undefined}>
           <path d="m6 9 6 6 6-6" />
         </svg>
       </button>
       {open ? (
-        <ul id={list} className="range-pop menu-pop" role="listbox">
+        <ul id={list} className={inline ? "range-pop menu-pop menu-inline" : "range-pop menu-pop"} role="listbox">
           {options.map((option, index) => (
             <li
               key={option.value}
@@ -76,7 +99,7 @@ export function MenuSelect({ value, options, onChange }: { value: string; option
               onMouseEnter={() => setActive(index)}
               onClick={() => choose(index)}
             >
-              {option.label}
+              <OptionLabel option={option} />
             </li>
           ))}
         </ul>

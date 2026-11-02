@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { saveModel, setModelEnabled } from "@/app/admin/actions";
+import { useState, useTransition } from "react";
+import { saveModel, toggleModel } from "@/app/admin/actions";
 import { CompanyLogo } from "@/components/company-logo";
 import { ModelFields } from "@/components/model-fields";
 import { SaveButton } from "@/components/save-button";
@@ -283,20 +283,7 @@ function ModelRow({
       <td>
         <div className="roster-buttons">
           {row.available ? (
-            <form action={setModelEnabled}>
-              <RosterReturnFields
-                query={query}
-                sort={sort}
-                activePage={activePage}
-                inactivePage={inactivePage}
-                unavailablePage={unavailablePage}
-              />
-              <input type="hidden" name="id" value={row.id} />
-              <input type="hidden" name="enabled" value={row.enabled ? "0" : "1"} />
-              <button className={row.enabled ? "button-off" : "button-on"} type="submit">
-                {row.enabled ? "OFF" : "ON"}
-              </button>
-            </form>
+            <ModelToggle id={row.id} enabled={row.enabled} />
           ) : null}
           <button className="button-quiet" type="button" popoverTarget={panel}>
             Edit
@@ -345,5 +332,38 @@ function ModelRow({
         </div>
       </td>
     </tr>
+  );
+}
+
+/** Flips a model on or off in place. The page is not reloaded, so scroll, search, and pages stay as they are. */
+function ModelToggle({ id, enabled }: { id: string; enabled: boolean }) {
+  const [pending, startTransition] = useTransition();
+  const [error, setError] = useState("");
+  return (
+    <>
+      <button
+        className={enabled ? "button-off" : "button-on"}
+        type="button"
+        disabled={pending}
+        aria-busy={pending}
+        onClick={() =>
+          startTransition(async () => {
+            setError("");
+            try {
+              setError((await toggleModel(id, !enabled)) ?? "");
+            } catch {
+              setError("Could not save that model.");
+            }
+          })
+        }
+      >
+        {pending ? "…" : enabled ? "OFF" : "ON"}
+      </button>
+      {error ? (
+        <span className="error" role="alert">
+          {error}
+        </span>
+      ) : null}
+    </>
   );
 }

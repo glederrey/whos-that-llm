@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { lobePath } from "@/lib/lobe-logo";
-import { parseSize } from "@/lib/admin-model";
+import { parseSize, rosterNotice } from "@/lib/admin-model";
 import { requireOwner } from "@/lib/admin-access";
 import { parseDifficulty } from "@/lib/difficulty";
 import {
@@ -162,9 +162,15 @@ export async function saveModel(formData: FormData) {
   finish(formData, await updateRosterModel({ id: text(formData, "id"), ...fields(formData), reasoningOff: formData.get("reasoningOff") === "1" }));
 }
 
-export async function setModelEnabled(formData: FormData) {
+/** Turns a model on or off without leaving the page, so the list keeps its scroll position. Returns the notice text or null. */
+export async function toggleModel(id: string, enabled: boolean): Promise<string | null> {
   await requireOwner();
-  finish(formData, await setRosterEnabled(text(formData, "id"), text(formData, "enabled") === "1"));
+  if (typeof id !== "string" || typeof enabled !== "boolean") return rosterNotice("save");
+  const notice = await setRosterEnabled(id, enabled);
+  revalidatePath("/admin");
+  revalidatePath("/admin/models");
+  revalidatePath("/admin/categories");
+  return rosterNotice(notice ?? undefined);
 }
 
 export async function addCategory(formData: FormData) {
