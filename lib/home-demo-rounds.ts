@@ -54,9 +54,10 @@ function hintFor(key: HomeDemoHintKey | undefined, target: PublicModel): HomeDem
 
 /**
  * Builds the demo rounds from the live roster. A guess agrees with every hint shown so far, as a real player's would.
- * A round whose company has no model in the roster is left out.
+ * A round whose company has no model in the roster is left out. The order is shuffled on every call, so a visitor does not
+ * always open on the same example. Pass `random` to make it repeatable.
  */
-export function buildHomeDemoRounds(models: readonly PublicModel[]): HomeDemoRound[] {
+export function buildHomeDemoRounds(models: readonly PublicModel[], random: () => number = Math.random): HomeDemoRound[] {
   const rounds: HomeDemoRound[] = [];
   for (const steps of script) {
     const target = models.find((model) => model.companyName === steps[steps.length - 1].company);
@@ -92,5 +93,15 @@ export function buildHomeDemoRounds(models: readonly PublicModel[]): HomeDemoRou
       },
     });
   }
-  return rounds;
+  return shuffled(rounds, random);
+}
+
+/** Fisher-Yates on a copy. */
+export function shuffled<T>(items: readonly T[], random: () => number): T[] {
+  const result = [...items];
+  for (let index = result.length - 1; index > 0; index--) {
+    const swap = Math.floor(random() * (index + 1));
+    [result[index], result[swap]] = [result[swap], result[index]];
+  }
+  return result;
 }
