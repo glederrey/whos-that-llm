@@ -70,8 +70,9 @@ export function CompanyModelsSearch({ companies }: { companies: { id: string; na
       </button>
       <div id={panel} popover="auto" className="roster-edit card roster-sync-card roster-new-models">
         <h2>Models from a company</h2>
-        <div className="row">
+        <div className="company-search-row">
           <MenuSelect
+            inline
             value={companyId}
             onChange={setCompanyId}
             options={[{ value: "", label: "Choose a company" }, ...companies.map((company) => ({ value: company.id, label: company.name, logoUrl: company.logoUrl }))]}

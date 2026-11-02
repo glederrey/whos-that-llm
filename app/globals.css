@@ -1528,6 +1528,10 @@ html[data-theme="dark"] .md a { color: var(--teal); }
 }
 .menu-pop { width: max-content; min-width: 100%; max-height: 260px; overflow-y: auto; margin: 0; padding: 6px; gap: 2px; list-style: none; }
 .menu-pop li { padding: 8px 10px; border-radius: 8px; cursor: pointer; white-space: nowrap; }
+.menu-inline { position: static; width: 100%; max-width: none; margin-top: 6px; box-shadow: none; }
+.company-search-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: start; gap: 8px; margin-top: 12px; }
+.company-search-row .range-picker { grid-column: 1; }
+.company-search-row .button { grid-column: 2; grid-row: 1; height: 40px; }
 .menu-option { display: inline-flex; align-items: center; gap: 10px; min-width: 0; }
 .menu-option img { width: 20px; height: 20px; border-radius: 5px; flex: none; }
 .menu-option > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; }

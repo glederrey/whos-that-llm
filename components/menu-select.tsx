@@ -17,7 +17,18 @@ function OptionLabel({ option }: { option: MenuOption | undefined }) {
 }
 
 /** A dropdown that looks like the date picker. A native `<select>` list cannot be styled, so this draws its own. */
-export function MenuSelect({ value, options, onChange }: { value: string; options: MenuOption[]; onChange: (value: string) => void }) {
+export function MenuSelect({
+  value,
+  options,
+  onChange,
+  inline = false,
+}: {
+  value: string;
+  options: MenuOption[];
+  onChange: (value: string) => void;
+  /** Opens the list in the flow, pushing content down, for a picker inside a scrolling card that would clip a floating list. */
+  inline?: boolean;
+}) {
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(0);
   const root = useRef<HTMLDivElement>(null);
@@ -77,7 +88,7 @@ export function MenuSelect({ value, options, onChange }: { value: string; option
         </svg>
       </button>
       {open ? (
-        <ul id={list} className="range-pop menu-pop" role="listbox">
+        <ul id={list} className={inline ? "range-pop menu-pop menu-inline" : "range-pop menu-pop"} role="listbox">
           {options.map((option, index) => (
             <li
               key={option.value}
