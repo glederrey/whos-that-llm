@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { CategoryIcon } from "@/components/category-icon";
 import { CompanyLogo } from "@/components/company-logo";
@@ -126,6 +126,10 @@ export function HomeBoard({
   const [notice, setNotice] = useState("");
   const [resumeId, setResumeId] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  // The slot time is in the player's timezone, which the server does not know. Rendering it on the server
+  // would mismatch at hydration, and React then rebuilds <html> and drops the theme attribute.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
   const cards = lineup(gameModes);
   const left = Math.max(0, cap - played);
   const full = played >= cap;
@@ -135,7 +139,7 @@ export function HomeBoard({
   }
 
   function slotLabel() {
-    if (paused || !nextAt || played === 0) return null;
+    if (!mounted || paused || !nextAt || played === 0) return null;
     const when = localTime(nextAt);
     return left === 0 ? `Next one at ${when}` : `Adding a new game to the pool at ${when}`;
   }
