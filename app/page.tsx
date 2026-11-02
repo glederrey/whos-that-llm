@@ -14,14 +14,11 @@ import { groupByCompany, publicModels } from "@/lib/model-list";
 import { leaderboard, listBoardOptions, listGameModes, serviceOrThrow } from "@/lib/rounds";
 import { loadCatalog } from "@/lib/rounds-queries";
 import { currentProfile } from "@/lib/session";
-import { organizationJsonLd } from "@/lib/site";
+import { homeDescription, organizationJsonLd, socialMetadata } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = {
-  description:
-    "A guessing game for AI fans. Chat with a hidden LLM for ten messages and guess which model it is. Daily rounds, several game modes, and a public leaderboard.",
-};
+export const metadata: Metadata = socialMetadata(homeDescription);
 
 type HomeParams = { error?: string; gameMode?: string; period?: string; difficulty?: string; company?: string; category?: string };
 

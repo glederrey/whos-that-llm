@@ -7,13 +7,11 @@ import { anyDifficulty } from "@/lib/difficulty";
 import { boardChoice, boardHref, boardModes, boardPool, isPoolBoard, selectedCategory, selectedCompany } from "@/lib/board-query";
 import { leaderboard, listBoardOptions, listGameModes } from "@/lib/rounds";
 import { currentProfile } from "@/lib/session";
+import { socialMetadata } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = {
-  description:
-    "The highest scores from finished rounds. Choose a game mode, then this week, this month, or all time, and a difficulty or a company.",
-};
+export const metadata: Metadata = socialMetadata("The highest scores from finished rounds. Choose a game mode, then this week, this month, or all time, and a difficulty or a company.");
 
 const pageSize = 20;
 
