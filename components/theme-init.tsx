@@ -10,6 +10,11 @@ export function ThemeInit() {
     try {
       const stored = window.localStorage.getItem("theme");
       if (stored === "light" || stored === "dark") applyThemeColor(stored);
+      // A hydration error makes React rebuild <html> and drop data-theme; put it back.
+      if (!document.documentElement.dataset.theme) {
+        const dark = stored ? stored === "dark" : window.matchMedia("(prefers-color-scheme: dark)").matches;
+        document.documentElement.dataset.theme = dark ? "dark" : "light";
+      }
     } catch {}
   }, []);
   return (
