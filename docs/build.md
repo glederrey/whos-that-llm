@@ -115,7 +115,7 @@ The seed inserts missing ids and does not update a row whose `updated_at` is new
 
 ## Checks
 
-Run `npm run typecheck` and `npm test` before calling a change done. A round must not let the hidden model name itself, an empty successful reply still spends the message, and the total is never below 0. The token factor's only cap is `tokenCap`. A credit error sets `app_settings.paused`: after topping up on OpenRouter, clear it in the database. A GitHub Release deploys the release tag to Vercel.
+Run `npm run typecheck` and `npm test` before calling a change done. A round must not let the hidden model name itself, an empty successful reply still spends the message, and the total is never below 0. The token factor's only cap is `tokenCap`. A credit error sets `app_settings.paused`: after topping up on OpenRouter, clear it in the database. A GitHub Release deploys the release tag to Vercel. `vercel.json` pins the functions to `fra1` (Frankfurt), next to the production Supabase project in Zurich: a function far from the database pays a round trip on every query.
 
 ## Security headers and CI
 

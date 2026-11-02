@@ -70,11 +70,30 @@ export async function withCurrentLogos(client: SupabaseClient, traits: Traits): 
   return { ...traits, models };
 }
 
-export async function loadGame(client: SupabaseClient, gameId: string, userId: string): Promise<GameRow | null> {
+/**
+ * `logos: false` skips the extra read of current logos. Only display needs them,
+ * so write paths (guess, hint, give up) turn them off.
+ */
+export async function loadGame(
+  client: SupabaseClient,
+  gameId: string,
+  userId: string,
+  options: { logos?: boolean } = {},
+): Promise<GameRow | null> {
   const { data, error } = await client.from("games").select("*").eq("id", gameId).eq("user_id", userId).maybeSingle();
   if (error) throw new Error(error.message);
-  const game = (data as GameRow | null) ?? null;
-  return game ? { ...game, traits: await withCurrentLogos(client, presentTraits(game.traits)), rules: currentRules(game.rules), hints: playableHints(game.hints) } : null;
+  return rowWithTraits(client, (data as GameRow | null) ?? null, options.logos !== false);
+}
+
+export async function rowWithTraits(client: SupabaseClient, game: GameRow | null, logos: boolean): Promise<GameRow | null> {
+  if (!game) return null;
+  const traits = presentTraits(game.traits);
+  return {
+    ...game,
+    traits: logos ? await withCurrentLogos(client, traits) : traits,
+    rules: currentRules(game.rules),
+    hints: playableHints(game.hints),
+  };
 }
 
 export async function scoreFrom(client: SupabaseClient, game: GameRow, guesses: GuessFlags[], namedModel: boolean) {
