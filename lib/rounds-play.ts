@@ -15,7 +15,7 @@ import {
 } from "./game";
 import { roundContext } from "./prompt";
 import { serviceOrThrow } from "./rounds-db";
-import { loadGame, rpc, scoreFrom } from "./rounds-queries";
+import { loadGame, rowWithTraits, rpc, scoreFrom } from "./rounds-queries";
 import { guessFinish } from "./rounds-score";
 import {
   fail,
@@ -23,15 +23,15 @@ import {
   guessFlags,
   previousGuesses,
   recordedGuesses,
+  type GameRow,
   sortTranscript,
   type ApiFailure,
 } from "./rounds-shape";
 
 export async function readPublicGame(gameId: string, userId: string): Promise<PublicGame | null> {
   const client = serviceOrThrow();
-  const game = await loadGame(client, gameId, userId);
-  if (!game) return null;
-  const [{ data: messages }, { data: guesses }] = await Promise.all([
+  const [{ data: row, error }, { data: messages }, { data: guesses }] = await Promise.all([
+    client.from("games").select("*").eq("id", gameId).eq("user_id", userId).maybeSingle(),
     client.from("messages").select("turn, role, content").eq("game_id", gameId).order("turn").order("role"),
     client
       .from("guesses")
@@ -39,6 +39,9 @@ export async function readPublicGame(gameId: string, userId: string): Promise<Pu
       .eq("game_id", gameId)
       .order("turn"),
   ]);
+  if (error) throw new Error(error.message);
+  const game = await rowWithTraits(client, (row as GameRow | null) ?? null, true);
+  if (!game) return null;
   const recorded = recordedGuesses(guesses ?? []);
   const guessedModelIds = recorded
     .map((guess) => guess.modelId)
@@ -67,7 +70,7 @@ export async function readPublicGame(gameId: string, userId: string): Promise<Pu
 
 export async function hiddenCall(gameId: string, userId: string) {
   const client = serviceOrThrow();
-  const game = await loadGame(client, gameId, userId);
+  const game = await loadGame(client, gameId, userId, { logos: false });
   if (!game) return null;
   const { data, error } = await client
     .from("models")
@@ -149,14 +152,16 @@ export async function abortReply(gameId: string, userId: string, pause: boolean)
 
 export async function submitGuess(gameId: string, userId: string, modelId: string): Promise<ApiFailure | null> {
   const client = serviceOrThrow();
-  const game = await loadGame(client, gameId, userId);
+  const [game, { data: guesses }] = await Promise.all([
+    loadGame(client, gameId, userId, { logos: false }),
+    client
+      .from("guesses")
+      .select("guessed_model_id, guessed_origin, model_correct, company_correct, origin_correct")
+      .eq("game_id", gameId),
+  ]);
   if (!game) return fail(404, "not_found");
   if (!game.awaiting_guess || game.status !== "active") return fail(409, "turn");
 
-  const { data: guesses } = await client
-    .from("guesses")
-    .select("guessed_model_id, guessed_origin, model_correct, company_correct, origin_correct")
-    .eq("game_id", gameId);
   const previous = previousGuesses(guesses ?? []);
   const guessedModelIds = previous
     .map((guess) => guess.modelId)
@@ -216,7 +221,7 @@ export async function submitGuess(gameId: string, userId: string, modelId: strin
 /** Origin guess: one origin. Right ends the round solved, wrong ends it missed. No score. */
 export async function submitOriginGuess(gameId: string, userId: string, origin: string): Promise<ApiFailure | null> {
   const client = serviceOrThrow();
-  const game = await loadGame(client, gameId, userId);
+  const game = await loadGame(client, gameId, userId, { logos: false });
   if (!game) return fail(404, "not_found");
   if (game.game_mode !== "origin" || !game.awaiting_guess || game.status !== "active") return fail(409, "turn");
   const hidden = game.traits.models[game.model_id];
@@ -236,7 +241,7 @@ export async function buyHint(gameId: string, userId: string, key: string): Prom
   const hint = playableHints([key])[0];
   if (!hint) return fail(422, "hint");
   const client = serviceOrThrow();
-  const game = await loadGame(client, gameId, userId);
+  const game = await loadGame(client, gameId, userId, { logos: false });
   if (!game) return fail(404, "not_found");
   if (!hintAllowedForMode(game.game_mode, hint)) return fail(422, "hint");
   const hidden = game.traits.models[game.model_id];
@@ -260,7 +265,7 @@ export async function buyHint(gameId: string, userId: string, key: string): Prom
 
 export async function giveUp(gameId: string, userId: string): Promise<ApiFailure | null> {
   const client = serviceOrThrow();
-  const game = await loadGame(client, gameId, userId);
+  const game = await loadGame(client, gameId, userId, { logos: false });
   if (!game) return fail(404, "not_found");
   if (game.status !== "active") return fail(409, "turn");
   let score: number | null = null;
