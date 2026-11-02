@@ -30,9 +30,9 @@ export function siteSocialTitleHtml(name = siteName): string {
 /** 1200x630 card: logo, name, and the pitch. */
 export const socialImage = { url: "/brand/og-card.png", width: 1200, height: 630 };
 
-/** The one-paragraph pitch: the page description and the social card text. */
+/** The hero paragraph without the live model and company counts: the page description and the social card text. */
 export const homeDescription =
-  "A guessing game for AI fans. Chat with a hidden LLM for ten messages and guess which model it is. Daily rounds, several game modes, and a public leaderboard.";
+  "Think you can tell AI models apart, like a wine? In this guessing game, a hidden LLM answers you. It could be ChatGPT, Claude, Gemini, or any of the models in play. You get ten messages to find which one it is, in one of several game modes.";
 
 /**
  * Description for search, Open Graph, and Twitter cards. Next does not copy `description` into og:description,
