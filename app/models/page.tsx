@@ -7,7 +7,7 @@ import { socialMetadata } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = socialMetadata("Every language model you can meet in Who's that LLM?, with its company, origin, release year, and size, and a link to OpenRouter.");
+export const metadata: Metadata = socialMetadata("Every language model you can meet in Who's that LLM?, with its company, origin, release year, and size, and a link to OpenRouter.", "/models");
 
 export default async function ModelsPage() {
   const models = publicModels(await loadCatalog(serviceOrThrow()));

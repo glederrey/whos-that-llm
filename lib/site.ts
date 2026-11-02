@@ -37,13 +37,13 @@ export const homeDescription =
 /**
  * Description for search, Open Graph, and Twitter cards. Next does not copy `description` into og:description,
  * and a page's own `openGraph` replaces the layout's, so each page states it here.
- * The image is stated here too, because a page's `openGraph` drops the file-convention image. The titles stay raw HTML in `SiteTitle`.
+ * `path` is the page's own path and becomes og:url. The image is stated here too, because a page's `openGraph` drops the file-convention image. The titles stay raw HTML in `SiteTitle`.
  */
-export function socialMetadata(description: string): Metadata {
+export function socialMetadata(description: string, path = "/"): Metadata {
   const images = [{ url: socialImage.url, width: socialImage.width, height: socialImage.height, alt: siteName }];
   return {
     description,
-    openGraph: { type: "website", description, images },
+    openGraph: { type: "website", url: `${siteOrigin}${path}`, description, images },
     twitter: { card: "summary_large_image", description, images },
   };
 }

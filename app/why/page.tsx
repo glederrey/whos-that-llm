@@ -3,7 +3,7 @@ import { config } from "@/lib/config";
 import { SiteName } from "@/components/site-title";
 import { socialMetadata } from "@/lib/site";
 
-export const metadata: Metadata = socialMetadata("The reason for the game, the data a round stores, and who runs it. It asks whether people can tell language models apart.");
+export const metadata: Metadata = socialMetadata("The reason for the game, the data a round stores, and who runs it. It asks whether people can tell language models apart.", "/why");
 
 export default function WhyPage() {
   return (

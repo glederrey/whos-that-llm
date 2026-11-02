@@ -5,7 +5,7 @@ import { socialMetadata } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = socialMetadata("Figures from played rounds: how often players solve, give up, or miss, and which hidden models are the hardest to name.");
+export const metadata: Metadata = socialMetadata("Figures from played rounds: how often players solve, give up, or miss, and which hidden models are the hardest to name.", "/statistics");
 
 export default async function StatisticsPage() {
   const { stats, names, origins } = await loadPublicStats();

@@ -11,7 +11,7 @@ import { socialMetadata } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = socialMetadata("The highest scores from finished rounds. Choose a game mode, then this week, this month, or all time, and a difficulty or a company.");
+export const metadata: Metadata = socialMetadata("The highest scores from finished rounds. Choose a game mode, then this week, this month, or all time, and a difficulty or a company.", "/leaderboard");
 
 const pageSize = 20;
 

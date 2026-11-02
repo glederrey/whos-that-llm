@@ -5,7 +5,7 @@ import { socialMetadata } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = socialMetadata("How a round is scored, from the base through penalties, tokens, the no-hint bonus, and the difficulty multiplier, with one example.");
+export const metadata: Metadata = socialMetadata("How a round is scored, from the base through penalties, tokens, the no-hint bonus, and the difficulty multiplier, with one example.", "/scoring");
 
 const n = (value: number) => value.toLocaleString("en-US");
 
