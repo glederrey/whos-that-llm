@@ -2,7 +2,7 @@ import { RosterBrowser } from "@/components/roster-browser";
 import { RosterSync } from "@/components/roster-sync";
 import { SectionNav } from "@/components/section-nav";
 import { rosterNotice } from "@/lib/admin-model";
-import { loadRoster, type RosterRow } from "@/lib/admin-roster";
+import { loadCompanyList, loadRoster, type RosterRow } from "@/lib/admin-roster";
 import { loadOpenRouterCatalog } from "@/lib/openrouter-catalog";
 import { pageOf, rosterSortOf, searchRoster, sortRoster } from "@/lib/roster-list";
 import { withListPrices } from "@/lib/roster-sync";
@@ -10,13 +10,15 @@ import { requireOwner } from "@/lib/admin-access";
 
 export const dynamic = "force-dynamic";
 
-/** Changes when a saved model changes, so the browser list is replaced by the database roster. */
+/**
+ * Changes when a saved model changes, so the browser list is replaced by the database roster.
+ * `enabled` is left out on purpose: turning a model on or off updates the rows in place and keeps the search and pages.
+ */
 function rosterStamp(rows: RosterRow[]): string {
   return rows
     .map((row) =>
       [
         row.id,
-        row.enabled ? "1" : "0",
         row.available ? "1" : "0",
         row.name,
         row.openrouterId,
@@ -43,7 +45,7 @@ export default async function ModelsPage({
   await requireOwner();
   const params = await searchParams;
   const notice = rosterNotice(params.notice);
-  const [roster, catalog] = await Promise.all([loadRoster(), loadOpenRouterCatalog()]);
+  const [roster, catalog, companyList] = await Promise.all([loadRoster(), loadOpenRouterCatalog(), loadCompanyList()]);
   const { companies, categories } = roster;
   // Prices are not stored. When OpenRouter does not answer, the roster still renders with "—".
   const rows = withListPrices(roster.rows, catalog.ok ? catalog.models : null);
@@ -71,7 +73,7 @@ export default async function ModelsPage({
           {notice}
         </p>
       ) : null}
-      <RosterSync companies={companies.map((company) => ({ id: company.id, name: company.name }))} />
+      <RosterSync companies={companyList.map((company) => ({ id: company.id, name: company.name, logoUrl: company.logoUrl }))} />
       <RosterBrowser
         key={rosterStamp(rows)}
         rows={rows}

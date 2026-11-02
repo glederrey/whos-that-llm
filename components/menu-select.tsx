@@ -1,8 +1,20 @@
 "use client";
 
 import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
+import { CompanyLogo } from "./company-logo";
 
-export type MenuOption = { value: string; label: string };
+/** `logoUrl` puts a small logo before the label, in the list and on the button. */
+export type MenuOption = { value: string; label: string; logoUrl?: string };
+
+function OptionLabel({ option }: { option: MenuOption | undefined }) {
+  if (!option?.logoUrl) return <>{option?.label}</>;
+  return (
+    <span className="menu-option">
+      <CompanyLogo src={option.logoUrl} />
+      <span>{option.label}</span>
+    </span>
+  );
+}
 
 /** A dropdown that looks like the date picker. A native `<select>` list cannot be styled, so this draws its own. */
 export function MenuSelect({ value, options, onChange }: { value: string; options: MenuOption[]; onChange: (value: string) => void }) {
@@ -59,7 +71,7 @@ export function MenuSelect({ value, options, onChange }: { value: string; option
         onClick={() => (open ? setOpen(false) : show())}
         onKeyDown={onKeyDown}
       >
-        <span>{options[selected]?.label}</span>
+        <span><OptionLabel option={options[selected]} /></span>
         <svg viewBox="0 0 24 24" aria-hidden="true" data-open={open ? "true" : undefined}>
           <path d="m6 9 6 6 6-6" />
         </svg>
@@ -76,7 +88,7 @@ export function MenuSelect({ value, options, onChange }: { value: string; option
               onMouseEnter={() => setActive(index)}
               onClick={() => choose(index)}
             >
-              {option.label}
+              <OptionLabel option={option} />
             </li>
           ))}
         </ul>

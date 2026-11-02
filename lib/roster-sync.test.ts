@@ -414,7 +414,8 @@ test("the model page loads live prices and keeps availability apart", () => {
   const browser = fs.readFileSync(path.join(root, "components/roster-browser.tsx"), "utf8");
   assert.match(browser, /searchRoster\(rows, query\)/);
   assert.match(browser, /action=\{saveModel\}/);
-  assert.match(browser, /action=\{setModelEnabled\}/);
+  assert.match(browser, /toggleModel\(id, !enabled\)/);
+  assert.doesNotMatch(browser, /setModelEnabled/);
   assert.doesNotMatch(browser, /useState\(rows\)|admin-roster|method="get"/);
   assert.match(actions, /revalidatePath\("\/admin\/models"\)/);
   assert.match(actions, /redirect\(/);
