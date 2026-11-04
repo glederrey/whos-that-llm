@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import { config } from "@/lib/config";
 import { upcomingMessageNumber, type PublicGame } from "@/lib/game";
 import { filterCandidates, hintShown as roundHintShown } from "@/lib/round-view";
@@ -95,7 +95,12 @@ export function RoundBoard({ initial }: { initial: PublicGame }) {
                 </strong>
                 <span className="round-pool muted">
                   <span className="round-pool-sep"> · </span>
-                  {game.poolLabel}
+                  {game.poolLabel.split(" · ").map((part, index) => (
+                    <Fragment key={part}>
+                      {index ? <span className="round-dot"> · </span> : null}
+                      {part}
+                    </Fragment>
+                  ))}
                   {game.noHint ? <span className="pill">No hints</span> : null}
                 </span>
               </span>

@@ -168,6 +168,7 @@ Always visible.
 
 - `Message 2 of 10`. Before the first send: `Message 1 of 10` with the input empty, so the cap is there before they type.
 - Pool label: `All models · Easy`, `Daily · Easy`, `Company · Anthropic`, `Origin`, `Custom`
+- On a phone the counter and the pool label sit on two lines, the pips under them, and **Guess** and **Give up** are centered on the right across both rows. The dots in the label have a little room on each side.
 - **No hints** when the box was checked
 - **Give up**. Asks **End the round? You will see the model. This round stays off the leaderboard.** Buttons **Keep playing** and **Give up**.
 
