@@ -141,7 +141,7 @@ button { cursor: pointer; }
   gap: 12px;
   height: 40px;
   color: var(--text);
-  font-size: 20px;
+  font-size: 24px;
   font-weight: 700;
   letter-spacing: -0.01em;
   text-decoration: none;
