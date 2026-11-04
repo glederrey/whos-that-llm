@@ -2486,8 +2486,8 @@ html[data-theme="dark"] .home-mark { color: var(--teal); }
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--mute);
-  /* The head sits on the baseline (4.7px up a 18px line); the antennas rise above the line. */
-  background: no-repeat left 0 bottom 4.7px / auto 20px url("/brand/bot-ink-eyes.png");
+  /* The head (14.8px) is centered on the caps (9.1px up a 18px line); the antennas rise above the line. */
+  background: no-repeat left 0 bottom 1.7px / auto 20px url("/brand/bot-ink-eyes.png");
 }
 .reply-block .bubble.assistant { margin-top: 24px; }
 /* The robot from the logo: ink eyes on the light canvas, paper eyes on the dark one. */

@@ -53,7 +53,7 @@ Who's that LLM? is a chat game: a hidden model answers, the player has ten messa
 ## Iconography
 
 - Line icons at 18px, 2px stroke, round caps, `currentColor`: check, cross, send, search, the nav set. The current site draws its own inline SVGs; keep that.
-- The logo's robot, cut out with its antennas (`bot-ink-eyes.png` in light, `bot-paper-eyes.png` in dark, 20px tall), marks the hidden model's speaker line. Its head sits on the label's baseline; the antennas rise into the gap above.
+- The logo's robot, cut out with its antennas (`bot-ink-eyes.png` in light, `bot-paper-eyes.png` in dark, 20px tall), marks the hidden model's speaker line. Its head is centered on the label's capitals; the antennas rise into the gap above.
 - Company logos appear only after a round ends and in the guess picker, inside a 28px `radius-control` tile on `surface-sunk`.
 - No emoji as icons.
 
