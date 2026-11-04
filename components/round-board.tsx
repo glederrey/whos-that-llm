@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import { config } from "@/lib/config";
 import { upcomingMessageNumber, type PublicGame } from "@/lib/game";
 import { filterCandidates, hintShown as roundHintShown } from "@/lib/round-view";
@@ -57,6 +57,7 @@ export function RoundBoard({ initial }: { initial: PublicGame }) {
   const hintsOpen = game.hintsAllowed && !game.noHint;
   const showBoard = !game.noHint && game.gameMode !== "origin";
   const selectedRow = game.candidates.find((row) => row.id === selected) ?? null;
+  const companyValue = given.get("company") ?? (game.feedback?.company === "match" ? game.feedback.companyValue : null) ?? game.hints.company;
 
   function hintShown(key: "year" | "size") {
     return roundHintShown(game.hints, new Set(given.keys()), key);
@@ -94,7 +95,12 @@ export function RoundBoard({ initial }: { initial: PublicGame }) {
                 </strong>
                 <span className="round-pool muted">
                   <span className="round-pool-sep"> · </span>
-                  {game.poolLabel}
+                  {game.poolLabel.split(" · ").map((part, index) => (
+                    <Fragment key={part}>
+                      {index ? <span className="round-dot"> · </span> : null}
+                      {part}
+                    </Fragment>
+                  ))}
                   {game.noHint ? <span className="pill">No hints</span> : null}
                 </span>
               </span>
@@ -140,7 +146,8 @@ export function RoundBoard({ initial }: { initial: PublicGame }) {
           <section className="card feedback">
             <TraitLine
               label="Company"
-              value={given.get("company") ?? (game.feedback?.company === "match" ? game.feedback.companyValue : null) ?? game.hints.company}
+              value={companyValue}
+              logo={companyValue ? game.candidates.find((row) => row.companyName === companyValue)?.logoPath : null}
               reveal={purchasable("company")}
             />
             <TraitLine

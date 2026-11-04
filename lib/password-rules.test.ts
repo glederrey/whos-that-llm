@@ -65,7 +65,7 @@ test("a met rule turns green and an unmet rule stays grey", () => {
   assert.match(block, /\.must-contain li\[data-met="true"\] \{ color: #0b6b2e; font-family: var\(--font-bold\), var\(--font\), "Segoe UI", sans-serif; font-weight: 700; \}/);
   assert.match(block, /html\[data-theme="dark"\] \.must-contain li\[data-met="true"\] \{ color: #4cce7a; font-family: var\(--font-bold\), var\(--font\), "Segoe UI", sans-serif; font-weight: 700; \}/);
   const layout = fs.readFileSync(path.join(root, "app/layout.tsx"), "utf8");
-  assert.match(layout, /roboto-latin-700\.woff2/);
+  assert.match(layout, /src: "\.\/fonts\/instrument-sans-latin\.woff2",\n  weight: "700"/);
   assert.match(layout, /variable: "--font-bold"/);
   const container = block.match(/\.must-contain \{[^}]*\}/)?.[0] ?? "";
   assert.equal(container.includes("padding-left"), false);

@@ -32,7 +32,7 @@ export const socialImage = { url: "/brand/og-card.png", width: 1200, height: 630
 
 /** The hero paragraph without the live model and company counts: the page description and the social card text. */
 export const homeDescription =
-  "Think you can tell AI models apart, like a wine? In this guessing game, a hidden LLM answers you. It could be ChatGPT, Claude, Gemini, or any of the models in play. You get ten messages to find which one it is, in one of several game modes.";
+  "Think you can tell AI models apart, like a wine? A hidden LLM answers you: ChatGPT, Claude, Gemini, or any of the models in play. You have ten messages to name it, in one of several game modes.";
 
 /**
  * Description for search, Open Graph, and Twitter cards. Next does not copy `description` into og:description,

@@ -1,5 +1,6 @@
 import { Twemoji } from "@/components/twemoji";
 import type { OriginChoice } from "@/lib/game";
+import { noGuess } from "@/lib/share-card";
 
 /** The left block of an Origin score card: the guess, and the real origin when the guess missed or the player gave up. */
 export function OriginGuess({
@@ -16,13 +17,13 @@ export function OriginGuess({
   return (
     <div className="origin-guess">
       <p className="score-label">{label}</p>
-      <p className="score origin-pick">
+      <p className={guessed ? "score origin-pick" : "score origin-pick no-score"}>
         {guessed ? (
           <>
             <Twemoji emoji={guessed.flag} /> {guessed.name}
           </>
         ) : (
-          "—"
+          noGuess
         )}
       </p>
       {correct ? null : (

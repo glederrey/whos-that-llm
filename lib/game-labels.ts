@@ -1,6 +1,7 @@
 import type { Rules } from "./config";
 import { difficultyLabel, type Difficulty } from "./difficulty";
 import type { FrozenModel, HintKey, PublicGame, Origin, ScoreInput, Size, TraitKey, Traits } from "./game";
+import { formatThousands } from "./number-format";
 
 /** Name of a built-in origin. An origin an admin added shows its id until the round's frozen name is used. */
 export function originLabel(origin: Origin): string {
@@ -39,11 +40,11 @@ export function poolSizeFrom(ids: unknown): number | null {
 }
 
 export function formatInt(value: number): string {
-  return Math.trunc(value).toLocaleString("en-US");
+  return formatThousands(value);
 }
 
 export function formatStepNumber(value: number): string {
-  return Math.trunc(value).toLocaleString("en-US");
+  return formatThousands(value);
 }
 
 export function formatFactor(value: number): string {

@@ -31,9 +31,9 @@ export type HomeDemoTurn = {
   pickId: string;
   right: boolean;
   /** A hint revealed before this guess. */
-  hint?: { key: HomeDemoHintKey; value: string; flag?: string };
+  hint?: { key: HomeDemoHintKey; value: string; flag?: string; logo?: string };
 };
-export type HomeDemoFacts = Record<HomeDemoHintKey, { value: string; flag?: string }>;
+export type HomeDemoFacts = Record<HomeDemoHintKey, { value: string; flag?: string; logo?: string }>;
 /** `facts` describe the hidden model: all of them show once it is found. */
 export type HomeDemoRound = { turns: HomeDemoTurn[]; facts: HomeDemoFacts };
 
@@ -132,6 +132,8 @@ export function HomeDemo({ rounds }: { rounds: HomeDemoRound[] }) {
   const picked = reduced || phase === "reveal";
   const query = reduced || picked ? "" : shown.query.slice(0, typed);
   const listing = !picked && typed >= 2;
+  // Pips: earlier messages are sent, and this one once its question is out.
+  const sent = t + (reduced || phase !== "ask" ? 1 : 0);
 
   // Content stays top-aligned and scrolls up (with the fade) once it no longer fits.
   useEffect(() => {
@@ -144,7 +146,7 @@ export function HomeDemo({ rounds }: { rounds: HomeDemoRound[] }) {
 
   // Hints revealed so far: earlier turns always, this turn once the guess starts.
   const hintsOut = reduced || (phase === "hint" && hintOn) || phase === "search" || phase === "pick" || phase === "reveal";
-  const revealed = new Map<HomeDemoHintKey, { value: string; flag?: string }>();
+  const revealed = new Map<HomeDemoHintKey, { value: string; flag?: string; logo?: string }>();
   current.turns.forEach((row, index) => {
     if (row.hint && (index < t || (index === t && hintsOut))) revealed.set(row.hint.key, row.hint);
   });
@@ -164,7 +166,12 @@ export function HomeDemo({ rounds }: { rounds: HomeDemoRound[] }) {
   return (
     <div className="card demo demo-search" role="img" aria-label="An example round">
       <div className="demo-head" aria-hidden="true">
-        <strong>Message {t + 1} of 10</strong>
+        <strong className="demo-count">Message {t + 1} of 10</strong>
+        <span className="progress">
+          {Array.from({ length: 10 }, (_, index) => (
+            <i key={index} className={index < sent ? "on" : index === sent ? "now" : undefined} />
+          ))}
+        </span>
       </div>
       <div className="demo-chat" ref={chatRef} data-scrolled={overflow} aria-hidden="true">
         {current.turns.slice(0, t + 1).map((row, index) => {
@@ -220,31 +227,36 @@ export function HomeDemo({ rounds }: { rounds: HomeDemoRound[] }) {
         <div className="demo-cols">
           <div className="demo-hints">
             <h3>Hints</h3>
-            {hintRows.map(({ key, label }) => {
-              const hint = revealed.get(key);
-              return (
-                <p className="demo-hint" key={key} data-on={Boolean(hint)} data-flash={phase === "hint" && !hintOn && shown.hint?.key === key}>
-                  <span>{label}</span>
-                  {hint ? (
-                    <b>
-                      {hint.flag ? <Twemoji emoji={hint.flag} /> : null}
-                      {hint.value}
-                    </b>
-                  ) : (
-                    <i>Reveal</i>
-                  )}
-                </p>
-              );
-            })}
+            <div className="demo-tiles">
+              {hintRows.map(({ key, label }) => {
+                const hint = revealed.get(key);
+                return (
+                  <p className={hint ? "trait hit" : "trait"} key={key} data-flash={phase === "hint" && !hintOn && shown.hint?.key === key}>
+                    <span>{label}</span>
+                    {hint ? (
+                      <span className="trait-value">
+                        {hint.flag ? <Twemoji emoji={hint.flag} /> : null}
+                        {hint.logo ? <LogoImage src={hint.logo} width={16} height={16} /> : null}
+                        {hint.value}
+                      </span>
+                    ) : (
+                      <i>Reveal</i>
+                    )}
+                  </p>
+                );
+              })}
+            </div>
           </div>
           <div className="demo-results">
             <h3>Guesses</h3>
-            {results.map(({ turn: row, pick: model, key }) => (
-              <div key={key} className="picked demo-picked" data-right={row.right}>
-                <LogoImage src={model.logoUrl} width={24} height={24} />
-                <span>{model.name}</span>
-              </div>
-            ))}
+            <div className="demo-picks">
+              {results.map(({ turn: row, pick: model, key }) => (
+                <div key={key} className="picked demo-picked" data-right={row.right}>
+                  <LogoImage src={model.logoUrl} width={24} height={24} />
+                  <span>{model.name}</span>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>

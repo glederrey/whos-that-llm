@@ -11,31 +11,42 @@ import { SiteName, SiteTitle } from "@/components/site-title";
 import { crawlableFavicons, homeDescription, siteOrigin, socialMetadata } from "@/lib/site";
 import "./globals.css";
 
-// Latin Roboto, vendored so the standalone release build never resolves Google Fonts.
-// The regular file covers 400, 500, and the site-wide 700 face. A separate bold
-// cut is exposed as --font-bold for text that needs to look heavier.
+// Latin faces, vendored so the standalone release build never resolves Google Fonts (all OFL).
+// Instrument Sans is the text face; --font-bold keeps its name for text that needs to look heavier.
+// Roboto sets titles and the score; JetBrains Mono sets counters and labels.
 const font = localFont({
-  src: [
-    { path: "./fonts/roboto-latin.woff2", weight: "400", style: "normal" },
-    { path: "./fonts/roboto-latin.woff2", weight: "500", style: "normal" },
-    { path: "./fonts/roboto-latin.woff2", weight: "700", style: "normal" },
-  ],
+  src: "./fonts/instrument-sans-latin.woff2",
+  weight: "400 700",
   display: "swap",
   variable: "--font",
 });
 const fontBold = localFont({
-  src: "./fonts/roboto-latin-700.woff2",
+  src: "./fonts/instrument-sans-latin.woff2",
   weight: "700",
   display: "swap",
   variable: "--font-bold",
+});
+const fontDisplay = localFont({
+  src: "./fonts/roboto-latin.woff2",
+  weight: "100 900",
+  display: "swap",
+  variable: "--font-display",
+});
+const fontMono = localFont({
+  src: [
+    { path: "./fonts/jetbrains-mono-latin-500.woff2", weight: "500" },
+    { path: "./fonts/jetbrains-mono-latin-700.woff2", weight: "700" },
+  ],
+  display: "swap",
+  variable: "--font-mono",
 });
 
 // The status bar takes the page background, so it follows the OS color scheme like the canvas does.
 export const viewport: Viewport = {
   viewportFit: "cover",
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#e0e0e1" },
-    { media: "(prefers-color-scheme: dark)", color: "#141414" },
+    { media: "(prefers-color-scheme: light)", color: "#ebebeb" },
+    { media: "(prefers-color-scheme: dark)", color: "#0f0f0f" },
   ],
 };
 
@@ -58,7 +69,7 @@ export const metadata: Metadata = {
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const [{ user, username, avatarUrl }, owner] = await Promise.all([currentProfile(), sessionIsOwner()]);
   return (
-    <html lang="en" className={`${font.variable} ${fontBold.variable}`} suppressHydrationWarning>
+    <html lang="en" className={`${font.variable} ${fontBold.variable} ${fontDisplay.variable} ${fontMono.variable}`} suppressHydrationWarning>
       <head>
         <SiteTitle />
         <ThemeInit />

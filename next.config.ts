@@ -46,7 +46,8 @@ const nextConfig: NextConfig = {
     "/emoji/[code]": ["./node_modules/@twemoji/svg/*.svg"],
     // app/lobe/[file]/route.ts and the share card read a company logo by a computed name.
     "/lobe/[file]": ["./node_modules/@lobehub/icons-static-svg/icons/*.svg"],
-    "/r/[gameId]/card.png": ["./node_modules/@lobehub/icons-static-svg/icons/*.svg"],
+    // The share card also reads its fonts from a list of names.
+    "/r/[gameId]/card.png": ["./node_modules/@lobehub/icons-static-svg/icons/*.svg", "./app/fonts/*.ttf", "./app/fonts/*.woff"],
   },
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];

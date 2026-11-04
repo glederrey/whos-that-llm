@@ -71,14 +71,18 @@ export default async function ResultPage({ params }: { params: Promise<{ gameId:
         share={card ? { gameId: card.id, text: shareText(card) } : null}
         actions={nextRound}
       />
-      <div className="chat-head">
-        <h2>The chat</h2>
-      </div>
-      <div className="transcript">
-        {game.transcript.map((message) => (
-          <MessageBubble key={`${message.turn}-${message.role}`} role={message.role} content={message.content} />
-        ))}
-      </div>
+      {game.transcript.length > 0 ? (
+        <>
+          <div className="chat-head">
+            <h2>The chat</h2>
+          </div>
+          <div className="transcript">
+            {game.transcript.map((message) => (
+              <MessageBubble key={`${message.turn}-${message.role}`} role={message.role} content={message.content} />
+            ))}
+          </div>
+        </>
+      ) : null}
     </div>
   );
 }

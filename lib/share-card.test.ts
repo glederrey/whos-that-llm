@@ -74,7 +74,7 @@ function input(overrides: Partial<ShareCardInput> = {}): ShareCardInput {
     status: "solved",
     messageCount: 3,
     score: 1240,
-    breakdown: [{ label: "Tokens · 1,420 tokens", points: null, multiplier: "×7.042" }],
+    breakdown: [{ label: "Tokens · 1\u00a0420 tokens", points: null, multiplier: "×7.042" }],
     modelId: "hidden",
     traits: traits(),
     ...overrides,
@@ -143,15 +143,16 @@ test("the card uses the tokens the score counted", () => {
   });
   assert.equal(tokensFromBreakdown(scored.breakdown), 2694);
   assert.equal(tokensFromBreakdown([{ label: "Tokens · 0 tokens", points: null, multiplier: "×20" }]), 0);
+  assert.equal(tokensFromBreakdown([{ label: "Tokens · 1,420 tokens", points: null, multiplier: "×7.042" }]), 1420);
   assert.equal(tokensFromBreakdown(null), null);
   assert.equal(card({ score: null, breakdown: null }).tokens, null);
 });
 
-test("difficulty words use the leaderboard colors", () => {
+test("difficulty words use the slab colors", () => {
   assert.deepEqual(difficultyColor, {
-    easy: "#1c7c43",
+    easy: "#3fb36b",
     medium: "#f5c518",
-    hard: "#c41b15",
+    hard: "#ff6b62",
     impossible: "#a78bfa",
   });
   const display = shareCardDisplay(card({ gameMode: "daily", difficulty: "impossible" }));
@@ -214,7 +215,7 @@ test("share text names the round and hides a daily model", () => {
   assert.equal(
     text,
     [
-      `I just played on ${shareBrand} and scored 1,240 points.`,
+      `I just played on ${shareBrand} and scored 1\u00a0240 points.`,
       "Game mode: Daily\nDifficulty: Easy.",
       "Do you think you can beat my score?",
       link,
@@ -230,7 +231,7 @@ test("share text names the round and hides a daily model", () => {
   assert.equal(
     shareText(named),
     [
-      `I just played on ${shareBrand} and scored 1,240 points.`,
+      `I just played on ${shareBrand} and scored 1\u00a0240 points.`,
       "Game mode: All models\nDifficulty: Hard.",
       `The model I had to guess was ${hidden}.`,
       "Do you think you can beat my score?",
@@ -248,9 +249,9 @@ test("share text names the round and hides a daily model", () => {
     shareText(quiet),
     [`I just played on ${shareBrand}`, "Game mode: Daily\nDifficulty: Medium.", link].join("\n\n"),
   );
-  assert.equal(shareCardDisplay(quiet).score, "—");
+  assert.equal(shareCardDisplay(quiet).score, "No score");
   assert.equal(shareCardDisplay(quiet).tokens, "—");
-  assert.equal(shareCardDisplay(card()).invite, "Can you beat my score of 1,240?");
+  assert.equal(shareCardDisplay(card()).invite, "Can you beat my score of 1\u00a0240?");
   const played = new Date("2026-10-15T18:00:00.000Z");
   const today = card({ gameMode: "daily", difficulty: "easy", dailyKey: "2026-10-15:1", now: played });
   assert.equal(today.modelName, null);
@@ -286,7 +287,7 @@ test("X and Facebook get the text and the link to this round", () => {
   const id = "11111111-1111-4111-8111-111111111111";
   const page = sharePageUrl(id);
   assert.equal(page, `https://www.whos-that-llm.com/r/${id}`);
-  const text = `Solved · 1,240 · Daily · Easy — ${shareBrand}`;
+  const text = `Solved · 1\u00a0240 · Daily · Easy — ${shareBrand}`;
   const x = new URL(xShareUrl(page, text));
   assert.equal(`${x.origin}${x.pathname}`, "https://twitter.com/intent/tweet");
   assert.equal(x.searchParams.get("text"), `${text}\n\n`);
@@ -327,7 +328,7 @@ test("the public picture and the download are the same card", () => {
   assert.equal(image.includes("\u2019"), false);
   assert.match(image, /Daily/);
   assert.match(image, /Easy/);
-  assert.match(image, /#1c7c43/);
+  assert.match(image, /#0e5a2c/);
   assert.match(image, /Failed/);
   assert.match(image, /background:#c41b15/);
   assert.match(image, /color:#fff/);
@@ -351,14 +352,16 @@ test("the public picture and the download are the same card", () => {
   assert.match(image, /Can you beat my score of/);
   assert.match(image, /https:\/\/whos-that-llm\.com/);
   assert.match(image, /#EBEBEB/);
-  assert.match(image, /#007F88/i);
+  assert.match(image, /background:#FFFFFF/);
+  assert.match(image, /#006C74/i);
   assert.equal(image.includes("www.whos-that-llm.com"), false);
   const darkImage = renderToStaticMarkup(shareCardImage(daily, "data:image/png;base64,aaaa", null, "dark"));
-  assert.match(darkImage, /#1E1E1E/);
+  assert.match(darkImage, /#1A1A1A/);
+  assert.match(darkImage, /background:#262626/);
   assert.match(darkImage, /#EBEBEB/);
   assert.match(darkImage, /background:#c41b15/);
   assert.match(darkImage, /color:#fff/);
-  assert.equal(/#007F88/i.test(darkImage), false);
+  assert.equal(/#006C74/i.test(darkImage), false);
   assert.equal(shareCardAlt(daily).includes(hidden), false);
 
   const named = card();
@@ -375,14 +378,14 @@ test("the public picture and the download are the same card", () => {
   const quiet = card({ status: "given_up", score: null, breakdown: null, messageCount: 0 });
   const quietImage = renderToStaticMarkup(shareCardImage(quiet, "data:image/png;base64,aaaa"));
   assert.match(quietImage, /Given up/);
-  assert.match(quietImage, /background:#F3F3F4/i);
+  assert.match(quietImage, /background:#F4F4F5/i);
   assert.match(quietImage, /color:#141414/i);
   assert.match(quietImage, /border:1px solid #D4D4D8/i);
   assert.doesNotMatch(quietImage, /background:#1c7c43|background:#c41b15/);
   const quietDark = renderToStaticMarkup(shareCardImage(quiet, "data:image/png;base64,aaaa", null, "dark"));
   assert.match(quietDark, /background:#383838/i);
   assert.match(quietDark, /color:#EBEBEB/i);
-  assert.match(quietDark, /border:1px solid #4A4A4A/i);
+  assert.match(quietDark, /border:1px solid #5A5A5A/i);
 
   const page = fs.readFileSync(path.join(root, "app/r/[gameId]/page.tsx"), "utf8");
   assert.match(page, /shareCardPath/);
@@ -395,7 +398,7 @@ test("the public result is the score table and a link home", () => {
   assert.match(html, />Gael&#x27;s score</);
   assert.equal(html.includes("Your score"), false);
   assert.equal(html.includes("hidden until the next day"), false);
-  assert.match(html, /1,240/);
+  assert.match(html, /1\u00a0240/);
   assert.match(html, /Solved on message/);
   assert.match(html, /All models/);
   assert.match(html, /Hard/);
@@ -417,7 +420,7 @@ test("the public result is the score table and a link home", () => {
   assert.match(dailyHtml, /logo-tail-right/);
   assert.match(dailyHtml, /Daily/);
   assert.match(dailyHtml, /Easy/);
-  assert.match(dailyHtml, /#1c7c43/);
+  assert.match(dailyHtml, /class="difficulty-easy"/);
   const when = new Date("2026-10-16T12:00:00.000Z");
   const today = card({
     gameMode: "daily",

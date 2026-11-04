@@ -5,13 +5,13 @@
   --teal: #00bbc9;
   --teal-press: #006c74;
   --teal-wash: #e6f8f8;
-  --canvas: #e0e0e1;
+  --canvas: #ebebeb;
   --card: #ffffff;
-  --soft: #f3f3f4;
+  --soft: #f4f4f5;
   --chip-2: #e0e0e3;
   --chip-3: #c8c8ce;
   --text: #141414;
-  --mute: #52525b;
+  --mute: #55555c;
   --miss: #ff4436;
   --miss-press: #c41b15;
   --miss-text: #c41b15;
@@ -29,17 +29,35 @@
   --off-press: #9e1510;
   --shadow: 0 1px 2px rgba(20, 20, 20, 0.05), 0 1px 0 rgba(20, 20, 20, 0.03);
   --lift: 0 12px 32px rgba(20, 20, 20, 0.12);
-  --radius: 14px;
-  --radius-sm: 10px;
+  --radius: 18px;
+  --radius-sm: 12px;
+  /* The score slab: a white card in light, the logo's ink bubble (a raised grey) in dark. */
+  --hidden: #ffffff;
+  --on-hidden: #141414;
+  --on-hidden-mute: #55555c;
+  --link-on-hidden: #00838c;
+  /* The hidden model's replies: a grey a step off the canvas, in both themes. */
+  --reply: #dedee2;
+  --on-reply: #141414;
+  --on-reply-mute: #55555c;
+  --link-on-reply: #006c74;
+  --player: #d6f3f5;
+  --on-player: #141414;
+  /* Teal as a thin mark (pips, focus, checks) on light grounds; #00bbc9 stays a fill. */
+  --teal-mark: #00838c;
+  --teal-text: #006c74;
+  --hit-wash: #d6f3f5;
+  --press: 0 3px 0 #006c74;
+  --press-quiet: 0 2px 0 #86868e;
 }
 
 html[data-theme="dark"] {
   color-scheme: dark;
   --teal-press: #008f99;
   --teal-wash: #062e2e;
-  --canvas: #141414;
-  --card: #1e1e1e;
-  --soft: #262626;
+  --canvas: #0f0f0f;
+  --card: #1a1a1a;
+  --soft: #232323;
   --chip-2: #363636;
   --chip-3: #4a4a4a;
   --text: #ebebeb;
@@ -52,6 +70,20 @@ html[data-theme="dark"] {
   --bubble: var(--card);
   --shadow: none;
   --lift: 0 12px 32px rgba(0, 0, 0, 0.5);
+  --hidden: #262626;
+  --on-hidden: #ebebeb;
+  --on-hidden-mute: #a1a1aa;
+  --link-on-hidden: #33ccd8;
+  --reply: #262626;
+  --on-reply: #ebebeb;
+  --on-reply-mute: #a1a1aa;
+  --link-on-reply: #33ccd8;
+  --player: #0b3a3e;
+  --on-player: #ebebeb;
+  --teal-mark: #00bbc9;
+  --teal-text: #33ccd8;
+  --hit-wash: #062e2e;
+  --press-quiet: 0 2px 0 #76767e;
 }
 
 * { box-sizing: border-box; }
@@ -63,7 +95,7 @@ body {
   min-height: 100dvh;
   background: var(--canvas);
   color: var(--text);
-  font-family: var(--font), "Segoe UI", sans-serif;
+  font-family: var(--font), system-ui, sans-serif;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
 }
@@ -76,14 +108,13 @@ html[data-theme="dark"] .menu a,
 html[data-theme="dark"] .header-nav a,
 html[data-theme="dark"] .section-nav a { color: var(--text); }
 html[data-theme="dark"] a.button { color: #062e2e; }
-@media (hover: hover) and (pointer: fine) { html[data-theme="dark"] a.button:hover { color: white; } }
 html[data-theme="dark"] a.button-quiet { color: var(--text); }
 @media (hover: hover) and (pointer: fine) { html[data-theme="dark"] a.button-quiet:hover { color: var(--text); } }
 html[data-theme="dark"] .tabs a[aria-pressed="true"],
 html[data-theme="dark"] .segmented a[aria-pressed="true"] { color: #062e2e; }
 button, input, textarea, select { font: inherit; color: inherit; }
 button { cursor: pointer; }
-:focus-visible { outline: 2px solid var(--teal); outline-offset: 2px; }
+:focus-visible { outline: 3px solid var(--teal-mark); outline-offset: 2px; }
 ::selection { background: var(--teal); color: #062e2e; }
 
 /* Layout */
@@ -112,7 +143,7 @@ button { cursor: pointer; }
   gap: 12px;
   height: 40px;
   color: var(--text);
-  font-size: 20px;
+  font-size: 24px;
   font-weight: 700;
   letter-spacing: -0.01em;
   text-decoration: none;
@@ -246,6 +277,7 @@ a.kofi span { text-decoration: underline; text-underline-offset: 3px; }
 .claude-mark { width: 32px; height: 32px; margin: -4px 0; }
 
 /* Type */
+h1, h2, h3 { font-family: var(--font-display), var(--font), sans-serif; }
 h1 { font-size: 40px; line-height: 1.1; letter-spacing: -0.025em; margin: 8px 0 12px; }
 h2 { font-size: 20px; line-height: 1.25; letter-spacing: -0.01em; margin: 0 0 8px; }
 .stack > h2 { margin: 16px 0 -6px; }
@@ -289,7 +321,9 @@ p { margin: 0; text-wrap: pretty; }
   transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.1s ease;
 }
 .button:active, .button-quiet:active, .button-danger:active, .button-on:active, .button-off:active, .icon-button:active { transform: scale(0.97); }
-@media (hover: hover) and (pointer: fine) { .button:hover, .icon-button:hover { background: var(--teal-press); color: white; } }
+/* Hover deepens the teal a step toward its own label color; the button never flips to ink or paper. */
+@media (hover: hover) and (pointer: fine) { .button:hover:not(:disabled) { background: color-mix(in srgb, var(--teal) 84%, #062e2e); } }
+@media (hover: hover) and (pointer: fine) { .icon-button:hover:not(:disabled) { background: var(--soft); } }
 .button:disabled, .icon-button:disabled { opacity: 0.45; cursor: not-allowed; }
 .button[aria-busy="true"]:disabled { cursor: progress; }
 .spinner {
@@ -310,7 +344,7 @@ p { margin: 0; text-wrap: pretty; }
   color: var(--text);
   border-color: var(--control-line);
 }
-@media (hover: hover) and (pointer: fine) { .button-quiet:hover { background: var(--teal-wash); border-color: var(--teal); } }
+@media (hover: hover) and (pointer: fine) { .button-quiet:hover { background: var(--soft); } }
 a.button, a.button-quiet { display: inline-block; text-decoration: none; }
 .button-lg { padding: 13px 26px; font-size: 17px; }
 .menu .theme-toggle { display: flex; align-items: center; justify-content: space-between; gap: 12px; cursor: pointer; }
@@ -622,7 +656,7 @@ html[data-theme="dark"] .hour-status strong { color: var(--teal); }
 }
 .difficulty-list { display: grid; gap: 8px; }
 .difficulty-easy { --diff: #1c7c43; --diff-text: #0e5a2c; }
-.difficulty-medium { --diff: #f5c518; --diff-text: #dba800; }
+.difficulty-medium { --diff: #f5c518; --diff-text: #7a5c00; }
 .difficulty-hard { --diff: #c41b15; --diff-text: #b01711; }
 .difficulty-impossible { --diff: #a78bfa; --diff-text: #4e2fb0; }
 html[data-theme="dark"] .difficulty-easy { --diff-text: #3fb36b; }
@@ -636,7 +670,6 @@ html[data-theme="dark"] .difficulty-impossible { --diff-text: #a78bfa; }
   width: 100%;
   padding: 10px 12px;
   border: 1px solid var(--line);
-  border-left: 4px solid var(--diff);
   border-radius: var(--radius-sm);
   background: var(--soft);
   color: inherit;
@@ -656,7 +689,7 @@ html[data-theme="dark"] .difficulty-resume { color: var(--teal); }
 .difficulty-choice strong { color: var(--diff-text); }
 .difficulty-choice:disabled, .difficulty-choice.is-done { opacity: 0.45; cursor: not-allowed; }
 .difficulty-choice.is-soon { cursor: default; }
-.company-choice { align-items: center; border-left-color: var(--line-strong); }
+.company-choice { align-items: center; }
 .company-choice strong { color: var(--text); }
 .company-choice img {
   width: 28px;
@@ -732,10 +765,19 @@ html[data-theme="dark"] .segmented a.difficulty-impossible[aria-pressed="true"] 
   line-height: 1.5;
   white-space: nowrap;
 }
-.board-chip.difficulty-easy { background: #1c7c43; color: #fff; }
-.board-chip.difficulty-medium { background: #f5c518; color: #141414; }
-.board-chip.difficulty-hard { background: #c41b15; color: #fff; }
-.board-chip.difficulty-impossible { background: #7c5ce6; color: #fff; }
+/* Difficulty is a dot and the word, as in the lobby; no filled chip. */
+.board-chip.difficulty-easy,
+.board-chip.difficulty-medium,
+.board-chip.difficulty-hard,
+.board-chip.difficulty-impossible { gap: 6px; padding: 1px 0; color: var(--diff-text); font-size: 13px; }
+.board-chip[class*="difficulty-"]::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--diff);
+  flex: none;
+}
 .board-chip.no-hints { background: var(--chip-3); color: var(--text); border: 1px solid var(--line); }
 .board-chip.company-chip {
   gap: 6px;
@@ -812,16 +854,12 @@ html[data-theme="dark"] {
 .tabs { display: flex; gap: 8px; flex-wrap: wrap; }
 .filters { display: flex; gap: 12px 20px; flex-wrap: wrap; align-items: center; justify-content: space-between; }
 .board-controls {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
   align-items: center;
 }
-.board-controls-modes,
-.board-controls-middle,
-.board-controls-period { grid-area: 1 / 1; }
-.board-controls-modes { justify-self: start; }
 .board-controls-middle {
-  justify-self: center;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -831,7 +869,8 @@ html[data-theme="dark"] {
 .board-controls .segmented a,
 .board-controls .segmented span[aria-disabled="true"] {
   white-space: nowrap;
-  padding: 7px 8px;
+  font-size: 13px;
+  padding: 7px 10px;
 }
 .board-controls .segmented span[aria-disabled="true"] {
   color: var(--mute);
@@ -1042,6 +1081,8 @@ html[data-theme="dark"] .company-menu summary { color: var(--text); }
 .round-title strong { color: var(--text); font-size: 16px; }
 .round-title .pill { margin-left: 8px; }
 .round-pool { min-width: 0; }
+/* Instrument Sans has a narrow space: give the dots between the parts of the label room to breathe. */
+.round-pool-sep, .round-dot { margin: 0 4px; }
 .progress { display: flex; gap: 4px; width: min(260px, 100%); }
 .progress i { flex: 1; height: 5px; border-radius: 999px; background: var(--line); transition: background 0.3s ease; }
 .progress i.on { background: var(--teal); }
@@ -1067,7 +1108,6 @@ html[data-theme="dark"] .company-menu summary { color: var(--text); }
   border-top-right-radius: 4px;
   box-shadow: none;
 }
-html[data-theme="dark"] .bubble.user { border-color: #0b4545; }
 .bubble.assistant { white-space: normal; justify-self: start; background: var(--bubble); }
 .bubble em { padding-right: 0.08em; }
 .empty-message { color: var(--mute); }
@@ -1162,8 +1202,7 @@ html[data-theme="dark"] .bubble.user { border-color: #0b4545; }
   box-shadow: var(--shadow);
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
-.composer:focus-within { border-color: var(--teal); box-shadow: 0 0 0 3px var(--teal-wash); }
-html[data-theme="dark"] .composer:focus-within { box-shadow: 0 0 0 3px rgba(0, 187, 201, 0.25); }
+.composer:focus-within { border-color: transparent; box-shadow: 0 0 0 3px var(--teal-mark); }
 .composer textarea {
   border: 0;
   background: transparent;
@@ -2009,8 +2048,9 @@ html[data-theme="dark"] .daybar-gave-up { background: var(--bar-gave-up); }
   .round-pool { display: block; }
   .round-pool-sep { display: none; }
   .round-pool .pill { margin-left: 8px; }
-  .round-actions { grid-column: 2; grid-row: 1; }
-  .progress { grid-column: 1 / -1; grid-row: 2; width: 100%; }
+  /* The buttons span both rows, centered on the bar; the pips stay under the counter. */
+  .round-actions { grid-column: 2; grid-row: 1 / 3; }
+  .progress { grid-column: 1; grid-row: 2; width: 100%; }
   .composer .meta .button { padding: 10px 22px; }
   .trait { flex-wrap: wrap; gap: 8px 12px; }
   .trait-side { flex-wrap: wrap; justify-content: flex-end; }
@@ -2022,6 +2062,7 @@ html[data-theme="dark"] .daybar-gave-up { background: var(--bar-gave-up); }
   .score-head { align-items: center; gap: 8px 10px; }
   .score-card .score { font-size: 44px; white-space: nowrap; }
   .score-card .score.origin-pick { font-size: 28px; white-space: normal; overflow-wrap: anywhere; }
+  .score-card p.score.no-score { font-size: 30px; }
   .score-head > :first-child { flex: none; }
   .score-meta { flex: 1 1 auto; gap: 4px; min-width: 0; }
   .score-meta .status-row { flex-direction: column-reverse; align-items: flex-end; gap: 6px; width: auto; max-width: 100%; }
@@ -2324,21 +2365,44 @@ html[data-theme="dark"] .home-mark { color: var(--teal); }
   .home-hero { grid-template-columns: 1fr; gap: 20px; }
   .home-logo { display: none; }
 }
-.demo-search .demo-head { justify-content: flex-start; color: var(--text); font-size: 14px; }
+.demo-search .demo-head { justify-content: space-between; align-items: center; gap: 12px; }
+.demo-count { font: 500 12px/18px var(--font-mono), ui-monospace, monospace; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text); white-space: nowrap; }
+.demo-head .progress { width: auto; gap: 3px; }
+.demo-head .progress i { width: 10px; height: 10px; }
 .demo-search .bubble { padding: 8px 12px; }
 .demo-guess { flex: none; min-height: 0; align-content: start; grid-auto-rows: min-content; border-top: 1px solid var(--line-strong); padding-top: 14px; }
-.demo-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 4px; }
-.demo-cols h3 { margin: 0 0 6px; font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--mute); }
-.demo-hint { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 0; height: 36px; box-sizing: border-box; padding: 0; border-top: 1px solid var(--line); font-size: 14px; }
-.demo-hint > span { color: var(--mute); }
-.demo-hint b { display: inline-flex; align-items: center; gap: 6px; color: var(--teal-press); animation: demo-in 0.25s ease-out; }
-html[data-theme="dark"] .demo-hint b { color: var(--teal); }
-.demo-hint i { font-style: normal; font-size: 12px; line-height: 18px; color: var(--mute); padding: 1px 8px; border: 1px solid var(--line-strong); border-radius: 999px; }
-.demo-hint[data-flash="true"] i { color: var(--text); border-color: var(--teal); background: var(--teal-wash); animation: demo-flash 0.35s ease-in-out 2; }
-.demo-hint:first-of-type { border-top: 0; }
+/* Tiles take the full width so a logo and a long name fit; the guesses sit under them, side by side. */
+.demo-cols { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; margin-top: 4px; }
+.demo-cols h3 { margin: 0 0 6px; font: 500 12px/18px var(--font-mono), ui-monospace, monospace; letter-spacing: 0.08em; text-transform: uppercase; color: var(--mute); }
+/* Hints are the round's clue tiles, smaller: dashed until found, filled when found (no check, to save room).
+   Four in one line when the card is wide enough; otherwise 2×2, each tile one line. */
+.demo-guess { container-type: inline-size; }
+.demo-tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.demo-tiles .trait,
+.demo-tiles .trait:first-child { display: flex; flex-wrap: nowrap; align-items: center; align-content: center; justify-content: space-between; min-height: 0; height: 34px; box-sizing: border-box; gap: 6px; padding: 0 9px; margin: 0; overflow: hidden; }
+.demo-tiles .trait > span:first-child { font-size: 10px; }
+.demo-tiles .trait-value { gap: 4px; font-size: 12px; white-space: nowrap; animation: demo-in 0.25s ease-out; }
+.demo-tiles .trait.hit .trait-value::before { content: none; }
+.demo-tiles .trait-value img { width: 14px; height: 14px; }
+.demo-tiles .trait i { font-style: normal; font-size: 11px; line-height: 15px; color: var(--mute); padding: 1px 7px; border: 1px solid var(--line-strong); border-radius: 999px; }
+.demo-tiles .trait[data-flash="true"] i { color: var(--text); border-color: var(--teal); background: var(--teal-wash); animation: demo-flash 0.35s ease-in-out 2; }
+/* Narrow phones: a long company with its logo needs every pixel of the one-line tile. */
+@container (max-width: 300px) {
+  .demo-tiles .trait,
+  .demo-tiles .trait:first-child { gap: 4px; padding: 0 6px; }
+  .demo-tiles .trait > span:first-child { letter-spacing: 0; }
+  .demo-tiles .trait-value { gap: 3px; }
+}
+@container (min-width: 400px) {
+  .demo-tiles { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .demo-tiles .trait,
+  .demo-tiles .trait:first-child { display: grid; align-content: center; justify-content: stretch; justify-items: start; height: 46px; gap: 2px; padding: 0 8px; }
+  .demo-tiles .trait i { justify-self: center; }
+}
 .demo-search .guess-search .candidates { z-index: 2; }
-.demo-results { display: grid; gap: 4px; align-content: start; }
-.demo-results .demo-picked { height: 32px; box-sizing: border-box; padding: 0 10px; font-size: 14px; gap: 8px; }
+.demo-results { display: grid; align-content: start; min-width: 0; }
+.demo-picks { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 4px; min-height: 32px; }
+.demo-results .demo-picked { min-width: 0; height: 32px; box-sizing: border-box; padding: 0 10px; font-size: 14px; gap: 8px; }
 .demo-results .demo-picked span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
 .demo-results .demo-picked img { width: 24px; height: 24px; }
 .demo-picked[data-right="false"] { border-color: var(--miss-text); background: color-mix(in srgb, var(--miss-text) 10%, transparent); }
@@ -2375,3 +2439,170 @@ html[data-theme="dark"] .demo-hint b { color: var(--teal); }
 .lobe-option { display: grid; justify-items: center; gap: 4px; padding: 6px 4px; border: 1px solid var(--line-strong); border-radius: 8px; background: transparent; color: var(--text); cursor: pointer; }
 .lobe-option[aria-selected="true"] { border-color: var(--text); outline: 2px solid var(--text); }
 .lobe-name { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11px; }
+
+/* Redesign: the logo's shapes. The hidden model speaks from the black bubble, messages are
+   counted in antenna dots, buttons are keys, traits are clue tiles, the result is the last bubble. */
+
+/* Mono labels: the machine layer */
+.round-count strong,
+.composer .meta > span,
+.trait > span:first-child,
+.past-message,
+.score-label,
+.breakdown thead th,
+.board th,
+.difficulty-heading {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--mute);
+}
+.round-count strong { color: var(--text); }
+.board .num, .rank-chip, .breakdown td.change, .breakdown td:last-child { font-family: var(--font-mono), ui-monospace, monospace; }
+/* The thousands space is a full cell wide in mono; pull it in to about half. */
+.board .num, .breakdown td.change, .breakdown td:last-child { word-spacing: -0.3em; }
+.md code, .md pre { font-family: var(--font-mono), ui-monospace, monospace; }
+
+/* Message pips */
+.progress { width: auto; gap: 4px; align-items: center; }
+.progress i {
+  flex: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  border: 2px solid var(--control-line);
+  background: transparent;
+}
+.progress i.on { background: var(--teal-mark); border-color: var(--teal-mark); }
+.progress i.now { background: var(--hit-wash); border-color: var(--teal-mark); opacity: 1; }
+
+/* Bubbles */
+.transcript { gap: 14px; }
+.bubble { border-radius: 22px; }
+.bubble.assistant {
+  position: relative;
+  margin-top: 24px;
+  background: var(--reply);
+  color: var(--on-reply);
+  border-color: transparent;
+  border-top-left-radius: 22px;
+  border-bottom-left-radius: 4px;
+}
+.bubble.assistant::before {
+  content: "Hidden model";
+  position: absolute;
+  left: 0;
+  bottom: calc(100% + 6px);
+  padding: 8px 0 0 23px;
+  white-space: nowrap;
+  font: 500 12px/18px var(--font-mono), ui-monospace, monospace;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--mute);
+  /* The head (14.8px) is centered on the caps (9.1px up a 18px line); the antennas rise above the line. */
+  background: no-repeat left 0 bottom 1.7px / auto 20px url("/brand/bot-ink-eyes.png");
+}
+.reply-block .bubble.assistant { margin-top: 24px; }
+/* The robot from the logo: ink eyes on the light canvas, paper eyes on the dark one. */
+html[data-theme="dark"] .bubble.assistant::before { background-image: url("/brand/bot-paper-eyes.png"); }
+/* The hidden model types in mono, the player writes in sans. Mono runs wide, so one step smaller. */
+.bubble.assistant { font-family: var(--font-mono), ui-monospace, monospace; font-size: 15px; line-height: 1.55; }
+.bubble.assistant strong, .bubble.assistant b { font-weight: 700; }
+.bubble.assistant .md a { color: var(--link-on-reply); }
+.bubble.assistant .md code { background: color-mix(in srgb, currentColor 10%, transparent); color: var(--on-reply); }
+.bubble.assistant .md pre { background: transparent; border-color: color-mix(in srgb, currentColor 24%, transparent); }
+.bubble.assistant .md pre code { background: none; }
+.bubble.assistant .typing i { background: var(--on-reply-mute); }
+.bubble.assistant .empty-message { color: var(--on-reply-mute); }
+.bubble.user {
+  background: var(--player);
+  color: var(--on-player);
+  border-color: transparent;
+  border-radius: 22px 22px 4px 22px;
+}
+
+/* Buttons: arcade keys */
+.button { font-weight: 600; box-shadow: var(--press); transition: transform 90ms ease, box-shadow 90ms ease, background 0.15s ease, color 0.15s ease; }
+.button:active:not(:disabled) { transform: translateY(3px); box-shadow: none; }
+.button:disabled { box-shadow: none; }
+.button-quiet { font-weight: 600; box-shadow: var(--press-quiet); }
+.button-quiet:active:not(:disabled) { transform: translateY(2px); box-shadow: none; }
+.button-quiet.give-up, .button-quiet.reveal, .button-quiet.is-disabled { box-shadow: none; }
+.button-quiet.give-up:active { transform: scale(0.97); }
+
+/* Composer */
+.composer { padding: 6px 8px 8px 16px; }
+.composer textarea { font-size: 16px; }
+
+/* Evidence: traits as clue tiles */
+.feedback {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  padding: 12px;
+}
+.trait,
+.trait:first-child {
+  display: grid;
+  align-content: start;
+  gap: 6px;
+  min-height: 60px;
+  padding: 10px 12px;
+  border: 1px dashed var(--control-line);
+  border-radius: 12px;
+}
+.trait-side { display: grid; justify-items: start; gap: 6px; }
+.trait .pill { background: none; border: 0; padding: 0; font-size: 14px; color: var(--mute); }
+.trait .reveal { padding: 4px 8px; font-size: 12px; }
+.trait.hit { border: 1px solid transparent; background: var(--hit-wash); }
+.trait.hit .trait-value { background: none; padding: 0; color: var(--teal-text); }
+.trait.hit .trait-value::before {
+  content: "";
+  width: 16px;
+  height: 16px;
+  flex: none;
+  background: currentColor;
+  mask: center / contain no-repeat url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 8.5l3.2 3L13 4.5'/%3E%3C/svg%3E");
+}
+
+.trait-value img { width: 18px; height: 18px; flex: none; object-fit: contain; }
+
+/* Guess box */
+.candidate[aria-pressed="true"], .picked { border-color: var(--teal-mark); }
+@media (hover: hover) and (pointer: fine) { .candidate:hover { background: var(--soft); } }
+
+/* Difficulty: a dot and the word */
+.difficulty-choice strong { display: inline-flex; align-items: center; gap: 8px; }
+.difficulty-choice strong::before { content: ""; width: 10px; height: 10px; border-radius: 999px; background: var(--diff); flex: none; }
+.company-choice strong::before { content: none; }
+
+/* Result: the score sits on a white card in light, the hidden model's ink bubble in dark */
+.score-card {
+  background: var(--hidden);
+  color: var(--on-hidden);
+}
+html[data-theme="dark"] .score-card { border-color: transparent; box-shadow: none; }
+.score-card .score-label,
+.score-card .score-meta dt,
+.score-card .breakdown thead th,
+.score-card .breakdown td.change,
+.score-card .muted { color: var(--on-hidden-mute); }
+.score-card .score { font-family: var(--font-display), var(--font), sans-serif; font-weight: 900; letter-spacing: -0.02em; color: var(--link-on-hidden); }
+/* No score or no guess: words, not a giant dash, in the slab's muted color. */
+.score-card .score.no-score { font-size: 48px; font-weight: 700; letter-spacing: -0.01em; color: var(--on-hidden-mute); white-space: nowrap; }
+.score-card a:not(.button):not(.button-quiet) { color: var(--teal-text); }
+.score-card .score-meta dd[class^="difficulty-"] { color: var(--diff-text); }
+html[data-theme="dark"] .score-card .breakdown td, html[data-theme="dark"] .score-card .breakdown th { border-top-color: rgba(235, 235, 235, 0.16); }
+html[data-theme="dark"] .score-card .pill, html[data-theme="dark"] .score-card .status:not([data-state="solved"]):not([data-state="miss"]) {
+  background: rgba(235, 235, 235, 0.1);
+  border-color: rgba(235, 235, 235, 0.2);
+  color: var(--on-hidden);
+}
+.score-card .model-lockup img { background: var(--paper); }
+
+@media (prefers-reduced-motion: reduce) {
+  .button, .button-quiet { transition: none; }
+  .button:active, .button-quiet:active { transform: none; }
+}

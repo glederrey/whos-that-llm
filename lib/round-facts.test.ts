@@ -12,7 +12,7 @@ const item = {
   when: "12 Oct 2026, 07:00 UTC",
   status: "Solved",
   state: "solved" as const,
-  score: "1,200",
+  score: "1\u00a0200",
   best: false,
   messages: 3,
   tokens: "800",
@@ -78,7 +78,7 @@ test("the history dropdown names the mode and the difficulty", () => {
   assert.ok(html.includes("Hard"));
   assert.ok(html.includes("Claude Haiku"));
   assert.ok(html.includes("Your score"));
-  assert.ok(html.includes("1,200"));
+  assert.ok(html.includes("1\u00a0200"));
   assert.ok(html.includes("Solved on message 3"));
   assert.ok(html.includes("Share"));
   assert.ok(html.includes("Copy link"));

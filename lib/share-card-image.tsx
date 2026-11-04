@@ -1,5 +1,6 @@
 import { createElement, type CSSProperties, type ReactElement } from "react";
-import { clipText, hiddenModelNote, hiddenModelTitle, shareCardDisplay, type ShareCard, type ShareCardTheme, type ShareMeta } from "./share-card";
+import { clipText, difficultyColor, difficultyColorLight, hiddenModelNote, hiddenModelTitle, noGuess, noScore, shareCardDisplay, type ShareCard, type ShareCardTheme, type ShareMeta } from "./share-card";
+import type { Difficulty } from "./difficulty";
 
 /** Data URIs of the flag pictures an Origin card draws. Null falls back to the name alone. */
 export type ShareCardFlags = { guessed: string | null; actual: string | null };
@@ -12,47 +13,72 @@ const metaValueMax = 26;
 
 const playLink = "https://whos-that-llm.com";
 
+/** The site's three faces, as the route registers them. */
+const fontDisplay = "Roboto";
+const fontSans = "Instrument Sans";
+const fontMono = "JetBrains Mono";
+
 type Tone = {
   paper: string;
   ink: string;
   mute: string;
   line: string;
-  score: string;
+  link: string;
   frame: string;
+  hidden: string;
+  onHidden: string;
+  onHiddenMute: string;
+  linkOnHidden: string;
   quietWash: string;
-  noHint: string;
-  noHintBorder: string;
+  quietLine: string;
 };
 
 const light: Tone = {
   paper: "#EBEBEB",
   ink: "#141414",
-  mute: "#52525B",
+  mute: "#55555C",
   line: "#D4D4D8",
-  score: "#007F88",
+  link: "#006C74",
   frame: "#00BBC9",
-  quietWash: "#F3F3F4",
-  noHint: "#C8C8CE",
-  noHintBorder: "#B4B4BA",
+  hidden: "#FFFFFF",
+  onHidden: "#141414",
+  onHiddenMute: "#55555C",
+  linkOnHidden: "#00838C",
+  quietWash: "#F4F4F5",
+  quietLine: "#D4D4D8",
 };
 
 const dark: Tone = {
-  paper: "#1E1E1E",
+  paper: "#1A1A1A",
   ink: "#EBEBEB",
   mute: "#A1A1AA",
   line: "#2E2E2E",
-  score: "#00BBC9",
+  link: "#33CCD8",
   frame: "#00BBC9",
+  hidden: "#262626",
+  onHidden: "#EBEBEB",
+  onHiddenMute: "#A1A1AA",
+  linkOnHidden: "#33CCD8",
   quietWash: "#383838",
-  noHint: "#4A4A4A",
-  noHintBorder: "#6A6A6A",
+  quietLine: "#5A5A5A",
 };
+
+/** The light card's slab is white, so its difficulty words take the light-theme text colors. */
+const lightDifficulty: Record<string, string> = Object.fromEntries(
+  (Object.keys(difficultyColor) as Difficulty[]).map((difficulty) => [difficultyColor[difficulty], difficultyColorLight[difficulty]]),
+);
+
+/** Small uppercase label, the machine layer. */
+function label(value: string, color: string, style: CSSProperties = {}): ReactElement {
+  return text(value, { fontFamily: fontMono, fontSize: 24, fontWeight: 500, letterSpacing: 2, textTransform: "uppercase", color, ...style });
+}
 
 /**
  * The 4:5 score card. Satori draws this to a PNG. Download saves it, and the
  * link preview uses it. The public page itself is the score table. Nothing
  * here is the chat.
- * The teal frame and the rounded corners are part of the image.
+ * The teal frame and the rounded corners are part of the image. The score sits
+ * on the slab, as on the result page: white in light, ink in dark.
  */
 export function shareCardImage(
   card: ShareCard,
@@ -72,7 +98,7 @@ export function shareCardImage(
       borderRadius: 56,
       padding: 18,
       color: tone.ink,
-      fontFamily: "Roboto",
+      fontFamily: fontSans,
     },
     box(
       {
@@ -90,7 +116,7 @@ export function shareCardImage(
           height: 188,
           style: { margin: "-28px 4px -28px -28px" },
         }),
-        text(display.title, { fontSize: 108, fontWeight: 700, lineHeight: 0.92, letterSpacing: -2.5 }),
+        text(display.title, { fontFamily: fontDisplay, fontSize: 108, fontWeight: 700, lineHeight: 0.92, letterSpacing: -2.5 }),
       ),
       box(
         { flexDirection: "column", flexGrow: 1, justifyContent: "center" },
@@ -100,7 +126,7 @@ export function shareCardImage(
             createElement("img", { src: logoSrc, width: 96, height: 96, style: { marginRight: 18 } }),
             box(
               { flexDirection: "column" },
-              text(hiddenModelTitle, { fontSize: 44, fontWeight: 700, lineHeight: 1.1 }),
+              text(hiddenModelTitle, { fontFamily: fontDisplay, fontSize: 44, fontWeight: 700, lineHeight: 1.1 }),
               text(hiddenModelNote, { marginTop: 8, fontSize: 26, color: tone.mute }),
             ),
           )
@@ -122,31 +148,34 @@ export function shareCardImage(
                 : null,
               box(
                 { flexDirection: "column" },
-                text(display.modelName, { fontSize: 44, fontWeight: 700, lineHeight: 1.1 }),
+                text(display.modelName, { fontFamily: fontDisplay, fontSize: 44, fontWeight: 700, lineHeight: 1.1 }),
                 display.modelFacts.length > 0 ? factLine(display.modelFacts, tone) : null,
               ),
             )
           : null,
       box(
-        { alignItems: "center", justifyContent: "space-between", marginTop: display.modelName || card.modelHidden ? 76 : 0 },
+        {
+          alignItems: "center",
+          justifyContent: "space-between",
+          marginTop: display.modelName || card.modelHidden ? 48 : 0,
+          background: tone.hidden,
+          color: tone.onHidden,
+          borderRadius: 44,
+          padding: "36px 44px",
+        },
         display.origin
           ? originBlock(display.origin, flags, tone)
           : box(
           { flexDirection: "column" },
-          text(display.scoreLabel, {
-            fontSize: 28,
-            fontWeight: 500,
-            letterSpacing: 2,
-            textTransform: "uppercase",
-            color: tone.mute,
-          }),
+          label(display.scoreLabel, tone.onHiddenMute),
           text(display.score, {
-            marginTop: 4,
-            fontSize: display.score === "—" ? 104 : 136,
+            marginTop: 8,
+            fontFamily: fontDisplay,
+            fontSize: display.score === noScore ? 72 : 136,
             fontWeight: 700,
             lineHeight: 0.9,
-            letterSpacing: display.score === "—" ? 0 : -3,
-            color: tone.score,
+            letterSpacing: display.score === noScore ? -1 : -3,
+            color: display.score === noScore ? tone.onHiddenMute : tone.linkOnHidden,
           }),
         ),
         box(
@@ -155,12 +184,12 @@ export function shareCardImage(
             { flexDirection: "column", alignItems: "stretch", width: "100%" },
             text(display.status, {
               justifyContent: "center",
-              fontSize: 36,
+              fontSize: 28,
               fontWeight: 700,
               color: status.color,
               background: status.background,
               borderRadius: 999,
-              padding: "12px 22px",
+              padding: "10px 22px",
               ...(status.border ? { border: status.border } : {}),
             }),
             display.noHint
@@ -168,9 +197,9 @@ export function shareCardImage(
                   justifyContent: "center",
                   fontSize: 30,
                   fontWeight: 700,
-                  color: tone.ink,
-                  background: tone.noHint,
-                  border: `2px solid ${tone.noHintBorder}`,
+                  color: tone.onHidden,
+                  background: tone.quietWash,
+                  border: `2px solid ${tone.quietLine}`,
                   borderRadius: 999,
                   padding: "8px 22px",
                   marginTop: 10,
@@ -181,21 +210,21 @@ export function shareCardImage(
           metaTable(display.meta, tone),
         ),
       ),
-      !display.origin && (display.steps.length > 0 || display.score !== "—")
+      !display.origin && (display.steps.length > 0 || display.score !== noScore)
         ? box(
             { flexDirection: "column", marginTop: 28 },
             tableHead(tone),
             ...display.steps.map((step) =>
               tableRow(step.label, step.change, step.after, step.kind === "subtotal" || step.kind === "floor", tone),
             ),
-            display.score !== "—" ? tableRow("Total", "", display.score, true, tone) : null,
+            display.score !== noScore ? tableRow("Total", "", display.score, true, tone) : null,
           )
         : null,
       ),
       box(
         { flexDirection: "column" },
         text(display.invite, { fontSize: 36, fontWeight: 700 }),
-        text(playLink, { marginTop: 8, fontSize: 32, fontWeight: 700, color: tone.score }),
+        text(playLink, { marginTop: 8, fontSize: 32, fontWeight: 700, color: tone.link }),
       ),
     ),
   );
@@ -207,33 +236,27 @@ function originBlock(origin: NonNullable<ReturnType<typeof shareCardDisplay>["or
     box(
       { alignItems: "center" },
       flag ? createElement("img", { src: flag, width: size, height: size, style: { marginRight: 18 } }) : null,
-      text(clipText(name, 14), { fontSize: size, fontWeight: 700, lineHeight: 1, color }),
+      text(clipText(name, 14), { fontFamily: fontDisplay, fontSize: size, fontWeight: 700, lineHeight: 1, color }),
     );
   return box(
     { flexDirection: "column" },
-    text(origin.guessLabel, {
-      fontSize: 28,
-      fontWeight: 500,
-      letterSpacing: 2,
-      textTransform: "uppercase",
-      color: tone.mute,
-    }),
-    box({ marginTop: 12 }, origin.guessed ? place(origin.guessed.name, flags.guessed, 84, tone.score) : text("—", { fontSize: 84, fontWeight: 700, lineHeight: 1, color: tone.score })),
+    label(origin.guessLabel, tone.onHiddenMute),
+    box({ marginTop: 12 }, origin.guessed ? place(origin.guessed.name, flags.guessed, 84, tone.linkOnHidden) : text(noGuess, { fontFamily: fontDisplay, fontSize: 72, fontWeight: 700, lineHeight: 1, letterSpacing: -1, color: tone.onHiddenMute })),
     origin.correct
       ? null
       : box(
           { flexDirection: "column", marginTop: 36 },
-          text("Comes from", { fontSize: 28, fontWeight: 500, letterSpacing: 2, textTransform: "uppercase", color: tone.mute }),
-          box({ marginTop: 12 }, place(origin.actual.name, flags.actual, 64, tone.ink)),
+          label("Comes from", tone.onHiddenMute),
+          box({ marginTop: 12 }, place(origin.actual.name, flags.actual, 64, tone.onHidden)),
         ),
   );
 }
 
-/** Same chips as the score card. Solved is the Easy green, Failed is the Hard red, Given up stays gray. */
+/** Same chips as the score card. Solved is the Easy green, Failed is the Hard red, Given up stays gray on the slab. */
 function statusChip(outcome: ShareCard["outcome"], tone: Tone): { color: string; background: string; border?: string } {
   if (outcome === "Solved") return { color: "#fff", background: "#1c7c43" };
   if (outcome === "Failed") return { color: "#fff", background: "#c41b15" };
-  return { color: tone.ink, background: tone.quietWash, border: `1px solid ${tone === dark ? "#4A4A4A" : tone.line}` };
+  return { color: tone.onHidden, background: tone.quietWash, border: `1px solid ${tone.quietLine}` };
 }
 
 function factLine(facts: string[], tone: Tone): ReactElement {
@@ -252,11 +275,11 @@ function metaTable(rows: ShareMeta[], tone: Tone): ReactElement {
     { marginTop: 8, justifyContent: "flex-end" },
     box(
       { flexDirection: "column", alignItems: "flex-end", marginRight: 16 },
-      ...rows.map((row) => text(row.label, { ...cell, fontSize: 26, color: tone.mute })),
+      ...rows.map((row) => text(row.label, { ...cell, fontSize: 26, fontWeight: 500, color: tone.onHiddenMute })),
     ),
     box(
       { flexDirection: "column", alignItems: "flex-start" },
-      ...rows.map((row) => text(clipText(row.value, metaValueMax), { ...cell, fontSize: 28, fontWeight: 700, color: row.color ?? tone.ink })),
+      ...rows.map((row) => text(clipText(row.value, metaValueMax), { ...cell, fontSize: 28, fontWeight: 700, color: (row.color && tone === light ? lightDifficulty[row.color] : row.color) ?? tone.onHidden })),
     ),
   );
 }
@@ -264,17 +287,11 @@ function metaTable(rows: ShareMeta[], tone: Tone): ReactElement {
 function tableHead(tone: Tone): ReactElement {
   return box(
     { justifyContent: "flex-end", paddingBottom: 8 },
-    text("After", {
-      fontSize: 20,
-      fontWeight: 500,
-      letterSpacing: 1.5,
-      textTransform: "uppercase",
-      color: tone.mute,
-    }),
+    label("After", tone.mute, { fontSize: 20, letterSpacing: 1.5 }),
   );
 }
 
-function tableRow(label: string, change: string, after: string, strong: boolean, tone: Tone): ReactElement {
+function tableRow(name: string, change: string, after: string, strong: boolean, tone: Tone): ReactElement {
   return box(
     {
       alignItems: "center",
@@ -283,14 +300,14 @@ function tableRow(label: string, change: string, after: string, strong: boolean,
       paddingTop: 12,
       paddingBottom: 12,
     },
-    text(label, { fontSize: 28, fontWeight: strong ? 700 : 500, color: tone.ink }),
+    text(name, { fontSize: 28, fontWeight: strong ? 700 : 500, color: tone.ink }),
     box(
       { alignItems: "center" },
       change
-        ? text(change, { width: 160, justifyContent: "flex-end", fontSize: 28, fontWeight: 500, color: tone.mute })
+        ? text(change, { width: 170, justifyContent: "flex-end", fontFamily: fontMono, fontSize: 26, fontWeight: 500, wordSpacing: -10, color: tone.mute })
         : null,
       after
-        ? text(after, { width: 170, justifyContent: "flex-end", fontSize: 28, fontWeight: 700, color: tone.ink })
+        ? text(after, { width: 190, justifyContent: "flex-end", fontFamily: fontMono, fontSize: 26, fontWeight: 500, wordSpacing: -10, color: tone.ink })
         : null,
     ),
   );
