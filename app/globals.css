@@ -2468,7 +2468,7 @@ html[data-theme="dark"] .home-mark { color: var(--teal); }
 .bubble { border-radius: 22px; }
 .bubble.assistant {
   position: relative;
-  margin-top: 30px;
+  margin-top: 24px;
   background: var(--reply);
   color: var(--on-reply);
   border-color: transparent;
@@ -2480,15 +2480,16 @@ html[data-theme="dark"] .home-mark { color: var(--teal); }
   position: absolute;
   left: 0;
   bottom: calc(100% + 6px);
-  padding-left: 26px;
+  padding: 8px 0 0 23px;
   white-space: nowrap;
-  font: 500 12px/24px var(--font-mono), ui-monospace, monospace;
+  font: 500 12px/18px var(--font-mono), ui-monospace, monospace;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--mute);
-  background: no-repeat left bottom / 20px 24px url("/brand/bot-ink-eyes.png");
+  /* The head sits on the baseline (4.7px up a 18px line); the antennas rise above the line. */
+  background: no-repeat left 0 bottom 4.7px / auto 20px url("/brand/bot-ink-eyes.png");
 }
-.reply-block .bubble.assistant { margin-top: 30px; }
+.reply-block .bubble.assistant { margin-top: 24px; }
 /* The robot from the logo: ink eyes on the light canvas, paper eyes on the dark one. */
 html[data-theme="dark"] .bubble.assistant::before { background-image: url("/brand/bot-paper-eyes.png"); }
 /* The hidden model types in mono, the player writes in sans. Mono runs wide, so one step smaller. */

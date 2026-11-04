@@ -145,6 +145,6 @@ Radius `sm`, flat fills, no gradient. Buttons are keys: a hard bottom edge (`0 3
 ## Round
 
 - The message bar shows ten dots: sent filled with `teal-mark`, current a ring on `hit-wash`, the rest empty.
-- The hidden model's replies sit in `reply` with a "Hidden model" label and the logo's robot above (`public/brand/bot-ink-eyes.png` in light, `bot-paper-eyes.png` in dark, 20×24px, antennas included; the reply keeps 30px above it so the antennas never touch the message before); the player's in `player`.
+- The hidden model's replies sit in `reply` with a "Hidden model" label and the logo's robot above (`public/brand/bot-ink-eyes.png` in light, `bot-paper-eyes.png` in dark, 20px tall: the head sits on the label's baseline, about one text line high, and the antennas rise above the line into the gap before the reply); the player's in `player`.
 - Traits are a 2×2 grid of tiles: dashed when unknown, `hit-wash` with a check when found, a cross when missed. An unknown tile shows only its Reveal button when one is for sale, else **Not found yet**. A found company shows its logo before the name, as Origin shows its flag.
 - The result's score card is an ink slab (`hidden`) with the score in Roboto 900 and `link-on-hidden`.
