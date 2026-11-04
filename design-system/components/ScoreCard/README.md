@@ -9,4 +9,4 @@ The result of a round on a slab of `hidden` (a white card in light, the logo's i
 - Breakdown rows are plain text left, mono figures right, hairlines in `line` (16% paper in dark). The change column is `on-hidden-mute`.
 - Difficulty words on the slab take `--diff-text` for the current theme.
 - The share card image (`/r/<id>/card.png`, 1080×1350) follows the same slab, white in light and ink in dark, with a 28px status chip: score in Roboto 700 and `link-on-hidden`, mono labels and figures, Instrument Sans for the rest, inside the teal frame.
-- Actions: Play again (`wl-btn`) and Share (`wl-btn-quiet`). A gave-up or failed round shows the model and 0 with the label "Gave up" or "Out of messages"; no red slab.
+- Actions: Play again (`wl-btn`) and Share (`wl-btn-quiet`). A given-up round shows **No score** and the status chip **Given up**; a failed round shows its score with **Failed**. No red slab.

@@ -21,7 +21,7 @@ Who's that LLM? is a chat game: a hidden model answers, the player has ten messa
 - Light theme: `canvas` is the logo's `paper`, `surface` is white for cards. Dark theme: `canvas` `#0f0f0f`, `surface` `#1a1a1a`.
 - Body text is `text`; secondary text and every mono label is `mute`. Links and matched values are `teal-text`.
 - `teal` is a fill: the primary button, the You tag, the robot. Text on it is `on-teal`, never white. As a thin mark on light grounds (pips, focus ring, check icons) use `teal-mark`, which holds 3:1.
-- `hidden` carries the hidden model's bubble and the score slab: ink in light, `#262626` in dark, with `on-hidden` text and `link-on-hidden` for links and code.
+- `hidden` is the score slab: a white card in light, `#262626` in dark, with `on-hidden` text and `link-on-hidden` for the score (`#00838c` in light). The hidden model's bubble is `reply`.
 - `player` (a pale teal) carries the player's own bubbles, with `on-player` text.
 - A miss is `miss-text` on `miss-wash` with a cross icon; `miss` is only ever a small dot. A hit is `teal-text` on `hit-wash` with a check. Color never carries a state alone.
 - Difficulty is a dot and a word: the dot uses `easy`, `medium`, `hard`, `impossible`; the word uses the matching `-text` token. Never the fill as text, never on a large area.

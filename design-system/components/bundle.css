@@ -308,11 +308,13 @@
 .wl-logo { width: 28px; height: 28px; border-radius: 8px; background: var(--surface-sunk); border: 1px solid var(--line); display: grid; place-items: center; font: 700 12px var(--font-sans); color: var(--text); flex: none; }
 .wl-kbd { font: 500 11px/1 var(--font-mono); padding: 4px 6px; border-radius: var(--radius-chip); border: 1px solid var(--line); color: var(--mute); }
 
-/* Score slab: the logo's black bubble, holding the result */
+/* Score slab: a white card in light, the logo's ink bubble in dark */
 .wl-score {
   background: var(--hidden);
   color: var(--on-hidden);
+  border: 1px solid var(--line);
   border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
   padding: var(--space-6);
   display: grid;
   gap: var(--space-4);
@@ -328,7 +330,7 @@
   font-variant-numeric: tabular-nums;
 }
 .wl-score-rows { width: 100%; border-collapse: collapse; }
-.wl-score-rows td { padding: 8px 0; border-top: 1px solid rgba(235, 235, 235, 0.16); }
+.wl-score-rows td { padding: 8px 0; border-top: 1px solid color-mix(in srgb, var(--on-hidden) 16%, transparent); }
 .wl-score-rows td:last-child { text-align: right; font-family: var(--font-mono); font-size: 14px; font-variant-numeric: tabular-nums; }
 .wl-score-model { display: flex; align-items: center; gap: 10px; font-family: var(--font-display); font-size: 24px; font-weight: 700; }
 

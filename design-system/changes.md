@@ -4,7 +4,7 @@ This system is a proposed redesign of whos-that-llm.com, built from its `DESIGN.
 
 | Area | Live site | This system | Why |
 |---|---|---|---|
-| Hidden model bubble | Light grey card with a border | `hidden`: the logo's ink bubble in light, `#262626` in dark | The suspect gets the logo's voice; the transcript reads at a glance |
+| Hidden model bubble | Light grey card with a border | `reply`: a grey a step off the canvas, `#262626` in dark | The suspect gets the logo's voice; the transcript reads at a glance |
 | Player bubble | Card with border | `player` pale teal, tail bottom-right | Two speakers told apart by ground and corner, not only position |
 | Message counter | Ten thin bars | Ten antenna-dot pips: filled, ring, empty | Shape carries state; echoes the robot |
 | Buttons | Flat fill, scale 0.97 on press | Arcade key: hard `shadow-press` edge, 3px travel | A game, not a form |
