@@ -33,8 +33,10 @@ const fontDisplay = localFont({
   variable: "--font-display",
 });
 const fontMono = localFont({
-  src: "./fonts/jetbrains-mono-latin-500.woff2",
-  weight: "500",
+  src: [
+    { path: "./fonts/jetbrains-mono-latin-500.woff2", weight: "500" },
+    { path: "./fonts/jetbrains-mono-latin-700.woff2", weight: "700" },
+  ],
   display: "swap",
   variable: "--font-mono",
 });

@@ -15,7 +15,7 @@ This system is a proposed redesign of whos-that-llm.com, built from its `DESIGN.
 | Medium text, light | `#DBA800` (1.7:1 on canvas) | `#7a5c00` (above 4.5:1) | Fixes a contrast failure |
 | Teal marks on light | `#00BBC9` focus ring and bars (1.8:1 on canvas) | `teal-mark` `#00838c` (above 3:1) | Fixes a contrast failure |
 | Canvas, light | `#E0E0E1` | `paper` `#EBEBEB` | The logo's own grey |
-| Type | Roboto only | Roboto for titles and score, Instrument Sans for text, JetBrains Mono for labels | Keeps the familiar face for titles and score; mono for the machine layer (a deliberate change to the "no mono in interface" rule) |
+| Type | Roboto only | Roboto for titles and score, Instrument Sans for text, JetBrains Mono for labels and the hidden model's replies | Keeps the familiar face for titles and score; mono for the machine layer (a deliberate change to the "no mono in interface" rule) |
 | Radii | 14 / 10 | 22 bubble, 18 card, 12 control, 4 tail | Rounder, from the robot head and the bubble tail |
 
 Not covered: admin pages (owner-only, desktop-only), the date-range picker, profile forms, and the statistics charts. They would take the same tokens.

@@ -30,9 +30,9 @@ Who's that LLM? is a chat game: a hidden model answers, the player has ten messa
 
 ## Type
 
-- Three families, each with one job. `display` (Roboto, 700 and 900) for titles and the score. `sans` (Instrument Sans) for everything people read: chat, body, buttons. `mono` (JetBrains Mono) for the machine layer: the turn counter, evidence names, score breakdown figures, ranks, token counts.
+- Three families, each with one job. `display` (Roboto, 700 and 900) for titles and the score. `sans` (Instrument Sans) for everything people read: the player's messages, body, buttons. `mono` (JetBrains Mono) for the machine layer: the hidden model's replies, the turn counter, evidence names, score breakdown figures, ranks, token counts.
 - Styles: `score` for the result number only; `hero` for the home title only; `h1` page titles; `h2` card titles; `lede` the paragraph under a title, in `mute`; `body` chat and copy at 16px; `body-strong` model names and values; `small` help text; `label` mono uppercase labels; `figure` mono numbers.
-- Chat bubbles are always `sans`, never mono, however technical the reply. Code inside a reply is mono.
+- The hidden model's bubble is `mono` at 15px, the player's is `sans`: two voices, two faces. Code inside a reply keeps its tinted ground so it still stands out.
 - In the app, vendor the three fonts as woff2 with `next/font/local` (Latin subset), as Roboto is today; do not load Google Fonts at runtime.
 
 ## Shape and space

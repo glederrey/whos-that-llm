@@ -112,10 +112,10 @@ The theme is switched with the `data-theme` attribute on `html`. The first visit
 Three families, each with one job, all Latin subsets vendored as woff2 in `app/fonts` (OFL) and loaded with `next/font/local`. Do not load a font from Google Fonts.
 
 - Roboto (variable, 700 for headings, 900 for the score) for headings and the score (`--font-display`).
-- Instrument Sans for everything people read: chat, body, buttons (`--font`, `--font-bold`).
-- JetBrains Mono (500) for the machine layer: the message counter, trait names, table heads, score breakdown figures, ranks and character counts, as small uppercase labels or figures (`--font-mono`). Code in rendered markdown is mono too.
+- Instrument Sans for everything people read: the player's messages, body, buttons (`--font`, `--font-bold`).
+- JetBrains Mono (500, 700 for bold in a reply) for the machine layer: the hidden model's replies, the message counter, trait names, table heads, score breakdown figures, ranks and character counts, as small uppercase labels or figures (`--font-mono`). Code in rendered markdown is mono too.
 
-Chat bubbles are always Instrument Sans, never mono. The share card image (`app/r/[gameId]/card.png`) is all Roboto.
+The hidden model types in mono at 15px (it runs wider than sans); the player writes in Instrument Sans, so the two voices differ in face as well as color. The share card image (`app/r/[gameId]/card.png`) uses the same three families.
 
 ## Layout
 
