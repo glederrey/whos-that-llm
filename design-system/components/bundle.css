@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Roboto:wght@700;900&family=Instrument+Sans:wght@400..700&family=JetBrains+Mono:wght@500&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Roboto:wght@700;900&family=Instrument+Sans:wght@400..700&family=JetBrains+Mono:wght@500;700&display=swap");
 
 /* Who's that LLM? component styles. Every value comes from tokens.css. */
 
@@ -53,7 +53,7 @@
 }
 .wl-btn:active { transform: translateY(3px); box-shadow: none; }
 .wl-btn:focus-visible { box-shadow: var(--shadow-press), var(--focus-ring); }
-@media (hover: hover) { .wl-btn:hover { background: var(--text); color: var(--canvas); } }
+@media (hover: hover) { .wl-btn:hover { background: color-mix(in srgb, var(--teal) 84%, var(--on-teal)); } }
 .wl-btn-lg { min-height: 52px; padding: 14px 28px; font-size: 18px; }
 .wl-btn-quiet {
   background: var(--surface);
@@ -72,7 +72,7 @@
 @media (hover: hover) { .wl-btn-giveup:hover { background: var(--miss-wash); color: var(--miss-text); } }
 .wl-btn-giveup:active { transform: scale(0.97); }
 .wl-btn-danger { background: var(--miss-fill); color: var(--on-fill); box-shadow: none; }
-@media (hover: hover) { .wl-btn-danger:hover { background: var(--text); color: var(--canvas); } }
+@media (hover: hover) { .wl-btn-danger:hover { background: var(--miss-wash); color: var(--miss-text); } }
 .wl-btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
 .wl-btn svg { width: 18px; height: 18px; flex: none; }
 
@@ -175,25 +175,8 @@
 .wl-turn-hidden { justify-items: start; }
 .wl-turn-player { justify-items: end; }
 .wl-speaker { display: inline-flex; align-items: center; gap: var(--space-2); }
-.wl-bot {
-  width: 22px;
-  height: 20px;
-  border-radius: 6px;
-  background: var(--teal);
-  position: relative;
-  flex: none;
-}
-.wl-bot::before, .wl-bot::after {
-  content: "";
-  position: absolute;
-  top: 7px;
-  width: 4px;
-  height: 4px;
-  border-radius: 1px;
-  background: var(--paper);
-}
-.wl-bot::before { left: 5px; }
-.wl-bot::after { right: 5px; }
+/* The logo's robot, antennas included: teal head, eyes and mouth in `text` (ink in light, paper in dark). */
+.wl-bot { height: 20px; width: auto; flex: none; }
 .wl-bubble {
   max-width: min(72%, 620px);
   padding: 12px 16px;
@@ -202,33 +185,35 @@
   overflow-wrap: break-word;
 }
 .wl-bubble-hidden {
-  background: var(--hidden);
-  color: var(--on-hidden);
+  background: var(--reply);
+  color: var(--on-reply);
+  font-family: var(--font-mono);
+  font-size: 15px;
   border-bottom-left-radius: var(--radius-tail);
   box-shadow: var(--shadow-card);
 }
-.wl-bubble-hidden a, .wl-bubble-hidden code { color: var(--link-on-hidden); }
-.wl-bubble-hidden code { font-family: var(--font-mono); font-size: 14px; }
+.wl-bubble-hidden a { color: var(--link-on-reply); }
+.wl-bubble-hidden code { font-family: var(--font-mono); font-size: 14px; padding: 1px 5px; border-radius: 5px; background: color-mix(in srgb, currentColor 10%, transparent); }
 .wl-bubble-hidden pre {
   margin: 8px 0;
   padding: 10px 12px;
   border-radius: 10px;
-  border: 1px solid var(--on-hidden-mute);
+  border: 1px solid color-mix(in srgb, currentColor 24%, transparent);
   font-family: var(--font-mono);
   font-size: 13px;
   white-space: pre;
   overflow-x: auto;
 }
-.wl-bubble-hidden pre code { color: var(--on-hidden); }
+.wl-bubble-hidden pre code { padding: 0; background: none; }
 .wl-bubble-hidden ul { margin: 6px 0; padding-left: 20px; white-space: normal; }
-.wl-bubble-meta { font: 500 11px/1 var(--font-mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--on-hidden-mute); }
+.wl-bubble-meta { font: 500 11px/1 var(--font-mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--mute); }
 .wl-bubble-player {
   background: var(--player);
   color: var(--on-player);
   border-bottom-right-radius: var(--radius-tail);
 }
 .wl-typing { display: inline-flex; gap: 5px; padding: 16px 18px; }
-.wl-typing i { width: 7px; height: 7px; border-radius: var(--radius-pill); background: var(--on-hidden-mute); animation: wl-blink 1.2s infinite ease-in-out; }
+.wl-typing i { width: 7px; height: 7px; border-radius: var(--radius-pill); background: var(--on-reply-mute); animation: wl-blink 1.2s infinite ease-in-out; }
 .wl-typing i:nth-child(2) { animation-delay: 0.15s; }
 .wl-typing i:nth-child(3) { animation-delay: 0.3s; }
 @keyframes wl-blink { 0%, 80%, 100% { opacity: 0.3; } 40% { opacity: 1; } }
