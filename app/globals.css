@@ -2383,7 +2383,8 @@ html[data-theme="dark"] .home-mark { color: var(--teal); }
 @container (min-width: 400px) {
   .demo-tiles { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   .demo-tiles .trait,
-  .demo-tiles .trait:first-child { display: grid; align-content: center; justify-items: start; height: 46px; gap: 2px; padding: 0 8px; }
+  .demo-tiles .trait:first-child { display: grid; align-content: center; justify-content: stretch; justify-items: start; height: 46px; gap: 2px; padding: 0 8px; }
+  .demo-tiles .trait i { justify-self: center; }
 }
 .demo-search .guess-search .candidates { z-index: 2; }
 .demo-results { display: grid; align-content: start; min-width: 0; }
