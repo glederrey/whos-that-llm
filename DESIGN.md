@@ -127,7 +127,7 @@ Content width is `min(980px, 100% - 32px)` for the header, the page and the foot
 
 ## Shapes
 
-`base` (18px) is for cards, menus and the composer; `sm` (12px, the robot's head) is for buttons and inputs. Bubbles are `bubble` (22px) with one `tail` (4px) corner on the speaker's side: bottom-left for the hidden model and the score slab, bottom-right for the player. Pills and message dots are fully rounded.
+`base` (18px) is for cards, menus and the composer; `sm` (12px, the robot's head) is for buttons and inputs. Bubbles are `bubble` (22px) with one `tail` (4px) corner on the speaker's side: bottom-left for the hidden model, bottom-right for the player. The score slab has no tail: all four corners are `base`. Pills and message dots are fully rounded.
 
 ## Buttons
 
@@ -147,4 +147,4 @@ Radius `sm`, flat fills, no gradient. Buttons are keys: a hard bottom edge (`0 3
 - The message bar shows ten dots: sent filled with `teal-mark`, current a ring on `hit-wash`, the rest empty.
 - The hidden model's replies sit in `reply` with a "Hidden model" label and the logo's robot above (`public/brand/bot-ink-eyes.png` in light, `bot-paper-eyes.png` in dark, 20px tall: the head, about one text line high, is centered on the label's capitals, and the antennas rise above the line into the gap before the reply); the player's in `player`.
 - Traits are a 2×2 grid of tiles: dashed when unknown, `hit-wash` with a check when found, a cross when missed. An unknown tile shows only its Reveal button when one is for sale, else **Not found yet**. A found company shows its logo before the name, as Origin shows its flag.
-- The result's score card is an ink slab (`hidden`) with the score in Roboto 900 and `link-on-hidden`.
+- The result's score card is an ink slab (`hidden`) with the score in Roboto 900 and `link-on-hidden`. A round with no score (given up, missed) shows the words **No score** in `on-hidden-mute`, smaller (Roboto 700); an Origin round without a guess shows **No guess** the same way. A result with no message hides **The chat**.

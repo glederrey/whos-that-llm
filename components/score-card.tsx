@@ -9,7 +9,7 @@ import { scoreSteps, type OriginView, type ScoreLine } from "@/lib/game";
 import { poolSizeLabel, poolSizeValue } from "@/lib/game-labels";
 import { formatThousands } from "@/lib/number-format";
 import { difficultyText, type RoundPlace } from "@/lib/round-facts";
-import { difficultyColor } from "@/lib/share-card";
+import { difficultyColor, noScore } from "@/lib/share-card";
 
 type ScoreCardModel = {
   name: string;
@@ -89,7 +89,7 @@ export function ScoreCard({
           ) : (
             <div>
               <p className="score-label">Your score</p>
-              <p className="score">{scored ? formatThousands(score) : "—"}</p>
+              <p className={scored ? "score" : "score no-score"}>{scored ? formatThousands(score) : noScore}</p>
             </div>
           )}
           <div className="score-meta">

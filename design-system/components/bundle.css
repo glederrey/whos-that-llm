@@ -313,7 +313,6 @@
   background: var(--hidden);
   color: var(--on-hidden);
   border-radius: var(--radius-card);
-  border-bottom-left-radius: var(--radius-tail);
   padding: var(--space-6);
   display: grid;
   gap: var(--space-4);

@@ -2060,6 +2060,7 @@ html[data-theme="dark"] .daybar-gave-up { background: var(--bar-gave-up); }
   .score-head { align-items: center; gap: 8px 10px; }
   .score-card .score { font-size: 44px; white-space: nowrap; }
   .score-card .score.origin-pick { font-size: 28px; white-space: normal; overflow-wrap: anywhere; }
+  .score-card p.score.no-score { font-size: 30px; }
   .score-head > :first-child { flex: none; }
   .score-meta { flex: 1 1 auto; gap: 4px; min-width: 0; }
   .score-meta .status-row { flex-direction: column-reverse; align-items: flex-end; gap: 6px; width: auto; max-width: 100%; }
@@ -2580,7 +2581,6 @@ html[data-theme="dark"] .bubble.assistant::before { background-image: url("/bran
   background: var(--hidden);
   color: var(--on-hidden);
   border-color: transparent;
-  border-bottom-left-radius: 4px;
   box-shadow: none;
 }
 .score-card .score-label,
@@ -2589,6 +2589,8 @@ html[data-theme="dark"] .bubble.assistant::before { background-image: url("/bran
 .score-card .breakdown td.change,
 .score-card .muted { color: var(--on-hidden-mute); }
 .score-card .score { font-family: var(--font-display), var(--font), sans-serif; font-weight: 900; letter-spacing: -0.02em; color: var(--link-on-hidden); }
+/* No score or no guess: words, not a giant dash, in the slab's muted color. */
+.score-card .score.no-score { font-size: 48px; font-weight: 700; letter-spacing: -0.01em; color: var(--on-hidden-mute); white-space: nowrap; }
 .score-card .breakdown td, .score-card .breakdown th { border-top-color: rgba(235, 235, 235, 0.16); }
 .score-card a:not(.button):not(.button-quiet) { color: var(--link-on-hidden); }
 /* The slab is ink in both themes, so difficulty words take the dark-theme text colors. */

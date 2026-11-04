@@ -38,7 +38,7 @@ Who's that LLM? is a chat game: a hidden model answers, the player has ten messa
 ## Shape and space
 
 - Radii: `radius-control` (12px, the robot's head) for buttons, inputs and options; `radius-card` (18px) for cards, menus and the composer; `radius-bubble` (22px) for bubbles with one `radius-tail` (4px) corner on the speaker's side; `radius-chip` for ranks and keys; `radius-pill` for pills and pips.
-- The tail corner is the speaker: bottom-left for the hidden model and the score slab, bottom-right for the player.
+- The tail corner is the speaker: bottom-left for the hidden model, bottom-right for the player. The score slab is rounded on all four corners.
 - Spacing steps `space-1` to `space-12` (4 to 48px). Card padding `space-5` on desktop and `space-4` on phones; turns sit `space-3` apart.
 - Content width `min(1040px, 100% - 32px)`; on phones `100% - 24px`. A round puts the evidence and guess panel in a 340px right column from 900px up; below that it stacks bar, transcript, evidence, composer, then a full-width Guess button.
 

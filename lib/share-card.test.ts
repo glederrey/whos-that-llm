@@ -249,7 +249,7 @@ test("share text names the round and hides a daily model", () => {
     shareText(quiet),
     [`I just played on ${shareBrand}`, "Game mode: Daily\nDifficulty: Medium.", link].join("\n\n"),
   );
-  assert.equal(shareCardDisplay(quiet).score, "—");
+  assert.equal(shareCardDisplay(quiet).score, "No score");
   assert.equal(shareCardDisplay(quiet).tokens, "—");
   assert.equal(shareCardDisplay(card()).invite, "Can you beat my score of 1\u00a0240?");
   const played = new Date("2026-10-15T18:00:00.000Z");

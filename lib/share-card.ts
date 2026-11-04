@@ -149,6 +149,11 @@ export function tokensFromBreakdown(lines: ScoreLine[] | null | undefined): numb
   return null;
 }
 
+/** Shown in place of the number when a round has no score (given up, missed). */
+export const noScore = "No score";
+/** Shown in place of the origin on an Origin round given up without a guess. */
+export const noGuess = "No guess";
+
 const scoreLabelNameMax = 20;
 
 /** `Your score` for the player. `Gael's score` for a shared round. `Score` when the name is gone. */
@@ -369,7 +374,7 @@ export function shareCardDisplay(card: ShareCard): ShareCardDisplay {
     mode,
     variant,
     variantColor: colored,
-    score: card.score === null ? "—" : formatShareNumber(card.score),
+    score: card.score === null ? noScore : formatShareNumber(card.score),
     scoreLabel: scoreLabel(card.playerName, false),
     origin: card.origin ? { ...card.origin, guessLabel: guessLabel(card.playerName, false) } : null,
     outcome: card.outcome,

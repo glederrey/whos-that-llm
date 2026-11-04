@@ -70,7 +70,7 @@ export function SharedResult({ card }: { card: ShareCard }) {
           ) : (
             <div>
               <p className="score-label">{display.scoreLabel}</p>
-              <p className="score">{display.score}</p>
+              <p className={card.score === null ? "score no-score" : "score"}>{display.score}</p>
             </div>
           )}
           <div className="score-meta">

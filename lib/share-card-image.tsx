@@ -1,5 +1,5 @@
 import { createElement, type CSSProperties, type ReactElement } from "react";
-import { clipText, hiddenModelNote, hiddenModelTitle, shareCardDisplay, type ShareCard, type ShareCardTheme, type ShareMeta } from "./share-card";
+import { clipText, hiddenModelNote, hiddenModelTitle, noGuess, noScore, shareCardDisplay, type ShareCard, type ShareCardTheme, type ShareMeta } from "./share-card";
 
 /** Data URIs of the flag pictures an Origin card draws. Null falls back to the name alone. */
 export type ShareCardFlags = { guessed: string | null; actual: string | null };
@@ -154,10 +154,7 @@ export function shareCardImage(
           marginTop: display.modelName || card.modelHidden ? 48 : 0,
           background: tone.hidden,
           color: tone.onHidden,
-          borderTopLeftRadius: 44,
-          borderTopRightRadius: 44,
-          borderBottomRightRadius: 44,
-          borderBottomLeftRadius: 8,
+          borderRadius: 44,
           padding: "36px 44px",
         },
         display.origin
@@ -168,11 +165,11 @@ export function shareCardImage(
           text(display.score, {
             marginTop: 8,
             fontFamily: fontDisplay,
-            fontSize: display.score === "—" ? 104 : 136,
+            fontSize: display.score === noScore ? 72 : 136,
             fontWeight: 700,
             lineHeight: 0.9,
-            letterSpacing: display.score === "—" ? 0 : -3,
-            color: tone.linkOnHidden,
+            letterSpacing: display.score === noScore ? -1 : -3,
+            color: display.score === noScore ? tone.onHiddenMute : tone.linkOnHidden,
           }),
         ),
         box(
@@ -207,14 +204,14 @@ export function shareCardImage(
           metaTable(display.meta, tone),
         ),
       ),
-      !display.origin && (display.steps.length > 0 || display.score !== "—")
+      !display.origin && (display.steps.length > 0 || display.score !== noScore)
         ? box(
             { flexDirection: "column", marginTop: 28 },
             tableHead(tone),
             ...display.steps.map((step) =>
               tableRow(step.label, step.change, step.after, step.kind === "subtotal" || step.kind === "floor", tone),
             ),
-            display.score !== "—" ? tableRow("Total", "", display.score, true, tone) : null,
+            display.score !== noScore ? tableRow("Total", "", display.score, true, tone) : null,
           )
         : null,
       ),
@@ -238,7 +235,7 @@ function originBlock(origin: NonNullable<ReturnType<typeof shareCardDisplay>["or
   return box(
     { flexDirection: "column" },
     label(origin.guessLabel, tone.onHiddenMute),
-    box({ marginTop: 12 }, origin.guessed ? place(origin.guessed.name, flags.guessed, 84, tone.linkOnHidden) : text("—", { fontFamily: fontDisplay, fontSize: 84, fontWeight: 700, lineHeight: 1, color: tone.linkOnHidden })),
+    box({ marginTop: 12 }, origin.guessed ? place(origin.guessed.name, flags.guessed, 84, tone.linkOnHidden) : text(noGuess, { fontFamily: fontDisplay, fontSize: 72, fontWeight: 700, lineHeight: 1, letterSpacing: -1, color: tone.onHiddenMute })),
     origin.correct
       ? null
       : box(
