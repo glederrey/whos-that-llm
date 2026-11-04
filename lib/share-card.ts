@@ -17,12 +17,20 @@ import { utcDayKey } from "./daily";
 import { siteName, siteOrigin } from "./site";
 import { formatThousands } from "./number-format";
 
-/** Difficulty word colors on the ink score slab (the dark-theme text colors), on the page and the card. */
+/** Difficulty word colors on the dark score slab (the dark-theme text colors), on the card image. */
 export const difficultyColor: Record<Difficulty, string> = {
   easy: "#3fb36b",
   medium: "#f5c518",
   hard: "#ff6b62",
   impossible: "#a78bfa",
+};
+
+/** Difficulty word colors on the white score slab of the light card image (the light-theme text colors). */
+export const difficultyColorLight: Record<Difficulty, string> = {
+  easy: "#0e5a2c",
+  medium: "#7a5c00",
+  hard: "#b01711",
+  impossible: "#4e2fb0",
 };
 
 export const shareBrand = siteName;

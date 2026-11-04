@@ -1,5 +1,6 @@
 import { createElement, type CSSProperties, type ReactElement } from "react";
-import { clipText, hiddenModelNote, hiddenModelTitle, noGuess, noScore, shareCardDisplay, type ShareCard, type ShareCardTheme, type ShareMeta } from "./share-card";
+import { clipText, difficultyColor, difficultyColorLight, hiddenModelNote, hiddenModelTitle, noGuess, noScore, shareCardDisplay, type ShareCard, type ShareCardTheme, type ShareMeta } from "./share-card";
+import type { Difficulty } from "./difficulty";
 
 /** Data URIs of the flag pictures an Origin card draws. Null falls back to the name alone. */
 export type ShareCardFlags = { guessed: string | null; actual: string | null };
@@ -39,12 +40,12 @@ const light: Tone = {
   line: "#D4D4D8",
   link: "#006C74",
   frame: "#00BBC9",
-  hidden: "#141414",
-  onHidden: "#EBEBEB",
-  onHiddenMute: "#A1A1AA",
-  linkOnHidden: "#00BBC9",
-  quietWash: "#2A2A2A",
-  quietLine: "#4A4A4A",
+  hidden: "#FFFFFF",
+  onHidden: "#141414",
+  onHiddenMute: "#55555C",
+  linkOnHidden: "#00838C",
+  quietWash: "#F4F4F5",
+  quietLine: "#D4D4D8",
 };
 
 const dark: Tone = {
@@ -62,6 +63,11 @@ const dark: Tone = {
   quietLine: "#5A5A5A",
 };
 
+/** The light card's slab is white, so its difficulty words take the light-theme text colors. */
+const lightDifficulty: Record<string, string> = Object.fromEntries(
+  (Object.keys(difficultyColor) as Difficulty[]).map((difficulty) => [difficultyColor[difficulty], difficultyColorLight[difficulty]]),
+);
+
 /** Small uppercase label, the machine layer. */
 function label(value: string, color: string, style: CSSProperties = {}): ReactElement {
   return text(value, { fontFamily: fontMono, fontSize: 24, fontWeight: 500, letterSpacing: 2, textTransform: "uppercase", color, ...style });
@@ -72,7 +78,7 @@ function label(value: string, color: string, style: CSSProperties = {}): ReactEl
  * link preview uses it. The public page itself is the score table. Nothing
  * here is the chat.
  * The teal frame and the rounded corners are part of the image. The score sits
- * on the ink slab, as on the result page.
+ * on the slab, as on the result page: white in light, ink in dark.
  */
 export function shareCardImage(
   card: ShareCard,
@@ -178,12 +184,12 @@ export function shareCardImage(
             { flexDirection: "column", alignItems: "stretch", width: "100%" },
             text(display.status, {
               justifyContent: "center",
-              fontSize: 36,
+              fontSize: 28,
               fontWeight: 700,
               color: status.color,
               background: status.background,
               borderRadius: 999,
-              padding: "12px 22px",
+              padding: "10px 22px",
               ...(status.border ? { border: status.border } : {}),
             }),
             display.noHint
@@ -273,7 +279,7 @@ function metaTable(rows: ShareMeta[], tone: Tone): ReactElement {
     ),
     box(
       { flexDirection: "column", alignItems: "flex-start" },
-      ...rows.map((row) => text(clipText(row.value, metaValueMax), { ...cell, fontSize: 28, fontWeight: 700, color: row.color ?? tone.onHidden })),
+      ...rows.map((row) => text(clipText(row.value, metaValueMax), { ...cell, fontSize: 28, fontWeight: 700, color: (row.color && tone === light ? lightDifficulty[row.color] : row.color) ?? tone.onHidden })),
     ),
   );
 }

@@ -31,11 +31,11 @@
   --lift: 0 12px 32px rgba(20, 20, 20, 0.12);
   --radius: 18px;
   --radius-sm: 12px;
-  /* The score slab is the logo's ink bubble: ink in light, a raised grey in dark. */
-  --hidden: #141414;
-  --on-hidden: #ebebeb;
-  --on-hidden-mute: #a1a1aa;
-  --link-on-hidden: #00bbc9;
+  /* The score slab: a white card in light, the logo's ink bubble (a raised grey) in dark. */
+  --hidden: #ffffff;
+  --on-hidden: #141414;
+  --on-hidden-mute: #55555c;
+  --link-on-hidden: #00838c;
   /* The hidden model's replies: a grey a step off the canvas, in both themes. */
   --reply: #dedee2;
   --on-reply: #141414;
@@ -71,6 +71,8 @@ html[data-theme="dark"] {
   --shadow: none;
   --lift: 0 12px 32px rgba(0, 0, 0, 0.5);
   --hidden: #262626;
+  --on-hidden: #ebebeb;
+  --on-hidden-mute: #a1a1aa;
   --link-on-hidden: #33ccd8;
   --reply: #262626;
   --on-reply: #ebebeb;
@@ -2576,13 +2578,12 @@ html[data-theme="dark"] .bubble.assistant::before { background-image: url("/bran
 .difficulty-choice strong::before { content: ""; width: 10px; height: 10px; border-radius: 999px; background: var(--diff); flex: none; }
 .company-choice strong::before { content: none; }
 
-/* Result: the score sits in the hidden model's bubble */
+/* Result: the score sits on a white card in light, the hidden model's ink bubble in dark */
 .score-card {
   background: var(--hidden);
   color: var(--on-hidden);
-  border-color: transparent;
-  box-shadow: none;
 }
+html[data-theme="dark"] .score-card { border-color: transparent; box-shadow: none; }
 .score-card .score-label,
 .score-card .score-meta dt,
 .score-card .breakdown thead th,
@@ -2591,14 +2592,10 @@ html[data-theme="dark"] .bubble.assistant::before { background-image: url("/bran
 .score-card .score { font-family: var(--font-display), var(--font), sans-serif; font-weight: 900; letter-spacing: -0.02em; color: var(--link-on-hidden); }
 /* No score or no guess: words, not a giant dash, in the slab's muted color. */
 .score-card .score.no-score { font-size: 48px; font-weight: 700; letter-spacing: -0.01em; color: var(--on-hidden-mute); white-space: nowrap; }
-.score-card .breakdown td, .score-card .breakdown th { border-top-color: rgba(235, 235, 235, 0.16); }
-.score-card a:not(.button):not(.button-quiet) { color: var(--link-on-hidden); }
-/* The slab is ink in both themes, so difficulty words take the dark-theme text colors. */
-.score-card .difficulty-easy { --diff-text: #3fb36b; }
-.score-card .difficulty-medium { --diff-text: #f5c518; }
-.score-card .difficulty-hard { --diff-text: #ff6b62; }
-.score-card .difficulty-impossible { --diff-text: #a78bfa; }
-.score-card .pill, .score-card .status:not([data-state="solved"]):not([data-state="miss"]) {
+.score-card a:not(.button):not(.button-quiet) { color: var(--teal-text); }
+.score-card .score-meta dd[class^="difficulty-"] { color: var(--diff-text); }
+html[data-theme="dark"] .score-card .breakdown td, html[data-theme="dark"] .score-card .breakdown th { border-top-color: rgba(235, 235, 235, 0.16); }
+html[data-theme="dark"] .score-card .pill, html[data-theme="dark"] .score-card .status:not([data-state="solved"]):not([data-state="miss"]) {
   background: rgba(235, 235, 235, 0.1);
   border-color: rgba(235, 235, 235, 0.2);
   color: var(--on-hidden);

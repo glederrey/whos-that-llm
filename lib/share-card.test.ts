@@ -328,7 +328,7 @@ test("the public picture and the download are the same card", () => {
   assert.equal(image.includes("\u2019"), false);
   assert.match(image, /Daily/);
   assert.match(image, /Easy/);
-  assert.match(image, /#3fb36b/);
+  assert.match(image, /#0e5a2c/);
   assert.match(image, /Failed/);
   assert.match(image, /background:#c41b15/);
   assert.match(image, /color:#fff/);
@@ -352,7 +352,7 @@ test("the public picture and the download are the same card", () => {
   assert.match(image, /Can you beat my score of/);
   assert.match(image, /https:\/\/whos-that-llm\.com/);
   assert.match(image, /#EBEBEB/);
-  assert.match(image, /background:#141414/);
+  assert.match(image, /background:#FFFFFF/);
   assert.match(image, /#006C74/i);
   assert.equal(image.includes("www.whos-that-llm.com"), false);
   const darkImage = renderToStaticMarkup(shareCardImage(daily, "data:image/png;base64,aaaa", null, "dark"));
@@ -378,9 +378,9 @@ test("the public picture and the download are the same card", () => {
   const quiet = card({ status: "given_up", score: null, breakdown: null, messageCount: 0 });
   const quietImage = renderToStaticMarkup(shareCardImage(quiet, "data:image/png;base64,aaaa"));
   assert.match(quietImage, /Given up/);
-  assert.match(quietImage, /background:#2A2A2A/i);
-  assert.match(quietImage, /color:#EBEBEB/i);
-  assert.match(quietImage, /border:1px solid #4A4A4A/i);
+  assert.match(quietImage, /background:#F4F4F5/i);
+  assert.match(quietImage, /color:#141414/i);
+  assert.match(quietImage, /border:1px solid #D4D4D8/i);
   assert.doesNotMatch(quietImage, /background:#1c7c43|background:#c41b15/);
   const quietDark = renderToStaticMarkup(shareCardImage(quiet, "data:image/png;base64,aaaa", null, "dark"));
   assert.match(quietDark, /background:#383838/i);
@@ -420,7 +420,7 @@ test("the public result is the score table and a link home", () => {
   assert.match(dailyHtml, /logo-tail-right/);
   assert.match(dailyHtml, /Daily/);
   assert.match(dailyHtml, /Easy/);
-  assert.match(dailyHtml, /#3fb36b/);
+  assert.match(dailyHtml, /class="difficulty-easy"/);
   const when = new Date("2026-10-16T12:00:00.000Z");
   const today = card({
     gameMode: "daily",

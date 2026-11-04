@@ -9,7 +9,7 @@ import { scoreSteps, type OriginView, type ScoreLine } from "@/lib/game";
 import { poolSizeLabel, poolSizeValue } from "@/lib/game-labels";
 import { formatThousands } from "@/lib/number-format";
 import { difficultyText, type RoundPlace } from "@/lib/round-facts";
-import { difficultyColor, noScore } from "@/lib/share-card";
+import { noScore } from "@/lib/share-card";
 
 type ScoreCardModel = {
   name: string;
@@ -110,7 +110,7 @@ export function ScoreCard({
               ) : hasDifficulty ? (
                 <>
                   <dt>Difficulty</dt>
-                  <dd style={difficulty ? { color: difficultyColor[difficulty] } : undefined}>{difficultyText(difficulty)}</dd>
+                  <dd className={difficulty ? `difficulty-${difficulty}` : undefined}>{difficultyText(difficulty)}</dd>
                 </>
               ) : null}
               {poolSize !== null ? (
