@@ -72,9 +72,9 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
             .
           </h1>
           <p className="home-copy">
-            Think you can tell AI models apart, like a wine? In this guessing game, a hidden LLM answers you. It could be ChatGPT, Claude, Gemini, or any of the{" "}
+            Think you can tell AI models apart, like a wine? A hidden LLM answers you: ChatGPT, Claude, Gemini, or any of the{" "}
             <strong className="home-mark">{models.length.toLocaleString("en-US")} models</strong> by{" "}
-            <strong className="home-mark">{groups.length.toLocaleString("en-US")} companies</strong> in play. You get ten messages to find which one it is, in one of several game modes.
+            <strong className="home-mark">{groups.length.toLocaleString("en-US")} companies</strong> in play. You have ten messages to name it.
           </p>
           <HomeCta signedIn={Boolean(user && username)} />
         </div>
