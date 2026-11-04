@@ -2422,6 +2422,8 @@ html[data-theme="dark"] .demo-hint b { color: var(--teal); }
 }
 .round-count strong { color: var(--text); }
 .board .num, .rank-chip, .breakdown td.change, .breakdown td:last-child { font-family: var(--font-mono), ui-monospace, monospace; }
+/* The thousands space is a full cell wide in mono; pull it in to about half. */
+.board .num, .breakdown td.change, .breakdown td:last-child { word-spacing: -0.3em; }
 .md code, .md pre { font-family: var(--font-mono), ui-monospace, monospace; }
 
 /* Message pips */
@@ -2540,6 +2542,7 @@ html[data-theme="dark"] .demo-hint b { color: var(--teal); }
 .score-card .score-label,
 .score-card .score-meta dt,
 .score-card .breakdown thead th,
+.score-card .breakdown td.change,
 .score-card .muted { color: var(--on-hidden-mute); }
 .score-card .score { font-family: var(--font-display), var(--font), sans-serif; font-weight: 900; letter-spacing: -0.02em; color: var(--link-on-hidden); }
 .score-card .breakdown td, .score-card .breakdown th { border-top-color: rgba(235, 235, 235, 0.16); }

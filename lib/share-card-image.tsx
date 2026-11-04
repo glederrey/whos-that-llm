@@ -301,10 +301,10 @@ function tableRow(name: string, change: string, after: string, strong: boolean, 
     box(
       { alignItems: "center" },
       change
-        ? text(change, { width: 170, justifyContent: "flex-end", fontFamily: fontMono, fontSize: 26, fontWeight: 500, color: tone.mute })
+        ? text(change, { width: 170, justifyContent: "flex-end", fontFamily: fontMono, fontSize: 26, fontWeight: 500, wordSpacing: -10, color: tone.mute })
         : null,
       after
-        ? text(after, { width: 190, justifyContent: "flex-end", fontFamily: fontMono, fontSize: 26, fontWeight: 500, color: tone.ink })
+        ? text(after, { width: 190, justifyContent: "flex-end", fontFamily: fontMono, fontSize: 26, fontWeight: 500, wordSpacing: -10, color: tone.ink })
         : null,
     ),
   );
