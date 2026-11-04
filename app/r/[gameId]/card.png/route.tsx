@@ -10,23 +10,30 @@ import { shareCardTheme, shareFileName } from "@/lib/share-card";
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
-let assets: Promise<{ light: string; dark: string; regular: Buffer; bold: Buffer }> | undefined;
+let assets: Promise<{ light: string; dark: string; fonts: Font[] }> | undefined;
+
+type Font = { name: string; data: Buffer; weight: 400 | 500 | 700; style: "normal" };
+
+// The site fonts are woff2, and some are variable. The card image can only read
+// static TrueType or woff files, so these are the same faces in those formats.
+const fontFiles: Array<[string, string, Font["weight"]]> = [
+  ["Roboto", "roboto-latin-700.ttf", 700],
+  ["Instrument Sans", "instrument-sans-latin-500.woff", 500],
+  ["Instrument Sans", "instrument-sans-latin-700.woff", 700],
+  ["JetBrains Mono", "jetbrains-mono-latin-500.woff", 500],
+];
 
 function loadAssets() {
-  // The site fonts are woff2, and the regular cut is a variable font. The card
-  // image can only read a static TrueType file, so these are those same faces.
   assets ??= (async () => {
-    const [light, dark, regular, bold] = await Promise.all([
+    const [light, dark, ...fonts] = await Promise.all([
       readFile(join(process.cwd(), "public/brand/logo-tail-right-light.png")),
       readFile(join(process.cwd(), "public/brand/logo-tail-right-dark.png")),
-      readFile(join(process.cwd(), "app/fonts/roboto-latin-400.ttf")),
-      readFile(join(process.cwd(), "app/fonts/roboto-latin-700.ttf")),
+      ...fontFiles.map(([, file]) => readFile(join(process.cwd(), "app/fonts", file))),
     ]);
     return {
       light: `data:image/png;base64,${light.toString("base64")}`,
       dark: `data:image/png;base64,${dark.toString("base64")}`,
-      regular,
-      bold,
+      fonts: fonts.map((data, index) => ({ name: fontFiles[index][0], data, weight: fontFiles[index][2], style: "normal" as const })),
     };
   })();
   return assets;
@@ -50,10 +57,7 @@ export async function GET(request: Request, context: { params: Promise<{ gameId:
   return new ImageResponse(shareCardImage(card, logo, modelLogo, theme, { guessed: guessedFlag, actual: actualFlag }), {
     width: shareCardWidth,
     height: shareCardHeight,
-    fonts: [
-      { name: "Roboto", data: loaded.regular, weight: 400, style: "normal" },
-      { name: "Roboto", data: loaded.bold, weight: 700, style: "normal" },
-    ],
+    fonts: loaded.fonts,
     headers: {
       "Cache-Control": "public, max-age=60, s-maxage=600",
       "Content-Disposition": download ? `attachment; filename="${shareFileName(card.id)}"` : "inline",

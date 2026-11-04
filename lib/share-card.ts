@@ -15,12 +15,13 @@ import {
 import { poolSizeFrom, poolSizeLabel, poolSizeValue } from "./game-labels";
 import { utcDayKey } from "./daily";
 import { siteName, siteOrigin } from "./site";
+import { formatThousands } from "./number-format";
 
-/** Leaderboard difficulty colors. The card uses these on the difficulty word. */
+/** Difficulty word colors on the ink score slab (the dark-theme text colors), on the page and the card. */
 export const difficultyColor: Record<Difficulty, string> = {
-  easy: "#1c7c43",
+  easy: "#3fb36b",
   medium: "#f5c518",
-  hard: "#c41b15",
+  hard: "#ff6b62",
   impossible: "#a78bfa",
 };
 
@@ -139,9 +140,10 @@ export function shareCardImagePath(gameId: string, theme: ShareCardTheme, downlo
 export function tokensFromBreakdown(lines: ScoreLine[] | null | undefined): number | null {
   if (!lines) return null;
   for (const line of lines) {
-    const match = /^Tokens · ([\d,]+) tokens$/.exec(line.label);
+    // Older games stored "1,420"; newer ones store "1\u00a0420".
+    const match = /^Tokens · ([\d,\u00a0]+) tokens$/.exec(line.label);
     if (!match) continue;
-    const tokens = Number(match[1].replaceAll(",", ""));
+    const tokens = Number(match[1].replace(/[,\u00a0]/g, ""));
     return Number.isFinite(tokens) ? tokens : null;
   }
   return null;
@@ -313,7 +315,7 @@ function hintsLine(lines: ScoreLine[] | null): string | null {
 }
 
 export function formatShareNumber(value: number): string {
-  return Math.trunc(value).toLocaleString("en-US");
+  return formatThousands(value);
 }
 
 export type ShareMeta = { label: string; value: string; color: string | null };
