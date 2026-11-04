@@ -13,7 +13,7 @@ Who's that LLM? is a chat game: a hidden model answers, the player has ten messa
 - Address the player as "you"; the game never speaks as "we". Short, plain sentences, a little playful: "Who is behind the bubble?", "You got it.", "Out of messages."
 - Sentence case everywhere, including buttons: "Play today's round", "Give up", "Share result".
 - Name the hidden model "Hidden model" until the round ends. Never hint at its name, company or logo in copy, alt text or color.
-- Numbers are figures: "4 messages", "500 characters", "×1.5". Thin space between thousands in scores: "1 240".
+- Numbers are figures: "4 messages", "500 characters", "×1.5". A no-break space (U+00A0) between thousands in every figure: "1 240". None of the site fonts has a narrow space, so mono figures pull it in with `word-spacing: -0.3em`.
 - No emoji in interface copy. Players may use emoji in their own messages and usernames.
 
 ## Color

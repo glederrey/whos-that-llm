@@ -11,7 +11,7 @@ This system is a proposed redesign of whos-that-llm.com, built from its `DESIGN.
 | Hover on filled buttons | Teal press with white text | `text` on `canvas` (ink in light, paper in dark) | Logo pair; no white on teal |
 | Traits | Rows with a pill when matched | Four evidence tiles: dashed unknown, check hit, cross miss | Reads as clues collected; works without color |
 | Result | Big teal number on a card | Ink slab with the tail corner and a 112px display number | The model's last word, the moment worth sharing |
-| Difficulty | 4px colored left edge | Dot plus word chip | Clearer, and drops the colored-edge card |
+| Difficulty | 4px colored left edge | Dot plus word (lobby, leaderboard) | Clearer, and drops the colored-edge card |
 | Medium text, light | `#DBA800` (1.7:1 on canvas) | `#7a5c00` (above 4.5:1) | Fixes a contrast failure |
 | Teal marks on light | `#00BBC9` focus ring and bars (1.8:1 on canvas) | `teal-mark` `#00838c` (above 3:1) | Fixes a contrast failure |
 | Canvas, light | `#E0E0E1` | `paper` `#EBEBEB` | The logo's own grey |
