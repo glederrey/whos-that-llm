@@ -834,25 +834,26 @@ html[data-theme="dark"] {
 .filters { display: flex; gap: 12px 20px; flex-wrap: wrap; align-items: center; justify-content: space-between; }
 .board-controls {
   display: grid;
-  grid-template-columns: minmax(0, 1fr);
+  grid-template-columns: auto auto;
+  grid-template-areas: "modes period" "middle middle";
+  gap: 10px 16px;
   align-items: center;
 }
-.board-controls-modes,
-.board-controls-middle,
-.board-controls-period { grid-area: 1 / 1; }
-.board-controls-modes { justify-self: start; }
+.board-controls-modes { grid-area: modes; justify-self: start; }
+.board-controls-period { grid-area: period; }
 .board-controls-middle {
-  justify-self: center;
+  grid-area: middle;
+  justify-self: start;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 .board-controls-period { justify-self: end; }
-.board-controls .segmented { flex-wrap: nowrap; max-width: none; }
+.board-controls .segmented { flex-wrap: nowrap; max-width: none; gap: 4px; }
 .board-controls .segmented a,
 .board-controls .segmented span[aria-disabled="true"] {
   white-space: nowrap;
-  padding: 7px 8px;
+  padding: 7px 12px;
 }
 .board-controls .segmented span[aria-disabled="true"] {
   color: var(--mute);
