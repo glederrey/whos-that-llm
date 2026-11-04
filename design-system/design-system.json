@@ -1,0 +1,64 @@
+{
+  "v": 3,
+  "assetGroups": {
+    "Logos": {
+      "files": {
+        "logo-tail-left-dark.png": {
+          "blob": "c314d8aee4bffe25caa1fd2e9c9bd3ca",
+          "name": "logo-tail-left-dark.png",
+          "size": 251865,
+          "type": "image/png"
+        },
+        "logo-tail-left-light.png": {
+          "blob": "c894e26cfe72efd9f82af236fadacbdd",
+          "name": "logo-tail-left-light.png",
+          "size": 250386,
+          "type": "image/png"
+        },
+        "logo-tail-right-dark.png": {
+          "blob": "86d0e7552b16cdde1caee0930ac563db",
+          "name": "logo-tail-right-dark.png",
+          "size": 252011,
+          "type": "image/png"
+        },
+        "logo-tail-right-light.png": {
+          "blob": "f1aa22873f39ce0de0bef412272bad4b",
+          "name": "logo-tail-right-light.png",
+          "size": 250545,
+          "type": "image/png"
+        }
+      },
+      "name": "Logos",
+      "order": [
+        "logo-tail-right-light.png",
+        "logo-tail-right-dark.png",
+        "logo-tail-left-light.png",
+        "logo-tail-left-dark.png"
+      ],
+      "tile": "l"
+    }
+  },
+  "blobs": {},
+  "createdOnFiles": {
+    "at": "2026-11-04T09:53:03Z",
+    "v": 1
+  },
+  "docs": {
+    "readme": "project/README.md",
+    "sections": []
+  },
+  "groups": [
+    "Logos"
+  ],
+  "lastChange": {
+    "at": "2026-11-04T09:53:03Z",
+    "by": "Gael",
+    "note": "Redesign proposal built from DESIGN.md and app/globals.css",
+    "via": "Claude Code"
+  },
+  "layout": "files",
+  "libraries": [],
+  "namespace": "WhosThatLLM",
+  "sections": {},
+  "title": "Who's that LLM?"
+}

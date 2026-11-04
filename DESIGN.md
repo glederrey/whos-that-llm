@@ -45,6 +45,8 @@ rounded:
 
 ## Overview
 
+The full design system (every token's usage, component rules and previews) is in `design-system/`; start at `design-system/INDEX.md`. This file is the short version the code follows.
+
 Who's that LLM? is a chat game. The player should see the game, not a generated marketing page: neat, simple, flat. The look comes from the logo itself: the hidden model speaks from the logo's black bubble, messages are counted in the robot's antenna dots, and buttons are keys with a hard edge. Light and dark themes are both first-class and share one layout. Phone and desktop are equally important; the round must feel good in one hand.
 
 ## Colors
