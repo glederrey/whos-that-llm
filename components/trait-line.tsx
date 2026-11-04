@@ -25,7 +25,7 @@ export function TraitLine({
             {logo ? <CompanyLogo src={logo} /> : null}
             {value}
           </span>
-        ) : (
+        ) : reveal ? null : (
           <span className="pill">Not found yet</span>
         )}
         {reveal && !value ? (

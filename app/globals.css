@@ -31,11 +31,16 @@
   --lift: 0 12px 32px rgba(20, 20, 20, 0.12);
   --radius: 18px;
   --radius-sm: 12px;
-  /* The hidden model speaks from the logo's bubble: ink in light, a raised grey in dark. */
+  /* The score slab is the logo's ink bubble: ink in light, a raised grey in dark. */
   --hidden: #141414;
   --on-hidden: #ebebeb;
   --on-hidden-mute: #a1a1aa;
   --link-on-hidden: #00bbc9;
+  /* The hidden model's replies: a grey a step off the canvas, in both themes. */
+  --reply: #dedee2;
+  --on-reply: #141414;
+  --on-reply-mute: #55555c;
+  --link-on-reply: #006c74;
   --player: #d6f3f5;
   --on-player: #141414;
   /* Teal as a thin mark (pips, focus, checks) on light grounds; #00bbc9 stays a fill. */
@@ -67,6 +72,10 @@ html[data-theme="dark"] {
   --lift: 0 12px 32px rgba(0, 0, 0, 0.5);
   --hidden: #262626;
   --link-on-hidden: #33ccd8;
+  --reply: #262626;
+  --on-reply: #ebebeb;
+  --on-reply-mute: #a1a1aa;
+  --link-on-reply: #33ccd8;
   --player: #0b3a3e;
   --on-player: #ebebeb;
   --teal-mark: #00bbc9;
@@ -2358,15 +2367,23 @@ html[data-theme="dark"] .home-mark { color: var(--teal); }
 /* Tiles take the full width so a logo and a long name fit; the guesses sit under them, side by side. */
 .demo-cols { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; margin-top: 4px; }
 .demo-cols h3 { margin: 0 0 6px; font: 500 12px/18px var(--font-mono), ui-monospace, monospace; letter-spacing: 0.08em; text-transform: uppercase; color: var(--mute); }
-/* Hints are the round's clue tiles, smaller: dashed until found, a check when found. */
+/* Hints are the round's clue tiles, smaller: dashed until found, filled when found (no check, to save room).
+   Four in one line when the card is wide enough; otherwise 2×2, each tile one line. */
+.demo-guess { container-type: inline-size; }
 .demo-tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
 .demo-tiles .trait,
-.demo-tiles .trait:first-child { min-height: 0; height: 58px; box-sizing: border-box; gap: 4px; padding: 7px 9px; margin: 0; overflow: hidden; }
-.demo-tiles .trait > span:first-child { font-size: 11px; }
-.demo-tiles .trait-value { gap: 5px; font-size: 13px; white-space: nowrap; animation: demo-in 0.25s ease-out; }
-.demo-tiles .trait.hit .trait-value::before { width: 13px; height: 13px; }
-.demo-tiles .trait i { justify-self: start; font-style: normal; font-size: 12px; line-height: 16px; color: var(--mute); padding: 1px 8px; border: 1px solid var(--line-strong); border-radius: 999px; }
+.demo-tiles .trait:first-child { display: flex; align-items: center; justify-content: space-between; min-height: 0; height: 34px; box-sizing: border-box; gap: 6px; padding: 0 9px; margin: 0; overflow: hidden; }
+.demo-tiles .trait > span:first-child { font-size: 10px; }
+.demo-tiles .trait-value { gap: 4px; font-size: 12px; white-space: nowrap; animation: demo-in 0.25s ease-out; }
+.demo-tiles .trait.hit .trait-value::before { content: none; }
+.demo-tiles .trait-value img { width: 14px; height: 14px; }
+.demo-tiles .trait i { font-style: normal; font-size: 11px; line-height: 15px; color: var(--mute); padding: 1px 7px; border: 1px solid var(--line-strong); border-radius: 999px; }
 .demo-tiles .trait[data-flash="true"] i { color: var(--text); border-color: var(--teal); background: var(--teal-wash); animation: demo-flash 0.35s ease-in-out 2; }
+@container (min-width: 400px) {
+  .demo-tiles { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .demo-tiles .trait,
+  .demo-tiles .trait:first-child { display: grid; align-content: center; justify-items: start; height: 46px; gap: 2px; padding: 0 8px; }
+}
 .demo-search .guess-search .candidates { z-index: 2; }
 .demo-results { display: grid; align-content: start; min-width: 0; }
 .demo-picks { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 4px; min-height: 32px; }
@@ -2452,8 +2469,8 @@ html[data-theme="dark"] .home-mark { color: var(--teal); }
 .bubble.assistant {
   position: relative;
   margin-top: 24px;
-  background: var(--hidden);
-  color: var(--on-hidden);
+  background: var(--reply);
+  color: var(--on-reply);
   border-color: transparent;
   border-top-left-radius: 22px;
   border-bottom-left-radius: 4px;
@@ -2472,12 +2489,12 @@ html[data-theme="dark"] .home-mark { color: var(--teal); }
   background: no-repeat left center / 20px 18px url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 18'%3E%3Crect width='20' height='18' rx='5' fill='%2300bbc9'/%3E%3Crect x='4.5' y='6' width='3.5' height='3.5' rx='1' fill='%23ebebeb'/%3E%3Crect x='12' y='6' width='3.5' height='3.5' rx='1' fill='%23ebebeb'/%3E%3C/svg%3E");
 }
 .reply-block .bubble.assistant { margin-top: 24px; }
-.bubble.assistant .md a { color: var(--link-on-hidden); }
-.bubble.assistant .md code { background: rgba(235, 235, 235, 0.12); color: var(--on-hidden); }
-.bubble.assistant .md pre { background: transparent; border-color: rgba(235, 235, 235, 0.24); }
+.bubble.assistant .md a { color: var(--link-on-reply); }
+.bubble.assistant .md code { background: color-mix(in srgb, currentColor 10%, transparent); color: var(--on-reply); }
+.bubble.assistant .md pre { background: transparent; border-color: color-mix(in srgb, currentColor 24%, transparent); }
 .bubble.assistant .md pre code { background: none; }
-.bubble.assistant .typing i { background: var(--on-hidden-mute); }
-.bubble.assistant .empty-message { color: var(--on-hidden-mute); }
+.bubble.assistant .typing i { background: var(--on-reply-mute); }
+.bubble.assistant .empty-message { color: var(--on-reply-mute); }
 .bubble.user {
   background: var(--player);
   color: var(--on-player);
@@ -2510,7 +2527,7 @@ html[data-theme="dark"] .home-mark { color: var(--teal); }
   display: grid;
   align-content: start;
   gap: 6px;
-  min-height: 72px;
+  min-height: 60px;
   padding: 10px 12px;
   border: 1px dashed var(--control-line);
   border-radius: 12px;
@@ -2530,7 +2547,6 @@ html[data-theme="dark"] .home-mark { color: var(--teal); }
 }
 
 .trait-value img { width: 18px; height: 18px; flex: none; object-fit: contain; }
-.demo-tiles .trait-value img { width: 15px; height: 15px; }
 
 /* Guess box */
 .candidate[aria-pressed="true"], .picked { border-color: var(--teal-mark); }

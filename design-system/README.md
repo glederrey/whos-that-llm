@@ -1,9 +1,9 @@
-Who's that LLM? is a chat game: a hidden model answers, the player has ten messages to name it. The design comes from the logo itself. The hidden model speaks from the logo's black bubble, messages are counted in the robot's antenna dots, and every control is the robot's rounded square. Ink, paper and teal stay the only brand colors; the game gets its character from shape, type and one big number at the end.
+Who's that LLM? is a chat game: a hidden model answers, the player has ten messages to name it. The design comes from the logo itself. The hidden model speaks from a bubble with the logo's tail, messages are counted in the robot's antenna dots, and every control is the robot's rounded square. Ink, paper and teal stay the only brand colors; the game gets its character from shape, type and one big number at the end.
 
 ## Principles
 
 - **The chat is the game.** Every screen of a round centers the transcript. Side panels (evidence, the guess picker) support it and never compete with it.
-- **The hidden model is the black bubble.** Only the hidden model's replies and the result slab use `hidden`. Nothing else on a page is ink-filled, so the eye always finds the suspect.
+- **The hidden model has its own bubble.** Its replies use `reply`, a grey a step off the canvas, with the tail bottom-left. Only the result slab is ink-filled (`hidden`).
 - **Count, don't decorate.** The only recurring ornament is the row of ten pips. It is information: messages used and left.
 - **Same game on phone and desktop.** Phone and desktop get the same parts, stacked or side by side. Targets are 44px.
 - **Honest limits.** Messages left, characters left, games per hour and a paused game are always shown in plain words in the mono `label` style.

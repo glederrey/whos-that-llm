@@ -26,6 +26,9 @@ colors:
   hidden: "#141414"
   on-hidden: "#EBEBEB"
   link-on-hidden: "#00BBC9"
+  reply: "#DEDEE2"
+  on-reply: "#141414"
+  link-on-reply: "#006C74"
   player: "#D6F3F5"
   teal-mark: "#00838C"
   hit-wash: "#D6F3F5"
@@ -47,13 +50,13 @@ rounded:
 
 The full design system (every token's usage, component rules and previews) is in `design-system/`; start at `design-system/INDEX.md`. This file is the short version the code follows.
 
-Who's that LLM? is a chat game. The player should see the game, not a generated marketing page: neat, simple, flat. The look comes from the logo itself: the hidden model speaks from the logo's black bubble, messages are counted in the robot's antenna dots, and buttons are keys with a hard edge. Light and dark themes are both first-class and share one layout. Phone and desktop are equally important; the round must feel good in one hand.
+Who's that LLM? is a chat game. The player should see the game, not a generated marketing page: neat, simple, flat. The look comes from the logo itself: the hidden model speaks from a bubble with the logo's tail, messages are counted in the robot's antenna dots, and buttons are keys with a hard edge. Light and dark themes are both first-class and share one layout. Phone and desktop are equally important; the round must feel good in one hand.
 
 ## Colors
 
 The brand is three flat colors taken from the logo: ink, paper and teal. There is no fourth brand hue. Teal is the one accent: links, the primary button, the score on a result and a matched trait. It marks the next action and is never a wash across a page.
 
-The default values above are the light theme. `hidden` is the logo's bubble: the hidden model's replies and the score slab on a result, with `on-hidden` text and `link-on-hidden` for links, code and the score. Nothing else on a page is ink-filled, so the eye always finds the suspect. `player` is the pale teal of the player's own bubbles. `teal-mark` is teal as a thin mark (message dots, the focus ring, check icons) on light grounds, where `teal` is under 3:1; `teal` stays a fill. `hit-wash` is the ground of a found trait. `canvas` is the page background; `card` is the surface for panels, which lift off the canvas. `text` and `mute` are primary and secondary text. `teal-press` is for links and hover, and for small teal text on a light surface. `miss` is the word "Wrong" and a small dot; `miss-press` is that red on a light surface, where `miss` is too faint at small size. `miss-wash` and `teal-wash` are the backgrounds of a missed and a matched trait.
+The default values above are the light theme. `hidden` is the logo's ink bubble: the score slab on a result, with `on-hidden` text and `link-on-hidden` for links and the score. Nothing else on a page is ink-filled. `reply` is the hidden model's bubble: a grey a step off the canvas (`#DEDEE2` with `on-reply` ink text in light, `#262626` with paper text in dark), with `link-on-reply` for links. `player` is the pale teal of the player's own bubbles. `teal-mark` is teal as a thin mark (message dots, the focus ring, check icons) on light grounds, where `teal` is under 3:1; `teal` stays a fill. `hit-wash` is the ground of a found trait. `canvas` is the page background; `card` is the surface for panels, which lift off the canvas. `text` and `mute` are primary and secondary text. `teal-press` is for links and hover, and for small teal text on a light surface. `miss` is the word "Wrong" and a small dot; `miss-press` is that red on a light surface, where `miss` is too faint at small size. `miss-wash` and `teal-wash` are the backgrounds of a missed and a matched trait.
 
 A match and a miss must stay distinguishable without relying on color alone.
 
@@ -94,6 +97,9 @@ The theme is switched with the `data-theme` attribute on `html`. The first visit
 | bubble | #F6F6F7 | the card |
 | hidden | #141414 | #262626 |
 | link-on-hidden | #00BBC9 | #33CCD8 |
+| reply | #DEDEE2 | #262626 |
+| on-reply | #141414 | #EBEBEB |
+| link-on-reply | #006C74 | #33CCD8 |
 | player | #D6F3F5 | #0B3A3E |
 | teal-mark | #00838C | #00BBC9 |
 | teal-text | #006C74 | #33CCD8 |
@@ -139,6 +145,6 @@ Radius `sm`, flat fills, no gradient. Buttons are keys: a hard bottom edge (`0 3
 ## Round
 
 - The message bar shows ten dots: sent filled with `teal-mark`, current a ring on `hit-wash`, the rest empty.
-- The hidden model's replies sit in `hidden` with a "Hidden model" label and the small robot above; the player's in `player`.
-- Traits are a 2×2 grid of tiles: dashed when unknown, `hit-wash` with a check when found, a cross when missed. A found company shows its logo before the name, as Origin shows its flag.
+- The hidden model's replies sit in `reply` with a "Hidden model" label and the small robot above; the player's in `player`.
+- Traits are a 2×2 grid of tiles: dashed when unknown, `hit-wash` with a check when found, a cross when missed. An unknown tile shows only its Reveal button when one is for sale, else **Not found yet**. A found company shows its logo before the name, as Origin shows its flag.
 - The result's score card is an ink slab (`hidden`) with the score in Roboto 900 and `link-on-hidden`.
