@@ -29,7 +29,7 @@ const none = {
 };
 
 const intro =
-  "Your score starts from the base and subtracts penalties. That subtotal is multiplied by 10,000 divided by the tokens used, capped at 20, then by 2× if you played with no hints, then by the difficulty. It is rounded and never goes below 0.";
+  "Your score starts from the base and subtracts penalties. That subtotal is multiplied by 10\u00a0000 divided by the tokens used, capped at 20, then by 2× if you played with no hints, then by the difficulty. It is rounded and never goes below 0.";
 
 function frozen(
   name: string,
@@ -107,7 +107,7 @@ test("explanation: a miss with nothing matched and zero tokens", () => {
 test("explanation: base line for origin and company, origin only, company only", () => {
   const both = scoreRound({ rules, ...none, originMatched: true, companyMatched: true, tokens: 2000 });
   assert.equal(both.explanation[1], "Base: 400 — origin 100, company 300.");
-  assert.equal(both.explanation[5], "Tokens: 2,000. Token factor ×5 (10,000/2,000).");
+  assert.equal(both.explanation[5], "Tokens: 2\u00a0000. Token factor ×5 (10\u00a0000/2\u00a0000).");
   const origin = scoreRound({ rules, ...none, originMatched: true, tokens: 2000 });
   assert.equal(origin.explanation[1], "Base: 100 for the origin.");
   const company = scoreRound({ rules, ...none, companyMatched: true, tokens: 2000 });
@@ -115,7 +115,7 @@ test("explanation: base line for origin and company, origin only, company only",
   assert.equal(company.score, 1500);
   assert.deepEqual(company.breakdown, [
     { label: "Company", points: 300 },
-    { label: "Tokens · 2,000 tokens", points: null, multiplier: "×5" },
+    { label: "Tokens · 2\u00a0000 tokens", points: null, multiplier: "×5" },
   ]);
   const given = scoreRound({ rules, ...none, originMatched: true, companyMatched: true, originGiven: true, tokens: 2000 });
   assert.equal(given.explanation[1], "Base: 300 for the company.");
@@ -135,9 +135,9 @@ test("explanation: very large token counts show a tiny factor", () => {
   const huge = scoreRound({ rules, ...none, namedModel: true, tokens: 1_000_000 });
   assert.equal(huge.score, 20);
   assert.equal(huge.breakdown[1].multiplier, "×0.01");
-  assert.equal(huge.explanation[5], "Tokens: 1,000,000. Token factor ×0.01 (10,000/1,000,000).");
+  assert.equal(huge.explanation[5], "Tokens: 1\u00a0000\u00a0000. Token factor ×0.01 (10\u00a0000/1\u00a0000\u00a0000).");
   const bigger = scoreRound({ rules, ...none, namedModel: true, tokens: 12_345_678 });
-  assert.equal(bigger.explanation[5], "Tokens: 12,345,678. Token factor ×0.001 (10,000/12,345,678).");
+  assert.equal(bigger.explanation[5], "Tokens: 12\u00a0345\u00a0678. Token factor ×0.001 (10\u00a0000/12\u00a0345\u00a0678).");
 });
 
 test("explanation: hints, wrong guesses, no-hint-with-hint, difficulty", () => {
@@ -156,16 +156,16 @@ test("explanation: hints, wrong guesses, no-hint-with-hint, difficulty", () => {
     { label: "Named the model", points: 2000 },
     { label: "Year hint", points: -100 },
     { label: "Wrong guesses · 3", points: -300 },
-    { label: "Tokens · 2,694 tokens", points: null, multiplier: "×3.712" },
+    { label: "Tokens · 2\u00a0694 tokens", points: null, multiplier: "×3.712" },
     { label: "Difficulty · Hard", points: null, multiplier: "×2" },
   ]);
   assert.deepEqual(result.explanation, [
     intro,
-    "Base: 2,000 for naming the model.",
+    "Base: 2\u00a0000 for naming the model.",
     "Hints: Year −100.",
     "Wrong guesses: 3 × −100.",
-    "Before the multiplier: 2,000 − 400 = 1,600.",
-    "Tokens: 2,694. Token factor ×3.712 (10,000/2,694).",
+    "Before the multiplier: 2\u00a0000 − 400 = 1\u00a0600.",
+    "Tokens: 2\u00a0694. Token factor ×3.712 (10\u00a0000/2\u00a0694).",
     "Difficulty: Hard ×2.",
   ]);
 });
@@ -177,15 +177,15 @@ test("score steps for a floored round and for stacked multipliers", () => {
     { label: "Company hint", change: "-600", after: "-600", kind: "points" },
     { label: "Wrong guesses · 2", change: "-200", after: "-800", kind: "points" },
     { label: "Before the multiplier", change: "", after: "-800", kind: "subtotal" },
-    { label: "Tokens · 500 tokens", change: "×20", after: "-16,000", kind: "factor" },
+    { label: "Tokens · 500 tokens", change: "×20", after: "-16\u00a0000", kind: "factor" },
     { label: "Floor at 0", change: "", after: "0", kind: "floor" },
   ]);
   const stacked = scoreRound({ rules, ...none, namedModel: true, noHint: true, difficulty: "hard", tokens: 2694 });
   assert.deepEqual(scoreSteps(stacked.breakdown, stacked.score), [
-    { label: "Named the model", change: "2,000", after: "2,000", kind: "points" },
-    { label: "Before the multiplier", change: "", after: "2,000", kind: "subtotal" },
-    { label: "Tokens · 2,694 tokens", change: "×3.712", after: "7,424", kind: "factor" },
-    { label: "No-hint", change: "×2", after: "14,848", kind: "factor" },
-    { label: "Difficulty · Hard", change: "×2", after: "29,696", kind: "factor" },
+    { label: "Named the model", change: "2\u00a0000", after: "2\u00a0000", kind: "points" },
+    { label: "Before the multiplier", change: "", after: "2\u00a0000", kind: "subtotal" },
+    { label: "Tokens · 2\u00a0694 tokens", change: "×3.712", after: "7\u00a0424", kind: "factor" },
+    { label: "No-hint", change: "×2", after: "14\u00a0848", kind: "factor" },
+    { label: "Difficulty · Hard", change: "×2", after: "29\u00a0696", kind: "factor" },
   ]);
 });

@@ -117,7 +117,7 @@ test("score tokens ignore reasoning and cache reads, and do not clamp a smaller 
   assert.equal(scoreTokens([{ inputTokens: Number.NaN, outputTokens: 10 }]).tokens, 10);
 });
 
-test("the token factor is 10,000 divided by tokens, capped at 20", () => {
+test("the token factor is 10\u00a0000 divided by tokens, capped at 20", () => {
   assert.equal(tokenFactor(0, rules), 20);
   assert.equal(tokenFactor(1, rules), 20);
   assert.equal(tokenFactor(500, rules), 20);
@@ -138,9 +138,9 @@ test("naming the model starts at 2000 and penalties stay minus lines", () => {
   assert.deepEqual(pointValues(result.breakdown), [2000, -100, null]);
   assert.equal(result.breakdown.at(-1)?.multiplier, "×20");
   assert.equal(result.breakdown.at(-1)?.label, "Tokens · 500 tokens");
-  assert.match(result.explanation[1] ?? "", /2,000 for naming the model/);
+  assert.match(result.explanation[1] ?? "", /2\u00a0000 for naming the model/);
   assert.match(result.explanation.join("\n"), /Year −100/);
-  assert.match(result.explanation.join("\n"), /Token factor ×20 \(10,000\/500\)\./);
+  assert.match(result.explanation.join("\n"), /Token factor ×20 \(10\u00a0000\/500\)\./);
   assert.match(result.explanation.join("\n"), /Wrong guesses: none/);
   assert.doesNotMatch(result.explanation.join("\n"), /Message/);
   assert.doesNotMatch(result.explanation.join("\n"), /counted as/);
@@ -195,7 +195,7 @@ test("the no-hint multiplier applies only to a round with no hint", () => {
   assert.equal(open.breakdown.some((line) => line.label === "No-hint"), false);
 });
 
-test("a 2,694-token hint round scores 6682", () => {
+test("a 2\u00a0694-token hint round scores 6682", () => {
   const result = scoreRound({
     rules,
     ...none,
@@ -207,20 +207,20 @@ test("a 2,694-token hint round scores 6682", () => {
   assert.equal(result.score, 6682);
   assert.deepEqual(pointValues(result.breakdown), [2000, -100, -100, null]);
   const tokens = result.breakdown.find((line) => line.label.startsWith("Tokens"));
-  assert.equal(tokens?.label, "Tokens · 2,694 tokens");
+  assert.equal(tokens?.label, "Tokens · 2\u00a0694 tokens");
   assert.equal(tokens?.points, null);
   assert.equal(tokens?.multiplier, "×3.712");
   assert.equal(result.breakdown.some((line) => line.label === "No-hint"), false);
-  assert.match(result.explanation.join("\n"), /Before the multiplier: 2,000 − 200 = 1,800/);
-  assert.match(result.explanation.join("\n"), /Token factor ×3\.712 \(10,000\/2,694\)/);
+  assert.match(result.explanation.join("\n"), /Before the multiplier: 2\u00a0000 − 200 = 1\u00a0800/);
+  assert.match(result.explanation.join("\n"), /Token factor ×3\.712 \(10\u00a0000\/2\u00a0694\)/);
   assert.deepEqual(
     scoreSteps(result.breakdown, result.score).map((step) => [step.label, step.change, step.after]),
     [
-      ["Named the model", "2,000", "2,000"],
-      ["Size hint", "-100", "1,900"],
-      ["Wrong guesses · 1", "-100", "1,800"],
-      ["Before the multiplier", "", "1,800"],
-      ["Tokens · 2,694 tokens", "×3.712", "6,682"],
+      ["Named the model", "2\u00a0000", "2\u00a0000"],
+      ["Size hint", "-100", "1\u00a0900"],
+      ["Wrong guesses · 1", "-100", "1\u00a0800"],
+      ["Before the multiplier", "", "1\u00a0800"],
+      ["Tokens · 2\u00a0694 tokens", "×3.712", "6\u00a0682"],
     ],
   );
 });
@@ -255,14 +255,14 @@ test("a trait the player revealed does not pay base points", () => {
   assert.equal(originOnly.breakdown.at(-1)?.label, "Floor at 0");
 });
 
-test("500 tokens or fewer is 20×, and 1,000 tokens is still 10×", () => {
+test("500 tokens or fewer is 20×, and 1\u00a0000 tokens is still 10×", () => {
   for (const tokens of [0, 1, 499, 500]) {
     const result = scoreRound({ rules, ...none, namedModel: true, tokens });
     assert.equal(result.score, 40000, String(tokens));
     assert.equal(result.breakdown.find((line) => line.label.startsWith("Tokens"))?.multiplier, "×20", String(tokens));
   }
   const under = scoreRound({ rules, ...none, namedModel: true, tokens: 499 });
-  assert.match(under.explanation.join("\n"), /Token factor ×20 \(10,000\/499, capped at 20\)/);
+  assert.match(under.explanation.join("\n"), /Token factor ×20 \(10\u00a0000\/499, capped at 20\)/);
   const thousand = scoreRound({ rules, ...none, namedModel: true, tokens: 1000 });
   assert.equal(thousand.score, 20000);
   assert.equal(thousand.breakdown.find((line) => line.label.startsWith("Tokens"))?.multiplier, "×10");
@@ -282,8 +282,8 @@ test("difficulty multiplies after the token factor and the no-hint multiplier", 
   assert.equal(easy.breakdown.at(-1)?.points, null);
   assert.equal(easy.breakdown.at(-1)?.multiplier, "×0.5");
   const easySteps = scoreSteps(easy.breakdown, easy.score);
-  assert.equal(easySteps.find((step) => step.kind === "subtotal")?.after, "2,000");
-  assert.equal(easySteps.at(-1)?.after, "20,000");
+  assert.equal(easySteps.find((step) => step.kind === "subtotal")?.after, "2\u00a0000");
+  assert.equal(easySteps.at(-1)?.after, "20\u00a0000");
   assert.match(easy.explanation.join("\n"), /Difficulty: Easy ×0\.5\./);
   const medium = scoreRound({ rules, ...none, namedModel: true, tokens: 500, difficulty: "medium" });
   assert.equal(medium.score, 40000);

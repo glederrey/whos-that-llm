@@ -753,10 +753,19 @@ html[data-theme="dark"] .segmented a.difficulty-impossible[aria-pressed="true"] 
   line-height: 1.5;
   white-space: nowrap;
 }
-.board-chip.difficulty-easy { background: #1c7c43; color: #fff; }
-.board-chip.difficulty-medium { background: #f5c518; color: #141414; }
-.board-chip.difficulty-hard { background: #c41b15; color: #fff; }
-.board-chip.difficulty-impossible { background: #7c5ce6; color: #fff; }
+/* Difficulty is a dot and the word, as in the lobby; no filled chip. */
+.board-chip.difficulty-easy,
+.board-chip.difficulty-medium,
+.board-chip.difficulty-hard,
+.board-chip.difficulty-impossible { gap: 6px; padding: 1px 0; color: var(--diff-text); font-size: 13px; }
+.board-chip[class*="difficulty-"]::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--diff);
+  flex: none;
+}
 .board-chip.no-hints { background: var(--chip-3); color: var(--text); border: 1px solid var(--line); }
 .board-chip.company-chip {
   gap: 6px;
@@ -833,27 +842,23 @@ html[data-theme="dark"] {
 .tabs { display: flex; gap: 8px; flex-wrap: wrap; }
 .filters { display: flex; gap: 12px 20px; flex-wrap: wrap; align-items: center; justify-content: space-between; }
 .board-controls {
-  display: grid;
-  grid-template-columns: auto auto;
-  grid-template-areas: "modes period" "middle middle";
-  gap: 10px 16px;
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
   align-items: center;
 }
-.board-controls-modes { grid-area: modes; justify-self: start; }
-.board-controls-period { grid-area: period; }
 .board-controls-middle {
-  grid-area: middle;
-  justify-self: start;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 .board-controls-period { justify-self: end; }
-.board-controls .segmented { flex-wrap: nowrap; max-width: none; gap: 4px; }
+.board-controls .segmented { flex-wrap: nowrap; max-width: none; }
 .board-controls .segmented a,
 .board-controls .segmented span[aria-disabled="true"] {
   white-space: nowrap;
-  padding: 7px 12px;
+  font-size: 13px;
+  padding: 7px 10px;
 }
 .board-controls .segmented span[aria-disabled="true"] {
   color: var(--mute);

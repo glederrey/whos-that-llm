@@ -7,6 +7,7 @@ import { ShareActions } from "@/components/share-actions";
 import type { Difficulty } from "@/lib/difficulty";
 import { scoreSteps, type OriginView, type ScoreLine } from "@/lib/game";
 import { poolSizeLabel, poolSizeValue } from "@/lib/game-labels";
+import { formatThousands } from "@/lib/number-format";
 import { difficultyText, type RoundPlace } from "@/lib/round-facts";
 import { difficultyColor } from "@/lib/share-card";
 
@@ -88,7 +89,7 @@ export function ScoreCard({
           ) : (
             <div>
               <p className="score-label">Your score</p>
-              <p className="score">{scored ? score.toLocaleString("en-US") : "—"}</p>
+              <p className="score">{scored ? formatThousands(score) : "—"}</p>
             </div>
           )}
           <div className="score-meta">
@@ -141,7 +142,7 @@ export function ScoreCard({
               <tr>
                 <th>Total</th>
                 <th></th>
-                <th>{score.toLocaleString("en-US")}</th>
+                <th>{formatThousands(score)}</th>
               </tr>
             </tbody>
           </table>

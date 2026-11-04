@@ -3,6 +3,7 @@ import { Avatar } from "./avatar";
 import type { CategoryIconData } from "@/lib/category-icon";
 import { CategoryIcon } from "./category-icon";
 import { CompanyLogo } from "./company-logo";
+import { formatThousands } from "@/lib/number-format";
 
 export type BoardRow = {
   rank: number;
@@ -81,7 +82,7 @@ export function BoardTable({
                     </span>
                   </td>
                 ) : null}
-                <td className="num">{row.score.toLocaleString("en-US")}</td>
+                <td className="num">{formatThousands(row.score)}</td>
               </tr>
             );
           })}

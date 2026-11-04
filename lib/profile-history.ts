@@ -3,6 +3,7 @@ import type { GameStatus, OriginView, ScoreLine } from "./game";
 import type { HistoryRow } from "./profile-data";
 import { isBestSolved } from "./profile-filter";
 import type { RoundPlace } from "./round-facts";
+import { formatThousands } from "./number-format";
 
 /** One row of the Games list, formatted for the screen. */
 export type HistoryItem = {
@@ -59,10 +60,10 @@ export function historyItem(row: HistoryRow, best: number | null): HistoryItem {
     when: formatWhen(row.startedAt),
     status: statusLabel(row.status),
     state: row.status,
-    score: row.score === null ? "—" : row.score.toLocaleString("en-US"),
+    score: row.score === null ? "—" : formatThousands(row.score),
     best: isBestSolved(row, best),
     messages: row.messageCount,
-    tokens: row.tokens.toLocaleString("en-US"),
+    tokens: formatThousands(row.tokens),
     modelName: row.modelName,
     companyName: row.companyName,
     logoPath: row.logoPath,
