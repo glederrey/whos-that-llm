@@ -2349,24 +2349,35 @@ html[data-theme="dark"] .home-mark { color: var(--teal); }
   .home-hero { grid-template-columns: 1fr; gap: 20px; }
   .home-logo { display: none; }
 }
-.demo-search .demo-head { justify-content: flex-start; color: var(--text); font-size: 14px; }
+.demo-search .demo-head { justify-content: space-between; align-items: center; gap: 12px; }
+.demo-count { font: 500 12px/18px var(--font-mono), ui-monospace, monospace; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text); white-space: nowrap; }
+.demo-head .progress { width: auto; gap: 3px; }
+.demo-head .progress i { width: 10px; height: 10px; }
 .demo-search .bubble { padding: 8px 12px; }
 .demo-guess { flex: none; min-height: 0; align-content: start; grid-auto-rows: min-content; border-top: 1px solid var(--line-strong); padding-top: 14px; }
-.demo-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 4px; }
-.demo-cols h3 { margin: 0 0 6px; font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--mute); }
-.demo-hint { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 0; height: 36px; box-sizing: border-box; padding: 0; border-top: 1px solid var(--line); font-size: 14px; }
-.demo-hint > span { color: var(--mute); }
-.demo-hint b { display: inline-flex; align-items: center; gap: 6px; color: var(--teal-press); animation: demo-in 0.25s ease-out; }
-html[data-theme="dark"] .demo-hint b { color: var(--teal); }
-.demo-hint i { font-style: normal; font-size: 12px; line-height: 18px; color: var(--mute); padding: 1px 8px; border: 1px solid var(--line-strong); border-radius: 999px; }
-.demo-hint[data-flash="true"] i { color: var(--text); border-color: var(--teal); background: var(--teal-wash); animation: demo-flash 0.35s ease-in-out 2; }
-.demo-hint:first-of-type { border-top: 0; }
+.demo-cols { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 12px; margin-top: 4px; }
+.demo-cols h3 { margin: 0 0 6px; font: 500 12px/18px var(--font-mono), ui-monospace, monospace; letter-spacing: 0.08em; text-transform: uppercase; color: var(--mute); }
+/* Hints are the round's clue tiles, smaller: dashed until found, a check when found. */
+.demo-tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.demo-tiles .trait,
+.demo-tiles .trait:first-child { min-height: 0; height: 58px; box-sizing: border-box; gap: 4px; padding: 7px 9px; margin: 0; overflow: hidden; }
+.demo-tiles .trait > span:first-child { font-size: 11px; }
+.demo-tiles .trait-value { gap: 5px; font-size: 13px; white-space: nowrap; animation: demo-in 0.25s ease-out; }
+.demo-tiles .trait.hit .trait-value::before { width: 13px; height: 13px; }
+.demo-tiles .trait i { justify-self: start; font-style: normal; font-size: 12px; line-height: 16px; color: var(--mute); padding: 1px 8px; border: 1px solid var(--line-strong); border-radius: 999px; }
+.demo-tiles .trait[data-flash="true"] i { color: var(--text); border-color: var(--teal); background: var(--teal-wash); animation: demo-flash 0.35s ease-in-out 2; }
 .demo-search .guess-search .candidates { z-index: 2; }
-.demo-results { display: grid; gap: 4px; align-content: start; }
-.demo-results .demo-picked { height: 32px; box-sizing: border-box; padding: 0 10px; font-size: 14px; gap: 8px; }
+.demo-results { display: grid; align-content: start; min-width: 0; }
+.demo-picks { display: grid; grid-template-columns: minmax(0, 1fr); gap: 4px; }
+.demo-results .demo-picked { min-width: 0; height: 32px; box-sizing: border-box; padding: 0 10px; font-size: 14px; gap: 8px; }
 .demo-results .demo-picked span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
 .demo-results .demo-picked img { width: 24px; height: 24px; }
 .demo-picked[data-right="false"] { border-color: var(--miss-text); background: color-mix(in srgb, var(--miss-text) 10%, transparent); }
+/* On a phone the guesses sit under the tiles, side by side. */
+@media (max-width: 560px) {
+  .demo-cols { grid-template-columns: minmax(0, 1fr); gap: 10px; }
+  .demo-picks { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); min-height: 32px; }
+}
 .home .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 100%; }
 .home .row:has(> :only-child) { grid-template-columns: 1fr; }
 .home .row .button-lg { width: 100%; text-align: center; justify-content: center; }
