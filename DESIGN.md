@@ -140,5 +140,5 @@ Radius `sm`, flat fills, no gradient. Buttons are keys: a hard bottom edge (`0 3
 
 - The message bar shows ten dots: sent filled with `teal-mark`, current a ring on `hit-wash`, the rest empty.
 - The hidden model's replies sit in `hidden` with a "Hidden model" label and the small robot above; the player's in `player`.
-- Traits are a 2×2 grid of tiles: dashed when unknown, `hit-wash` with a check when found, a cross when missed.
+- Traits are a 2×2 grid of tiles: dashed when unknown, `hit-wash` with a check when found, a cross when missed. A found company shows its logo before the name, as Origin shows its flag.
 - The result's score card is an ink slab (`hidden`) with the score in Roboto 900 and `link-on-hidden`.

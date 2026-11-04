@@ -1,14 +1,18 @@
+import { CompanyLogo } from "./company-logo";
 import { OriginFlag } from "./origin-flag";
 
 export function TraitLine({
   label,
   value,
   flag,
+  logo,
   reveal,
 }: {
   label: string;
   value: string | null | undefined;
   flag?: boolean;
+  /** Company logo shown before the value once it is known. */
+  logo?: string | null;
   reveal?: { label: string; busy: boolean; onOpen: () => void } | null;
 }) {
   return (
@@ -18,6 +22,7 @@ export function TraitLine({
         {value ? (
           <span className="trait-value">
             {flag ? <OriginFlag origin={value} /> : null}
+            {logo ? <CompanyLogo src={logo} /> : null}
             {value}
           </span>
         ) : (

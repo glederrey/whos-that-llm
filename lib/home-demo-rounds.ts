@@ -45,7 +45,7 @@ const script: Step[][] = [
 ];
 
 function hintFor(key: HomeDemoHintKey | undefined, target: PublicModel): HomeDemoTurn["hint"] {
-  if (key === "company") return { key, value: target.companyName };
+  if (key === "company") return { key, value: target.companyName, logo: target.logoUrl };
   if (key === "origin") return { key, value: target.originName, flag: target.originFlag };
   if (key === "year") return { key, value: String(target.year) };
   if (key === "size") return { key, value: target.sizeName };
@@ -86,7 +86,7 @@ export function buildHomeDemoRounds(models: readonly PublicModel[], random: () =
     rounds.push({
       turns,
       facts: {
-        company: { value: target.companyName },
+        company: { value: target.companyName, logo: target.logoUrl },
         origin: { value: target.originName, flag: target.originFlag },
         year: { value: String(target.year) },
         size: { value: target.sizeName },

@@ -57,6 +57,7 @@ export function RoundBoard({ initial }: { initial: PublicGame }) {
   const hintsOpen = game.hintsAllowed && !game.noHint;
   const showBoard = !game.noHint && game.gameMode !== "origin";
   const selectedRow = game.candidates.find((row) => row.id === selected) ?? null;
+  const companyValue = given.get("company") ?? (game.feedback?.company === "match" ? game.feedback.companyValue : null) ?? game.hints.company;
 
   function hintShown(key: "year" | "size") {
     return roundHintShown(game.hints, new Set(given.keys()), key);
@@ -140,7 +141,8 @@ export function RoundBoard({ initial }: { initial: PublicGame }) {
           <section className="card feedback">
             <TraitLine
               label="Company"
-              value={given.get("company") ?? (game.feedback?.company === "match" ? game.feedback.companyValue : null) ?? game.hints.company}
+              value={companyValue}
+              logo={companyValue ? game.candidates.find((row) => row.companyName === companyValue)?.logoPath : null}
               reveal={purchasable("company")}
             />
             <TraitLine

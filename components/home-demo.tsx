@@ -31,9 +31,9 @@ export type HomeDemoTurn = {
   pickId: string;
   right: boolean;
   /** A hint revealed before this guess. */
-  hint?: { key: HomeDemoHintKey; value: string; flag?: string };
+  hint?: { key: HomeDemoHintKey; value: string; flag?: string; logo?: string };
 };
-export type HomeDemoFacts = Record<HomeDemoHintKey, { value: string; flag?: string }>;
+export type HomeDemoFacts = Record<HomeDemoHintKey, { value: string; flag?: string; logo?: string }>;
 /** `facts` describe the hidden model: all of them show once it is found. */
 export type HomeDemoRound = { turns: HomeDemoTurn[]; facts: HomeDemoFacts };
 
@@ -146,7 +146,7 @@ export function HomeDemo({ rounds }: { rounds: HomeDemoRound[] }) {
 
   // Hints revealed so far: earlier turns always, this turn once the guess starts.
   const hintsOut = reduced || (phase === "hint" && hintOn) || phase === "search" || phase === "pick" || phase === "reveal";
-  const revealed = new Map<HomeDemoHintKey, { value: string; flag?: string }>();
+  const revealed = new Map<HomeDemoHintKey, { value: string; flag?: string; logo?: string }>();
   current.turns.forEach((row, index) => {
     if (row.hint && (index < t || (index === t && hintsOut))) revealed.set(row.hint.key, row.hint);
   });
@@ -236,6 +236,7 @@ export function HomeDemo({ rounds }: { rounds: HomeDemoRound[] }) {
                     {hint ? (
                       <span className="trait-value">
                         {hint.flag ? <Twemoji emoji={hint.flag} /> : null}
+                        {hint.logo ? <LogoImage src={hint.logo} width={16} height={16} /> : null}
                         {hint.value}
                       </span>
                     ) : (

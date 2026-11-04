@@ -2355,7 +2355,8 @@ html[data-theme="dark"] .home-mark { color: var(--teal); }
 .demo-head .progress i { width: 10px; height: 10px; }
 .demo-search .bubble { padding: 8px 12px; }
 .demo-guess { flex: none; min-height: 0; align-content: start; grid-auto-rows: min-content; border-top: 1px solid var(--line-strong); padding-top: 14px; }
-.demo-cols { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 12px; margin-top: 4px; }
+/* Tiles take the full width so a logo and a long name fit; the guesses sit under them, side by side. */
+.demo-cols { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; margin-top: 4px; }
 .demo-cols h3 { margin: 0 0 6px; font: 500 12px/18px var(--font-mono), ui-monospace, monospace; letter-spacing: 0.08em; text-transform: uppercase; color: var(--mute); }
 /* Hints are the round's clue tiles, smaller: dashed until found, a check when found. */
 .demo-tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
@@ -2368,16 +2369,11 @@ html[data-theme="dark"] .home-mark { color: var(--teal); }
 .demo-tiles .trait[data-flash="true"] i { color: var(--text); border-color: var(--teal); background: var(--teal-wash); animation: demo-flash 0.35s ease-in-out 2; }
 .demo-search .guess-search .candidates { z-index: 2; }
 .demo-results { display: grid; align-content: start; min-width: 0; }
-.demo-picks { display: grid; grid-template-columns: minmax(0, 1fr); gap: 4px; }
+.demo-picks { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 4px; min-height: 32px; }
 .demo-results .demo-picked { min-width: 0; height: 32px; box-sizing: border-box; padding: 0 10px; font-size: 14px; gap: 8px; }
 .demo-results .demo-picked span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
 .demo-results .demo-picked img { width: 24px; height: 24px; }
 .demo-picked[data-right="false"] { border-color: var(--miss-text); background: color-mix(in srgb, var(--miss-text) 10%, transparent); }
-/* On a phone the guesses sit under the tiles, side by side. */
-@media (max-width: 560px) {
-  .demo-cols { grid-template-columns: minmax(0, 1fr); gap: 10px; }
-  .demo-picks { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); min-height: 32px; }
-}
 .home .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 100%; }
 .home .row:has(> :only-child) { grid-template-columns: 1fr; }
 .home .row .button-lg { width: 100%; text-align: center; justify-content: center; }
@@ -2532,6 +2528,9 @@ html[data-theme="dark"] .home-mark { color: var(--teal); }
   background: currentColor;
   mask: center / contain no-repeat url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 8.5l3.2 3L13 4.5'/%3E%3C/svg%3E");
 }
+
+.trait-value img { width: 18px; height: 18px; flex: none; object-fit: contain; }
+.demo-tiles .trait-value img { width: 15px; height: 15px; }
 
 /* Guess box */
 .candidate[aria-pressed="true"], .picked { border-color: var(--teal-mark); }
