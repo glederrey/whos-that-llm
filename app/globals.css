@@ -2468,7 +2468,7 @@ html[data-theme="dark"] .home-mark { color: var(--teal); }
 .bubble { border-radius: 22px; }
 .bubble.assistant {
   position: relative;
-  margin-top: 24px;
+  margin-top: 30px;
   background: var(--reply);
   color: var(--on-reply);
   border-color: transparent;
@@ -2482,13 +2482,15 @@ html[data-theme="dark"] .home-mark { color: var(--teal); }
   bottom: calc(100% + 6px);
   padding-left: 26px;
   white-space: nowrap;
-  font: 500 12px/18px var(--font-mono), ui-monospace, monospace;
+  font: 500 12px/24px var(--font-mono), ui-monospace, monospace;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--mute);
-  background: no-repeat left center / 20px 18px url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 18'%3E%3Crect width='20' height='18' rx='5' fill='%2300bbc9'/%3E%3Crect x='4.5' y='6' width='3.5' height='3.5' rx='1' fill='%23ebebeb'/%3E%3Crect x='12' y='6' width='3.5' height='3.5' rx='1' fill='%23ebebeb'/%3E%3C/svg%3E");
+  background: no-repeat left bottom / 20px 24px url("/brand/bot-ink-eyes.png");
 }
-.reply-block .bubble.assistant { margin-top: 24px; }
+.reply-block .bubble.assistant { margin-top: 30px; }
+/* The robot from the logo: ink eyes on the light canvas, paper eyes on the dark one. */
+html[data-theme="dark"] .bubble.assistant::before { background-image: url("/brand/bot-paper-eyes.png"); }
 /* The hidden model types in mono, the player writes in sans. Mono runs wide, so one step smaller. */
 .bubble.assistant { font-family: var(--font-mono), ui-monospace, monospace; font-size: 15px; line-height: 1.55; }
 .bubble.assistant strong, .bubble.assistant b { font-weight: 700; }

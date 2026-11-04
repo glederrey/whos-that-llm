@@ -140,11 +140,11 @@ Radius `sm`, flat fills, no gradient. Buttons are keys: a hard bottom edge (`0 3
 - Don't put `miss` on the logo or on large fills; full teal against full red buzzes.
 - Don't add decorative loops, a bouncing logo or an animated background. The home page has two exceptions, and both stop under reduced motion: the example round and the slow company strip. Motion stays small: a reply arriving word by word, waiting dots, a trait tile unveiling, a short shake on a wrong guess. Pages settle in with a 6px rise and fade (0.22s), the account menu opens from its button (0.14s), and tabs give a little on press. All of it stops under reduced motion.
 - Don't build the landing page as a feature grid, quotes or a logo wall. The home hero is the title (**Guess the hidden AI.**) with the logo tail pointing at the word AI, one paragraph, one primary button and an example round. The only list below it is the company strip and the Top 5. It has no card of steps.
-- Don't edit, flip or redraw the logo files, and never use the `_dot` favicon files. Use `tail_right` when the title is to the right of the mark and `tail_left` when it is to the left; leave the mark out where no text sits beside it.
+- Don't edit, flip or redraw the logo files, and never use the `_dot` favicon files. The only cut-out is the robot (`bot-ink-eyes.png`, `bot-paper-eyes.png`), taken unchanged from the logo files with the background removed. Use `tail_right` when the title is to the right of the mark and `tail_left` when it is to the left; leave the mark out where no text sits beside it.
 
 ## Round
 
 - The message bar shows ten dots: sent filled with `teal-mark`, current a ring on `hit-wash`, the rest empty.
-- The hidden model's replies sit in `reply` with a "Hidden model" label and the small robot above; the player's in `player`.
+- The hidden model's replies sit in `reply` with a "Hidden model" label and the logo's robot above (`public/brand/bot-ink-eyes.png` in light, `bot-paper-eyes.png` in dark, 20×24px, antennas included; the reply keeps 30px above it so the antennas never touch the message before); the player's in `player`.
 - Traits are a 2×2 grid of tiles: dashed when unknown, `hit-wash` with a check when found, a cross when missed. An unknown tile shows only its Reveal button when one is for sale, else **Not found yet**. A found company shows its logo before the name, as Origin shows its flag.
 - The result's score card is an ink slab (`hidden`) with the score in Roboto 900 and `link-on-hidden`.
