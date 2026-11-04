@@ -2380,6 +2380,13 @@ html[data-theme="dark"] .home-mark { color: var(--teal); }
 .demo-tiles .trait-value img { width: 14px; height: 14px; }
 .demo-tiles .trait i { font-style: normal; font-size: 11px; line-height: 15px; color: var(--mute); padding: 1px 7px; border: 1px solid var(--line-strong); border-radius: 999px; }
 .demo-tiles .trait[data-flash="true"] i { color: var(--text); border-color: var(--teal); background: var(--teal-wash); animation: demo-flash 0.35s ease-in-out 2; }
+/* Narrow phones: a long company with its logo needs every pixel of the one-line tile. */
+@container (max-width: 300px) {
+  .demo-tiles .trait,
+  .demo-tiles .trait:first-child { gap: 4px; padding: 0 6px; }
+  .demo-tiles .trait > span:first-child { letter-spacing: 0; }
+  .demo-tiles .trait-value { gap: 3px; }
+}
 @container (min-width: 400px) {
   .demo-tiles { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   .demo-tiles .trait,
