@@ -74,7 +74,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
           <p className="home-copy">
             Think you can tell AI models apart, like a wine? A hidden LLM answers you: ChatGPT, Claude, Gemini, or any of the{" "}
             <strong className="home-mark">{models.length.toLocaleString("en-US")} models</strong> by{" "}
-            <strong className="home-mark">{groups.length.toLocaleString("en-US")} companies</strong> in play. You have ten messages to name it.
+            <strong className="home-mark">{groups.length.toLocaleString("en-US")} companies</strong> in play. You have ten messages to name it, in one of several game modes.
           </p>
           <HomeCta signedIn={Boolean(user && username)} />
         </div>
