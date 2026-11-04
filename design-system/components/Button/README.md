@@ -11,7 +11,7 @@ An arcade key: a flat fill with a hard bottom edge that disappears when pressed.
 | `wl-btn-giveup` | Give up inside the composer | text only in `miss-text`, `miss-wash` on hover |
 | `wl-btn-danger` | Confirm a destructive step in a dialog | `miss-fill`, `on-fill` label |
 
-- Press: the button travels 3px down and loses its edge in `t-press`. Hover (only where hover exists) turns any filled button to `text` on `canvas`: ink in light, paper in dark, like the logo.
+- Press: the button travels 3px down and loses its edge in `t-press`. Hover (only where hover exists) deepens the primary teal a step (`#01A4B0`) and keeps its dark-teal label, in both themes. It never flips to ink or paper.
 - One `wl-btn` per view. Two teal keys side by side means one of them is quiet.
 - 44px minimum height everywhere; full width on phones at the bottom of a round.
 - Never white text on `teal`. Never a gradient or glow.

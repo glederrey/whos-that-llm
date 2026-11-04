@@ -106,7 +106,6 @@ html[data-theme="dark"] .menu a,
 html[data-theme="dark"] .header-nav a,
 html[data-theme="dark"] .section-nav a { color: var(--text); }
 html[data-theme="dark"] a.button { color: #062e2e; }
-@media (hover: hover) and (pointer: fine) { html[data-theme="dark"] a.button:hover { color: var(--canvas); } }
 html[data-theme="dark"] a.button-quiet { color: var(--text); }
 @media (hover: hover) and (pointer: fine) { html[data-theme="dark"] a.button-quiet:hover { color: var(--text); } }
 html[data-theme="dark"] .tabs a[aria-pressed="true"],
@@ -320,7 +319,9 @@ p { margin: 0; text-wrap: pretty; }
   transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.1s ease;
 }
 .button:active, .button-quiet:active, .button-danger:active, .button-on:active, .button-off:active, .icon-button:active { transform: scale(0.97); }
-@media (hover: hover) and (pointer: fine) { .button:hover:not(:disabled), .icon-button:hover:not(:disabled) { background: var(--text); color: var(--canvas); } }
+/* Hover deepens the teal a step toward its own label color; the button never flips to ink or paper. */
+@media (hover: hover) and (pointer: fine) { .button:hover:not(:disabled) { background: color-mix(in srgb, var(--teal) 84%, #062e2e); } }
+@media (hover: hover) and (pointer: fine) { .icon-button:hover:not(:disabled) { background: var(--soft); } }
 .button:disabled, .icon-button:disabled { opacity: 0.45; cursor: not-allowed; }
 .button[aria-busy="true"]:disabled { cursor: progress; }
 .spinner {
@@ -2372,7 +2373,7 @@ html[data-theme="dark"] .home-mark { color: var(--teal); }
 .demo-guess { container-type: inline-size; }
 .demo-tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
 .demo-tiles .trait,
-.demo-tiles .trait:first-child { display: flex; align-items: center; justify-content: space-between; min-height: 0; height: 34px; box-sizing: border-box; gap: 6px; padding: 0 9px; margin: 0; overflow: hidden; }
+.demo-tiles .trait:first-child { display: flex; flex-wrap: nowrap; align-items: center; align-content: center; justify-content: space-between; min-height: 0; height: 34px; box-sizing: border-box; gap: 6px; padding: 0 9px; margin: 0; overflow: hidden; }
 .demo-tiles .trait > span:first-child { font-size: 10px; }
 .demo-tiles .trait-value { gap: 4px; font-size: 12px; white-space: nowrap; animation: demo-in 0.25s ease-out; }
 .demo-tiles .trait.hit .trait-value::before { content: none; }

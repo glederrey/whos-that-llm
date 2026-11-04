@@ -131,7 +131,7 @@ Content width is `min(980px, 100% - 32px)` for the header, the page and the foot
 
 ## Buttons
 
-Radius `sm`, flat fills, no gradient. Buttons are keys: a hard bottom edge (`0 3px 0 teal-press` on primary, `0 2px 0 control-line` on quiet) that goes away with a small travel on press. Primary is teal with a near-black text (`#062e2e`, a dark teal, not `ink`); hover on a filled button is `text` on `canvas`, never white on teal. Quiet is `card` with a `control-line` border (3.6:1 on the card in light, 3.7:1 in dark) and `text` label. Give up is quiet with `miss-press` text, no border and no edge. On/off are `on` (green) and `miss-press` fills with white text; hover darkens to `on-press` and `off-press`. Hover is gated behind `(hover: hover)`. Targets are 44px on phones.
+Radius `sm`, flat fills, no gradient. Buttons are keys: a hard bottom edge (`0 3px 0 teal-press` on primary, `0 2px 0 control-line` on quiet) that goes away with a small travel on press. Primary is teal with a near-black text (`#062e2e`, a dark teal, not `ink`); hover on the primary deepens the teal a step (`#01A4B0`, teal mixed 16% toward its label color) and keeps the dark-teal label, 4.8:1; it never flips to ink, paper or white. Quiet is `card` with a `control-line` border (3.6:1 on the card in light, 3.7:1 in dark) and `text` label. Give up is quiet with `miss-press` text, no border and no edge. On/off are `on` (green) and `miss-press` fills with white text; hover darkens to `on-press` and `off-press`. Hover is gated behind `(hover: hover)`. Targets are 44px on phones.
 
 ## Do's and Don'ts
 

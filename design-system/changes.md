@@ -8,7 +8,7 @@ This system is a proposed redesign of whos-that-llm.com, built from its `DESIGN.
 | Player bubble | Card with border | `player` pale teal, tail bottom-right | Two speakers told apart by ground and corner, not only position |
 | Message counter | Ten thin bars | Ten antenna-dot pips: filled, ring, empty | Shape carries state; echoes the robot |
 | Buttons | Flat fill, scale 0.97 on press | Arcade key: hard `shadow-press` edge, 3px travel | A game, not a form |
-| Hover on filled buttons | Teal press with white text | `text` on `canvas` (ink in light, paper in dark) | Logo pair; no white on teal |
+| Hover on filled buttons | Teal press with white text | A deeper teal (`#01A4B0`) with the same dark-teal label | Stays on brand without a jarring flip; no white on teal |
 | Traits | Rows with a pill when matched | Four evidence tiles: dashed unknown, check hit, cross miss | Reads as clues collected; works without color |
 | Result | Big teal number on a card | Ink slab with the tail corner and a 112px display number | The model's last word, the moment worth sharing |
 | Difficulty | 4px colored left edge | Dot plus word (lobby, leaderboard) | Clearer, and drops the colored-edge card |
