@@ -13,7 +13,7 @@ import "./globals.css";
 
 // Latin faces, vendored so the standalone release build never resolves Google Fonts (all OFL).
 // Instrument Sans is the text face; --font-bold keeps its name for text that needs to look heavier.
-// Lato sets titles and the score; JetBrains Mono sets counters and labels.
+// Roboto sets titles and the score; JetBrains Mono sets counters and labels.
 const font = localFont({
   src: "./fonts/instrument-sans-latin.woff2",
   weight: "400 700",
@@ -27,10 +27,8 @@ const fontBold = localFont({
   variable: "--font-bold",
 });
 const fontDisplay = localFont({
-  src: [
-    { path: "./fonts/lato-latin-700.woff2", weight: "700" },
-    { path: "./fonts/lato-latin-900.woff2", weight: "900" },
-  ],
+  src: "./fonts/roboto-latin.woff2",
+  weight: "100 900",
   display: "swap",
   variable: "--font-display",
 });

@@ -31,7 +31,7 @@ colors:
   hit-wash: "#D6F3F5"
 typography:
   display:
-    fontFamily: Lato
+    fontFamily: Roboto
   sans:
     fontFamily: Instrument Sans
   mono:
@@ -103,11 +103,11 @@ The theme is switched with the `data-theme` attribute on `html`. The first visit
 
 Three families, each with one job, all Latin subsets vendored as woff2 in `app/fonts` (OFL) and loaded with `next/font/local`. Do not load a font from Google Fonts.
 
-- Lato (700, 900) for headings and the score (`--font-display`).
+- Roboto (variable, 700 for headings, 900 for the score) for headings and the score (`--font-display`).
 - Instrument Sans for everything people read: chat, body, buttons (`--font`, `--font-bold`).
 - JetBrains Mono (500) for the machine layer: the message counter, trait names, table heads, score breakdown figures, ranks and character counts, as small uppercase labels or figures (`--font-mono`). Code in rendered markdown is mono too.
 
-Chat bubbles are always Instrument Sans, never mono. Roboto stays only for the share card image (`app/r/[gameId]/card.png`).
+Chat bubbles are always Instrument Sans, never mono. The share card image (`app/r/[gameId]/card.png`) is all Roboto.
 
 ## Layout
 
@@ -139,4 +139,4 @@ Radius `sm`, flat fills, no gradient. Buttons are keys: a hard bottom edge (`0 3
 - The message bar shows ten dots: sent filled with `teal-mark`, current a ring on `hit-wash`, the rest empty.
 - The hidden model's replies sit in `hidden` with a "Hidden model" label and the small robot above; the player's in `player`.
 - Traits are a 2×2 grid of tiles: dashed when unknown, `hit-wash` with a check when found, a cross when missed.
-- The result's score card is an ink slab (`hidden`) with the score in Lato 900 and `link-on-hidden`.
+- The result's score card is an ink slab (`hidden`) with the score in Roboto 900 and `link-on-hidden`.
