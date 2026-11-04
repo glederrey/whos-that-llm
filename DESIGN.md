@@ -109,3 +109,14 @@ Radius `sm`, flat fills, no gradient. Primary is teal with a near-black text (`#
 - Don't add decorative loops, a bouncing logo or an animated background. The home page has two exceptions, and both stop under reduced motion: the example round and the slow company strip. Motion stays small: a reply arriving word by word, waiting dots, a trait chip unveiling, a short shake on a wrong guess. Pages settle in with a 6px rise and fade (0.22s), the account menu opens from its button (0.14s), and tabs give a little on press. All of it stops under reduced motion.
 - Don't build the landing page as a feature grid, quotes or a logo wall. The home hero is the title (**Guess the hidden AI.**) with the logo tail pointing at the word AI, one paragraph, one primary button and an example round. The only list below it is the company strip and the Top 5. It has no card of steps.
 - Don't edit, flip or redraw the logo files, and never use the `_dot` favicon files. Use `tail_right` when the title is to the right of the mark and `tail_left` when it is to the left; leave the mark out where no text sits beside it.
+
+## Round redesign trial
+
+Branch `play-redesign` tries the new design system on the round page (`/play/[id]`) only. Everything lives in `app/play/[gameId]/round.css`, scoped to the `.round-skin` wrapper, and `app/play/[gameId]/fonts.ts`; the rest of the site keeps the rules above.
+
+- The hidden model's replies sit in the logo's bubble: ink in light, `#262626` in dark, with paper text, a 4px corner bottom-left and a "Hidden model" label with the small robot above. The player's bubbles are a pale teal (`#d6f3f5`, dark `#0b3a3e`) with the 4px corner bottom-right.
+- The message bar shows ten dots: sent filled, current a ring, the rest empty. Thin teal marks on light grounds use `#00838c` (3:1); `#00BBC9` stays a fill.
+- Buttons have a hard bottom edge (`0 3px 0 #006c74`) that goes away on press. Hover on a filled button is `text` on `canvas`.
+- Traits are a 2×2 grid of tiles: dashed when unknown, teal-wash with a check when found.
+- Type on the round: Bricolage Grotesque for titles, Instrument Sans for text, JetBrains Mono (12px uppercase) for counters and labels. All three are vendored woff2 (OFL) in `app/fonts`. This breaks the "Roboto only" and "no mono in the interface" rules on purpose, for the trial.
+- Light canvas on the round is `paper` (`#ebebeb`); dark is `#0f0f0f`.
