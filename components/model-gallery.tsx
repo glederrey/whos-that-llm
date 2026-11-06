@@ -30,7 +30,7 @@ export function ModelGallery({ models }: { models: PublicModel[] }) {
         <section key={group.companyId} className="model-group">
           <h2 className="model-company">
             <span className="model-logo">
-              <CompanyLogo src={group.logoUrl} />
+              <CompanyLogo src={group.logoUrl} lazy />
             </span>
             {group.companyName}
             <span className="muted model-company-count">{group.models.length}</span>

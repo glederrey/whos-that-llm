@@ -39,11 +39,22 @@ export async function createSessionClient() {
   });
 }
 
+let serviceClient: { key: string; client: SupabaseClient } | null = null;
+
+/**
+ * One client per process. It holds no session and no per-request state (persistSession and
+ * autoRefreshToken are off), so requests can share it. Keyed on url + secret so a changed env
+ * builds a new one.
+ */
 export function createServiceClient(): SupabaseClient | null {
   const env = publicEnv();
   const secret = secretKey();
   if (!env || !secret) return null;
-  return createClient(env.url, secret, {
+  const key = `${env.url}\n${secret}`;
+  if (serviceClient?.key === key) return serviceClient.client;
+  const client = createClient(env.url, secret, {
     auth: { persistSession: false, autoRefreshToken: false },
   });
+  serviceClient = { key, client };
+  return client;
 }

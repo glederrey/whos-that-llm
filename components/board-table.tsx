@@ -72,7 +72,7 @@ export function BoardTable({
                       {showCompany ? (
                         row.companyName ? (
                           <span className="board-chip company-chip">
-                            {row.categoryIcon ? <CategoryIcon icon={row.categoryIcon} /> : row.companyLogo ? <CompanyLogo src={row.companyLogo} /> : null}
+                            {row.categoryIcon ? <CategoryIcon icon={row.categoryIcon} /> : row.companyLogo ? <CompanyLogo src={row.companyLogo} lazy /> : null}
                             {row.companyName}
                           </span>
                         ) : (

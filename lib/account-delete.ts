@@ -4,12 +4,12 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { clearedGameLink, clearedUsageLink } from "./anonymize-account";
 import { serviceOrThrow } from "./rounds";
 import { giveUp } from "./rounds-play";
-import { currentUser } from "./session";
+import { strictUser } from "./session";
 import { createSessionClient } from "./supabase/server";
 
 export async function deleteSignedInAccount(confirmed: boolean): Promise<"confirm" | "auth" | "save" | null> {
   if (!confirmed) return "confirm";
-  const user = await currentUser();
+  const user = await strictUser();
   if (!user) return "auth";
   let client: SupabaseClient;
   try {

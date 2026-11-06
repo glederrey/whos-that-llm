@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
+import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { signOut } from "@/app/auth/actions";
 import { Avatar } from "./avatar";
@@ -22,6 +23,11 @@ export function AccountMenu({
   const pathname = usePathname();
   const [open, setOpen] = useState<"nav" | "account" | null>(null);
   const rootRef = useRef<HTMLDivElement>(null);
+
+  // Header links are soft navigations now: the layout stays mounted, so close the lists when the page changes.
+  useEffect(() => {
+    setOpen(null);
+  }, [pathname]);
 
   useEffect(() => {
     function onPointer(event: MouseEvent) {
@@ -69,7 +75,7 @@ export function AccountMenu({
       </button>
       {open === "nav" ? (
         <div className="menu" role="menu">
-          <a href="/" role="menuitem" aria-current={pathname === "/" ? "page" : undefined} onClick={() => setOpen(null)}>
+          <Link href="/" role="menuitem" aria-current={pathname === "/" ? "page" : undefined} onClick={() => setOpen(null)}>
             <svg className="nav-icon" viewBox="0 0 24 24" aria-hidden="true">
               <path
                 fill="none"
@@ -81,9 +87,9 @@ export function AccountMenu({
               />
             </svg>
             Home
-          </a>
+          </Link>
           {navItems.map((item) => (
-            <a
+            <Link
               key={item.href}
               href={item.href}
               role="menuitem"
@@ -92,7 +98,7 @@ export function AccountMenu({
             >
               {item.icon}
               {item.label}
-            </a>
+            </Link>
           ))}
         </div>
       ) : null}
@@ -114,9 +120,9 @@ export function AccountMenu({
             <>
               {children}
               {username ? (
-                <a href="/profile" role="menuitem">
+                <Link href="/profile" role="menuitem">
                   Profile
-                </a>
+                </Link>
               ) : null}
               <div className="menu-rule" />
               <button type="button" className="menu-item" onClick={() => void signOutAccount()}>

@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { refreshCatalog } from "@/lib/catalog-cache";
 import { lobePath } from "@/lib/lobe-logo";
 import { parseSize, rosterNotice } from "@/lib/admin-model";
 import { requireOwner } from "@/lib/admin-access";
@@ -66,6 +67,7 @@ function categoryFields(formData: FormData) {
 }
 
 function finish(formData: FormData, notice: string | null) {
+  refreshCatalog();
   revalidatePath("/admin");
   revalidatePath("/admin/models");
   revalidatePath("/admin/categories");
@@ -83,6 +85,7 @@ function finish(formData: FormData, notice: string | null) {
 }
 
 function finishCategory(notice: string | null) {
+  refreshCatalog();
   revalidatePath("/admin/categories");
   revalidatePath("/admin/models");
   revalidatePath("/play");
@@ -92,6 +95,7 @@ function finishCategory(notice: string | null) {
 }
 
 function finishOrigin(notice: string | null) {
+  refreshCatalog();
   revalidatePath("/admin/origins");
   revalidatePath("/admin/models");
   revalidatePath("/admin/companies");
@@ -119,6 +123,7 @@ export async function toggleOrigin(formData: FormData) {
 }
 
 function finishCompany(notice: string | null) {
+  refreshCatalog();
   revalidatePath("/admin/companies");
   revalidatePath("/admin/origins");
   revalidatePath("/admin/models");
@@ -167,6 +172,7 @@ export async function toggleModel(id: string, enabled: boolean): Promise<string 
   await requireOwner();
   if (typeof id !== "string" || typeof enabled !== "boolean") return rosterNotice("save");
   const notice = await setRosterEnabled(id, enabled);
+  refreshCatalog();
   revalidatePath("/admin");
   revalidatePath("/admin/models");
   revalidatePath("/admin/categories");
@@ -255,6 +261,7 @@ export async function addNewRosterModels(picks: { id: string; size: string; diff
   );
   if (added === null) return { ok: false, error: "Could not add those models." };
   if (added > 0) {
+    refreshCatalog();
     revalidatePath("/admin");
     revalidatePath("/admin/models");
   }
@@ -323,6 +330,7 @@ export async function addCompanyModels(companyId: string, picks: { id: string; s
   );
   if (added === null) return { ok: false, error: "Could not add those models." };
   if (added > 0) {
+    refreshCatalog();
     revalidatePath("/admin");
     revalidatePath("/admin/models");
     revalidatePath("/admin/companies");

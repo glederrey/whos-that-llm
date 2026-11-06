@@ -10,7 +10,7 @@ function OptionLabel({ option }: { option: MenuOption | undefined }) {
   if (!option?.logoUrl) return <>{option?.label}</>;
   return (
     <span className="menu-option">
-      <CompanyLogo src={option.logoUrl} />
+      <CompanyLogo src={option.logoUrl} lazy />
       <span>{option.label}</span>
     </span>
   );

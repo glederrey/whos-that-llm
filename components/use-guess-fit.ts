@@ -1,7 +1,15 @@
-import { useEffect, type RefObject } from "react";
+import { useEffect, useRef, type RefObject } from "react";
 
 // Sizes the previous-guesses card so the side column fits next to the thread.
-export function useGuessFit(roundRef: RefObject<HTMLDivElement | null>) {
+// `paused` (a reply is streaming) skips refits: the thread grows each frame and
+// the card only needs to follow once the reply is done.
+export function useGuessFit(roundRef: RefObject<HTMLDivElement | null>, paused = false) {
+  const pausedRef = useRef(paused);
+  const refitRef = useRef<() => void>(() => {});
+  useEffect(() => {
+    pausedRef.current = paused;
+    if (!paused) refitRef.current();
+  }, [paused]);
   useEffect(() => {
     const round = roundRef.current;
     if (!round) return;
@@ -70,9 +78,10 @@ export function useGuessFit(roundRef: RefObject<HTMLDivElement | null>) {
       applied = mark;
     };
     const schedule = () => {
-      if (frame) return;
+      if (frame || pausedRef.current) return;
       frame = window.requestAnimationFrame(fit);
     };
+    refitRef.current = schedule;
     fit();
     window.addEventListener("scroll", schedule, { passive: true });
     window.addEventListener("resize", schedule);

@@ -1,8 +1,8 @@
 import "server-only";
 
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Origin, Size } from "./game";
-import { computePublicStats, type NamedCategory, type NamedGameMode, type PublicGameFact, type PublicGuessFact, type PublicUsageFact } from "./public-stats";
+import { computePublicStats, type NamedCategory, type NamedGameMode } from "./public-stats";
+import { factsFromRows, type StatisticsFacts } from "./public-stats-facts";
 import { serviceOrThrow } from "./rounds";
 
 const pageSize = 1000;
@@ -17,16 +17,16 @@ export type PublicStatsPayload = {
 
 export async function loadPublicStats(): Promise<PublicStatsPayload> {
   const client = serviceOrThrow();
-  const [games, usage, guesses, gameModes, models, categories, companies, originRows] = await Promise.all([
-    readAll(client, "games", "id, model_id, status, message_count, started_at, finished_at, game_mode, traits, pool_model_ids, pool_key, difficulty, no_hint, score"),
-    readAll(client, "usage", "id, game_id, model_id, input_tokens, output_tokens"),
-    readAll(client, "guesses", "id, game_id, guessed_model_id, guessed_origin, model_correct, origin_correct"),
+  const [facts, gameModes, models, categories, companies, originRows] = await Promise.all([
+    client.rpc("statistics_facts"),
     readAll(client, "game_modes", "id, name, sort_order"),
     readAll(client, "models", "id, name"),
     readAll(client, "categories", "id, name, enabled"),
     readAll(client, "companies", "id, name"),
     readAll(client, "origins", "id, name, flag"),
   ]);
+  if (facts.error || !facts.data) throw new Error("Could not read stats.");
+  const { games, usage, guesses } = factsFromRows(facts.data as StatisticsFacts);
   const names: Record<string, string> = {};
   for (const row of models) names[row.id as string] = row.name as string;
   const listed: NamedGameMode[] = gameModes
@@ -41,66 +41,12 @@ export async function loadPublicStats(): Promise<PublicStatsPayload> {
     names,
     origins,
     stats: computePublicStats(
-      games.map(gameFact),
-      usage.map(usageFact),
-      guesses.map(guessFact),
+      games,
+      usage,
+      guesses,
       listed,
       { categories: categoryNames, companies: companies.map((row) => ({ id: row.id as string, name: row.name as string })) },
     ),
-  };
-}
-
-function gameFact(row: Record<string, unknown>): PublicGameFact {
-  const modelId = row.model_id as string;
-  const trait = hiddenTrait(row.traits, modelId);
-  return {
-    id: row.id as string,
-    modelId,
-    status: row.status as string,
-    messageCount: Number(row.message_count ?? 0),
-    startedAt: row.started_at as string,
-    finishedAt: typeof row.finished_at === "string" && row.finished_at.length > 0 ? row.finished_at : null,
-    gameMode: row.game_mode as string,
-    size: trait.size,
-    origin: trait.origin,
-    poolKey: typeof row.pool_key === "string" && row.pool_key.length > 0 ? row.pool_key : null,
-    difficulty: row.difficulty === null || row.difficulty === undefined ? null : Number(row.difficulty),
-    noHint: Boolean(row.no_hint),
-    score: row.score === null || row.score === undefined ? null : Number(row.score),
-    poolModelIds: Array.isArray(row.pool_model_ids) ? row.pool_model_ids.flatMap((id) => (typeof id === "string" ? [id] : [])) : [],
-  };
-}
-
-function usageFact(row: Record<string, unknown>): PublicUsageFact {
-  return {
-    gameId: (row.game_id as string | null) ?? null,
-    modelId: row.model_id as string,
-    inputTokens: Number(row.input_tokens ?? 0),
-    outputTokens: Number(row.output_tokens ?? 0),
-  };
-}
-
-function guessFact(row: Record<string, unknown>): PublicGuessFact {
-  return {
-    gameId: row.game_id as string,
-    modelCorrect: Boolean(row.model_correct),
-    guessedModelId: (row.guessed_model_id as string | null) ?? null,
-    guessedOrigin: (row.guessed_origin as string | null) ?? null,
-    originCorrect: Boolean(row.origin_correct),
-  };
-}
-
-function hiddenTrait(traits: unknown, modelId: string): { size: Size | null; origin: Origin | null } {
-  if (!traits || typeof traits !== "object") return { size: null, origin: null };
-  const models = (traits as { models?: unknown }).models;
-  if (!models || typeof models !== "object") return { size: null, origin: null };
-  const model = (models as Record<string, unknown>)[modelId];
-  if (!model || typeof model !== "object") return { size: null, origin: null };
-  const size = (model as { size?: unknown }).size;
-  const origin = (model as { origin?: unknown }).origin;
-  return {
-    size: size === "nano" || size === "small" || size === "medium" || size === "large" || size === "xxl" ? size : null,
-    origin: typeof origin === "string" && origin.length > 0 ? origin : null,
   };
 }
 

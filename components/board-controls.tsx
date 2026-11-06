@@ -132,7 +132,7 @@ function CompanyMenu({
             href={boardHref(base, { ...choice, company: item.id })}
             scroll={false}
           >
-            <CompanyLogo src={item.logoUrl} />
+            <CompanyLogo src={item.logoUrl} lazy />
             <span>{item.name}</span>
           </Link>
         ))}

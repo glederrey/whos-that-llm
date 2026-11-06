@@ -15,7 +15,8 @@ import {
 } from "./game";
 import { roundContext } from "./prompt";
 import { serviceOrThrow } from "./rounds-db";
-import { loadGame, rowWithTraits, rpc, scoreFrom } from "./rounds-queries";
+import { loadGame, readUsage, rowWithTraits, rpc, scoreFrom, withCatalogLogos } from "./rounds-queries";
+import { loadCatalogCached } from "./rounds-start";
 import { guessFinish } from "./rounds-score";
 import {
   fail,
@@ -30,7 +31,8 @@ import {
 
 export async function readPublicGame(gameId: string, userId: string): Promise<PublicGame | null> {
   const client = serviceOrThrow();
-  const [{ data: row, error }, { data: messages }, { data: guesses }] = await Promise.all([
+  // The current logos come from the cached catalog, in the same batch, instead of a read after the game row.
+  const [{ data: row, error }, { data: messages }, { data: guesses }, catalog] = await Promise.all([
     client.from("games").select("*").eq("id", gameId).eq("user_id", userId).maybeSingle(),
     client.from("messages").select("turn, role, content").eq("game_id", gameId).order("turn").order("role"),
     client
@@ -38,10 +40,12 @@ export async function readPublicGame(gameId: string, userId: string): Promise<Pu
       .select("turn, guessed_model_id, guessed_origin, model_correct, company_correct, origin_correct")
       .eq("game_id", gameId)
       .order("turn"),
+    loadCatalogCached(),
   ]);
   if (error) throw new Error(error.message);
-  const game = await rowWithTraits(client, (row as GameRow | null) ?? null, true);
-  if (!game) return null;
+  const loaded = await rowWithTraits(client, (row as GameRow | null) ?? null, false);
+  if (!loaded) return null;
+  const game = { ...loaded, traits: withCatalogLogos(loaded.traits, catalog) };
   const recorded = recordedGuesses(guesses ?? []);
   const guessedModelIds = recorded
     .map((guess) => guess.modelId)
@@ -70,25 +74,18 @@ export async function readPublicGame(gameId: string, userId: string): Promise<Pu
 
 export async function hiddenCall(gameId: string, userId: string) {
   const client = serviceOrThrow();
-  const game = await loadGame(client, gameId, userId, { logos: false });
+  // The transcript only needs the game id. A round that is not the player's is dropped below, with the messages unused.
+  const [game, { data: messages }] = await Promise.all([
+    loadGame(client, gameId, userId, { logos: false }),
+    client.from("messages").select("turn, role, content").eq("game_id", gameId).order("turn"),
+  ]);
   if (!game) return null;
-  const { data, error } = await client
-    .from("models")
-    .select("openrouter_id, provider_settings, reasoning")
-    .eq("id", game.model_id)
-    .single();
+  const [{ data, error }, categoryName] = await Promise.all([
+    client.from("models").select("openrouter_id, provider_settings, reasoning").eq("id", game.model_id).single(),
+    game.game_mode === "class" && typeof game.pool_key === "string" ? readCategoryName(client, game.pool_key) : Promise.resolve(null),
+  ]);
   if (error) throw new Error(error.message);
-  const { data: messages } = await client
-    .from("messages")
-    .select("turn, role, content")
-    .eq("game_id", gameId)
-    .order("turn");
   const pool = Object.values(game.traits.models);
-  let categoryName: string | null = null;
-  if (game.game_mode === "class" && typeof game.pool_key === "string") {
-    const { data: category } = await client.from("categories").select("name").eq("id", game.pool_key).maybeSingle();
-    categoryName = (category?.name as string | undefined) ?? null;
-  }
   return {
     game,
     context: roundContext({
@@ -102,6 +99,11 @@ export async function hiddenCall(gameId: string, userId: string) {
     reasoning: Boolean(data.reasoning),
     transcript: sortTranscript(messages ?? []).map(({ role, content }) => ({ role, content })),
   };
+}
+
+async function readCategoryName(client: ReturnType<typeof serviceOrThrow>, id: string): Promise<string | null> {
+  const { data } = await client.from("categories").select("name").eq("id", id).maybeSingle();
+  return (data?.name as string | undefined) ?? null;
 }
 
 export async function claimCall(gameId: string, userId: string) {
@@ -152,12 +154,15 @@ export async function abortReply(gameId: string, userId: string, pause: boolean)
 
 export async function submitGuess(gameId: string, userId: string, modelId: string): Promise<ApiFailure | null> {
   const client = serviceOrThrow();
-  const [game, { data: guesses }] = await Promise.all([
+  // The usage read is only used when this guess ends the round, but it needs nothing from the game row,
+  // so it runs beside the other two instead of after them.
+  const [game, { data: guesses }, usage] = await Promise.all([
     loadGame(client, gameId, userId, { logos: false }),
     client
       .from("guesses")
       .select("guessed_model_id, guessed_origin, model_correct, company_correct, origin_correct")
       .eq("game_id", gameId),
+    readUsage(client, gameId),
   ]);
   if (!game) return fail(404, "not_found");
   if (!game.awaiting_guess || game.status !== "active") return fail(409, "turn");
@@ -195,7 +200,7 @@ export async function submitGuess(gameId: string, userId: string, modelId: strin
   let breakdown: ScoreLine[] | null = null;
   let explanation: string[] | null = null;
   if (finish !== "continue") {
-    const scored = await scoreFrom(client, game, all, finish === "solved");
+    const scored = await scoreFrom(client, game, all, finish === "solved", usage);
     score = scored.score;
     breakdown = scored.breakdown;
     explanation = scored.explanation;
@@ -241,15 +246,14 @@ export async function buyHint(gameId: string, userId: string, key: string): Prom
   const hint = playableHints([key])[0];
   if (!hint) return fail(422, "hint");
   const client = serviceOrThrow();
-  const game = await loadGame(client, gameId, userId, { logos: false });
+  const [game, { data: guesses }] = await Promise.all([
+    loadGame(client, gameId, userId, { logos: false }),
+    client.from("guesses").select("model_correct, company_correct, origin_correct").eq("game_id", gameId),
+  ]);
   if (!game) return fail(404, "not_found");
   if (!hintAllowedForMode(game.game_mode, hint)) return fail(422, "hint");
   const hidden = game.traits.models[game.model_id];
   if (!hidden) return fail(409, "conflict");
-  const { data: guesses } = await client
-    .from("guesses")
-    .select("model_correct, company_correct, origin_correct")
-    .eq("game_id", gameId);
   const flags = guessFlags(guesses ?? []);
   const offered = hintOffered({
     key: hint,
@@ -265,18 +269,20 @@ export async function buyHint(gameId: string, userId: string, key: string): Prom
 
 export async function giveUp(gameId: string, userId: string): Promise<ApiFailure | null> {
   const client = serviceOrThrow();
-  const game = await loadGame(client, gameId, userId, { logos: false });
+  // The guesses and the usage only need the game id, so they are read beside the game row. They are
+  // used only when the round has a score to compute.
+  const [game, { data: guesses }, usage] = await Promise.all([
+    loadGame(client, gameId, userId, { logos: false }),
+    client.from("guesses").select("model_correct, company_correct, origin_correct").eq("game_id", gameId),
+    readUsage(client, gameId),
+  ]);
   if (!game) return fail(404, "not_found");
   if (game.status !== "active") return fail(409, "turn");
   let score: number | null = null;
   let breakdown: ScoreLine[] | null = null;
   let explanation: string[] | null = null;
   if (game.message_count >= 1 && game.game_mode !== "origin") {
-    const { data: guesses } = await client
-      .from("guesses")
-      .select("model_correct, company_correct, origin_correct")
-      .eq("game_id", gameId);
-    const scored = await scoreFrom(client, game, guessFlags(guesses ?? []), false);
+    const scored = await scoreFrom(client, game, guessFlags(guesses ?? []), false, usage);
     score = scored.score;
     breakdown = scored.breakdown;
     explanation = scored.explanation;

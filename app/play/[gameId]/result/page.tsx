@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { MessageBubble } from "@/components/message-bubble";
 import { ScoreCard } from "@/components/score-card";
@@ -15,18 +16,20 @@ export default async function ResultPage({ params }: { params: Promise<{ gameId:
   const next = `/play/${gameId}/result`;
   if (!user) redirect(`/login?next=${encodeURIComponent(next)}`);
   if (!username) redirect(`/welcome?next=${encodeURIComponent(next)}`);
+  // The mode list does not depend on the game; the category name needs the game, so it starts as soon as the game is read.
+  const gameModesPromise = listGameModes();
   const [game, card] = await Promise.all([readPublicGame(gameId, user.id), readShareCard(gameId)]);
   if (!game || !game.model) notFound();
   if (game.status === "active") redirect(`/play/${gameId}`);
-  const gameModes = await listGameModes();
+  const categoryNamePromise =
+    game.gameMode === "class" && game.poolKey ? readCategoryName(serviceOrThrow(), game.poolKey) : Promise.resolve(null);
+  const [gameModes, categoryName] = await Promise.all([gameModesPromise, categoryNamePromise]);
   const mode = gameModes.find((gameMode) => gameMode.id === game.gameMode);
   const facts = playedRoundFacts({
     gameModeId: game.gameMode,
     gameModeName: mode?.name,
     difficulty: game.difficulty,
   });
-  const categoryName =
-    game.gameMode === "class" && game.poolKey ? await readCategoryName(serviceOrThrow(), game.poolKey) : null;
   const onBoard = Boolean(mode?.leaderboard);
   const again = "/play";
   const leaderboardHref =
@@ -38,13 +41,13 @@ export default async function ResultPage({ params }: { params: Promise<{ gameId:
 
   const nextRound = (
     <div className="row result-actions">
-      <a className="button" href={again}>
+      <Link className="button" href={again}>
         Play again
-      </a>
+      </Link>
       {onBoard && (game.status === "solved" || game.status === "miss") ? (
-        <a className="button-quiet" href={leaderboardHref}>
+        <Link className="button-quiet" href={leaderboardHref}>
           Leaderboard
-        </a>
+        </Link>
       ) : null}
     </div>
   );
