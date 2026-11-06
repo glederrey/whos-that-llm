@@ -45,8 +45,12 @@ export function RoundBoard({ initial }: { initial: PublicGame }) {
   });
 
   // LiveReply calls this once per streamed frame, not per token.
-  const scrollToEnd = useCallback(() => endRef.current?.scrollIntoView({ block: "nearest" }), []);
-  useEffect(scrollToEnd, [scrollToEnd, game.transcript, liveUser]);
+  const scrollToEnd = useCallback(() => {
+    endRef.current?.scrollIntoView({ block: "nearest" });
+  }, []);
+  useEffect(() => {
+    scrollToEnd();
+  }, [scrollToEnd, game.transcript, liveUser]);
 
   // The thread grows with every streamed frame; refit the guess card once the reply is done.
   useGuessFit(roundRef, busy);
