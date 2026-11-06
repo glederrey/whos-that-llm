@@ -71,6 +71,22 @@ export async function withCurrentLogos(client: SupabaseClient, traits: Traits): 
 }
 
 /**
+ * The same refresh as `withCurrentLogos`, from the cached catalog instead of a query. The catalog holds the
+ * enabled models with their current logo, and an admin logo edit refreshes it. A model that is turned off
+ * since the round started keeps the logo frozen on the round.
+ */
+export function withCatalogLogos(traits: Traits, catalog: readonly Pick<CatalogModel, "id" | "logoPath">[]): Traits {
+  if (catalog.length === 0) return traits;
+  const current = new Map(catalog.map((model) => [model.id, model.logoPath]));
+  const models = { ...traits.models };
+  for (const [id, frozen] of Object.entries(traits.models)) {
+    const logoPath = current.get(id);
+    if (logoPath) models[id] = { ...frozen, logoPath };
+  }
+  return { ...traits, models };
+}
+
+/**
  * `logos: false` skips the extra read of current logos. Only display needs them,
  * so write paths (guess, hint, give up) turn them off.
  */
@@ -96,14 +112,26 @@ export async function rowWithTraits(client: SupabaseClient, game: GameRow | null
   };
 }
 
-export async function scoreFrom(client: SupabaseClient, game: GameRow, guesses: GuessFlags[], namedModel: boolean) {
-  const { data, error } = await client
+/** The token usage of one round, oldest call first. Never throws: the caller decides when the error matters. */
+export async function readUsage(client: SupabaseClient, gameId: string) {
+  return client
     .from("usage")
     .select("input_tokens, output_tokens")
-    .eq("game_id", game.id)
+    .eq("game_id", gameId)
     .is("error_code", null)
     .order("created_at", { ascending: true })
     .order("id", { ascending: true });
+}
+
+/** Pass `usage` when it was read already, beside the other reads, so scoring costs no extra round trip. */
+export async function scoreFrom(
+  client: SupabaseClient,
+  game: GameRow,
+  guesses: GuessFlags[],
+  namedModel: boolean,
+  usage?: Awaited<ReturnType<typeof readUsage>>,
+) {
+  const { data, error } = usage ?? (await readUsage(client, game.id));
   if (error) throw new Error(error.message);
   return scoreGame(game, guesses, namedModel, data ?? []);
 }
@@ -117,11 +145,20 @@ export async function leaderboardWith(
   difficulty?: BoardDifficulty | null,
   companyId?: string | null,
 ): Promise<{ rows: BoardRow[] } | ApiFailure> {
+  // The category icons only matter for a Category board, and do not depend on the rows: read them beside the rpc.
+  const categories = gameMode === "class" ? loadCategoryEntries(client).catch(() => null) : null;
   const result = await leaderboardRows(client, gameMode, period, viewerId, difficulty, companyId);
-  if (gameMode !== "class" || !("rows" in result) || result.rows.length === 0) return result;
-  const categories = await loadCategoryEntries(client);
-  const icons = new Map((categories ?? []).map((item) => [item.id, item.icon]));
+  if (!categories || !("rows" in result) || result.rows.length === 0) return result;
+  const icons = new Map(((await categories) ?? []).map((item) => [item.id, item.icon]));
   return { rows: result.rows.map((row) => ({ ...row, categoryIcon: row.companyId ? (icons.get(row.companyId) ?? null) : null })) };
+}
+
+/**
+ * The database does not have this rpc signature: PostgREST says PGRST202 (not in the schema cache)
+ * and Postgres says 42883 (undefined_function). Any other error is a real failure, not an old schema.
+ */
+export function isMissingRpcSignature(error: { code?: string | null } | null | undefined): boolean {
+  return error?.code === "PGRST202" || error?.code === "42883";
 }
 
 async function leaderboardRows(
@@ -132,24 +169,28 @@ async function leaderboardRows(
   difficulty?: BoardDifficulty | null,
   companyId?: string | null,
 ): Promise<{ rows: BoardRow[] } | ApiFailure> {
-  const { data: row, error: modeError } = await client.from("game_modes").select("leaderboard").eq("id", gameMode).maybeSingle();
-  if (modeError) throw new Error(modeError.message);
-  if (!row?.leaderboard) return fail(404, "not_found");
   const filters = boardFilters(gameMode, period, difficulty, companyId);
   const since = filters.since;
   const pickedDifficulty = filters.difficulty;
   const pickedCompany = filters.company;
-  const fresh = await client.rpc("leaderboard", {
-    game_mode: gameMode,
-    since,
-    viewer: viewerId ?? null,
-    p_difficulty: pickedDifficulty,
-    p_company: pickedCompany,
-  });
+  // The mode flag and the newest rpc do not depend on each other: one round trip instead of two.
+  const [{ data: row, error: modeError }, fresh] = await Promise.all([
+    client.from("game_modes").select("leaderboard").eq("id", gameMode).maybeSingle(),
+    client.rpc("leaderboard", {
+      game_mode: gameMode,
+      since,
+      viewer: viewerId ?? null,
+      p_difficulty: pickedDifficulty,
+      p_company: pickedCompany,
+    }),
+  ]);
+  if (modeError) throw new Error(modeError.message);
+  if (!row?.leaderboard) return fail(404, "not_found");
   if (!fresh.error) {
     return { rows: boardRows(fresh.data) };
   }
   // Databases that have not run the latest migration only have the older leaderboard signatures.
+  if (!isMissingRpcSignature(fresh.error)) throw new Error(fresh.error.message);
   const previous = await client.rpc("leaderboard", {
     game_mode: gameMode,
     since,
@@ -159,6 +200,7 @@ async function leaderboardRows(
   if (!previous.error) {
     return { rows: boardRows(previous.data) };
   }
+  if (!isMissingRpcSignature(previous.error)) throw new Error(previous.error.message);
   const legacy = await client.rpc("leaderboard", { game_mode: gameMode, since });
   if (legacy.error) throw new Error(legacy.error.message);
   const rows = await markLegacyMine(client, (legacy.data ?? []) as BoardEntry[], viewerId, gameMode, since);

@@ -1,6 +1,6 @@
 import { isUuid } from "@/lib/paths";
 import { apiError, apiJson, readJsonBody } from "@/lib/http";
-import { streamPlayedReply } from "@/lib/openrouter";
+import { preloadProviders, streamPlayedReply } from "@/lib/openrouter";
 import { sseResponse } from "@/lib/reply-events";
 import { abortReply, claimCall, hiddenCall, readPublicGame, saveReply } from "@/lib/rounds";
 import { requireUser } from "@/lib/session";
@@ -18,6 +18,8 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
   const text = typeof body.text === "string" ? body.text : "";
   const trimmed = text.trim();
 
+  // The provider book does not depend on the round: read it while the round loads and the call is claimed.
+  const providers = preloadProviders();
   const hidden = await hiddenCall(id, user.id);
   if (!hidden) return apiJson({ error: "not_found" }, 404);
   if (!trimmed || trimmed.length > hidden.game.rules.maxUserChars) return apiJson({ error: "turn" }, 422);
@@ -35,6 +37,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
         transcript: hidden.transcript,
         userText: trimmed,
         context: hidden.context,
+        providers,
         onWord(word) {
           send({ type: "word", text: word });
         },

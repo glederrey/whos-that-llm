@@ -2,10 +2,10 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { rulesForGameMode } from "./config";
-import { leaderboardWith, rpc, saveUsername, scoreFrom } from "./rounds-queries";
+import { isMissingRpcSignature, leaderboardWith, readUsage, rpc, saveUsername, scoreFrom, withCatalogLogos } from "./rounds-queries";
 import type { GameRow } from "./rounds-shape";
 
-type Reply = { data?: unknown; error?: { message: string } | null; count?: number | null };
+type Reply = { data?: unknown; error?: { message: string; code?: string } | null; count?: number | null };
 
 /** A hand-written client: every query method chains, awaiting a table gives its reply, rpc gives the reply for its name. */
 function fakeClient(tables: Record<string, Reply>, rpcs: Record<string, Reply>) {
@@ -101,7 +101,8 @@ test("leaderboard returns not_found when the mode has no board", async () => {
     status: 404,
     error: "not_found",
   });
-  assert.equal(rpcCalls.length, 0);
+  // the mode flag and the rpc run together, so the rpc is sent even for a mode with no board
+  assert.equal(rpcCalls.length, 1);
 });
 
 test("leaderboard uses the newest rpc signature first, with the company filter", async () => {
@@ -123,7 +124,7 @@ test("leaderboard falls back to the older signatures in order, then marks the vi
   const { client } = fakeClient({ game_modes: { data: { leaderboard: true } }, games: { data: [{ username: "ann", score: 10 }] } }, {});
   (client as unknown as { rpc: unknown }).rpc = async (_fn: string, args: Record<string, unknown>) => {
     calls.push(args);
-    if ("p_company" in args || "p_difficulty" in args) return { error: { message: "old" }, data: null };
+    if ("p_company" in args || "p_difficulty" in args) return { error: { message: "old", code: "PGRST202" }, data: null };
     return { error: null, data: [entry, { ...entry, rank: 2, name: "bob", mine: true }] };
   };
   const out = await leaderboardWith(client, "all", "week", "viewer", "easy");
@@ -141,11 +142,51 @@ test("leaderboard legacy path without a viewer marks nobody, and a failing legac
   const legacyOnly = (reply: Reply) => {
     const { client } = fakeClient(modeOn, {});
     (client as unknown as { rpc: unknown }).rpc = async (_fn: string, args: Record<string, unknown>) =>
-      "since" in args && !("viewer" in args) ? { error: null, data: null, ...reply } : { error: { message: "old" }, data: null };
+      "since" in args && !("viewer" in args) ? { error: null, data: null, ...reply } : { error: { message: "old", code: "42883" }, data: null };
     return client;
   };
   const out = await leaderboardWith(legacyOnly({ data: [entry] }), "all", "week");
   assert.ok("rows" in out);
   assert.deepEqual(out.rows.map((r) => r.mine), [false]);
   await assert.rejects(leaderboardWith(legacyOnly({ error: { message: "legacy down" } }), "all", "week"), /legacy down/);
+});
+
+test("only a missing function signature counts as an older database", () => {
+  assert.equal(isMissingRpcSignature({ code: "PGRST202" }), true);
+  assert.equal(isMissingRpcSignature({ code: "42883" }), true);
+  assert.equal(isMissingRpcSignature({ code: "PGRST203" }), false);
+  assert.equal(isMissingRpcSignature({ code: "57014" }), false);
+  assert.equal(isMissingRpcSignature({}), false);
+  assert.equal(isMissingRpcSignature(null), false);
+});
+
+test("leaderboard fails fast on an error that is not a missing signature", async () => {
+  const calls: Array<Record<string, unknown>> = [];
+  const { client } = fakeClient(modeOn, {});
+  (client as unknown as { rpc: unknown }).rpc = async (_fn: string, args: Record<string, unknown>) => {
+    calls.push(args);
+    return { error: { message: "statement timeout", code: "57014" }, data: null };
+  };
+  await assert.rejects(leaderboardWith(client, "all", "week", "viewer", "easy"), /statement timeout/);
+  assert.equal(calls.length, 1);
+});
+
+test("scoreFrom uses usage rows that were read beside the game and does not query again", async () => {
+  const { client, tableCalls } = fakeClient({ usage: { data: [{ input_tokens: 10, output_tokens: 5 }] } }, {});
+  const usage = await readUsage(client, "g1");
+  assert.deepEqual(tableCalls, ["usage"]);
+  const scored = await scoreFrom(client, gameRow(), [{ modelCorrect: true, companyCorrect: true, originCorrect: true }], true, usage);
+  assert.deepEqual(tableCalls, ["usage"]);
+  assert.equal(typeof scored.score, "number");
+  await assert.rejects(scoreFrom(client, gameRow(), [], false, { data: null, error: { message: "usage down" } } as never), /usage down/);
+});
+
+test("withCatalogLogos puts the current logo on the models the catalog knows and keeps the frozen one otherwise", () => {
+  const model = (logoPath: string) => ({ name: "n", companyId: "c", companyName: "C", origin: "us", size: "large", year: 2025, logoPath });
+  const traits = { given: [], models: { a: model("old-a"), b: model("old-b") } } as unknown as Parameters<typeof withCatalogLogos>[0];
+  const out = withCatalogLogos(traits, [{ id: "a", logoPath: "new-a" }]);
+  assert.equal(out.models.a.logoPath, "new-a");
+  assert.equal(out.models.b.logoPath, "old-b");
+  assert.equal(traits.models.a.logoPath, "old-a");
+  assert.equal(withCatalogLogos(traits, []), traits);
 });

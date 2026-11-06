@@ -1,6 +1,8 @@
 import type { JSONObject } from "@ai-sdk/provider";
 import { createOpenRouter } from "@openrouter/ai-sdk-provider";
 import { APICallError, streamText, type ModelMessage } from "ai";
+import { after } from "next/server";
+import { createIdleWatch } from "./idle-watch";
 import { systemPrompt } from "./prompt";
 import { isCreditError } from "./game";
 import { countGptTokens } from "./gpt-tokens";
@@ -37,6 +39,29 @@ export type CallTokens = {
   /** Cache-read tokens reported for this call. Display only. */
   cacheRead: number;
 };
+
+/** The upstream stream may pause this long between chunks (text or reasoning) before the call is cut. */
+export const upstreamIdleMs = 10_000;
+/** Longer wait for the very first chunk: a big model can be slow to start. */
+export const upstreamFirstChunkMs = 30_000;
+
+export type ProviderContext = { book: ProviderBook; directory: { slug: string; name: string }[] };
+
+/**
+ * Starts the provider book and directory reads. Never rejects, so a caller can start it early, beside
+ * other work, and drop it if the request ends first.
+ */
+export function preloadProviders(): Promise<ProviderContext> {
+  return (async () => {
+    try {
+      const providers = await import("./openrouter-providers");
+      const [book, directory] = await Promise.all([providers.loadProviderBook(), providers.loadProviderDirectory()]);
+      return { book, directory };
+    } catch {
+      return { book: { trusted: new Set<string>(), ignored: [] }, directory: [] };
+    }
+  })();
+}
 
 export type SentTurn = { role: "system" | "user" | "assistant"; content: string };
 
@@ -123,6 +148,8 @@ export async function streamHiddenReply(input: {
   maxOutputTokens: number;
   messages: ModelMessage[];
   context?: string | null;
+  /** From `preloadProviders()`, started earlier by the caller. Loaded here when absent. */
+  providers?: Promise<ProviderContext>;
   onWord: (word: string) => void;
 }): Promise<StreamedReply> {
   const system = systemPrompt(new Date(), input.context ?? null);
@@ -131,15 +158,7 @@ export async function streamHiddenReply(input: {
   const apiKey = readServerEnv("OPENROUTER_API_KEY");
   if (!apiKey) return { ok: false, paused: false, message: "Missing OpenRouter key.", sent };
 
-  let book: ProviderBook = { trusted: new Set(), ignored: [] };
-  let directory: { slug: string; name: string }[] = [];
-  try {
-    const providers = await import("./openrouter-providers");
-    book = await providers.loadProviderBook();
-    directory = await providers.loadProviderDirectory();
-  } catch {
-    book = { trusted: new Set(), ignored: [] };
-  }
+  const { book, directory } = await (input.providers ?? preloadProviders());
 
   const openrouter = createOpenRouter({ apiKey });
   const ignored = [...book.ignored];
@@ -165,7 +184,9 @@ export async function streamHiddenReply(input: {
       ? outputAboveCount(outcome.reply.gptTokens, outcome.reply.tokens.output, outcome.reply.tokens.reasoning)
       : false;
     const blacklisted = providerBlacklisted(input.reasoning, over);
-    if (outcome.slug) await remember(verdict(input.openrouterId, outcome, blacklisted));
+    // Nothing before the reveal reads the stored verdict: a retry uses the in-memory ignore list, and the
+    // next message reads the book seconds later. So the write runs after the response.
+    if (outcome.slug) await rememberLater(verdict(input.openrouterId, outcome, blacklisted));
 
     if (!input.reasoning || outcome.streamed || !blacklisted) {
       if (outcome.streamed || !input.reasoning) await outcome.done();
@@ -209,7 +230,18 @@ async function oneCall(input: {
   onWord: (word: string) => void;
 }): Promise<Attempt> {
   let streamError: unknown = null;
+  let idle = false;
+  const abort = new AbortController();
+  const watch = createIdleWatch({
+    firstMs: upstreamFirstChunkMs,
+    idleMs: upstreamIdleMs,
+    onIdle() {
+      idle = true;
+      abort.abort();
+    },
+  });
   const result = streamText({
+    abortSignal: abort.signal,
     model: input.openrouter(input.openrouterId),
     system: input.system,
     messages: input.messages,
@@ -249,6 +281,8 @@ async function oneCall(input: {
 
   try {
     for await (const part of result.fullStream) {
+      // The SDK sends its own "start" part before anything arrives from upstream.
+      if (part.type !== "start") watch.touch();
       if (part.type === "raw") {
         rememberSlug(part.rawValue);
         startLiveIfTrusted();
@@ -263,7 +297,10 @@ async function oneCall(input: {
     }
   } catch (error) {
     streamError = error;
+  } finally {
+    watch.stop();
   }
+  if (idle) streamError = new Error("The model stopped responding.");
 
   if (streamError) {
     if (mode === "live") await out.finish();
@@ -357,6 +394,15 @@ function verdict(model: string, outcome: Extract<Attempt, { ok: true }>, blackli
   };
 }
 
+async function rememberLater(verdictToSave: ProviderVerdict) {
+  try {
+    after(() => remember(verdictToSave));
+  } catch {
+    // Not inside a request (a script or a test): there is no response to wait for, so write now.
+    await remember(verdictToSave);
+  }
+}
+
 async function remember(verdictToSave: ProviderVerdict) {
   try {
     await (await import("./openrouter-providers")).saveProviderVerdict(verdictToSave);
@@ -405,10 +451,12 @@ export async function streamPlayedReply(input: {
   transcript: { role: "user" | "assistant"; content: string }[];
   userText: string;
   context?: string | null;
+  providers?: Promise<ProviderContext>;
   onWord: (word: string) => void;
 }): Promise<StreamedReply> {
   return streamHiddenReply({
     context: input.context,
+    providers: input.providers,
     openrouterId: input.openrouterId,
     providerSettings: input.providerSettings,
     reasoning: input.reasoning,

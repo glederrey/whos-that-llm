@@ -1,4 +1,6 @@
+import { unstable_cache } from "next/cache";
 import { parseCategoryId } from "./admin-category";
+import { catalogRevalidateSeconds, catalogTag, gameModesRevalidateSeconds, gameModesTag } from "./catalog-cache";
 import { loadCategoryEntries } from "./category-data";
 import { config, rulesForGameMode } from "./config";
 import { companyModelCounts } from "./company";
@@ -7,72 +9,102 @@ import { dailyRoundKey, startDailyRound, utcDayKey, type DailyRound } from "./da
 import { difficultyFromStored, difficultyNumber, type Difficulty } from "./difficulty";
 import { buildTraits, gameModeAllowsHints } from "./game";
 import { originFlag, originLabel, sizeLabel } from "./game-labels";
+import { hourlyWindow } from "./lobby-window";
 import { serviceOrThrow } from "./rounds-db";
 import { loadCatalog, loadModel, rpc } from "./rounds-queries";
 import { difficultyCounts, fail, fromRpc, presentLogo, type ApiFailure } from "./rounds-shape";
 
-export async function listGameModes() {
-  const client = serviceOrThrow();
-  const { data, error } = await client
-    .from("game_modes")
-    .select("id, name, blurb, enabled, sort_order, leaderboard")
-    .order("sort_order");
-  if (error) throw new Error(error.message);
-  return data ?? [];
+// The player-facing config below changes only when an admin edits it, so it is cached per process
+// with a tag. Every admin write calls refreshCatalog() (lib/catalog-cache.ts); the revalidate time
+// is only a safety net. These reads use the service client, which has no cookies.
+const cachedGameModes = unstable_cache(
+  async () => {
+    const client = serviceOrThrow();
+    const { data, error } = await client
+      .from("game_modes")
+      .select("id, name, blurb, enabled, sort_order, leaderboard")
+      .order("sort_order");
+    if (error) throw new Error(error.message);
+    return data ?? [];
+  },
+  ["game-modes"],
+  { tags: [gameModesTag], revalidate: gameModesRevalidateSeconds },
+);
+
+export function listGameModes() {
+  return cachedGameModes();
 }
 
-export async function listBoardOptions() {
-  const client = serviceOrThrow();
-  const [categories, companies] = await Promise.all([
-    loadCategoryEntries(client),
-    client.from("companies").select("id, name, logo_path").order("name"),
-  ]);
-  if (!categories) throw new Error("Could not read categories.");
-  if (companies.error) throw new Error(companies.error.message);
-  return {
-    categories: categories.filter((row) => row.enabled).map((row) => ({ id: row.id, name: row.name, icon: row.icon })),
-    companies: (companies.data ?? []).map((row) => ({
-      id: row.id as string,
-      name: row.name as string,
-      logoUrl: presentLogo((row.logo_path as string | null) ?? "", row.id as string),
-    })),
-  };
+/** The enabled models, cached. `maxDifficulty` is part of the cache key. */
+export const loadCatalogCached = unstable_cache(
+  async (maxDifficulty?: Difficulty) => loadCatalog(serviceOrThrow(), maxDifficulty),
+  ["catalog"],
+  { tags: [catalogTag], revalidate: catalogRevalidateSeconds },
+);
+
+const cachedBoardOptions = unstable_cache(
+  async () => {
+    const client = serviceOrThrow();
+    const [categories, companies] = await Promise.all([
+      loadCategoryEntries(client),
+      client.from("companies").select("id, name, logo_path").order("name"),
+    ]);
+    if (!categories) throw new Error("Could not read categories.");
+    if (companies.error) throw new Error(companies.error.message);
+    return {
+      categories: categories.filter((row) => row.enabled).map((row) => ({ id: row.id, name: row.name, icon: row.icon })),
+      companies: (companies.data ?? []).map((row) => ({
+        id: row.id as string,
+        name: row.name as string,
+        logoUrl: presentLogo((row.logo_path as string | null) ?? "", row.id as string),
+      })),
+    };
+  },
+  ["board-options"],
+  { tags: [catalogTag], revalidate: catalogRevalidateSeconds },
+);
+
+export function listBoardOptions() {
+  return cachedBoardOptions();
 }
+
+/** Companies, categories and category links for the lobby, with the catalog. All of it is admin-edited config. */
+const cachedLobbyConfig = unstable_cache(
+  async () => {
+    const client = serviceOrThrow();
+    const [catalog, companyRows, categoryEntries, memberships] = await Promise.all([
+      loadCatalog(client),
+      client.from("companies").select("id, name, logo_path, enabled").order("name"),
+      loadCategoryEntries(client),
+      client.from("model_categories").select("model_id, category_id"),
+    ]);
+    if (companyRows.error) throw new Error(companyRows.error.message);
+    if (!categoryEntries || memberships.error) throw new Error("Could not read categories.");
+    return { catalog, companyRows: companyRows.data ?? [], categoryEntries, memberships: memberships.data ?? [] };
+  },
+  ["lobby-config"],
+  { tags: [catalogTag], revalidate: catalogRevalidateSeconds },
+);
 
 export async function lobbyState(userId: string) {
   const client = serviceOrThrow();
   const since = new Date(Date.now() - 60 * 60 * 1000).toISOString();
   const day = utcDayKey();
-  const [{ data: settings }, { count }, activeResult, { data: dailyToday }, catalog, companyRows, categoryEntries, memberships] = await Promise.all([
+  // One read of the last hour's rounds gives the count against the cap and when the oldest one expires.
+  const [{ data: settings }, recentResult, activeResult, { data: dailyToday }, lobbyConfig] = await Promise.all([
     client.from("app_settings").select("paused").eq("id", 1).single(),
-    client.from("games").select("id", { count: "exact", head: true }).eq("user_id", userId).gt("started_at", since),
+    client.from("games").select("started_at").eq("user_id", userId).gt("started_at", since).order("started_at", { ascending: true }),
     client.from("games").select("id, game_mode, difficulty, pool_key").eq("user_id", userId).eq("status", "active"),
     client.from("games").select("status, difficulty").eq("user_id", userId).eq("game_mode", "daily").like("daily_key", `${day}:%`),
-    loadCatalog(client),
-    client.from("companies").select("id, name, logo_path, enabled").order("name"),
-    loadCategoryEntries(client),
-    client.from("model_categories").select("model_id, category_id"),
+    cachedLobbyConfig(),
   ]);
-  let nextAt: string | null = null;
-  if ((count ?? 0) > 0) {
-    const { data: oldest } = await client
-      .from("games")
-      .select("started_at")
-      .eq("user_id", userId)
-      .gt("started_at", since)
-      .order("started_at", { ascending: true })
-      .limit(1)
-      .maybeSingle();
-    if (oldest?.started_at) {
-      nextAt = new Date(new Date(oldest.started_at as string).getTime() + 60 * 60 * 1000).toISOString();
-    }
-  }
+  if (recentResult.error) throw new Error(recentResult.error.message);
   if (activeResult.error) throw new Error(activeResult.error.message);
-  if (companyRows.error) throw new Error(companyRows.error.message);
-  if (!categoryEntries || memberships.error) throw new Error("Could not read categories.");
+  const { catalog, categoryEntries } = lobbyConfig;
+  const { played, nextAt } = hourlyWindow((recentResult.data ?? []).map((row) => row.started_at as string), new Date(since).getTime());
   const enabledIds = new Set(catalog.map((model) => model.id));
   const categoryCounts = new Map<string, number>();
-  for (const link of memberships.data ?? []) {
+  for (const link of lobbyConfig.memberships) {
     if (!enabledIds.has(link.model_id as string)) continue;
     categoryCounts.set(link.category_id as string, (categoryCounts.get(link.category_id as string) ?? 0) + 1);
   }
@@ -81,7 +113,7 @@ export async function lobbyState(userId: string) {
     .map((row) => ({ id: row.id, name: row.name, description: row.description, icon: row.icon, models: categoryCounts.get(row.id) ?? 0 }))
     .filter((row) => row.models >= 2);
   const logos = new Map(
-    (companyRows.data ?? []).map((row) => [row.id as string, (row.logo_path as string | null) ?? ""]),
+    lobbyConfig.companyRows.map((row) => [row.id as string, (row.logo_path as string | null) ?? ""]),
   );
   // A turned-off company has no card, and neither has one with fewer than two models, unless the player has a round open on it: that one stays resumable.
   const openCompanyIds = new Set(
@@ -90,7 +122,7 @@ export async function lobbyState(userId: string) {
     ),
   );
   const companies = companyModelCounts(
-    (companyRows.data ?? []).flatMap((row) =>
+    lobbyConfig.companyRows.flatMap((row) =>
       typeof row.id === "string" && typeof row.name === "string" && (row.enabled || openCompanyIds.has(row.id))
         ? [{ id: row.id, name: row.name }]
         : [],
@@ -105,7 +137,7 @@ export async function lobbyState(userId: string) {
     }));
   return {
     paused: Boolean(settings?.paused),
-    played: count ?? 0,
+    played,
     cap: config.hourlyCap,
     openGames: (activeResult.data ?? []).flatMap((row) => {
       const id = typeof row.id === "string" ? row.id : null;
@@ -155,7 +187,7 @@ export async function startCompany(userId: string, companyId: string, noHint = f
   const [{ data: gameMode, error }, { data: company, error: companyError }, catalog] = await Promise.all([
     client.from("game_modes").select("id, enabled, hints_allowed").eq("id", "company").maybeSingle(),
     client.from("companies").select("id").eq("id", id).eq("enabled", true).maybeSingle(),
-    loadCatalog(client),
+    loadCatalogCached(),
   ]);
   if (error) throw new Error(error.message);
   if (companyError) throw new Error(companyError.message);
@@ -190,7 +222,7 @@ export async function startCategory(userId: string, categoryId: string, noHint =
       client.from("game_modes").select("id, enabled, hints_allowed").eq("id", "class").maybeSingle(),
       client.from("categories").select("id, enabled").eq("id", id).maybeSingle(),
       client.from("model_categories").select("model_id").eq("category_id", id),
-      loadCatalog(client),
+      loadCatalogCached(),
     ]);
   if (error) throw new Error(error.message);
   if (categoryError) throw new Error(categoryError.message);
@@ -222,7 +254,7 @@ export async function startCustom(userId: string, modelIds: readonly string[], n
   const client = serviceOrThrow();
   const [{ data: gameMode, error }, catalog] = await Promise.all([
     client.from("game_modes").select("id, enabled, hints_allowed").eq("id", "custom").maybeSingle(),
-    loadCatalog(client),
+    loadCatalogCached(),
   ]);
   if (error) throw new Error(error.message);
   if (!gameMode?.enabled) return fail(404, "not_found");
@@ -252,7 +284,7 @@ export async function startOrigin(userId: string): Promise<{ gameId: string } | 
   const client = serviceOrThrow();
   const [{ data: gameMode, error }, catalog, { data: turnedOn, error: originsError }] = await Promise.all([
     client.from("game_modes").select("id, enabled").eq("id", "origin").maybeSingle(),
-    loadCatalog(client),
+    loadCatalogCached(),
     client.from("origins").select("id").eq("enabled", true),
   ]);
   if (error) throw new Error(error.message);
@@ -287,15 +319,14 @@ async function startRosterRound(
   difficulty: Difficulty,
 ): Promise<{ gameId: string } | ApiFailure> {
   const client = serviceOrThrow();
-  const { data: gameMode, error } = await client
-    .from("game_modes")
-    .select("id, enabled, hints_allowed")
-    .eq("id", modeId)
-    .maybeSingle();
+  const [{ data: gameMode, error }, catalog] = await Promise.all([
+    client.from("game_modes").select("id, enabled, hints_allowed").eq("id", modeId).maybeSingle(),
+    loadCatalogCached(difficulty),
+  ]);
   if (error) throw new Error(error.message);
   if (!gameMode?.enabled) return fail(404, "not_found");
 
-  let pool = await loadCatalog(client, difficulty);
+  let pool = catalog;
   let modelId = pool[Math.floor(Math.random() * pool.length)]?.id ?? null;
   if (modeId === "daily") {
     const day = utcDayKey();
