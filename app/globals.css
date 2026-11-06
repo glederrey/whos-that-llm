@@ -2607,13 +2607,41 @@ html[data-theme="dark"] .score-card .pill, html[data-theme="dark"] .score-card .
   .button:active, .button-quiet:active { transform: none; }
 }
 
-/* Loading skeletons (app/play/loading.tsx and friends): the real layout in cards, bars in --line, no spinner. */
-.skeleton-bar { display: block; height: 14px; border-radius: 7px; background: var(--line); opacity: 0.9; animation: skeleton-pulse 1.4s ease-in-out infinite; }
+/* Loading skeletons (app/play/loading.tsx and friends): the real layout (header + round-bar, empty transcript, composer, side cards), bars in --line-strong, no spinner. Heights match a fresh round so nothing shifts. */
+.skeleton-bar { display: block; height: 14px; border-radius: 7px; background: var(--line-strong); animation: skeleton-pulse 1.4s ease-in-out infinite; }
 .skeleton-bar.short { width: 40%; }
 .skeleton-bar.tall { height: 44px; border-radius: var(--radius-sm); }
 .skeleton-bar.title { height: 28px; width: 55%; }
 .skeleton-card { display: grid; gap: 12px; }
-.side .skeleton-card:first-child { min-height: 176px; }
+.skeleton-bar-row { display: flex; align-items: center; min-height: 63px; }
+.skeleton-composer { min-height: 110px; }
+.side .skeleton-card:first-child { min-height: 177px; }
 .side .skeleton-card:last-child { min-height: 224px; }
-.skeleton-bubble { height: 64px; width: min(78%, 420px); border-radius: var(--radius); background: var(--line); opacity: 0.7; animation: skeleton-pulse 1.4s ease-in-out infinite; }
 @keyframes skeleton-pulse { 50% { opacity: 0.45; } }
+@media (max-width: 560px) { .skeleton-bar-row { min-height: 84px; } }
+@media (prefers-reduced-motion: reduce) { .skeleton-bar { animation: none; } }
+@media (max-width: 899px) {
+  .side .skeleton-card:first-child { order: 2; min-height: 206px; }
+  .side .skeleton-card:last-child { order: 1; min-height: 219px; }
+}
+/* Lobby: heading, lede, hour strip and the mode list, at the heights of the real /play. */
+.skeleton-lobby { display: grid; gap: 16px; }
+.skeleton-lobby .title { height: 37px; width: 40%; margin-top: 4px; }
+.skeleton-lede { height: 26px; width: 70%; }
+.skeleton-status { height: 43px; border-radius: 999px; margin-bottom: 4px; }
+.skeleton-modes { min-height: 819px; align-content: start; }
+@media (max-width: 560px) {
+  .skeleton-lobby .title { height: 31px; }
+  .skeleton-lede { height: 51px; width: 100%; }
+  .skeleton-status { height: 114px; border-radius: var(--radius); }
+  .skeleton-modes { min-height: 1122px; }
+}
+/* Result: model lockup, actions and score card at the heights of the real page (a solved round has a taller card, the chat below varies). */
+.skeleton-lockup { height: 74px; width: 50%; border-radius: var(--radius); }
+.skeleton-actions { height: 43px; width: 220px; justify-self: end; border-radius: var(--radius-sm); }
+.skeleton-score { grid-column: 1 / -1; align-content: start; min-height: 231px; }
+@media (max-width: 560px) {
+  .skeleton-lockup { height: 65px; width: 80%; }
+  .skeleton-actions { display: none; }
+  .skeleton-score { min-height: 184px; }
+}

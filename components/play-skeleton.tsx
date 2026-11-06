@@ -17,14 +17,14 @@ export function RoundSkeleton() {
         Loading the round
       </p>
       <div className="thread">
-        <div className="round-bar">
-          <span className="skeleton-bar" style={{ width: 180 }} />
-        </div>
-        <div className="transcript" aria-hidden="true">
-          <span className="skeleton-bubble" />
-        </div>
-        <div className="card" aria-hidden="true">
-          <span className="skeleton-bar tall" style={{ display: "block" }} />
+        <header aria-hidden="true">
+          <div className="round-bar skeleton-bar-row">
+            <span className="skeleton-bar" style={{ width: 180 }} />
+          </div>
+        </header>
+        <div className="transcript" aria-hidden="true" />
+        <div className="composer skeleton-composer" aria-hidden="true">
+          <span className="skeleton-bar tall" />
         </div>
       </div>
       <aside className="side" aria-hidden="true">
@@ -46,7 +46,9 @@ export function ResultSkeleton() {
       <p className="sr-only" role="status">
         Loading the result
       </p>
-      <section className="card skeleton-card" aria-hidden="true">
+      <span className="skeleton-bar skeleton-lockup" aria-hidden="true" />
+      <span className="skeleton-bar skeleton-actions" aria-hidden="true" />
+      <section className="card skeleton-card skeleton-score" aria-hidden="true">
         <span className="skeleton-bar title" />
         <Bars count={3} />
       </section>
@@ -60,11 +62,14 @@ export function LobbySkeleton() {
       <p className="sr-only" role="status">
         Loading
       </p>
-      <section className="card skeleton-card" aria-hidden="true">
+      <div className="skeleton-lobby" aria-hidden="true">
         <span className="skeleton-bar title" />
-        <Bars count={2} />
-        <span className="skeleton-bar tall" />
-      </section>
+        <span className="skeleton-bar skeleton-lede" />
+        <span className="skeleton-bar skeleton-status" />
+        <section className="card skeleton-card skeleton-modes">
+          <Bars count={3} />
+        </section>
+      </div>
     </div>
   );
 }
