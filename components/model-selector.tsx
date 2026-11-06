@@ -82,7 +82,7 @@ export function ModelSelector({
           return (
             <section key={group.companyName} className="custom-group" aria-label={group.companyName}>
               <header>
-                <CompanyLogo src={group.logoUrl} />
+                <CompanyLogo src={group.logoUrl} lazy />
                 <strong>{group.companyName}</strong>
                 <span className="muted custom-origin">
                   <Twemoji emoji={group.originFlag} /> {group.originName}
@@ -145,7 +145,7 @@ export function ModelSelector({
             {groupByCompany(chosen).map((group) => (
               <section key={group.companyName} aria-label={group.companyName}>
                 <header>
-                  <CompanyLogo src={group.logoUrl} />
+                  <CompanyLogo src={group.logoUrl} lazy />
                   <strong>{group.companyName}</strong>
                   <span className="muted">{group.models.length}</span>
                 </header>

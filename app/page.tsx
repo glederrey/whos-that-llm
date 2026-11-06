@@ -11,8 +11,7 @@ import { allCompanies } from "@/lib/company";
 import { anyDifficulty } from "@/lib/difficulty";
 import { buildHomeDemoRounds } from "@/lib/home-demo-rounds";
 import { groupByCompany, publicModels } from "@/lib/model-list";
-import { leaderboard, listBoardOptions, listGameModes, serviceOrThrow } from "@/lib/rounds";
-import { loadCatalog } from "@/lib/rounds-queries";
+import { leaderboard, listBoardOptions, listGameModes, loadCatalogCached } from "@/lib/rounds";
 import { currentProfile } from "@/lib/session";
 import { homeDescription, organizationJsonLd, socialMetadata } from "@/lib/site";
 
@@ -27,8 +26,8 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
   if (params.error === "access_denied") redirect("/login?error=cancelled");
   const { user, username } = await currentProfile();
   if (user && !username) redirect("/welcome");
-  const client = serviceOrThrow();
-  const [gameModes, options] = await Promise.all([listGameModes(), listBoardOptions()]);
+  // The catalog does not depend on the board choice, so it loads with the modes and options.
+  const [gameModes, options, catalog] = await Promise.all([listGameModes(), listBoardOptions(), loadCatalogCached()]);
   const modes = boardModes(gameModes);
   const choice = boardChoice(params, modes);
   const view = {
@@ -36,10 +35,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
     company: choice.gameMode === "company" ? selectedCompany(choice.company, options.companies) : allCompanies,
     category: choice.gameMode === "class" ? selectedCategory(choice.category, options.categories) : allCompanies,
   };
-  const [catalog, board] = await Promise.all([
-    loadCatalog(client),
-    leaderboard(view.gameMode, view.period, user?.id, view.difficulty, boardPool(view)),
-  ]);
+  const board = await leaderboard(view.gameMode, view.period, user?.id, view.difficulty, boardPool(view));
   const models = publicModels(catalog);
   const groups = groupByCompany(models);
   const rounds = buildHomeDemoRounds(models);

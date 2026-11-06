@@ -477,7 +477,7 @@ export function HomeBoard({
                           });
                           const choice = (
                             <>
-                              <CompanyLogo src={company.logoUrl} />
+                              <CompanyLogo src={company.logoUrl} lazy />
                               <span className="difficulty-name">
                                 <strong>{company.name}</strong>
                                 {playable && small && !open ? <span className="muted">Not enough models.</span> : null}

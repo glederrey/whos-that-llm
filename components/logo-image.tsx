@@ -1,6 +1,9 @@
 import { lobeIdOf, lobeThemeUrl } from "@/lib/lobe-logo";
 
-/** A shipped logo is drawn twice, one per theme, and the theme CSS shows the one that fits. */
+/**
+ * A shipped logo is drawn twice, one per theme, and the theme CSS shows the one that fits.
+ * With `lazy` the browser skips the image hidden by `display: none`, so only the visible theme downloads.
+ */
 export function themedLogoUrls(src: string): { light: string; dark: string } | null {
   const match = /^\/lobe\/([a-z0-9-]+)\.svg$/.exec(src);
   const id = match ? lobeIdOf(`lobe:${match[1]}`) : null;

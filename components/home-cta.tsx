@@ -1,10 +1,12 @@
+import Link from "next/link";
+
 export function HomeCta({ signedIn, label = "Sign up", signedInLabel = "Try a round" }: { signedIn: boolean; label?: string; signedInLabel?: string }) {
   return (
     <div className="row">
       {signedIn ? (
-        <a className="button button-lg" href="/play">
+        <Link className="button button-lg" href="/play">
           {signedInLabel}
-        </a>
+        </Link>
       ) : (
         <>
           <a className="button button-lg" href="/login?tab=create&next=/play">

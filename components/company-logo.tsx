@@ -3,7 +3,8 @@
 import { useLayoutEffect, useRef, useState } from "react";
 import { LogoImage, themedLogoUrls } from "./logo-image";
 
-export function CompanyLogo({ src }: { src: string }) {
+// `lazy` is for lists and menus: the hidden theme variant of a shipped logo is then never downloaded.
+export function CompanyLogo({ src, lazy }: { src: string; lazy?: boolean }) {
   const ref = useRef<HTMLImageElement>(null);
   const [shown, setShown] = useState<string | null>(null);
 
@@ -13,7 +14,7 @@ export function CompanyLogo({ src }: { src: string }) {
   }, [src]);
 
   if (!src) return null;
-  if (themedLogoUrls(src)) return <LogoImage src={src} />;
+  if (themedLogoUrls(src)) return <LogoImage src={src} lazy={lazy} />;
   return (
     <img
       ref={ref}

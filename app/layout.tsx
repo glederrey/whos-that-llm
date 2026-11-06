@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
+import Link from "next/link";
 import { Analytics } from "@vercel/analytics/next";
 import { AccountMenu } from "@/components/account-menu";
 import { navItems } from "@/components/nav-items";
@@ -77,23 +78,23 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <body suppressHydrationWarning>
         <div className="shell">
           <header className="header">
-            <a className="brand" href="/">
+            <Link className="brand" href="/">
               <img className="for-light" width={56} height={56} src="/brand/logo-tail-right-light.png" alt="" />
               <img className="for-dark" width={56} height={56} src="/brand/logo-tail-right-dark.png" alt="" />
               <SiteName />
-            </a>
+            </Link>
             <nav className="header-nav">
               {navItems.map((item) => (
-                <a key={item.href} href={item.href} aria-label={item.label}>
+                <Link key={item.href} href={item.href} aria-label={item.label}>
                   {item.icon}
                   <span className="nav-label">{item.label}</span>
-                </a>
+                </Link>
               ))}
               <AccountMenu userId={user?.id ?? null} username={username} avatarUrl={avatarUrl}>
                 {owner ? (
-                  <a href="/admin" role="menuitem">
+                  <Link href="/admin" role="menuitem">
                     Admin
-                  </a>
+                  </Link>
                 ) : null}
               </AccountMenu>
             </nav>

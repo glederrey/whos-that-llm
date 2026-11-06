@@ -1,13 +1,13 @@
 "use client";
 
-import { Fragment, useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { config } from "@/lib/config";
 import { upcomingMessageNumber, type PublicGame } from "@/lib/game";
 import { filterCandidates, hintShown as roundHintShown } from "@/lib/round-view";
 import { ChatComposer } from "./chat-composer";
 import { CompanyLogo } from "./company-logo";
 import { GuessHistory } from "./guess-history";
-import { MessageBubble } from "./message-bubble";
+import { LiveReply, MessageBubble } from "./message-bubble";
 import { Twemoji } from "./twemoji";
 import { TraitLine } from "./trait-line";
 import { useGuessFit } from "./use-guess-fit";
@@ -25,7 +25,7 @@ export function RoundBoard({ initial }: { initial: PublicGame }) {
     setDraft,
     busy,
     liveUser,
-    liveAssistant,
+    live,
     notice,
     search,
     setSearch,
@@ -44,11 +44,12 @@ export function RoundBoard({ initial }: { initial: PublicGame }) {
     closeDialog: () => dialogRef.current?.close(),
   });
 
-  useEffect(() => {
-    endRef.current?.scrollIntoView({ block: "nearest" });
-  }, [game.transcript, liveUser, liveAssistant]);
+  // LiveReply calls this once per streamed frame, not per token.
+  const scrollToEnd = useCallback(() => endRef.current?.scrollIntoView({ block: "nearest" }), []);
+  useEffect(scrollToEnd, [scrollToEnd, game.transcript, liveUser]);
 
-  useGuessFit(roundRef);
+  // The thread grows with every streamed frame; refit the guess card once the reply is done.
+  useGuessFit(roundRef, busy);
 
   const shown = upcomingMessageNumber(game.messageNumber, game.messageLimit);
   const canGuess = game.awaitingGuess && game.status === "active";
@@ -129,7 +130,7 @@ export function RoundBoard({ initial }: { initial: PublicGame }) {
             <MessageBubble key={`${message.turn}-${message.role}`} role={message.role} content={message.content} />
           ))}
           {liveUser !== null ? <MessageBubble role="user" content={liveUser} /> : null}
-          {liveAssistant !== null ? <MessageBubble role="assistant" content={liveAssistant} live /> : null}
+          {liveUser !== null ? <LiveReply live={live} onGrow={scrollToEnd} /> : null}
           <div ref={endRef} />
         </div>
         <ChatComposer
@@ -253,7 +254,7 @@ export function RoundBoard({ initial }: { initial: PublicGame }) {
                           setListOpen(false);
                         }}
                       >
-                        <CompanyLogo src={row.logoPath} />
+                        <CompanyLogo src={row.logoPath} lazy />
                         <span>
                           {row.companyName}
                           <br />

@@ -95,7 +95,7 @@ export function HistoryDetail({ item, panel }: { item: HistoryItem; panel?: stri
     <div id={panel} className="history-detail">
       {item.logoPath && item.modelName ? (
         <div className="history-model">
-          <CompanyLogo src={item.logoPath} />
+          <CompanyLogo src={item.logoPath} lazy />
           <span>
             {item.companyName ? (
               <>

@@ -2606,3 +2606,12 @@ html[data-theme="dark"] .score-card .pill, html[data-theme="dark"] .score-card .
   .button, .button-quiet { transition: none; }
   .button:active, .button-quiet:active { transform: none; }
 }
+
+/* Loading skeletons (app/play/loading.tsx and friends): the real layout in cards, bars in --line, no spinner. */
+.skeleton-bar { display: block; height: 14px; border-radius: 7px; background: var(--line); opacity: 0.55; animation: skeleton-pulse 1.4s ease-in-out infinite; }
+.skeleton-bar.short { width: 40%; }
+.skeleton-bar.tall { height: 44px; border-radius: var(--radius-sm); }
+.skeleton-bar.title { height: 28px; width: 55%; }
+.skeleton-card { display: grid; gap: 12px; }
+.skeleton-bubble { height: 64px; width: min(78%, 420px); border-radius: var(--radius); background: var(--line); opacity: 0.4; animation: skeleton-pulse 1.4s ease-in-out infinite; }
+@keyframes skeleton-pulse { 50% { opacity: 0.25; } }
