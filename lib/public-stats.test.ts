@@ -467,7 +467,7 @@ test("the public stats page does not read prices, billing, or account rows", () 
   assert.doesNotMatch(board, /href=/);
   assert.doesNotMatch(board, /useRouter|router\.push|window\.location/);
   assert.match(loader, /readAll\(client, "companies", "id, name"\)/);
-  assert.match(loader, /finished_at/);
+  assert.match(loader, /rpc\("statistics_facts"\)/);
   const home = fs.readFileSync(path.join(root, "components/home-board.tsx"), "utf8");
   assert.match(home, /\["daily", "all", "company", "class", "origin", "custom"\]/);
   assert.match(home, /A set we define, not a lab's line\. Only Opus, only the nano models, or obscure ones\./);
